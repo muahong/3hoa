@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ninja Toán">
+<meta name="application-name" content="Ninja Toán Học">
+<meta name="theme-color" content="#6ec6ff">
+<meta name="description" content="Ninja Toán Học – trò chơi chém trái cây giúp bé lớp 1 đến lớp 3 luyện phép cộng, phép trừ. Chơi trên iPad, điện thoại hoặc máy tính.">
+<title>Ninja Toán Học – Chém trái cây, học cộng trừ</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- ================= HUD (khi đang chơi) ================= -->
+  <div id="hud" class="screen hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="score-box">
+          <span class="label">ĐIỂM</span>
+          <span class="value" id="hud-score">0</span>
+        </div>
+        <div class="stage-chip" id="hud-stage">Màn 1</div>
+        <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
+      </div>
+      <div class="hud-center">
+        <div class="question-card" id="hud-question">7 + 5 = <span class="q">?</span></div>
+        <div class="timer" id="hud-timer">
+          <span>⏱</span>
+          <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
+          <span class="time" id="hud-time">1:30</span>
+        </div>
+        <div class="hint" id="hud-hint" hidden></div>
+      </div>
+      <div class="hud-right">
+        <div class="hearts" id="hud-hearts"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+        <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MENU CHÍNH ================= -->
+  <div id="menu" class="screen">
+    <div class="panel">
+      <div class="logo-row">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="lg-apple" cx="38%" cy="32%" r="70%">
+              <stop offset="0" stop-color="#ff8a7a"/>
+              <stop offset="0.55" stop-color="#ef3b34"/>
+              <stop offset="1" stop-color="#a51d17"/>
+            </radialGradient>
+            <linearGradient id="lg-blade" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffffff"/>
+              <stop offset="0.5" stop-color="#c9d3e0"/>
+              <stop offset="1" stop-color="#8b97a8"/>
+            </linearGradient>
+          </defs>
+          <!-- Katana -->
+          <g transform="rotate(-40 100 100)">
+            <rect x="18" y="94" width="112" height="12" rx="6" fill="url(#lg-blade)" stroke="#5b6675" stroke-width="2"/>
+            <rect x="128" y="88" width="10" height="24" rx="3" fill="#ffd166" stroke="#b07f00" stroke-width="2"/>
+            <rect x="138" y="93" width="46" height="14" rx="7" fill="#2b2d42"/>
+            <path d="M144 94 l6 12 M152 94 l6 12 M160 94 l6 12 M168 94 l6 12" stroke="#ef476f" stroke-width="3"/>
+          </g>
+          <!-- Stem + leaf -->
+          <path d="M100 42 q4 -18 14 -22" stroke="#7a4a1e" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <path d="M104 34 q18 -22 40 -8 q-12 20 -40 8z" fill="#5cc45a" stroke="#2f8f3a" stroke-width="3"/>
+          <!-- Apple body -->
+          <path d="M100 52 c-18 -22 -62 -16 -66 30 c-3 36 24 74 58 78 c4 1 12 1 16 0 c34 -4 61 -42 58 -78 c-4 -46 -48 -52 -66 -30z" fill="url(#lg-apple)" stroke="#8e1a14" stroke-width="4"/>
+          <ellipse cx="66" cy="78" rx="12" ry="18" fill="#fff" opacity="0.28" transform="rotate(-20 66 78)"/>
+          <!-- Headband -->
+          <path d="M40 84 q60 -22 120 0 l0 16 q-60 -18 -120 0z" fill="#2b2d42"/>
+          <path d="M158 88 q26 -12 34 -30 q-8 20 -22 34 q12 8 26 18 q-24 -6 -38 -14z" fill="#2b2d42"/>
+          <rect x="42" y="88" width="116" height="4" fill="#ef476f" opacity="0.9"/>
+          <!-- Eyes -->
+          <ellipse cx="80" cy="118" rx="11" ry="13" fill="#fff"/>
+          <ellipse cx="120" cy="118" rx="11" ry="13" fill="#fff"/>
+          <circle cx="83" cy="120" r="6" fill="#2b2d42"/>
+          <circle cx="123" cy="120" r="6" fill="#2b2d42"/>
+          <circle cx="85" cy="117" r="2" fill="#fff"/>
+          <circle cx="125" cy="117" r="2" fill="#fff"/>
+          <path d="M66 104 l24 6 M134 104 l-24 6" stroke="#2b2d42" stroke-width="5" stroke-linecap="round"/>
+          <!-- Mouth -->
+          <path d="M88 142 q12 12 24 0" stroke="#7a1a14" stroke-width="5" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div>
+          <h1 class="title">NINJA<br>TOÁN HỌC<small>CHÉM TRÁI CÂY · CỘNG TRỪ</small></h1>
+        </div>
+      </div>
+      <p class="subtitle">Dành cho các bạn nhỏ lớp 1, lớp 2, lớp 3 🍎🍊🍉</p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn teal small" id="btn-howto">📖 Cách chơi</button>
+        <button class="btn ghost small" id="btn-sound">🔊 Âm thanh: Bật</button>
+      </div>
+      <div class="menu-options">
+        <span class="chip-label">⏱ Thời gian mỗi ván:</span>
+        <div class="chip-group" id="duration-group">
+          <button data-sec="60">1 phút</button>
+          <button data-sec="90" class="on">1,5 phút</button>
+          <button data-sec="120">2 phút</button>
+        </div>
+      </div>
+      <p class="footer-note">Vuốt tay lên các quả đang bay để chém thử nhé! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+    </div>
+  </div>
+
+  <!-- ================= CHỌN MÀN ================= -->
+  <div id="levels" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
+        <h2>Chọn màn chơi</h2>
+        <button class="btn ghost small" id="btn-levels-howto">📖</button>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-mode="answer">🎯 Chém đáp án</button>
+        <button class="tab" data-mode="pair">🤝 Ghép đôi</button>
+      </div>
+      <p class="mode-desc" id="mode-desc">Nhìn phép tính, chém quả có <b>đáp án đúng</b>!</p>
+      <div class="level-grid" id="level-grid"></div>
+    </div>
+  </div>
+
+  <!-- ================= HƯỚNG DẪN ================= -->
+  <div id="howto" class="screen hidden dim">
+    <div class="panel">
+      <h2>📖 Cách chơi</h2>
+      <div class="howto-list">
+        <div class="howto-item"><div class="em">🔢</div><div class="tx">Nhìn <b>phép tính</b> ở phía trên màn hình, ví dụ <b>7 + 5 = ?</b></div></div>
+        <div class="howto-item"><div class="em">👆</div><div class="tx"><b>Vuốt ngón tay</b> qua quả có <b>đáp án đúng</b> để chém nó. Chém nhanh được thêm điểm!</div></div>
+        <div class="howto-item"><div class="em">❌</div><div class="tx">Chém <b>số sai</b> hoặc chém <b>bom 💣</b> sẽ mất 1 tim ❤️. Hết 3 tim là thua.</div></div>
+        <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Chém tim 💗 để hồi lại mạng.</div></div>
+        <div class="howto-item"><div class="em">🤝</div><div class="tx">Chế độ <b>Ghép đôi</b>: chém <b>2 quả</b> mà cộng (hoặc trừ) lại bằng số cho trước.</div></div>
+      </div>
+      <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
+      <div class="btn-row">
+        <button class="btn" id="btn-howto-close">Đã hiểu!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ĐẾM NGƯỢC ================= -->
+  <div id="countdown" class="screen hidden">
+    <div class="count" id="count-num">3</div>
+  </div>
+
+  <!-- ================= TẠM DỪNG ================= -->
+  <div id="pause" class="screen hidden dim">
+    <div class="panel">
+      <h2>⏸ Tạm dừng</h2>
+      <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
+      <div class="btn-row">
+        <button class="btn big green" id="btn-resume">▶ Chơi tiếp</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
+        <button class="btn ghost small" id="btn-quit">🏠 Về trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ ================= -->
+  <div id="gameover" class="screen hidden dim">
+    <div class="panel">
+      <h2 class="result-title" id="result-title">Hết giờ!</h2>
+      <p id="result-level">Màn: Cộng trừ đến 10</p>
+      <div class="result-score-label">ĐIỂM CỦA BẠN</div>
+      <div class="result-score" id="result-score">0</div>
+      <div class="result-stars" id="result-stars"></div>
+      <div id="result-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
+      <div class="stats">
+        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
+        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Combo cao nhất 🔥</div></div>
+        <div class="stat acc"><div class="v" id="st-acc">0%</div><div class="k">Chính xác 🎯</div></div>
+      </div>
+      <div id="name-entry" class="name-entry" hidden>
+        <span style="font-weight:800;font-size:18px">Tên của bạn:</span>
+        <input id="name-input" type="text" maxlength="14" placeholder="Bé tên gì?" autocomplete="off" autocorrect="off" autocapitalize="words">
+        <button class="btn teal small" id="btn-save-name">Lưu</button>
+        <div class="name-chips" id="name-chips"></div>
+      </div>
+      <div class="leader" id="leader"></div>
+      <div class="btn-row">
+        <button class="btn big" id="btn-again">🔄 Chơi lại</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-other-level">📚 Chọn màn khác</button>
+        <button class="btn ghost small" id="btn-home">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/math.js"></script>
+<script src="js/fruits.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Ninja Toán Học",
+  "short_name": "Ninja Toán",
+  "description": "Chém trái cây, học cộng trừ cho bé lớp 1 đến lớp 3.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#6ec6ff",
+  "theme_color": "#6ec6ff",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

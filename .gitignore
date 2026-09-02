@@ -1,0 +1,6 @@
+math-ninja.zip
+.claude/
+*.zip
+chat-log-*.md
+Thumbs.db
+.DS_Store

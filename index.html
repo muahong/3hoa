@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Play classic arcade games online for free! Enjoy Tetris, Tank, Pacman, and more in your browser.">
+    <title>3hoa.com – Ninja Toán Học &amp; Classic Arcade Games</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body>
+    <header>
+        <h1>Classic Arcade Games</h1>
+        <nav>
+            <ul>
+                <li><a href="math-ninja/">Ninja Toán Học</a></li>
+                <li><a href="#tetris">Tetris</a></li>
+                <li><a href="#tank">Tank</a></li>
+                <li><a href="#pacman">Pacman</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="game-selection">
+            <h2>Choose a Game</h2>
+            <div class="game-grid">
+                <div class="game-card featured" id="ninja-toan">
+                    <img src="math-ninja/icons/icon-512.png" alt="Ninja Toán Học">
+                    <div class="game-info">
+                        <h3>Ninja Toán Học</h3>
+                        <p>Chém trái cây, học cộng trừ cho bé lớp 1 đến lớp 3. Chơi tốt trên iPad!</p>
+                        <button onclick="location.href='math-ninja/'">Chơi ngay</button>
+                    </div>
+                </div>
+                <div class="game-card" id="tetris">
+                    <img src="images/tetris-thumbnail.jpg" alt="Tetris">
+                    <div class="game-info">
+                        <h3>Tetris</h3>
+                        <p>Classic block-stacking puzzle game</p>
+                        <button onclick="loadGame('tetris')">Play Tetris</button>
+                    </div>
+                </div>
+                <div class="game-card" id="tank">
+                    <img src="images/tank-thumbnail.jpg" alt="Tank" onerror="this.onerror=null; this.src='images/placeholder.png';">
+                    <div class="game-info">
+                        <h3>Tank</h3>
+                        <p>Battle other tanks in this action-packed game</p>
+                        <button onclick="loadGame('tank')">Play Tank</button>
+                    </div>
+                </div>
+                <div class="game-card" id="pacman">
+                    <img src="images/pacman-thumbnail.jpg" alt="Pacman">
+                    <div class="game-info">
+                        <h3>Pacman</h3>
+                        <p>Navigate mazes and eat dots in this iconic game</p>
+                        <button onclick="loadGame('pacman')">Play Pacman</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-container">
+            <!-- Game will be loaded here -->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Classic Arcade Games. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/tetris.js"></script>
+    <script src="scripts/tank.js"></script>
+    <script src="scripts/pacman.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>

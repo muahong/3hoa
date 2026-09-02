@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vệ Binh Cửu Chương">
+<meta name="application-name" content="Vệ Binh Cửu Chương">
+<meta name="theme-color" content="#0b1a3a">
+<meta name="description" content="Vệ Binh Cửu Chương – trò chơi bắn thiên thạch giúp bé lớp 2, lớp 3 thuộc bảng nhân, bảng chia. Chơi trên iPad, điện thoại hoặc máy tính.">
+<title>Vệ Binh Cửu Chương – Bắn thiên thạch, học bảng nhân chia</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- ================= HUD (khi đang chơi) ================= -->
+  <div id="hud" class="screen hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="score-box">
+          <span class="label">ĐIỂM</span>
+          <span class="value" id="hud-score">0</span>
+        </div>
+        <div class="stage-chip" id="hud-stage">Đợt 1</div>
+        <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
+      </div>
+      <div class="hud-center">
+        <div class="answer-card" id="hud-answer">Sẵn sàng…</div>
+        <div class="timer" id="hud-timer">
+          <span>⏱</span>
+          <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
+          <span class="time" id="hud-time">1:30</span>
+        </div>
+        <div class="hint" id="hud-hint" hidden></div>
+      </div>
+      <div class="hud-right">
+        <div class="shields" id="hud-shields"><span>🛡️</span><span>🛡️</span><span>🛡️</span></div>
+        <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BÀN PHÍM SỐ ================= -->
+  <div id="numpad" class="off" aria-label="Bàn phím số">
+    <button type="button" class="k k7" data-key="7">7</button>
+    <button type="button" class="k k8" data-key="8">8</button>
+    <button type="button" class="k k9" data-key="9">9</button>
+    <button type="button" class="k k4" data-key="4">4</button>
+    <button type="button" class="k k5" data-key="5">5</button>
+    <button type="button" class="k k6" data-key="6">6</button>
+    <button type="button" class="k k1" data-key="1">1</button>
+    <button type="button" class="k k2" data-key="2">2</button>
+    <button type="button" class="k k3" data-key="3">3</button>
+    <button type="button" class="k del" data-key="del" aria-label="Xóa">⌫</button>
+    <button type="button" class="k k0" data-key="0">0</button>
+    <button type="button" class="k fire" data-key="fire" aria-label="Bắn">🚀<small>BẮN</small></button>
+  </div>
+
+  <!-- ================= MENU CHÍNH ================= -->
+  <div id="menu" class="screen">
+    <div class="panel">
+      <div class="logo-row">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="lg-planet" cx="35%" cy="30%" r="75%">
+              <stop offset="0" stop-color="#8ae6ff"/>
+              <stop offset="0.6" stop-color="#2ab0e6"/>
+              <stop offset="1" stop-color="#0f5f9c"/>
+            </radialGradient>
+            <linearGradient id="lg-flame" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#ff4d2e" stop-opacity="0"/>
+              <stop offset="0.45" stop-color="#ffb703"/>
+              <stop offset="1" stop-color="#fff4b0"/>
+            </linearGradient>
+            <radialGradient id="lg-rock" cx="35%" cy="35%" r="70%">
+              <stop offset="0" stop-color="#c4ae95"/>
+              <stop offset="1" stop-color="#5e4a3a"/>
+            </radialGradient>
+          </defs>
+          <!-- Lấp lánh -->
+          <path d="M156 28 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#ffe66d"/>
+          <path d="M178 76 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
+          <path d="M22 112 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
+          <!-- Thiên thạch có đuôi lửa -->
+          <g transform="rotate(-25 66 56)">
+            <path d="M40 40 L-30 46 L36 56 L-14 72 L44 70 Z" fill="url(#lg-flame)" opacity="0.95"/>
+            <circle cx="66" cy="56" r="26" fill="url(#lg-rock)" stroke="#3d2f24" stroke-width="3"/>
+            <circle cx="58" cy="48" r="5" fill="#4b3a2d" opacity="0.75"/>
+            <circle cx="74" cy="64" r="6" fill="#4b3a2d" opacity="0.75"/>
+            <circle cx="76" cy="46" r="3" fill="#4b3a2d" opacity="0.6"/>
+          </g>
+          <!-- Khiên -->
+          <path d="M22 146 a78 78 0 0 1 156 0" fill="rgba(120,230,255,0.22)" stroke="#9af0ff" stroke-width="4" stroke-linecap="round"/>
+          <!-- Cuống hoa -->
+          <path d="M76 84 q2 8 2 14 M100 74 q0 12 0 22 M124 84 q-2 8 -2 14" stroke="#3f9d3a" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <!-- Hành tinh -->
+          <circle cx="100" cy="146" r="54" fill="url(#lg-planet)" stroke="#0b4a7a" stroke-width="4"/>
+          <path d="M66 138 q10 -18 30 -10 q14 6 6 20 q-12 12 -30 4 q-12 -6 -6 -14z" fill="#6ddc7a"/>
+          <path d="M118 164 q14 -8 24 4 q4 12 -10 16 q-14 2 -14 -20z" fill="#6ddc7a"/>
+          <ellipse cx="78" cy="112" rx="14" ry="6" fill="#fff" opacity="0.35"/>
+          <!-- Ba bông hoa -->
+          <g fill="#ff6fa5">
+            <circle cx="76" cy="77" r="4.5"/><circle cx="82.7" cy="81.8" r="4.5"/><circle cx="80.1" cy="89.7" r="4.5"/>
+            <circle cx="71.9" cy="89.7" r="4.5"/><circle cx="69.3" cy="81.8" r="4.5"/>
+          </g>
+          <circle cx="76" cy="84" r="3.6" fill="#ffd94a"/>
+          <g fill="#ffffff">
+            <circle cx="100" cy="65" r="6"/><circle cx="108.6" cy="71.2" r="6"/><circle cx="105.3" cy="81.3" r="6"/>
+            <circle cx="94.7" cy="81.3" r="6"/><circle cx="91.4" cy="71.2" r="6"/>
+          </g>
+          <circle cx="100" cy="74" r="4.5" fill="#ffd94a"/>
+          <g fill="#ffa94d">
+            <circle cx="124" cy="77" r="4.5"/><circle cx="130.7" cy="81.8" r="4.5"/><circle cx="128.1" cy="89.7" r="4.5"/>
+            <circle cx="119.9" cy="89.7" r="4.5"/><circle cx="117.3" cy="81.8" r="4.5"/>
+          </g>
+          <circle cx="124" cy="84" r="3.6" fill="#ffd94a"/>
+        </svg>
+        <div>
+          <h1 class="title">VỆ BINH<br>CỬU CHƯƠNG<small>BẢO VỆ HÀNH TINH BA HOA</small></h1>
+        </div>
+      </div>
+      <p class="subtitle">Luyện bảng nhân, bảng chia cho các bạn lớp 2, lớp 3 🚀🪐</p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn teal small" id="btn-tables">📖 Bảng cửu chương</button>
+        <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
+      </div>
+      <div class="toggle-row" data-audio-toggles></div>
+      <div class="menu-options">
+        <span class="chip-label">⏱ Thời gian mỗi ván:</span>
+        <div class="chip-group" id="duration-group">
+          <button data-sec="60">1 phút</button>
+          <button data-sec="90" class="on">1,5 phút</button>
+          <button data-sec="120">2 phút</button>
+        </div>
+      </div>
+      <p class="footer-note">Gõ đáp án rồi bấm 🚀 BẮN để phá thiên thạch! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+    </div>
+  </div>
+
+  <!-- ================= CHỌN MÀN ================= -->
+  <div id="levels" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
+        <h2>Chọn màn chơi</h2>
+        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-mode="table">📚 Luyện từng bảng</button>
+        <button class="tab" data-mode="challenge">🏆 Thử thách</button>
+      </div>
+      <div class="menu-options" id="op-row">
+        <span class="chip-label">Phép tính:</span>
+        <div class="chip-group" id="op-group">
+          <button data-op="mul">Nhân ×</button>
+          <button data-op="div">Chia :</button>
+          <button data-op="mix" class="on">Cả hai</button>
+        </div>
+      </div>
+      <p class="mode-desc" id="mode-desc">Chọn bảng muốn luyện. Mỗi thiên thạch mang một phép tính!</p>
+      <div class="level-grid" id="level-grid"></div>
+    </div>
+  </div>
+
+  <!-- ================= BẢNG CỬU CHƯƠNG ================= -->
+  <div id="tables" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-tables-back">← Quay lại</button>
+        <h2>📖 Bảng cửu chương</h2>
+        <button class="btn teal small" id="btn-tables-read">🔊 Đọc cả bảng</button>
+      </div>
+      <div class="table-tabs" id="table-tabs"></div>
+      <div class="table-body" id="table-body"></div>
+      <p class="tip">💡 Chạm vào một dòng để nghe đọc. Học thuộc rồi vào <b>Chơi ngay</b> để thử sức nhé!</p>
+    </div>
+  </div>
+
+  <!-- ================= HƯỚNG DẪN ================= -->
+  <div id="howto" class="screen hidden dim">
+    <div class="panel">
+      <h2>❓ Cách chơi</h2>
+      <div class="howto-list">
+        <div class="howto-item"><div class="em">☄️</div><div class="tx">Thiên thạch mang <b>phép tính</b> (ví dụ <b>7 × 8</b>) đang rơi xuống hành tinh Ba Hoa!</div></div>
+        <div class="howto-item"><div class="em">🔢</div><div class="tx"><b>Gõ đáp án</b> trên bàn phím số rồi bấm <b>🚀 BẮN</b> (hoặc phím Enter) để pháo laser phá thiên thạch.</div></div>
+        <div class="howto-item"><div class="em">🎯</div><div class="tx">Pháo nhắm vào thiên thạch <b>thấp nhất</b> (có vòng sáng). Chạm vào thiên thạch khác để đổi mục tiêu.</div></div>
+        <div class="howto-item"><div class="em">🛡️</div><div class="tx">Thiên thạch chạm khiên sẽ làm <b>mất 1 khiên</b>. Hết 3 khiên là thua. Bắn thiên thạch 💗 để hồi khiên.</div></div>
+        <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Sai 2 lần, thiên thạch sẽ <b>hiện đáp án</b> để bé gõ theo.</div></div>
+      </div>
+      <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
+      <div class="btn-row">
+        <button class="btn" id="btn-howto-close">Đã hiểu!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ĐẾM NGƯỢC ================= -->
+  <div id="countdown" class="screen hidden">
+    <div class="count" id="count-num">3</div>
+  </div>
+
+  <!-- ================= TẠM DỪNG ================= -->
+  <div id="pause" class="screen hidden dim">
+    <div class="panel">
+      <h2>⏸ Tạm dừng</h2>
+      <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
+      <div class="toggle-row" data-audio-toggles></div>
+      <div class="btn-row">
+        <button class="btn big green" id="btn-resume">▶ Chơi tiếp</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
+        <button class="btn ghost small" id="btn-quit">🏠 Về trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ ================= -->
+  <div id="gameover" class="screen hidden dim">
+    <div class="panel">
+      <h2 class="result-title" id="result-title">Hết giờ!</h2>
+      <p id="result-level">Màn: Bảng 2</p>
+      <div class="result-score-label">ĐIỂM CỦA BẠN</div>
+      <div class="result-score" id="result-score">0</div>
+      <div class="result-stars" id="result-stars"></div>
+      <div id="result-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
+      <div class="stats">
+        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
+        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Combo cao nhất 🔥</div></div>
+        <div class="stat acc"><div class="v" id="st-acc">0%</div><div class="k">Chính xác 🎯</div></div>
+      </div>
+      <div id="review" class="review" hidden>
+        <h3>📝 Cần ôn lại</h3>
+        <div class="review-chips" id="review-chips"></div>
+      </div>
+      <div id="name-entry" class="name-entry" hidden>
+        <span style="font-weight:800;font-size:18px">Tên của bạn:</span>
+        <input id="name-input" type="text" maxlength="14" placeholder="Bé tên gì?" autocomplete="off" autocorrect="off" autocapitalize="words">
+        <button class="btn teal small" id="btn-save-name">Lưu</button>
+        <div class="name-chips" id="name-chips"></div>
+      </div>
+      <div class="leader" id="leader"></div>
+      <div class="btn-row">
+        <button class="btn big" id="btn-again">🔄 Chơi lại</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-other-level">📚 Chọn màn khác</button>
+        <button class="btn ghost small" id="btn-home">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/tables.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

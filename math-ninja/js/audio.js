@@ -92,6 +92,22 @@
   /* ============================================================
      Sfx – hiệu ứng
      ============================================================ */
+  const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent || '') ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  /** Tạo file WAV câm (0.5 giây) dạng blob URL – dùng cho mẹo mở khóa âm thanh trên iOS. */
+  function silentWavUrl(seconds) {
+    const sr = 8000, n = Math.floor(sr * seconds), bytes = n * 2;
+    const buf = new ArrayBuffer(44 + bytes);
+    const v = new DataView(buf);
+    const str = function (o, s) { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + bytes, true); str(8, 'WAVE');
+    str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, bytes, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+
   const Sfx = {
     ctx: null,
     master: null,   // âm lượng tổng
@@ -100,8 +116,14 @@
     _noise: null,
     _lastSwoosh: 0,
     _unlocked: false,
+    _mediaEl: null,
+    isIOS: IS_IOS,
 
-    /** Gọi trong một sự kiện người dùng (pointerdown/click) để mở khóa audio trên iOS. */
+    /**
+     * Gọi trong một sự kiện người dùng để mở khóa audio.
+     * iOS chỉ chấp nhận touchend/click, nên hàm này được gọi lại ở mọi thao tác
+     * cho tới khi AudioContext thực sự chạy.
+     */
     unlock() {
       try {
         if (!this.ctx) {
@@ -116,10 +138,14 @@
           this.sfx.connect(this.master);
           Music._init(this.ctx, this.master);
         }
+        if (IS_IOS) this._iosSession();
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
-        else done();
-        if (!this._unlocked) {
+        // iOS có thêm trạng thái "interrupted" (sau khi chuyển app, cuộc gọi...)
+        if (this.ctx.state !== 'running') {
+          const p = this.ctx.resume();
+          if (p && p.then) p.then(done, done); else done();
+        } else done();
+        if (!this._unlocked || this.ctx.state !== 'running') {
           const buf = this.ctx.createBuffer(1, 1, 22050);
           const src = this.ctx.createBufferSource();
           src.buffer = buf;
@@ -129,6 +155,37 @@
         }
       } catch (e) { /* bỏ qua */ }
       Voice.unlock();
+    },
+
+    /**
+     * Mẹo cho iOS: chuyển phiên âm thanh sang "playback" để Web Audio không bị
+     * Chế độ im lặng tắt tiếng. iOS 17.4+ có navigator.audioSession; các bản cũ
+     * cần phát một thẻ <audio> câm.
+     */
+    _iosSession() {
+      try {
+        if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback';
+      } catch (e) { /* bỏ qua */ }
+      try {
+        if (!this._mediaEl) {
+          const el = document.createElement('audio');
+          el.setAttribute('playsinline', '');
+          el.setAttribute('webkit-playsinline', '');
+          el.loop = true;
+          el.preload = 'auto';
+          el.src = silentWavUrl(0.5);
+          this._mediaEl = el;
+        }
+        if (this._mediaEl.paused) {
+          const p = this._mediaEl.play();
+          if (p && p.catch) p.catch(function () { /* chờ thao tác hợp lệ tiếp theo */ });
+        }
+      } catch (e) { /* bỏ qua */ }
+    },
+
+    /** Thông tin chẩn đoán (hiện trong menu khi âm thanh bị chặn). */
+    state() {
+      return this.ctx ? this.ctx.state : 'chưa tạo';
     },
 
     setEnabled(on) {
@@ -471,14 +528,20 @@
       setTimeout(pick, 3000);
     },
 
-    /** Mở khóa trong thao tác người dùng (iOS cần một lần speak trong sự kiện chạm). */
+    /** Mở khóa trong thao tác người dùng (iOS cần một lần speak trong sự kiện chạm hợp lệ). */
+    _attempts: 0,
     unlock() {
-      if (!this.supported || this._unlocked) return;
+      if (!this.supported || this._unlocked || this._attempts >= 6) return;
       try {
+        const ss = window.speechSynthesis;
+        if (ss.speaking || ss.pending) { this._unlocked = true; return; }
+        this._attempts++;
+        const self = this;
         const u = new SpeechSynthesisUtterance(' ');
         u.volume = 0;
-        window.speechSynthesis.speak(u);
-        this._unlocked = true;
+        u.onstart = function () { self._unlocked = true; };
+        u.onend = function () { self._unlocked = true; };
+        ss.speak(u);
       } catch (e) { /* bỏ qua */ }
     },
 

@@ -1,7 +1,7 @@
 {
   "name": "Ninja Toán Học",
   "short_name": "Ninja Toán",
-  "description": "Chém trái cây, học cộng trừ cho bé lớp 1 đến lớp 3.",
+  "description": "Chém trái cây, học cộng trừ nhân cho bé lớp 1 đến lớp 3.",
   "lang": "vi",
   "start_url": "./index.html",
   "scope": "./",

@@ -47,10 +47,14 @@ Mở trang bằng Safari → bấm nút **Chia sẻ** → **Thêm vào Màn hìn
 | Phạm vi 20 | Lớp 1, không nhớ |
 | Cộng trừ có nhớ | Lớp 2, ví dụ 8 + 7, 15 − 9 |
 | Phạm vi 100 | Lớp 2 |
+| Nhân 2 và 5 | Lớp 2, bảng nhân 2, 5 (đôi khi 10) |
+| Nhân 3 và 4 | Lớp 2, bảng nhân 3, 4 (ôn 2, 5) |
 | Phạm vi 1000 | Lớp 3 |
-| Siêu Ninja | Trộn tất cả, bay nhanh hơn |
+| Bảng cửu chương | Lớp 3, bảng nhân 2 đến 9 |
+| Nhân số lớn | Lớp 3, ví dụ 23 × 4, 40 × 6, 120 × 3 |
+| Siêu Ninja | Trộn cộng, trừ, nhân, bay nhanh hơn |
 
-**Ghép đôi** (chém 2 quả cộng hoặc trừ lại bằng số cho trước): Bạn của 10, Cộng trong 20, Trừ trong 20, Bạn của 100, Cộng trong 100.
+**Ghép đôi** (chém 2 quả cộng, trừ hoặc nhân với nhau bằng số cho trước): Bạn của 10, Cộng trong 20, Trừ trong 20, Bạn của 100, Cộng trong 100, Nhân bằng…
 
 Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 tim. Chém số sai hoặc chém bom mất 1 tim. Chém tim 💗 để hồi mạng. Trả lời đúng liên tiếp để nhân điểm (Combo x2, x3, x4). Cứ 5 câu đúng lên một màn, quả bay nhanh hơn một chút. Nếu lỡ mất quả đúng 2 lần, quả đúng sẽ được đánh dấu vòng vàng để gợi ý.
 

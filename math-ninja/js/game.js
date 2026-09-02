@@ -15,7 +15,7 @@
   const clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
 
   const PRAISE = ['Chính xác!', 'Tuyệt vời!', 'Giỏi quá!', 'Đúng rồi!', 'Xuất sắc!', 'Siêu đỉnh!', 'Hay lắm!'];
-  const STAR_FACTOR = { a1: 1, a2: 0.95, a3: 0.85, a4: 0.7, a5: 0.5, a6: 0.6, p1: 0.9, p2: 0.75, p3: 0.7, p4: 0.6, p5: 0.5 };
+  const STAR_FACTOR = { a1: 1, a2: 0.95, a3: 0.85, a4: 0.7, a5: 0.5, a6: 0.6, m1: 0.9, m2: 0.85, m3: 0.7, m4: 0.5, p1: 0.9, p2: 0.75, p3: 0.7, p4: 0.6, p5: 0.5, p6: 0.55 };
   const POP_T = 0.28;
   const MAX_HEARTS = 3;
   const TRAIL_MS = 170;
@@ -620,7 +620,7 @@
 
   function onPairSlice(f) {
     const q = G.question;
-    const opTxt = q.op === '+' ? ' + ' : ' ' + MG.MINUS + ' ';
+    const opTxt = ' ' + MG.opSymbol(q.op) + ' ';
     if (G.held == null) {
       if (!partnerInAir(f.value, f)) {
         onWrong(f, 'Không có quả nào ghép với ' + f.value);
@@ -636,7 +636,9 @@
       }
       renderQuestionCard(true);
       Sfx.play('pop');
-      const need = q.op === '+' ? q.target - f.value : (G.heldForm === 'a' ? f.value - q.target : f.value + q.target);
+      const need = q.op === '+' ? q.target - f.value
+        : q.op === '*' ? q.target / f.value
+        : (G.heldForm === 'a' ? f.value - q.target : f.value + q.target);
       addText('Tìm số ' + need + '!', f.x, f.y - f.r * 1.2, { color: '#5ce1e6', size: G.R * 0.95, life: 1.2 });
       Voice.say('Tìm số ' + need + '!');
       return false;
@@ -1396,7 +1398,7 @@
     const list = G.mode === 'answer' ? MG.ANSWER_LEVELS : MG.PAIR_LEVELS;
     ui.modeDesc.innerHTML = G.mode === 'answer'
       ? 'Nhìn phép tính, chém quả có <b>đáp án đúng</b>!'
-      : 'Chém <b>2 quả</b> cộng (hoặc trừ) lại bằng <b>số cho trước</b>!';
+      : 'Chém <b>2 quả</b> cộng, trừ hoặc nhân với nhau bằng <b>số cho trước</b>!';
     ui.levelGrid.innerHTML = list.map(function (l) {
       const rec = Store.getRecord(G.mode, l.id, G.duration);
       return '<div class="level-card" data-id="' + l.id + '" role="button">' +
@@ -1464,8 +1466,11 @@
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('dblclick', function (e) { e.preventDefault(); });
     document.addEventListener('contextmenu', function (e) { if (e.target === canvas) e.preventDefault(); });
-    // Mở khóa âm thanh ở mọi thao tác chạm đầu tiên (kể cả nút bấm)
+    // Mở khóa âm thanh ở mọi thao tác (iOS chỉ chấp nhận touchend/click, nên bắt cả ba)
     document.addEventListener('pointerdown', function () { Sfx.unlock(); }, true);
+    document.addEventListener('touchend', function () { Sfx.unlock(); checkAudioBlocked(); }, true);
+    document.addEventListener('click', function () { Sfx.unlock(); checkAudioBlocked(); }, true);
+    window.addEventListener('pageshow', function () { Sfx.unlock(); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
         if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
@@ -1508,15 +1513,19 @@
 
   /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12" */
   function speakMath(s) {
-    return String(s).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/≠/g, ' không bằng ')
+    return String(s).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/≠/g, ' không bằng ')
       .replace(/=/g, ' bằng ').replace(/✓/g, '').replace(/\s+/g, ' ').trim();
   }
+
+  function opWord(op) { return op === '+' ? ' cộng ' : op === '-' ? ' trừ ' : ' nhân '; }
 
   function questionSpeech() {
     const q = G.question;
     if (!q) return '';
-    if (G.mode === 'answer') return q.a + (q.op === '+' ? ' cộng ' : ' trừ ') + q.b + ' bằng mấy?';
-    return q.op === '+' ? 'Hai số nào cộng lại bằng ' + q.target + '?' : 'Hai số nào trừ nhau bằng ' + q.target + '?';
+    if (G.mode === 'answer') return q.a + opWord(q.op) + q.b + ' bằng mấy?';
+    if (q.op === '+') return 'Hai số nào cộng lại bằng ' + q.target + '?';
+    if (q.op === '*') return 'Hai số nào nhân với nhau bằng ' + q.target + '?';
+    return 'Hai số nào trừ nhau bằng ' + q.target + '?';
   }
 
   function bindUi() {
@@ -1589,6 +1598,18 @@
       if (!document.hidden) Sfx.unlock();
     });
     window.addEventListener('blur', function () { if (G.state === 'playing') pauseGame(); });
+  }
+
+  /** Sau thao tác hợp lệ mà audio vẫn chưa chạy thì nhắc người chơi (chỉ nhắc 1 lần). */
+  function checkAudioBlocked() {
+    if (checkAudioBlocked._done) return;
+    checkAudioBlocked._done = true;
+    setTimeout(function () {
+      if (Store.data.sound === false && Store.data.music === false) return;
+      if (Sfx.ctx && Sfx.ctx.state === 'running') return;
+      checkAudioBlocked._done = false;
+      toast('🔇 Âm thanh chưa bật: chạm vào màn hình lần nữa. Trên iPad hãy tắt Chế độ im lặng và tăng âm lượng.', 5000);
+    }, 1500);
   }
 
   /* ================= TIỆN ÍCH THIẾT BỊ ================= */

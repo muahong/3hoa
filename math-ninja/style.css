@@ -246,6 +246,25 @@ html, body {
   box-shadow: 0 3px 8px rgba(0,0,0,0.12);
 }
 .chip-label { font-size: 17px; font-weight: 800; color: var(--ink-soft); margin-right: 4px; }
+.toggle-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.toggle {
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 16px;
+  border: 3px solid #dfe3ef;
+  background: #f1f3fa;
+  color: var(--ink-soft);
+  padding: 8px 14px;
+  min-height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.08s;
+}
+.toggle:active { transform: scale(0.96); }
+.toggle.on { background: #e3fff4; border-color: var(--green); color: #05603f; }
+.toggle.off { text-decoration: line-through; opacity: 0.8; }
+.toggle[disabled] { opacity: 0.5; cursor: default; text-decoration: none; }
 .footer-note { margin-top: 14px; font-size: 15px; color: #98a0bd; font-weight: 700; }
 .footer-note a { color: var(--blue); text-decoration: none; }
 

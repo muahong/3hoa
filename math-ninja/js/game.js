@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const MG = window.MathGen, SP = window.Sprites, Sfx = window.Sfx;
+  const MG = window.MathGen, SP = window.Sprites, Sfx = window.Sfx, Music = window.Music, Voice = window.Voice;
   const rnd = MG.rnd, chance = MG.chance, pick = MG.pick, shuffle = MG.shuffle;
   const TAU = Math.PI * 2;
   const FONT = '"Baloo 2", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
@@ -25,7 +25,7 @@
   /* ================= LƯU TRỮ (localStorage) ================= */
   const Store = {
     key: 'ninja-toan-v1',
-    data: { sound: true, duration: 90, names: [], records: {} },
+    data: { sound: true, music: true, voice: true, duration: 90, names: [], records: {} },
     load() {
       try {
         const raw = localStorage.getItem(this.key);
@@ -90,7 +90,7 @@
     resultStars: $('result-stars'), resultRecord: $('result-record'),
     stCorrect: $('st-correct'), stWrong: $('st-wrong'), stCombo: $('st-combo'), stAcc: $('st-acc'),
     nameEntry: $('name-entry'), nameInput: $('name-input'), nameChips: $('name-chips'), leader: $('leader'),
-    btnSound: $('btn-sound'), durationGroup: $('duration-group'), ipadTip: $('ipad-tip')
+    durationGroup: $('duration-group'), ipadTip: $('ipad-tip')
   };
   const SCREENS = ['menu', 'levels', 'countdown', 'pause', 'gameover'];
 
@@ -434,6 +434,8 @@
     G.question = G.level.gen();
     G.qStart = G.time;
     renderQuestionCard(true);
+    Sfx.play('question');
+    Voice.say(questionSpeech(), { queue: true });
     launchForQuestion(0.45);
   }
 
@@ -535,6 +537,7 @@
     const praise = G.streak > 0 && G.streak % 3 === 0 && mult > 1 ? 'Combo x' + mult + '!' : pick(PRAISE);
     addText(praise, f.x, f.y - f.r * 1.3, { color: praise.indexOf('Combo') === 0 ? '#ff9f1c' : '#7bf1a8', size: G.R * 1.05, life: 1.2 });
     if (praise.indexOf('Combo') === 0) Sfx.play('combo'); else Sfx.play('correct');
+    Voice.say(praise.indexOf('Combo') === 0 ? 'Combo nhân ' + mult + '!' : praise);
     cardFx('ok');
     G.flash = { c: '120,255,180', a: 0.18 };
     const newStage = 1 + Math.floor(G.correct / 5);
@@ -562,6 +565,7 @@
     addText('Sai rồi!', f.x, f.y - f.r * 1.2, { color: '#ff5c7a', size: G.R * 1.0, life: 1.1 });
     addText('✗', f.x, f.y, { color: '#ff2d55', size: G.R * 1.3, life: 0.8, vy: -20 });
     if (hint) showHint(hint, 'bad');
+    Voice.say('Sai rồi! ' + (hint ? speakMath(hint) : ''));
     cardFx('shake');
     G.flash = { c: '255,60,90', a: 0.32 };
     G.shake = Math.max(G.shake, 0.45);
@@ -575,6 +579,7 @@
     G.flash = { c: '255,255,255', a: 0.9 };
     spawnExplosion(f.x, f.y, f.r);
     addText('BÙM!', f.x, f.y - f.r, { color: '#ffb703', size: G.R * 1.5, life: 1.2 });
+    Voice.say('Ối! Bom!');
     G.fruits.forEach(function (o) { if (o !== f && !o.dead) popFruit(o); });
     G.held = null;
     G.streak = 0;
@@ -589,6 +594,7 @@
     if (G.hearts < MAX_HEARTS) {
       G.hearts++;
       addText('+1 ❤️', f.x, f.y - f.r, { color: '#ff8fb1', size: G.R * 1.0, life: 1.2 });
+      Voice.say('Thêm một tim!');
       const spans = ui.hearts.children;
       const el = spans[G.hearts - 1];
       if (el) { el.classList.remove('gain'); void el.offsetWidth; el.classList.add('gain'); }
@@ -632,6 +638,7 @@
       Sfx.play('pop');
       const need = q.op === '+' ? q.target - f.value : (G.heldForm === 'a' ? f.value - q.target : f.value + q.target);
       addText('Tìm số ' + need + '!', f.x, f.y - f.r * 1.2, { color: '#5ce1e6', size: G.R * 0.95, life: 1.2 });
+      Voice.say('Tìm số ' + need + '!');
       return false;
     }
     if (MG.isPair(q, G.held, f.value)) {
@@ -730,7 +737,7 @@
       if (f.dead) continue;
       if (!f.launched) {
         f.delay -= dt;
-        if (f.delay <= 0) f.launched = true;
+        if (f.delay <= 0) { f.launched = true; if (G.state !== 'over') Sfx.play('launch'); }
         else { arr[w++] = f; continue; }
       }
       if (f.popping > 0) {
@@ -827,6 +834,7 @@
     if (G.timeLeft <= 10) {
       const s = Math.ceil(G.timeLeft);
       if (s !== G.lastWarnSec) { G.lastWarnSec = s; Sfx.play('warn'); }
+      if (!G.hurry) { G.hurry = true; Music.setTempo(1.15); }
     }
     if (G.nextQuestionAt >= 0 && G.time >= G.nextQuestionAt) { G.nextQuestionAt = -1; newQuestion(); }
     if (G.relaunchAt >= 0 && G.time >= G.relaunchAt) { G.relaunchAt = -1; G.misses++; launchForQuestion(0.1); }
@@ -1184,6 +1192,11 @@
     showScreen('countdown');
     syncHud();
     requestWake();
+    G.hurry = false;
+    Music.setTempo(1);
+    Music.setDuck('pause', null);
+    Music.play('game');
+    Voice.stop();
     runCountdown(function () {
       G.state = 'playing';
       G.nextQuestionAt = G.time + 0.15;
@@ -1222,6 +1235,8 @@
     if (G.state !== 'playing') return;
     G.state = 'paused';
     G.blades.clear();
+    Voice.stop();
+    Music.setDuck('pause', 0.25);
     $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · Còn ' + formatTime(G.timeLeft);
     showScreen('pause');
   }
@@ -1231,6 +1246,7 @@
     G.state = 'playing';
     showScreen(null);
     Sfx.unlock();
+    Music.setDuck('pause', null);
   }
 
   function endGame(reason) {
@@ -1240,6 +1256,9 @@
     G.blades.clear();
     G.nextQuestionAt = -1; G.relaunchAt = -1;
     G.overAt = G.anim + (reason === 'timeup' ? 1.0 : 1.3);
+    Music.stop();
+    Voice.stop();
+    Voice.say(reason === 'timeup' ? 'Hết giờ rồi!' : 'Hết tim rồi!');
     if (reason === 'timeup') {
       Sfx.play('timeup');
       addText('Hết giờ!', G.W / 2, G.H * 0.45, { color: '#fff', stroke: 'rgba(17,138,178,0.95)', size: G.R * 1.9, life: 1.6, vy: -15 });
@@ -1309,8 +1328,9 @@
     }
     renderLeader(newRec.top, entry);
     showScreen('gameover');
-    if (isRecord) { Sfx.play('record'); spawnConfetti(140); }
-    else if (stars >= 2) spawnConfetti(70);
+    if (isRecord) { Sfx.play('record'); Sfx.play('applause'); spawnConfetti(140); Voice.say('Kỷ lục mới! Giỏi quá!', { queue: true }); }
+    else if (stars >= 2) { Sfx.play('applause'); spawnConfetti(70); Voice.say('Chơi tốt lắm!', { queue: true }); }
+    setTimeout(function () { if (G.state === 'over') Music.play('menu'); }, 2500);
     releaseWake();
   }
 
@@ -1348,6 +1368,9 @@
     showHud(false);
     showScreen('menu');
     releaseWake();
+    Voice.stop();
+    Music.setDuck('pause', null);
+    Music.play('menu');
   }
 
   function goLevels() {
@@ -1360,6 +1383,9 @@
     renderLevels();
     showScreen('levels');
     releaseWake();
+    Voice.stop();
+    Music.setDuck('pause', null);
+    Music.play('menu');
   }
 
   /* ================= CHỌN MÀN ================= */
@@ -1454,8 +1480,43 @@
     el.addEventListener('click', function (e) { Sfx.unlock(); Sfx.play('click'); fn(e); });
   }
 
-  function updateSoundBtn() {
-    ui.btnSound.textContent = Store.data.sound ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt';
+  /* ---------- Âm thanh: cài đặt & nút bật/tắt ---------- */
+  function applyAudioSettings() {
+    Sfx.setEnabled(Store.data.sound !== false);
+    Music.setEnabled(Store.data.music !== false);
+    Voice.setEnabled(Store.data.voice !== false);
+  }
+
+  function renderAudioToggles() {
+    const defs = [
+      { key: 'sound', on: '🔊 Hiệu ứng: Bật', off: '🔇 Hiệu ứng: Tắt' },
+      { key: 'music', on: '🎵 Nhạc nền: Bật', off: '🎵 Nhạc nền: Tắt' },
+      { key: 'voice', on: '🗣️ Đọc phép tính: Bật', off: '🗣️ Đọc phép tính: Tắt' }
+    ];
+    const boxes = document.querySelectorAll('[data-audio-toggles]');
+    for (let i = 0; i < boxes.length; i++) {
+      boxes[i].innerHTML = defs.map(function (d) {
+        const noVoice = d.key === 'voice' && !Voice.available;
+        const on = Store.data[d.key] !== false && !noVoice;
+        let label = on ? d.on : d.off;
+        if (noVoice) label = '🗣️ Đọc phép tính: chưa có giọng Việt';
+        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '"' +
+          (noVoice ? ' disabled' : '') + '>' + label + '</button>';
+      }).join('');
+    }
+  }
+
+  /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12" */
+  function speakMath(s) {
+    return String(s).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/≠/g, ' không bằng ')
+      .replace(/=/g, ' bằng ').replace(/✓/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function questionSpeech() {
+    const q = G.question;
+    if (!q) return '';
+    if (G.mode === 'answer') return q.a + (q.op === '+' ? ' cộng ' : ' trừ ') + q.b + ' bằng mấy?';
+    return q.op === '+' ? 'Hai số nào cộng lại bằng ' + q.target + '?' : 'Hai số nào trừ nhau bằng ' + q.target + '?';
   }
 
   function bindUi() {
@@ -1463,12 +1524,21 @@
     click('btn-howto', function () { ui.howto.classList.remove('hidden'); });
     click('btn-levels-howto', function () { ui.howto.classList.remove('hidden'); });
     click('btn-howto-close', function () { ui.howto.classList.add('hidden'); });
-    click('btn-sound', function () {
-      Store.data.sound = !Store.data.sound;
+    document.addEventListener('click', function (e) {
+      const b = e.target.closest ? e.target.closest('.toggle[data-set]') : null;
+      if (!b || b.disabled) return;
+      const k = b.getAttribute('data-set');
+      Sfx.unlock();
+      Store.data[k] = !(Store.data[k] !== false);
       Store.save();
-      Sfx.setEnabled(Store.data.sound);
-      updateSoundBtn();
-      if (Store.data.sound) Sfx.play('correct');
+      applyAudioSettings();
+      renderAudioToggles();
+      if (Store.data[k] !== false) {
+        if (k === 'sound') Sfx.play('correct');
+        if (k === 'voice') Voice.say('Xin chào! Cùng học toán nào!');
+      } else {
+        Sfx.play('click');
+      }
     });
     click('btn-levels-back', function () { goMenu(); });
     click('btn-pause', function () { pauseGame(); });
@@ -1583,8 +1653,12 @@
   function boot() {
     Store.load();
     G.duration = [60, 90, 120].indexOf(Number(Store.data.duration)) >= 0 ? Number(Store.data.duration) : 90;
-    Sfx.setEnabled(Store.data.sound !== false);
-    updateSoundBtn();
+    Voice.init();
+    applyAudioSettings();
+    renderAudioToggles();
+    setTimeout(renderAudioToggles, 1200);
+    setTimeout(renderAudioToggles, 3600);
+    Music.play('menu');
     const durBtns = ui.durationGroup.querySelectorAll('button');
     for (let k = 0; k < durBtns.length; k++) durBtns[k].classList.toggle('on', Number(durBtns[k].getAttribute('data-sec')) === G.duration);
     resize();

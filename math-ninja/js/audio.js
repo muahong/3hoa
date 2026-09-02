@@ -1,14 +1,101 @@
 /* ============================================================
-   audio.js – Âm thanh tổng hợp bằng Web Audio API
-   Không cần tải file âm thanh, hoạt động tốt trên iPad/iOS
-   (AudioContext chỉ được tạo/mở khóa sau thao tác chạm đầu tiên).
+   audio.js – Âm thanh cho Ninja Toán Học
+   - Sfx: hiệu ứng tổng hợp bằng Web Audio (không cần file mp3)
+   - Music: nhạc nền chiptune, lập lịch chính xác theo AudioContext
+   - Voice: giọng đọc tiếng Việt (Web Speech API) đọc phép tính, lời khen
+   Tất cả chỉ được mở khóa sau thao tác chạm đầu tiên (yêu cầu của iOS).
    ============================================================ */
 (function () {
   'use strict';
 
+  /* ---------------- Tiện ích nốt nhạc ---------------- */
+  const NOTE_IDX = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const freqCache = {};
+  function noteFreq(name) {
+    if (freqCache[name]) return freqCache[name];
+    const m = /^([A-G])(#?)(\d)$/.exec(name);
+    if (!m) return 440;
+    const midi = 12 * (Number(m[3]) + 1) + NOTE_IDX[m[1]] + (m[2] ? 1 : 0);
+    const f = 440 * Math.pow(2, (midi - 69) / 12);
+    freqCache[name] = f;
+    return f;
+  }
+  /** [[nốt|null, số bước 1/16], ...] -> mảng theo từng bước */
+  function expand(seq) {
+    const out = [];
+    for (let i = 0; i < seq.length; i++) {
+      const n = seq[i][0], d = seq[i][1];
+      out.push(n ? { note: n, len: d } : null);
+      for (let k = 1; k < d; k++) out.push(null);
+    }
+    return out;
+  }
+  /** Bass theo hợp âm mỗi ô nhịp: gốc ở phách 1,3 và quãng 5 ở phách 2,4 */
+  function bassLine(roots, bouncy) {
+    const out = [];
+    for (let b = 0; b < roots.length; b++) {
+      const root = roots[b];
+      const m = /^([A-G])(#?)(\d)$/.exec(root);
+      const midi = 12 * (Number(m[3]) + 1) + NOTE_IDX[m[1]] + (m[2] ? 1 : 0);
+      const fifthMidi = midi + 7;
+      const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const fifth = names[fifthMidi % 12] + (Math.floor(fifthMidi / 12) - 1);
+      for (let s = 0; s < 16; s++) {
+        if (!bouncy) { out.push(s === 0 ? { note: root, len: 14 } : null); continue; }
+        if (s % 4 === 0) out.push({ note: root, len: 2 });
+        else if (s % 4 === 2) out.push({ note: fifth, len: 2 });
+        else out.push(null);
+      }
+    }
+    return out;
+  }
+
+  /* ---------------- Bản nhạc ---------------- */
+  const TRACKS = {
+    // Khi chơi: vui nhộn, 128 BPM, 8 ô nhịp
+    game: {
+      bpm: 128,
+      leadType: 'square', leadVol: 0.085, leadCut: 2400,
+      lead: expand([
+        ['C5', 2], ['E5', 2], ['G5', 2], ['E5', 2], ['A5', 2], ['G5', 2], ['E5', 4],
+        ['D5', 2], ['F5', 2], ['A5', 2], ['F5', 2], ['G5', 2], ['F5', 2], ['D5', 4],
+        ['E5', 2], ['G5', 2], ['C6', 2], ['G5', 2], ['A5', 2], ['G5', 2], ['E5', 2], ['C5', 2],
+        ['D5', 2], ['E5', 2], ['F5', 2], ['D5', 2], ['G5', 6], [null, 2],
+        ['C5', 2], ['C5', 2], ['E5', 2], ['G5', 2], ['C6', 4], ['A5', 2], ['G5', 2],
+        ['F5', 2], ['A5', 2], ['C6', 2], ['A5', 2], ['G5', 2], ['E5', 2], ['D5', 4],
+        ['G5', 2], ['E5', 2], ['G5', 2], ['E5', 2], ['A5', 2], ['F5', 2], ['D5', 4],
+        ['E5', 2], ['F5', 2], ['G5', 2], ['B4', 2], ['C5', 8]
+      ]),
+      bass: bassLine(['C3', 'D3', 'C3', 'G2', 'C3', 'F3', 'G2', 'C3'], true),
+      bassVol: 0.13,
+      kick: 'x...x...x...x...',
+      snare: '....x.......x...',
+      hat: 'x.x.x.x.x.x.x.x.'
+    },
+    // Menu: nhẹ nhàng, 96 BPM, rải hợp âm
+    menu: {
+      bpm: 96,
+      leadType: 'triangle', leadVol: 0.11, leadCut: 3000,
+      lead: expand([
+        ['C4', 2], ['E4', 2], ['G4', 2], ['C5', 2], ['G4', 2], ['E4', 2], ['C4', 2], ['E4', 2],
+        ['A3', 2], ['C4', 2], ['E4', 2], ['A4', 2], ['E4', 2], ['C4', 2], ['A3', 2], ['C4', 2],
+        ['F3', 2], ['A3', 2], ['C4', 2], ['F4', 2], ['C4', 2], ['A3', 2], ['F3', 2], ['A3', 2],
+        ['G3', 2], ['B3', 2], ['D4', 2], ['G4', 2], ['D4', 2], ['B3', 2], ['G3', 2], ['B3', 2]
+      ]),
+      bass: bassLine(['C3', 'A2', 'F2', 'G2'], false),
+      bassVol: 0.09,
+      kick: '', snare: '', hat: '......x.......x.'
+    }
+  };
+  for (const k in TRACKS) TRACKS[k].steps = TRACKS[k].lead.length;
+
+  /* ============================================================
+     Sfx – hiệu ứng
+     ============================================================ */
   const Sfx = {
     ctx: null,
-    master: null,
+    master: null,   // âm lượng tổng
+    sfx: null,      // nhánh hiệu ứng (bật/tắt riêng)
     enabled: true,
     _noise: null,
     _lastSwoosh: 0,
@@ -22,12 +109,17 @@
           if (!AC) return;
           this.ctx = new AC();
           this.master = this.ctx.createGain();
-          this.master.gain.value = this.enabled ? 0.6 : 0;
+          this.master.gain.value = 0.6;
           this.master.connect(this.ctx.destination);
+          this.sfx = this.ctx.createGain();
+          this.sfx.gain.value = this.enabled ? 1 : 0;
+          this.sfx.connect(this.master);
+          Music._init(this.ctx, this.master);
         }
-        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const done = () => { Music._kick(); };
+        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        else done();
         if (!this._unlocked) {
-          // Phát một buffer im lặng để iOS "mở khóa" hẳn đầu ra
           const buf = this.ctx.createBuffer(1, 1, 22050);
           const src = this.ctx.createBufferSource();
           src.buffer = buf;
@@ -36,15 +128,16 @@
           this._unlocked = true;
         }
       } catch (e) { /* bỏ qua */ }
+      Voice.unlock();
     },
 
     setEnabled(on) {
       this.enabled = !!on;
-      if (this.master) this.master.gain.value = this.enabled ? 0.6 : 0;
+      if (this.sfx) this.sfx.gain.value = this.enabled ? 1 : 0;
     },
 
     _ready() {
-      return this.enabled && this.ctx && this.ctx.state === 'running';
+      return this.ctx && this.ctx.state === 'running';
     },
 
     _noiseBuffer() {
@@ -57,7 +150,6 @@
       return buf;
     },
 
-    /** Nốt nhạc đơn giản với đường bao (envelope). */
     _tone(freq, opts) {
       const o = Object.assign({ type: 'triangle', t: 0, dur: 0.12, vol: 0.4, attack: 0.005, release: 0.08, slide: null, detune: 0 }, opts || {});
       const ctx = this.ctx;
@@ -73,12 +165,11 @@
       g.gain.setValueAtTime(o.vol, start + Math.max(o.attack, o.dur - o.release));
       g.gain.exponentialRampToValueAtTime(0.0001, start + o.dur + 0.02);
       osc.connect(g);
-      g.connect(this.master);
+      g.connect(this.sfx);
       osc.start(start);
       osc.stop(start + o.dur + 0.05);
     },
 
-    /** Tiếng nhiễu (noise) qua bộ lọc – dùng cho swoosh, splat, nổ. */
     _noiseHit(opts) {
       const o = Object.assign({ t: 0, dur: 0.15, vol: 0.3, filter: 'bandpass', f0: 1000, f1: null, q: 1 }, opts || {});
       const ctx = this.ctx;
@@ -94,13 +185,13 @@
       g.gain.setValueAtTime(0.0001, start);
       g.gain.exponentialRampToValueAtTime(o.vol, start + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, start + o.dur);
-      src.connect(flt); flt.connect(g); g.connect(this.master);
+      src.connect(flt); flt.connect(g); g.connect(this.sfx);
       src.start(start, Math.random() * 0.5);
       src.stop(start + o.dur + 0.05);
     },
 
     play(name) {
-      if (!this._ready()) return;
+      if (!this.enabled || !this._ready()) return;
       try {
         switch (name) {
           case 'swoosh': {
@@ -116,6 +207,13 @@
             break;
           case 'pop':
             this._tone(620, { type: 'sine', dur: 0.07, vol: 0.18, slide: 980 });
+            break;
+          case 'launch':
+            this._tone(260 + Math.random() * 80, { type: 'sine', dur: 0.09, vol: 0.09, slide: 720 });
+            break;
+          case 'question':
+            this._tone(1046.5, { type: 'sine', dur: 0.12, vol: 0.16 });
+            this._tone(1318.5, { type: 'sine', t: 0.11, dur: 0.2, vol: 0.16 });
             break;
           case 'correct':
             this._tone(523.25, { t: 0, dur: 0.1, vol: 0.32 });
@@ -163,6 +261,11 @@
             [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98].forEach((f, i) => this._tone(f, { t: i * 0.09, dur: i === 5 ? 0.6 : 0.15, vol: 0.3 }));
             this._tone(2093, { t: 0.55, dur: 0.6, vol: 0.15, type: 'sine' });
             break;
+          case 'applause':
+            for (let i = 0; i < 40; i++) {
+              this._noiseHit({ t: Math.random() * 1.8, dur: 0.05 + Math.random() * 0.06, vol: 0.05 + Math.random() * 0.06, f0: 1800 + Math.random() * 2500, q: 1.2 });
+            }
+            break;
           case 'click':
             this._tone(700, { type: 'sine', dur: 0.05, vol: 0.15, slide: 900 });
             break;
@@ -174,5 +277,244 @@
     }
   };
 
+  /* ============================================================
+     Music – nhạc nền
+     ============================================================ */
+  const Music = {
+    enabled: true,
+    ctx: null,
+    gain: null,
+    duckGain: null,
+    track: null,
+    trackName: null,
+    wanted: null,
+    step: 0,
+    nextTime: 0,
+    timer: null,
+    tempoMul: 1,
+    notesScheduled: 0,
+
+    _init(ctx, master) {
+      this.ctx = ctx;
+      this.gain = ctx.createGain();
+      this.gain.gain.value = 0.24;
+      this.duckGain = ctx.createGain();
+      this.duckGain.gain.value = 1;
+      this.gain.connect(this.duckGain);
+      this.duckGain.connect(master);
+    },
+
+    /** Yêu cầu phát bản nhạc (menu | game). Tự bắt đầu khi audio được mở khóa. */
+    play(name) {
+      this.wanted = name;
+      this._kick();
+    },
+
+    stop() {
+      this.wanted = null;
+      this._halt();
+    },
+
+    _halt() {
+      if (this.timer) clearInterval(this.timer);
+      this.timer = null;
+      this.trackName = null;
+      this.track = null;
+    },
+
+    _kick() {
+      if (!this.enabled || !this.wanted || !this.ctx || this.ctx.state !== 'running') return;
+      if (this.trackName === this.wanted && this.timer) return;
+      this._halt();
+      this.track = TRACKS[this.wanted];
+      if (!this.track) return;
+      this.trackName = this.wanted;
+      this.step = 0;
+      this.nextTime = this.ctx.currentTime + 0.08;
+      const self = this;
+      this.timer = setInterval(function () { self._tick(); }, 25);
+    },
+
+    setEnabled(on) {
+      this.enabled = !!on;
+      if (!this.enabled) this._halt(); else this._kick();
+    },
+
+    setTempo(mul) {
+      this.tempoMul = mul || 1;
+    },
+
+    /** Hạ nhỏ nhạc theo từng nguồn (voice, pause...); mức hiệu lực là mức nhỏ nhất đang bật. */
+    ducks: {},
+    setDuck(key, level) {
+      if (level == null) delete this.ducks[key]; else this.ducks[key] = level;
+      if (!this.duckGain || !this.ctx) return;
+      let v = 1;
+      for (const k in this.ducks) v = Math.min(v, this.ducks[k]);
+      this.duckGain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.06);
+    },
+    /** Tương thích: hạ nhỏ nhạc khi có giọng đọc. */
+    duck(on, level) {
+      this.setDuck('voice', on ? (level == null ? 0.35 : level) : null);
+    },
+
+    _tick() {
+      const ctx = this.ctx, tr = this.track;
+      if (!ctx || !tr) return;
+      const stepDur = 60 / (tr.bpm * this.tempoMul) / 4;
+      if (this.nextTime < ctx.currentTime - 0.5) this.nextTime = ctx.currentTime + 0.05;  // sau khi tab bị ẩn
+      while (this.nextTime < ctx.currentTime + 0.14) {
+        this._schedule(this.step, this.nextTime, stepDur);
+        this.step = (this.step + 1) % tr.steps;
+        this.nextTime += stepDur;
+      }
+    },
+
+    _schedule(i, t, stepDur) {
+      const tr = this.track;
+      const L = tr.lead[i];
+      if (L) this._note(noteFreq(L.note), t, L.len * stepDur * 0.9, tr.leadType, tr.leadVol, tr.leadCut);
+      const B = tr.bass[i];
+      if (B) this._note(noteFreq(B.note), t, B.len * stepDur * 0.85, 'triangle', tr.bassVol, 900);
+      const p = i % 16;
+      if (tr.kick[p] === 'x') this._kickDrum(t);
+      if (tr.snare[p] === 'x') this._snare(t);
+      if (tr.hat[p] === 'x') this._hat(t, p % 4 === 0 ? 0.05 : 0.03);
+      this.notesScheduled++;
+    },
+
+    _note(freq, t, dur, type, vol, cutoff) {
+      const ctx = this.ctx;
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = freq;
+      const flt = ctx.createBiquadFilter();
+      flt.type = 'lowpass';
+      flt.frequency.value = cutoff;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+      g.gain.setValueAtTime(vol, t + Math.max(0.02, dur * 0.55));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(flt); flt.connect(g); g.connect(this.gain);
+      osc.start(t);
+      osc.stop(t + dur + 0.03);
+    },
+
+    _kickDrum(t) {
+      const ctx = this.ctx;
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(160, t);
+      osc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.35, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      osc.connect(g); g.connect(this.gain);
+      osc.start(t); osc.stop(t + 0.16);
+    },
+
+    _snare(t) {
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource();
+      src.buffer = Sfx._noiseBuffer();
+      const flt = ctx.createBiquadFilter();
+      flt.type = 'bandpass'; flt.frequency.value = 1800; flt.Q.value = 0.8;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.16, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+      src.connect(flt); flt.connect(g); g.connect(this.gain);
+      src.start(t, Math.random() * 0.5); src.stop(t + 0.13);
+    },
+
+    _hat(t, vol) {
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource();
+      src.buffer = Sfx._noiseBuffer();
+      const flt = ctx.createBiquadFilter();
+      flt.type = 'highpass'; flt.frequency.value = 7000;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      src.connect(flt); flt.connect(g); g.connect(this.gain);
+      src.start(t, Math.random() * 0.5); src.stop(t + 0.05);
+    }
+  };
+
+  /* ============================================================
+     Voice – giọng đọc tiếng Việt (Web Speech API)
+     ============================================================ */
+  const Voice = {
+    enabled: true,
+    supported: false,
+    available: false,
+    voice: null,
+    _unlocked: false,
+    _speaking: false,
+
+    init() {
+      if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+      this.supported = true;
+      const self = this;
+      const pick = function () {
+        try {
+          const vs = window.speechSynthesis.getVoices() || [];
+          const vi = vs.filter(function (v) { return /^vi([-_]|$)/i.test(v.lang || ''); });
+          // Ưu tiên giọng cục bộ (iPad: "Linh"), sau đó giọng Google
+          self.voice = vi.find(function (v) { return v.localService; }) || vi[0] || null;
+          self.available = !!self.voice;
+        } catch (e) { /* bỏ qua */ }
+      };
+      pick();
+      try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) { /* bỏ qua */ }
+      setTimeout(pick, 800);
+      setTimeout(pick, 3000);
+    },
+
+    /** Mở khóa trong thao tác người dùng (iOS cần một lần speak trong sự kiện chạm). */
+    unlock() {
+      if (!this.supported || this._unlocked) return;
+      try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0;
+        window.speechSynthesis.speak(u);
+        this._unlocked = true;
+      } catch (e) { /* bỏ qua */ }
+    },
+
+    /** Đọc một câu. opts: { queue: true } để không cắt câu đang đọc; rate, pitch. */
+    say(text, opts) {
+      opts = opts || {};
+      if (!this.enabled || !this.available || !text) return;
+      try {
+        const ss = window.speechSynthesis;
+        if (!opts.queue) ss.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = this.voice;
+        u.lang = this.voice.lang || 'vi-VN';
+        u.rate = opts.rate || 1.0;
+        u.pitch = opts.pitch || 1.05;
+        u.volume = 1;
+        const self = this;
+        u.onstart = function () { self._speaking = true; Music.duck(true, 0.3); };
+        u.onend = u.onerror = function () { self._speaking = false; if (!ss.pending && !ss.speaking) Music.duck(false); };
+        ss.speak(u);
+      } catch (e) { /* bỏ qua */ }
+    },
+
+    stop() {
+      try { if (this.supported) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ }
+      this._speaking = false;
+      Music.duck(false);
+    },
+
+    setEnabled(on) {
+      this.enabled = !!on;
+      if (!this.enabled) this.stop();
+    }
+  };
+
   window.Sfx = Sfx;
+  window.Music = Music;
+  window.Voice = Voice;
 })();

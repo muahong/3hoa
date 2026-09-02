@@ -54,7 +54,17 @@ Mở trang bằng Safari → bấm nút **Chia sẻ** → **Thêm vào Màn hìn
 
 Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 tim. Chém số sai hoặc chém bom mất 1 tim. Chém tim 💗 để hồi mạng. Trả lời đúng liên tiếp để nhân điểm (Combo x2, x3, x4). Cứ 5 câu đúng lên một màn, quả bay nhanh hơn một chút. Nếu lỡ mất quả đúng 2 lần, quả đúng sẽ được đánh dấu vòng vàng để gợi ý.
 
+## Âm thanh
+
+- **Hiệu ứng**: tiếng chém, nước bắn, chuông đúng/sai, bom, tim, combo... (tổng hợp bằng Web Audio, không cần file mp3).
+- **Nhạc nền**: nhạc chiptune tự tổng hợp, bài nhẹ ở menu và bài sôi động khi chơi, tăng tốc ở 10 giây cuối.
+- **Đọc phép tính**: đọc to phép tính, lời khen, đáp án đúng khi sai... bằng giọng tiếng Việt của thiết bị (Web Speech API). Trên iPad/iPhone dùng giọng "Linh" có sẵn; máy tính cần có giọng tiếng Việt (Windows: cài gói ngôn ngữ Tiếng Việt, Chrome: giọng Google). Nếu thiết bị không có giọng Việt, nút này tự vô hiệu.
+
+Ba nút bật/tắt nằm ở menu chính và màn hình tạm dừng, được ghi nhớ trên thiết bị.
+
 ## Tùy chỉnh nhanh
+
+- **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js` (tên nốt và số bước 1/16).
 
 - **Thêm hoặc sửa màn chơi**: chỉnh mảng `ANSWER_LEVELS` và `PAIR_LEVELS` trong `js/math.js` (tốc độ `speed`, số quả `fruits`, tỉ lệ bom `bomb`).
 - **Ngưỡng sao**: hàm `starThresholds` và bảng `STAR_FACTOR` trong `js/game.js`.

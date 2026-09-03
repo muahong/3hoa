@@ -1562,7 +1562,8 @@
     Lesson.level = level;
     Lesson.i = 0;
     Lesson.from = from || 'levels';
-    if (Lesson.from !== 'pause') { leaveGame(); G.state = 'lesson'; }
+    if (Lesson.from !== 'pause' && Lesson.from !== 'results') { leaveGame(); G.state = 'lesson'; }
+    else Voice.stop();
     ui.lessonTitle.textContent = level.icon + ' Màn ' + level.n + ': ' + level.title;
     const rec = Store.lv(level.id);
     ui.lessonSkip.hidden = Lesson.from === 'pause' || !(rec.plays > 0);

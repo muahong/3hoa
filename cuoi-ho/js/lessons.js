@@ -266,7 +266,7 @@
     if (r < 0.78) {
       return mkQ({
         prompt: 'Đồng hồ chỉ mấy giờ?', clock: { h: h, m: m },
-        options: uniq(T(plain(h, m)), [T(plain(h, near)), T(plain(h, m + rnd(1, 3))), T(plain(h, m - rnd(1, 3))), T(plain(nextH(h), m))], 3, fbText),
+        options: uniq(T(plain(h, m)), [T(plain(h, near)), T(plain(h, Math.min(59, m + rnd(1, 3)))), T(plain(h, m - rnd(1, 3))), T(plain(nextH(h), m))], 3, fbText),
         explain: 'Kim dài qua số ' + k + ' (' + near + ' phút) thêm ' + j + ' vạch → ' + m + ' phút. Kim ngắn ' + (m >= 30 ? 'chưa đến số ' + nextH(h) : 'qua số ' + h) + ' → ' + plain(h, m) + '.'
       });
     }

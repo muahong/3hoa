@@ -5,9 +5,7 @@ function loadGame(gameName) {
     const gameContainer = document.getElementById('game-container');
     gameContainer.innerHTML = '';
 
-    if (gameName === 'tetris') {
-        tetris();
-    } else if (gameName === 'tank') {
+    if (gameName === 'tank') {
         tank();
     } else if (gameName === 'pacman') {
         pacman();

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tháp Đồng Hồ">
+<meta name="application-name" content="Tháp Đồng Hồ">
+<meta name="theme-color" content="#3a8fd9">
+<meta name="description" content="Tháp Đồng Hồ – trò chơi xếp đồng hồ kiểu Tetris giúp bé lớp 2, lớp 3 học xem giờ: giờ đúng, giờ rưỡi, giờ kém, 24 giờ. Có bài học và hỏi đáp sau mỗi màn. Chơi trên iPad, điện thoại hoặc máy tính.">
+<title>Tháp Đồng Hồ – Xếp đồng hồ, học xem giờ</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+  <div id="safe-probe" aria-hidden="true"></div>
+
+  <!-- ================= HUD (khi đang chơi) ================= -->
+  <div id="hud" class="screen hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="score-box">
+          <span class="label">ĐIỂM</span>
+          <span class="value" id="hud-score">0</span>
+        </div>
+        <div class="stage-chip" id="hud-level">Màn 1</div>
+        <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
+      </div>
+      <div class="hud-center">
+        <div class="progress" id="hud-progress">
+          <div class="bar"><div class="fill" id="hud-progress-fill"></div></div>
+          <span class="text" id="hud-progress-text">🕐 0/8</span>
+        </div>
+        <div class="hint" id="hud-hint" hidden></div>
+      </div>
+      <div class="hud-right">
+        <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NÚT ĐIỀU KHIỂN ================= -->
+  <div id="controls" class="off" aria-label="Điều khiển">
+    <button type="button" class="k" data-act="left" aria-label="Sang trái">◀</button>
+    <button type="button" class="k drop" data-act="drop" aria-label="Thả">⬇<small>THẢ</small></button>
+    <button type="button" class="k" data-act="right" aria-label="Sang phải">▶</button>
+  </div>
+
+  <!-- ================= MENU CHÍNH ================= -->
+  <div id="menu" class="screen">
+    <div class="panel">
+      <div class="logo-row">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="lg-tile" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff9e8"/>
+              <stop offset="1" stop-color="#ffe0a3"/>
+            </linearGradient>
+            <linearGradient id="lg-stone" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#c9ccd8"/>
+              <stop offset="1" stop-color="#8e93a8"/>
+            </linearGradient>
+          </defs>
+          <!-- Lấp lánh -->
+          <path d="M160 22 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#ffe66d"/>
+          <path d="M28 60 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
+          <path d="M182 110 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
+          <!-- Cỏ -->
+          <ellipse cx="100" cy="192" rx="96" ry="12" fill="#6cc75b"/>
+          <!-- Viên đá (sai) -->
+          <g transform="translate(34 128)">
+            <rect width="52" height="52" rx="11" fill="url(#lg-stone)" stroke="#5b5f7a" stroke-width="3"/>
+            <circle cx="26" cy="26" r="17" fill="#dfe2ea" stroke="#6b6f85" stroke-width="2.5"/>
+            <path d="M26 26 V14 M26 26 L34 30" stroke="#8a8fa8" stroke-width="3" stroke-linecap="round"/>
+            <path d="M8 4 l6 12 l-4 8 M46 50 l-8 -10 l3 -7" stroke="#3a3f5c" stroke-width="2" fill="none" stroke-linecap="round"/>
+          </g>
+          <!-- Viên gạch đồng hồ đã xếp -->
+          <g transform="translate(92 128)">
+            <rect width="52" height="52" rx="11" fill="url(#lg-tile)" stroke="#c77d1a" stroke-width="3"/>
+            <circle cx="26" cy="26" r="17" fill="#fff" stroke="#2b2d42" stroke-width="2.5"/>
+            <path d="M26 26 V16" stroke="#118ab2" stroke-width="4" stroke-linecap="round"/>
+            <path d="M26 26 L36 26" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="26" cy="26" r="2.5" fill="#2b2d42"/>
+          </g>
+          <g transform="translate(63 76)">
+            <rect width="52" height="52" rx="11" fill="url(#lg-tile)" stroke="#c77d1a" stroke-width="3"/>
+            <circle cx="26" cy="26" r="17" fill="#fff" stroke="#2b2d42" stroke-width="2.5"/>
+            <path d="M26 26 L33 18" stroke="#118ab2" stroke-width="4" stroke-linecap="round"/>
+            <path d="M26 26 V12" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="26" cy="26" r="2.5" fill="#2b2d42"/>
+          </g>
+          <!-- Đồng hồ đang rơi -->
+          <g transform="translate(96 14) rotate(8 26 26)">
+            <rect width="52" height="52" rx="11" fill="url(#lg-tile)" stroke="#c77d1a" stroke-width="3"/>
+            <circle cx="26" cy="26" r="17" fill="#fff" stroke="#2b2d42" stroke-width="2.5"/>
+            <path d="M26 26 L19 20" stroke="#118ab2" stroke-width="4" stroke-linecap="round"/>
+            <path d="M26 26 L26 40" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="26" cy="26" r="2.5" fill="#2b2d42"/>
+          </g>
+          <path d="M84 56 q-14 6 -20 18" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+          <path d="M156 60 q12 8 14 22" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.8"/>
+          <!-- Ba bông hoa -->
+          <g transform="translate(14 150)">
+            <path d="M8 26 v14 M22 22 v18 M36 26 v14" stroke="#3f9d3a" stroke-width="3" stroke-linecap="round"/>
+            <g fill="#ff6fa5"><circle cx="8" cy="20" r="3.4"/><circle cx="12.6" cy="23.6" r="3.4"/><circle cx="10.8" cy="29" r="3.4"/><circle cx="5.2" cy="29" r="3.4"/><circle cx="3.4" cy="23.6" r="3.4"/></g>
+            <circle cx="8" cy="25.5" r="2.6" fill="#ffd94a"/>
+            <g fill="#fff"><circle cx="22" cy="14" r="4"/><circle cx="27.4" cy="18.3" r="4"/><circle cx="25.3" cy="24.7" r="4"/><circle cx="18.7" cy="24.7" r="4"/><circle cx="16.6" cy="18.3" r="4"/></g>
+            <circle cx="22" cy="20.5" r="3" fill="#ffd94a"/>
+            <g fill="#ffa94d"><circle cx="36" cy="20" r="3.4"/><circle cx="40.6" cy="23.6" r="3.4"/><circle cx="38.8" cy="29" r="3.4"/><circle cx="33.2" cy="29" r="3.4"/><circle cx="31.4" cy="23.6" r="3.4"/></g>
+            <circle cx="36" cy="25.5" r="2.6" fill="#ffd94a"/>
+          </g>
+        </svg>
+        <div>
+          <h1 class="title">THÁP<br>ĐỒNG HỒ<small>XẾP ĐỒNG HỒ · HỌC XEM GIỜ</small></h1>
+        </div>
+      </div>
+      <p class="subtitle">Học xem giờ cho các bạn lớp 2, lớp 3 🕐🧱</p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
+      </div>
+      <div class="toggle-row" data-audio-toggles></div>
+      <p class="footer-note">Thả đồng hồ vào cột ghi đúng giờ! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+    </div>
+  </div>
+
+  <!-- ================= CHỌN MÀN ================= -->
+  <div id="levels" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
+        <h2>Chọn màn chơi</h2>
+        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+      </div>
+      <p class="mode-desc">Mỗi màn dạy một cách xem giờ mới. Hoàn thành màn và trả lời đúng <b>hỏi đáp</b> để mở khóa màn tiếp theo!</p>
+      <div class="level-grid" id="level-grid"></div>
+      <p class="parent-note">👨‍👩‍👧 Phụ huynh, thầy cô: <button type="button" class="linkish" id="btn-unlock-all">mở khóa tất cả các màn</button></p>
+    </div>
+  </div>
+
+  <!-- ================= BÀI HỌC ================= -->
+  <div id="lesson" class="screen hidden">
+    <div class="panel wide lesson-panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-lesson-back">← Quay lại</button>
+        <h2 id="lesson-head">Màn 1</h2>
+        <button class="btn teal small" id="btn-lesson-read" aria-label="Đọc bài học">🔊 Đọc</button>
+      </div>
+      <h3 class="lesson-title" id="lesson-title">Kim ngắn, kim dài và giờ đúng</h3>
+      <div class="lesson-body">
+        <div class="lesson-demo">
+          <div id="lesson-clock" class="clock-box"></div>
+          <div id="lesson-caption" class="clock-caption">3 giờ</div>
+        </div>
+        <div id="lesson-text" class="lesson-text"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn big green" id="btn-lesson-start">▶ Bắt đầu chơi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HƯỚNG DẪN ================= -->
+  <div id="howto" class="screen hidden dim">
+    <div class="panel">
+      <h2>❓ Cách chơi</h2>
+      <div class="howto-list">
+        <div class="howto-item"><div class="em">🕐</div><div class="tx">Một chiếc <b>đồng hồ</b> rơi xuống từ trên cao. Nhìn kỹ kim ngắn, kim dài (đồng hồ to bên cạnh giúp bạn nhìn rõ hơn).</div></div>
+        <div class="howto-item"><div class="em">🧱</div><div class="tx">Bên dưới có <b>4 cột</b>, mỗi cột ghi một giờ. <b>Chạm vào cột</b> (hoặc bấm ◀ ▶) để đưa đồng hồ tới, rồi bấm <b>⬇ THẢ</b>. Chạm lần nữa vào cột đang đứng cũng là thả.</div></div>
+        <div class="howto-item"><div class="em">✨</div><div class="tx">Thả <b>đúng cột</b>: đồng hồ nổ lấp lánh, được điểm. Thả <b>sai</b>: đồng hồ hóa đá và chồng lên nhau thành tháp!</div></div>
+        <div class="howto-item"><div class="em">⚠️</div><div class="tx">Tháp cao <b>chạm đỉnh</b> là thua. Trả lời đúng sẽ dọn bớt một viên đá; đúng <b>5 lần liên tiếp</b> dọn sạch tháp.</div></div>
+        <div class="howto-item"><div class="em">📝</div><div class="tx">Xong mỗi màn, trả lời đúng <b>3 câu hỏi</b> để ghi nhớ bài học và <b>mở khóa</b> màn tiếp theo!</div></div>
+      </div>
+      <div class="tip">⌨️ Máy tính: phím ← → di chuyển, ↓ rơi nhanh, Space hoặc Enter để thả, phím 1–4 chọn cột, Esc tạm dừng.</div>
+      <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
+      <div class="btn-row">
+        <button class="btn" id="btn-howto-close">Đã hiểu!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ĐẾM NGƯỢC ================= -->
+  <div id="countdown" class="screen hidden">
+    <div class="count" id="count-num">3</div>
+  </div>
+
+  <!-- ================= TẠM DỪNG ================= -->
+  <div id="pause" class="screen hidden dim">
+    <div class="panel">
+      <h2>⏸ Tạm dừng</h2>
+      <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
+      <div class="toggle-row" data-audio-toggles></div>
+      <div class="btn-row">
+        <button class="btn big green" id="btn-resume">▶ Chơi tiếp</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn teal small" id="btn-lesson-again">📖 Xem lại bài học</button>
+        <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
+        <button class="btn ghost small" id="btn-quit">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HOÀN THÀNH MÀN ================= -->
+  <div id="summary" class="screen hidden dim">
+    <div class="panel">
+      <h2 class="result-title" id="sum-title">🎉 Hoàn thành màn 1!</h2>
+      <p id="sum-level">Màn 1 · Giờ đúng</p>
+      <div class="result-score-label">ĐIỂM CỦA BẠN</div>
+      <div class="result-score" id="sum-score">0</div>
+      <div class="result-stars" id="sum-stars"></div>
+      <div id="sum-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
+      <div class="stats">
+        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
+        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Đúng liên tiếp 🔥</div></div>
+      </div>
+      <div id="review" class="review" hidden>
+        <h3>📝 Rút kinh nghiệm – những đồng hồ bé đọc nhầm (chạm để nghe)</h3>
+        <div class="review-list" id="review-list"></div>
+      </div>
+      <p class="sum-note" id="sum-note"></p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-quiz">📝 Trả lời câu hỏi</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-sum-home">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= THÁP ĐỔ ================= -->
+  <div id="fail" class="screen hidden dim">
+    <div class="panel">
+      <h2 class="result-title nolife">💥 Tháp đổ rồi!</h2>
+      <p id="fail-level">Màn 1 · Giờ đúng</p>
+      <p class="fail-info" id="fail-info"></p>
+      <div id="review-fail" class="review" hidden>
+        <h3>📝 Rút kinh nghiệm – những đồng hồ bé đọc nhầm (chạm để nghe)</h3>
+        <div class="review-list" id="review-fail-list"></div>
+      </div>
+      <p class="sum-note">Xem lại bài học rồi thử lại nhé, bé sẽ làm được! 💪</p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-fail-retry">🔄 Thử lại</button>
+        <button class="btn teal" id="btn-fail-lesson">📖 Xem lại bài học</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-fail-levels">📚 Chọn màn khác</button>
+        <button class="btn ghost small" id="btn-fail-home">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HỎI ĐÁP ================= -->
+  <div id="quiz" class="screen hidden dim">
+    <div class="panel wide quiz-panel">
+      <div class="screen-head">
+        <div class="quiz-dots" id="quiz-dots"></div>
+        <h2 id="quiz-head">📝 Câu 1/3</h2>
+        <button class="btn teal small" id="btn-quiz-read" aria-label="Đọc câu hỏi">🔊</button>
+      </div>
+      <div id="quiz-body">
+        <div class="quiz-q" id="quiz-q">Đồng hồ chỉ mấy giờ?</div>
+        <div class="quiz-clock" id="quiz-clock"></div>
+        <div class="quiz-choices" id="quiz-choices"></div>
+        <div class="quiz-feedback" id="quiz-feedback" hidden>
+          <div class="explain" id="quiz-explain"></div>
+          <div class="btn-row">
+            <button class="btn green" id="btn-quiz-next">Câu tiếp theo ▶</button>
+            <button class="btn" id="btn-quiz-retry" hidden>🔄 Thử lại</button>
+          </div>
+        </div>
+      </div>
+      <div id="quiz-done" hidden>
+        <div class="unlock-art">🔓</div>
+        <h3 class="quiz-done-title" id="quiz-done-title">Mở khóa màn 2!</h3>
+        <p id="quiz-done-text"></p>
+        <div class="btn-row">
+          <button class="btn big green" id="btn-quiz-next-level">▶ Chơi màn tiếp theo</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn ghost small" id="btn-quiz-replay">🔄 Chơi lại màn này</button>
+          <button class="btn ghost small" id="btn-quiz-levels">📚 Chọn màn</button>
+          <button class="btn ghost small" id="btn-quiz-home">🏠 Trang chính</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/clock.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

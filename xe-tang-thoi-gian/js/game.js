@@ -434,7 +434,9 @@
     const vy = Math.max(6, (G.lineY - lowest - bs.h / 2) / fallTime());
     for (let i = 0; i < n; i++) {
       const col = i % cols, row = Math.floor(i / cols);
-      const x = f.x + cellW * (col + 0.5) + (rows > 1 ? 0 : (Math.random() - 0.5) * cellW * 0.15);
+      const sway = G.tank.size * 0.12 + 2;
+      const slack = Math.max(0, cellW - bs.w - sway * 2);
+      const x = clamp(f.x + cellW * (col + 0.5) + (rows > 1 ? 0 : (Math.random() - 0.5) * Math.min(cellW * 0.15, slack)), f.x + bs.w / 2 + sway, f.x + f.w - bs.w / 2 - sway);
       // Hàng đầu (row 0) ở xa hơn = cao hơn trên màn hình; hàng sau gần xe tăng hơn
       const y = base + row * rowGap;
       const r = new Robot({ opt: q.options[i], idx: i, x: x, x0: x, y: y, vy: vy, w: bs.w, h: bs.h, clock: bs.clock, t: 0 });
@@ -1475,7 +1477,7 @@
     for (let k = 0; k < btns.length; k++) btns[k].classList.toggle('on', k === i);
     const label = e.label || C.readTime(e.h, e.m, G.level.id === 'l2' ? 'ruoi' : 'plain');
     ui.lessonClockLabel.textContent = label;
-    if (speak) Voice.say(label.replace(/·/g, ', hay là ').replace(/\(/g, ', buổi ').replace(/\)/g, '').replace(/→/g, ' đến ').replace(/:/g, ' là ').replace(/\+/g, ' cộng ').replace(/=/g, ' bằng '));
+    if (speak) Voice.say(label.replace(/(\d{1,2}):(\d{2})/g, function (_, hh, mm) { return hh + ' giờ ' + Number(mm) + ' phút'; }).replace(/·/g, ', hay là ').replace(/\(/g, ', buổi ').replace(/\)/g, '').replace(/→/g, ' đến ').replace(/:/g, ' là ').replace(/\+/g, ' cộng ').replace(/=/g, ' bằng '));
   }
 
   function paintLessonClock(force, dt) {

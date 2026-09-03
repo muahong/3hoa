@@ -333,7 +333,7 @@
       const hh = h12(h24), s = session(h24);
       const correct = textOpt(hh + ' giờ ' + s, true);
       const alt = s === 'chiều' ? 'tối' : 'chiều';
-      const wrongs = [textOpt(hh + ' giờ sáng'), textOpt(h12(hh + 1) + ' giờ ' + s), textOpt(h12(hh - 1) + ' giờ ' + s), textOpt((h24 - 10) + ' giờ ' + (h24 - 10 >= 7 && h24 - 10 <= 9 ? 'tối' : h24 - 10 <= 6 ? 'chiều' : 'sáng')), textOpt(hh + ' giờ ' + alt)];
+      const wrongs = [textOpt(hh + ' giờ sáng'), textOpt(h12(hh + 1) + ' giờ ' + s), textOpt(h12(hh - 1) + ' giờ ' + s), textOpt(h12(h24 - 10) + ' giờ ' + (h24 - 10 >= 7 && h24 - 10 <= 9 ? 'tối' : h24 - 10 <= 6 ? 'chiều' : 'sáng')), textOpt(hh + ' giờ ' + alt)];
       return wrap({
         kind: 'h24',
         prompt: { text: h24 + ' giờ còn gọi là mấy giờ?', speech: h24 + ' giờ còn gọi là mấy giờ?', clocks: [] },
@@ -350,7 +350,7 @@
       const wrongs = [textOpt(hh + ' giờ'), textOpt((h24 + 2 > 24 ? h24 - 2 : h24 + 2) + ' giờ'), textOpt((hh + 10) + ' giờ'), textOpt((h24 - 1) + ' giờ')];
       return wrap({
         kind: 'h24',
-        prompt: { text: 'Buổi ' + s + ', đồng hồ chỉ như hình. Bây giờ là mấy giờ?', speech: 'Buổi ' + s + ', đồng hồ chỉ như hình. Bây giờ là mấy giờ?', clocks: [{ h: hh, m: 0 }], session: s },
+        prompt: { text: 'Buổi ' + s + ', đồng hồ chỉ như hình. Theo cách gọi 24 giờ, bây giờ là mấy giờ?', speech: 'Buổi ' + s + ', đồng hồ chỉ như hình. Theo cách gọi 24 giờ, bây giờ là mấy giờ?', clocks: [{ h: hh, m: 0 }], session: s },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: h24 + ' giờ', speech: 'Buổi ' + s + ', đồng hồ chỉ ' + hh + ' giờ, tức là ' + h24 + ' giờ' },
         explain: 'Đồng hồ chỉ ' + hh + ' giờ. Buổi ' + s + ' ta cộng thêm 12: ' + hh + ' + 12 = ' + h24 + ' giờ.'
@@ -451,7 +451,7 @@
       const hh = h12(h24), s = session(h24);
       const label = readSession(h24, m);
       const correct = textOpt(label, true);
-      const wrongs = [textOpt(hh + ' giờ ' + m + ' phút ' + pick(SESSIONS.filter((x) => x !== s))), textOpt(h12(hh + 1) + ' giờ ' + m + ' phút ' + s), textOpt(m + ' giờ ' + hh + ' phút ' + s), textOpt(hh + ' giờ ' + ((m + 10) % 60) + ' phút ' + s)];
+      const wrongs = [textOpt(hh + ' giờ ' + m + ' phút ' + pick(SESSIONS.filter((x) => x !== s))), textOpt(h12(hh + 1) + ' giờ ' + m + ' phút ' + s), textOpt(h12(m) + ' giờ ' + hh + ' phút ' + s), textOpt(hh + ' giờ ' + ((m + 10) % 60) + ' phút ' + s)];
       if (h24 > 12) wrongs.unshift(textOpt(h24 + ' giờ ' + m + ' phút sáng'));
       return wrap({
         kind: 'digital',
@@ -467,7 +467,7 @@
       const hh = h12(h24), s = session(h24);
       const label = readSession(h24, m);
       const correct = digitalOpt(h24, m, true);
-      const wrongs = [digitalOpt(h24 > 12 ? hh : hh + 12, m), digitalOpt(h24, (m * 10) % 60 || 5), digitalOpt(m > 23 ? m - 20 : m, h24 > 12 ? hh : h24), digitalOpt((h24 + 1) % 24, m)];
+      const wrongs = [digitalOpt(h24 > 12 ? hh : (hh + 12) % 24, m), digitalOpt(h24, (m * 10) % 60 || 5), digitalOpt(m % 24, h24 > 12 ? hh : h24), digitalOpt((h24 + 1) % 24, m)];
       return wrap({
         kind: 'digital',
         prompt: { text: 'Bắn đồng hồ điện tử chỉ ' + label + '!', speech: 'Bắn đồng hồ điện tử chỉ ' + label, clocks: [] },
@@ -504,7 +504,7 @@
       // Hai đồng hồ → bao lâu
       const correct = textOpt(readDuration(dur), true);
       const wrongs = DURS.filter((d) => d !== dur).map((d) => textOpt(readDuration(d)));
-      wrongs.push(textOpt(end.m + ' phút'));
+      if (end.m > 0) wrongs.push(textOpt(end.m + ' phút'));
       return wrap({
         kind: 'elapsed',
         prompt: { text: 'Từ ' + sLabel + ' đến ' + eLabel + ' là bao lâu?', speech: 'Từ ' + sLabel + ' đến ' + eLabel + ' là bao lâu?', clocks: [start, end], arrow: true },

@@ -7,8 +7,6 @@ function loadGame(gameName) {
 
     if (gameName === 'tank') {
         tank();
-    } else if (gameName === 'pacman') {
-        pacman();
     } else {
         console.error("Unknown game:", gameName);
     }

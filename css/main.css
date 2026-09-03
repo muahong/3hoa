@@ -104,13 +104,6 @@ footer {
     user-select: none;
 }
 
-#tank-arena, #pacman-maze {
+#tank-arena {
     margin: 0 auto;
-}
-
-#pacman-board {
-    display: block;
-    margin: 0 auto;
-    background-color: black;
-    border: 2px solid red;
 }

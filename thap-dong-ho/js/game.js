@@ -873,7 +873,7 @@
 
     if (G.state === 'playing') updatePlaying(dt);
     else if (G.state === 'clear' || G.state === 'fail') updateEnding();
-    else if (G.state === 'lesson') updateLesson();
+    else if (G.state === 'lesson' || (G.state === 'paused' && G.lessonFromPause)) updateLesson();
     if (!boardVisible()) updateDeco(dt);
 
     if (G.state !== 'paused') {

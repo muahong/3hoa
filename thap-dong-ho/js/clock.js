@@ -109,10 +109,10 @@
     return read(t);
   }
 
-  /** Dạng đồng hồ điện tử: "15:00", "3:05". */
+  /** Dạng đồng hồ điện tử: "15:00", "07:05". */
   function digital(t) {
     const hh = t.h24 != null ? t.h24 : t.h;
-    return hh + ':' + (t.m < 10 ? '0' : '') + t.m;
+    return (hh < 10 ? '0' : '') + hh + ':' + (t.m < 10 ? '0' : '') + t.m;
   }
 
   /** Số trên mặt đồng hồ mà kim dài đang chỉ (12 khi 0 phút). */
@@ -153,7 +153,7 @@
     o = o || {};
     const size = o.size || 180;
     const ring = o.ring || null;
-    const ext = ring ? 130 : 110;
+    const ext = ring === 'kem' ? 140 : ring ? 130 : 110;
     const hA = ((t.h % 12) + t.m / 60) * 30, mA = t.m * 6;
     let s = '<svg class="clock-svg' + (o.cls ? ' ' + o.cls : '') + '" viewBox="' + (-ext) + ' ' + (-ext) + ' ' + (ext * 2) + ' ' + (ext * 2) + '" width="' + size + '" height="' + size + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(read(t)) + '">';
     s += '<circle r="104" fill="#e9edf8"/><circle r="100" fill="#ffffff" stroke="#2b2d42" stroke-width="6"/>';
@@ -287,7 +287,7 @@
     }
     const addP = (h, m) => { if (m < 0 || m > 59) return; push(mk(h, m, t.style, null, lv)); };
     // Nhầm kim ngắn với kim dài
-    addP(minuteNumber(t.m), t.h * 5 % 60);
+    if (t.m % 5 === 0) addP(minuteNumber(t.m), t.h * 5 % 60);
     // Nhầm giờ (kim ngắn đã đi quá nửa đường nên tưởng là giờ kế tiếp)
     addP(t.h + 1, t.m); addP(t.h - 1, t.m);
     // Nhầm "kém" với "hơn": 8 giờ kém 15 ↔ 8 giờ 15 phút; 3 giờ 15 ↔ 3 giờ 45

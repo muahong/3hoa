@@ -1,15 +1,15 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'ninja-toan-v3';
+const CACHE = 'cuoi-ho-v1';
 const CORE = [
   './',
   './index.html',
   './style.css',
   './js/audio.js',
-  './js/math.js',
-  './js/fruits.js',
+  './js/lessons.js',
   './js/game.js',
   './manifest.json',
+  './icons/logo.svg',
   './icons/icon-192.png',
   './icons/icon-180.png',
   './icons/icon-512.png'
@@ -26,7 +26,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('ninja-toan-') === 0).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('cuoi-ho-') === 0).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

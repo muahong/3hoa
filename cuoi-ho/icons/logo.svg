@@ -1,0 +1,68 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="lg-fur" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#ffb347"/>
+      <stop offset="0.7" stop-color="#ff8a1f"/>
+      <stop offset="1" stop-color="#d9600a"/>
+    </radialGradient>
+    <linearGradient id="lg-flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ff3d00"/>
+      <stop offset="0.55" stop-color="#ff9f1c"/>
+      <stop offset="1" stop-color="#ffe66d"/>
+    </linearGradient>
+    <radialGradient id="lg-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0.6" stop-color="#ff7a00" stop-opacity="0"/>
+      <stop offset="0.85" stop-color="#ff7a00" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ff7a00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="102" r="98" fill="url(#lg-glow)"/>
+  <g fill="url(#lg-flame)">
+    <path d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(45 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(90 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(135 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(180 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(225 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(270 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(315 100 102)" d="M100 8 q-14 22 -6 34 q6 -8 6 -16 q0 8 6 16 q8 -12 -6 -34z"/>
+    <path transform="rotate(22 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(67 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(112 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(157 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(202 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(247 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(292 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+    <path transform="rotate(337 100 102)" d="M100 22 q-9 14 -4 24 q4 -6 4 -11 q0 5 4 11 q5 -10 -4 -24z"/>
+  </g>
+  <circle cx="100" cy="102" r="64" fill="none" stroke="#7a2a12" stroke-width="12"/>
+  <circle cx="100" cy="102" r="64" fill="none" stroke="#ff7b1c" stroke-width="5"/>
+  <circle cx="100" cy="102" r="56" fill="#1a0b3d"/>
+  <!-- Tai -->
+  <circle cx="64" cy="70" r="16" fill="#e0700f"/><circle cx="64" cy="71" r="8" fill="#ffc7a0"/>
+  <circle cx="136" cy="70" r="16" fill="#e0700f"/><circle cx="136" cy="71" r="8" fill="#ffc7a0"/>
+  <!-- Đầu hổ -->
+  <circle cx="100" cy="102" r="44" fill="url(#lg-fur)"/>
+  <!-- Sọc -->
+  <path d="M100 60 l-4 14 h8z M84 66 l-2 12 l8 -8z M116 66 l2 12 l-8 -8z" fill="#2b1a12"/>
+  <path d="M60 96 q6 4 12 2 M60 108 q6 -2 12 0 M140 96 q-6 4 -12 2 M140 108 q-6 -2 -12 0" stroke="#2b1a12" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <!-- Mặt trắng -->
+  <ellipse cx="100" cy="118" rx="24" ry="17" fill="#fff3e0"/>
+  <ellipse cx="82" cy="108" rx="9" ry="9" fill="#fff3e0"/>
+  <ellipse cx="118" cy="108" rx="9" ry="9" fill="#fff3e0"/>
+  <!-- Mắt -->
+  <ellipse cx="84" cy="92" rx="8" ry="9" fill="#fff"/><ellipse cx="116" cy="92" rx="8" ry="9" fill="#fff"/>
+  <circle cx="86" cy="94" r="5" fill="#2b2d42"/><circle cx="114" cy="94" r="5" fill="#2b2d42"/>
+  <circle cx="88" cy="92" r="1.8" fill="#fff"/><circle cx="116" cy="92" r="1.8" fill="#fff"/>
+  <!-- Mũi, miệng -->
+  <path d="M94 110 h12 l-6 7z" fill="#e05a6d"/>
+  <path d="M100 117 v6 M92 122 q8 8 16 0" stroke="#2b1a12" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Ria -->
+  <path d="M74 112 h-16 M75 118 l-15 4 M126 112 h16 M125 118 l15 4" stroke="#2b1a12" stroke-width="2" stroke-linecap="round"/>
+  <!-- Đồng hồ nhỏ -->
+  <circle cx="156" cy="152" r="26" fill="#f7b733" stroke="#b5640c" stroke-width="3"/>
+  <circle cx="156" cy="152" r="20" fill="#fffdf6"/>
+  <path d="M156 136 v3 M172 152 h-3 M156 168 v-3 M140 152 h3" stroke="#2b2d42" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M156 152 v-11 M156 152 h9" stroke="#2b2d42" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="156" cy="152" r="2.5" fill="#ef476f"/>
+</svg>

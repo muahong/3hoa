@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cưỡi Hổ Vượt Lửa">
+<meta name="application-name" content="Cưỡi Hổ Vượt Lửa">
+<meta name="theme-color" content="#1a0b3d">
+<meta name="description" content="Cưỡi Hổ Vượt Lửa – trò chơi cưỡi hổ nhảy qua vòng lửa giúp bé lớp 2, lớp 3 học xem đồng hồ và tính thời gian. Học bài, vượt vòng lửa, hỏi đáp để mở khóa màn mới.">
+<title>Cưỡi Hổ Vượt Lửa – Học xem đồng hồ cho bé lớp 2, lớp 3</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+
+  <!-- ================= HUD (khi đang chơi) ================= -->
+  <div id="hud" class="screen hidden">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="score-box">
+          <span class="label">ĐIỂM</span>
+          <span class="value" id="hud-score">0</span>
+        </div>
+        <div class="stage-chip" id="hud-stage">Vòng 1/10</div>
+        <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
+      </div>
+      <div class="hud-center">
+        <div class="question-card" id="hud-question">
+          <div class="q-visual" id="hud-visual" hidden></div>
+          <div class="q-text" id="hud-prompt">Sẵn sàng…</div>
+        </div>
+        <div class="timer" id="hud-timer">
+          <span>🔥</span>
+          <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
+          <span class="time" id="hud-time">15</span>
+        </div>
+        <div class="hint" id="hud-hint" hidden></div>
+      </div>
+      <div class="hud-right">
+        <div class="hearts" id="hud-hearts"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+        <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
+      </div>
+    </div>
+    <div class="tap-tip" id="tap-tip" hidden>👆 Chạm vào vòng lửa có đáp án đúng để hổ nhảy qua!</div>
+  </div>
+
+  <!-- ================= MENU CHÍNH ================= -->
+  <div id="menu" class="screen">
+    <div class="panel">
+      <div class="logo-row">
+        <img src="icons/logo.svg" alt="" aria-hidden="true" class="logo-img">
+        <div>
+          <h1 class="title">CƯỠI HỔ<br>VƯỢT LỬA<small>CHINH PHỤC ĐỒNG HỒ</small></h1>
+        </div>
+      </div>
+      <p class="subtitle">Học xem đồng hồ &amp; tính thời gian cho các bạn lớp 2, lớp 3 🐯🔥</p>
+      <div class="btn-row">
+        <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn teal small" id="btn-notes">📖 Ghi nhớ</button>
+        <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
+      </div>
+      <div class="toggle-row" data-audio-toggles></div>
+      <p class="footer-note">Học bài → cưỡi hổ vượt vòng lửa → hỏi đáp để mở khóa màn mới! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+    </div>
+  </div>
+
+  <!-- ================= CHỌN MÀN (HÀNH TRÌNH) ================= -->
+  <div id="levels" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
+        <h2>🗺️ Hành trình</h2>
+        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+      </div>
+      <p class="mode-desc" id="journey-desc">Mỗi màn: <b>học bài</b> → <b>vượt vòng lửa</b> → <b>hỏi đáp</b> để mở khóa màn tiếp theo.</p>
+      <div class="journey-stats" id="journey-stats"></div>
+      <div class="level-grid" id="level-grid"></div>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-unlock-all">🔓 Dành cho phụ huynh: mở khóa tất cả màn</button></p>
+    </div>
+  </div>
+
+  <!-- ================= BÀI HỌC ================= -->
+  <div id="lesson" class="screen hidden">
+    <div class="panel wide lesson-panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-lesson-back">← Quay lại</button>
+        <h2 id="lesson-title">📖 Bài học</h2>
+        <button class="btn teal small" id="btn-lesson-read" aria-label="Đọc lại">🔊</button>
+      </div>
+      <div class="slide" id="slide">
+        <div class="slide-visual" id="slide-visual"></div>
+        <div class="slide-text" id="slide-text"></div>
+      </div>
+      <div class="dots" id="slide-dots"></div>
+      <div class="btn-row lesson-nav">
+        <button class="btn ghost small" id="btn-slide-prev">◀ Trước</button>
+        <button class="btn small" id="btn-slide-next">Tiếp ▶</button>
+        <button class="btn big green" id="btn-lesson-start" hidden>🐯 Lên hổ thôi!</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn ghost small" id="btn-lesson-skip">⏩ Bỏ qua bài học, chơi luôn</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GHI NHỚ ================= -->
+  <div id="notes" class="screen hidden">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-notes-back">← Quay lại</button>
+        <h2>📖 Ghi nhớ</h2>
+        <button class="btn teal small" id="btn-notes-read">🔊 Đọc</button>
+      </div>
+      <div class="notes-list" id="notes-list"></div>
+      <p class="tip">💡 Chạm vào một dòng để nghe đọc. Xem bài học đầy đủ ở từng màn trong <b>Hành trình</b>.</p>
+    </div>
+  </div>
+
+  <!-- ================= HƯỚNG DẪN ================= -->
+  <div id="howto" class="screen hidden dim">
+    <div class="panel">
+      <h2>❓ Cách chơi</h2>
+      <div class="howto-list">
+        <div class="howto-item"><div class="em">📖</div><div class="tx">Mỗi màn bắt đầu bằng một <b>bài học ngắn</b> về xem đồng hồ. Đọc kỹ rồi bấm <b>Lên hổ thôi!</b></div></div>
+        <div class="howto-item"><div class="em">🔥</div><div class="tx">Bé cưỡi hổ chạy tới <b>3 vòng lửa</b>, mỗi vòng mang một đáp án. Nhìn câu hỏi ở trên và <b>chạm vào vòng có đáp án đúng</b>.</div></div>
+        <div class="howto-item"><div class="em">🐯</div><div class="tx">Hổ sẽ <b>nhảy qua vòng</b> bé chọn. Đúng thì vòng lửa nổ thành sao, được điểm. Sai thì bị nóng, <b>mất 1 tim</b> và vòng đúng sẽ sáng lên để bé nhớ.</div></div>
+        <div class="howto-item"><div class="em">⏱️</div><div class="tx">Mỗi vòng có <b>thời gian chọn</b>. Chọn nhanh được thêm điểm, trả lời đúng liên tiếp được <b>Combo</b>.</div></div>
+        <div class="howto-item"><div class="em">❓</div><div class="tx">Về đích xong là phần <b>Hỏi đáp</b>: trả lời đúng hết các câu để <b>mở khóa màn tiếp theo</b>. Sai thì đọc giải thích rồi thử lại nhé!</div></div>
+      </div>
+      <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
+      <div class="btn-row">
+        <button class="btn" id="btn-howto-close">Đã hiểu!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ĐẾM NGƯỢC ================= -->
+  <div id="countdown" class="screen hidden">
+    <div class="count" id="count-num">3</div>
+  </div>
+
+  <!-- ================= TẠM DỪNG ================= -->
+  <div id="pause" class="screen hidden dim">
+    <div class="panel">
+      <h2>⏸ Tạm dừng</h2>
+      <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
+      <div class="toggle-row" data-audio-toggles></div>
+      <div class="btn-row">
+        <button class="btn big green" id="btn-resume">▶ Chơi tiếp</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
+        <button class="btn ghost small" id="btn-pause-lesson">📖 Xem bài học</button>
+        <button class="btn ghost small" id="btn-quit">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ ================= -->
+  <div id="gameover" class="screen hidden dim">
+    <div class="panel">
+      <h2 class="result-title" id="result-title">Về đích!</h2>
+      <p id="result-level">Màn 1: Giờ đúng</p>
+      <div class="result-score-label">ĐIỂM CỦA BẠN</div>
+      <div class="result-score" id="result-score">0</div>
+      <div class="result-stars" id="result-stars"></div>
+      <div id="result-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
+      <div class="stats">
+        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
+        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Combo cao nhất 🔥</div></div>
+        <div class="stat acc"><div class="v" id="st-acc">0%</div><div class="k">Chính xác 🎯</div></div>
+      </div>
+      <div id="review" class="review" hidden>
+        <h3>📝 Cần ôn lại</h3>
+        <div class="review-chips" id="review-chips"></div>
+      </div>
+      <p class="result-msg" id="result-msg"></p>
+      <div class="btn-row">
+        <button class="btn big purple" id="btn-quiz">❓ HỎI ĐÁP – mở khóa màn tiếp</button>
+        <button class="btn big" id="btn-again">🔄 Chơi lại</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="btn-next-level" hidden>▶ Màn tiếp theo</button>
+        <button class="btn ghost small" id="btn-result-lesson">📖 Bài học</button>
+        <button class="btn ghost small" id="btn-other-level">🗺️ Hành trình</button>
+        <button class="btn ghost small" id="btn-home">🏠 Trang chính</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= HỎI ĐÁP (mở khóa màn tiếp) ================= -->
+  <div id="quiz" class="screen hidden dim">
+    <div class="panel wide quiz-panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-quiz-back">← Thoát</button>
+        <h2 id="quiz-title">❓ Hỏi đáp</h2>
+        <button class="btn teal small" id="btn-quiz-read" aria-label="Đọc câu hỏi">🔊</button>
+      </div>
+      <div class="dots" id="quiz-dots"></div>
+      <div id="quiz-body">
+        <div class="quiz-q">
+          <div class="quiz-visual" id="quiz-visual" hidden></div>
+          <div class="quiz-text" id="quiz-text"></div>
+        </div>
+        <div class="quiz-answers" id="quiz-answers"></div>
+        <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+        <div class="btn-row">
+          <button class="btn small" id="btn-quiz-next" hidden>Tiếp ▶</button>
+          <button class="btn small green" id="btn-quiz-retry" hidden>🔄 Thử lại</button>
+        </div>
+      </div>
+      <div id="quiz-done" hidden>
+        <div class="unlock-art" id="unlock-art">🎉</div>
+        <h3 class="unlock-title" id="unlock-title">Mở khóa màn mới!</h3>
+        <p class="unlock-desc" id="unlock-desc"></p>
+        <div class="btn-row">
+          <button class="btn big green" id="btn-quiz-play-next">▶ Chơi màn tiếp</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn ghost small" id="btn-quiz-levels">🗺️ Hành trình</button>
+          <button class="btn ghost small" id="btn-quiz-home">🏠 Trang chính</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/audio.js"></script>
+<script src="js/lessons.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

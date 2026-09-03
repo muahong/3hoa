@@ -8,5 +8,6 @@ Website tĩnh, phục vụ bằng GitHub Pages (nhánh `main`, thư mục gốc)
 - `/me-cung-dong-ho/` – **Mê Cung Đồng Hồ**: game mê cung kiểu Pacman học xem đồng hồ cho bé lớp 2–3, có bài học và hỏi đáp sau mỗi màn (xem `me-cung-dong-ho/README.md`)
 - `/thap-dong-ho/` – **Tháp Đồng Hồ**: game xếp đồng hồ kiểu Tetris học xem giờ cho bé lớp 2–3, có bài học và hỏi đáp sau mỗi màn (xem `thap-dong-ho/README.md`)
 - `/xe-tang-thoi-gian/` – **Xe Tăng Thời Gian**: game xe tăng bắn robot học xem đồng hồ cho bé lớp 2–3, mỗi màn có bài học và phần hỏi đáp để mở khóa màn sau (xem `xe-tang-thoi-gian/README.md`)
+- `/cuoi-ho/` – **Cưỡi Hổ Vượt Lửa**: game cưỡi hổ nhảy qua vòng lửa học xem đồng hồ, tính thời gian cho bé lớp 2–3; mỗi màn có bài học, vượt vòng lửa và hỏi đáp để mở khóa màn tiếp (xem `cuoi-ho/README.md`)
 
 Cập nhật website: sửa file rồi `git push` lên nhánh `main`, GitHub Pages tự triển khai sau khoảng 1 phút.

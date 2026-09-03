@@ -117,7 +117,8 @@
           Music._init(this.ctx, this.master);
         }
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        // iOS có thể để ngữ cảnh ở trạng thái 'interrupted' (cuộc gọi, Siri...) – resume mọi trạng thái khác 'running'
+        if (this.ctx.state !== 'running' && this.ctx.resume) this.ctx.resume().then(done, done);
         else done();
         if (!this._unlocked) {
           const buf = this.ctx.createBuffer(1, 1, 22050);
@@ -129,6 +130,16 @@
         }
       } catch (e) { /* bỏ qua */ }
       Voice.unlock();
+    },
+
+    /** Tiếp tục ngữ cảnh audio đã có (tab hiện lại, pageshow, focus) – không tạo ngữ cảnh mới ngoài thao tác người dùng. */
+    resume() {
+      try {
+        if (!this.ctx) return;
+        const done = () => { Music._kick(); };
+        if (this.ctx.state !== 'running' && this.ctx.resume) this.ctx.resume().then(done, done);
+        else done();
+      } catch (e) { /* bỏ qua */ }
     },
 
     setEnabled(on) {
@@ -507,13 +518,24 @@
         u.pitch = opts.pitch || 1.05;
         u.volume = 1;
         const self = this;
-        u.onstart = function () { self._speaking = true; Music.duck(true, 0.3); if (opts.onstart) opts.onstart(); };
+        this._u = u;   // giữ tham chiếu để trình duyệt không thu dọn utterance đang đọc (lỗi Chrome)
+        u.onstart = function () {
+          self._speaking = true;
+          Music.duck(true, 0.3);
+          // Đồng hồ an toàn: nếu onend không bao giờ tới, không để _speaking treo mãi
+          clearTimeout(u._t);
+          u._t = setTimeout(function () { if (self._speaking) { self._speaking = false; Music.duck(false); } }, Math.min(15000, 80 * String(text).length + 1500));
+          if (opts.onstart) opts.onstart();
+        };
         u.onend = u.onerror = function () {
+          clearTimeout(u._t);
           self._speaking = false;
           if (!ss.pending && !ss.speaking) Music.duck(false);
           if (opts.onend) opts.onend();
         };
-        ss.speak(u);
+        // Sau cancel() một số trình duyệt còn "speaking/pending" một nhịp – hoãn speak sang tick sau
+        if (!opts.queue && (ss.speaking || ss.pending)) setTimeout(function () { try { ss.speak(u); } catch (e) { /* bỏ qua */ } }, 0);
+        else ss.speak(u);
       } catch (e) { /* bỏ qua */ }
     },
 

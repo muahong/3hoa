@@ -1,88 +1,214 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="3hoa.com – Ninja Toán Học (cộng trừ), Vệ Binh Cửu Chương (bảng nhân, bảng chia), Mê Cung Đồng Hồ, Tháp Đồng Hồ, Xe Tăng Thời Gian và Cưỡi Hổ Vượt Lửa (học xem đồng hồ, tính thời gian) cho bé lớp 1 đến lớp 3. Chơi tốt trên iPad!">
-    <title>3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3</title>
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="icon" type="image/png" href="images/favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3</title>
+<meta name="description" content="6 trò chơi học Toán miễn phí cho bé lớp 1–3: cộng trừ nhân chia, bảng cửu chương, xem đồng hồ và tính thời gian. Chơi tốt trên iPad.">
+<link rel="canonical" href="https://3hoa.com/">
+<meta name="theme-color" content="#1a0b3d">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://3hoa.com/">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:site_name" content="3hoa.com">
+<meta property="og:title" content="3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3">
+<meta property="og:description" content="6 trò chơi học Toán miễn phí cho bé lớp 1–3: cộng trừ nhân chia, bảng cửu chương, xem đồng hồ và tính thời gian. Chơi tốt trên iPad.">
+<meta property="og:image" content="https://3hoa.com/images/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="3hoa.com – sáu trò chơi học Toán cho bé lớp 1 đến lớp 3">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3">
+<meta name="twitter:description" content="6 trò chơi học Toán miễn phí cho bé lớp 1–3: cộng trừ nhân chia, bảng cửu chương, xem đồng hồ và tính thời gian. Chơi tốt trên iPad.">
+<meta name="twitter:image" content="https://3hoa.com/images/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="css/main.css">
+<link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="3hoa">
+<meta name="application-name" content="3hoa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-    <header>
-        <h1>3hoa.com – Trò chơi học Toán</h1>
-        <nav>
-            <ul>
-                <li><a href="math-ninja/">Ninja Toán Học</a></li>
-                <li><a href="cuu-chuong/">Vệ Binh Cửu Chương</a></li>
-                <li><a href="me-cung-dong-ho/">Mê Cung Đồng Hồ</a></li>
-                <li><a href="thap-dong-ho/">Tháp Đồng Hồ</a></li>
-                <li><a href="xe-tang-thoi-gian/">Xe Tăng Thời Gian</a></li>
-                <li><a href="cuoi-ho/">Cưỡi Hổ Vượt Lửa</a></li>
-            </ul>
-        </nav>
-    </header>
+<a class="skip" href="#games">Bỏ qua, tới danh sách trò chơi</a>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./" aria-label="3hoa.com – trang chủ">
+      <img src="images/favicon.svg" width="44" height="44" alt="" decoding="async">
+      <span>3hoa<b>.com</b></span>
+    </a>
+    <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi" aria-haspopup="dialog" aria-expanded="false">
+      <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
+    </button>
+  </header>
 
-    <main>
-        <section id="game-selection">
-            <h2>Chọn trò chơi</h2>
-            <div class="game-grid">
-                <div class="game-card featured" id="ninja-toan">
-                    <img src="math-ninja/icons/icon-512.png" alt="Ninja Toán Học">
-                    <div class="game-info">
-                        <h3>Ninja Toán Học</h3>
-                        <p>Chém trái cây, học cộng trừ nhân cho bé lớp 1 đến lớp 3. Chơi tốt trên iPad!</p>
-                        <button onclick="location.href='math-ninja/'">Chơi ngay</button>
-                    </div>
-                </div>
-                <div class="game-card featured" id="cuu-chuong">
-                    <img src="cuu-chuong/icons/icon-512.png" alt="Vệ Binh Cửu Chương">
-                    <div class="game-info">
-                        <h3>Vệ Binh Cửu Chương</h3>
-                        <p>Bắn thiên thạch, học bảng nhân và bảng chia cho bé lớp 2, lớp 3. Chơi tốt trên iPad!</p>
-                        <button onclick="location.href='cuu-chuong/'">Chơi ngay</button>
-                    </div>
-                </div>
-                <div class="game-card featured" id="me-cung-dong-ho">
-                    <img src="me-cung-dong-ho/icons/icon-512.png" alt="Mê Cung Đồng Hồ">
-                    <div class="game-info">
-                        <h3>Mê Cung Đồng Hồ</h3>
-                        <p>Mê cung kiểu Pacman: Cú Tí tránh ma, tìm đúng đồng hồ để học xem giờ cho bé lớp 2, lớp 3. Sau mỗi màn có hỏi đáp để mở màn mới!</p>
-                        <button onclick="location.href='me-cung-dong-ho/'">Chơi ngay</button>
-                    </div>
-                </div>
-                <div class="game-card featured" id="thap-dong-ho">
-                    <img src="thap-dong-ho/icons/icon-512.png" alt="Tháp Đồng Hồ">
-                    <div class="game-info">
-                        <h3>Tháp Đồng Hồ</h3>
-                        <p>Xếp đồng hồ kiểu Tetris, học xem giờ cho bé lớp 2, lớp 3. Có bài học và hỏi đáp sau mỗi màn. Chơi tốt trên iPad!</p>
-                        <button onclick="location.href='thap-dong-ho/'">Chơi ngay</button>
-                    </div>
-                </div>
-                <div class="game-card featured" id="xe-tang">
-                    <img src="xe-tang-thoi-gian/icons/icon-512.png" alt="Xe Tăng Thời Gian">
-                    <div class="game-info">
-                        <h3>Xe Tăng Thời Gian</h3>
-                        <p>Bắn robot, học xem đồng hồ (giờ đúng, giờ rưỡi, giờ kém, 24 giờ…) cho bé lớp 2, lớp 3. Sau mỗi màn có hỏi đáp để mở màn mới. Chơi tốt trên iPad!</p>
-                        <button onclick="location.href='xe-tang-thoi-gian/'">Chơi ngay</button>
-                    </div>
-                </div>
-                <div class="game-card featured" id="cuoi-ho">
-                    <img src="cuoi-ho/icons/icon-512.png" alt="Cưỡi Hổ Vượt Lửa">
-                    <div class="game-info">
-                        <h3>Cưỡi Hổ Vượt Lửa</h3>
-                        <p>Cưỡi hổ nhảy qua vòng lửa, học xem đồng hồ và tính thời gian cho bé lớp 2, lớp 3. Học bài, vượt lửa, hỏi đáp để mở khóa màn mới!</p>
-                        <button onclick="location.href='cuoi-ho/'">Chơi ngay</button>
-                    </div>
-                </div>
+  <main>
+    <section class="panel hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="title">👋 Chào <span id="hero-name">bé</span>!<small>Trò chơi học Toán lớp 1 – 3</small></h1>
+      <p id="hero-sub" class="lead">Con chọn một trò để bắt đầu nhé!</p>
+      <ul class="achv" id="achv" aria-label="Thành tích"></ul>
+      <div class="btn-row">
+        <a class="btn" id="hero-play" href="math-ninja/" hidden>▶ Chơi tiếp</a>
+        <a class="btn purple" id="btn-random" href="math-ninja/">🎲 Chơi ngẫu nhiên</a>
+      </div>
+    </section>
+
+    <div id="games" tabindex="-1">
+      <section aria-labelledby="h-so">
+        <h2 id="h-so">🔢 Số học</h2>
+        <div class="game-grid">
+          <article class="game-card" data-game="math-ninja" aria-labelledby="t-math-ninja">
+            <img class="thumb" src="math-ninja/icons/icon-192.png" width="192" height="192" alt="" decoding="async">
+            <div class="body">
+              <h3 id="t-math-ninja">Ninja Toán Học</h3>
+              <p class="tagline">Chém trái cây, luyện cộng trừ nhân thật nhanh.</p>
+              <p class="tags"><span class="tag grade">Lớp 1–3</span><span class="tag">➕➖✖️ Cộng trừ nhân</span></p>
+              <p class="topics">Cộng trừ trong 10, 20, 100, 1000 · có nhớ · nhân 2–9 · bạn của 10 và 100</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="math-ninja/" aria-label="Chơi Ninja Toán Học">▶ Chơi ngay</a>
             </div>
-        </section>
-    </main>
+          </article>
+          <article class="game-card" data-game="cuu-chuong" aria-labelledby="t-cuu-chuong">
+            <img class="thumb" src="cuu-chuong/icons/icon-192.png" width="192" height="192" alt="" decoding="async">
+            <div class="body">
+              <h3 id="t-cuu-chuong">Vệ Binh Cửu Chương</h3>
+              <p class="tagline">Bắn thiên thạch bằng bảng nhân, bảng chia.</p>
+              <p class="tags"><span class="tag grade">Lớp 2–3</span><span class="tag">✖️➗ Bảng nhân chia</span></p>
+              <p class="topics">Bảng 2 và 5 · bảng 3, 4, 6, 7, 8, 9 · tìm thừa số · nhân chia số lớn</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="cuu-chuong/" aria-label="Chơi Vệ Binh Cửu Chương">▶ Chơi ngay</a>
+            </div>
+          </article>
+        </div>
+      </section>
 
-    <footer>
-        <p>&copy; 2026 3hoa.com</p>
-    </footer>
+      <section aria-labelledby="h-gio">
+        <h2 id="h-gio">🕐 Xem đồng hồ</h2>
+        <div class="game-grid">
+          <article class="game-card" data-game="me-cung-dong-ho" aria-labelledby="t-me-cung-dong-ho">
+            <img class="thumb" src="me-cung-dong-ho/icons/icon-192.png" width="192" height="192" alt="" decoding="async" loading="lazy">
+            <div class="body">
+              <h3 id="t-me-cung-dong-ho">Mê Cung Đồng Hồ</h3>
+              <p class="tagline">Mê cung kiểu Pacman: Cú Tí tìm đúng đồng hồ.</p>
+              <p class="tags"><span class="tag grade">Lớp 2–3</span><span class="tag">🕐 Xem giờ</span></p>
+              <p class="topics">Giờ đúng · giờ rưỡi · 15 phút · sáng chiều tối · 5 phút · giờ kém · điện tử · thời gian trôi</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="me-cung-dong-ho/" aria-label="Chơi Mê Cung Đồng Hồ">▶ Chơi ngay</a>
+            </div>
+          </article>
+          <article class="game-card" data-game="thap-dong-ho" aria-labelledby="t-thap-dong-ho">
+            <img class="thumb" src="thap-dong-ho/icons/icon-192.png" width="192" height="192" alt="" decoding="async" loading="lazy">
+            <div class="body">
+              <h3 id="t-thap-dong-ho">Tháp Đồng Hồ</h3>
+              <p class="tagline">Xếp đồng hồ kiểu Tetris, đọc giờ đúng và nhanh.</p>
+              <p class="tags"><span class="tag grade">Lớp 2–3</span><span class="tag">🕐 Xem giờ</span></p>
+              <p class="topics">Giờ đúng · giờ rưỡi · 15 phút · 5 phút · giờ kém · từng phút · 24 giờ</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="thap-dong-ho/" aria-label="Chơi Tháp Đồng Hồ">▶ Chơi ngay</a>
+            </div>
+          </article>
+          <article class="game-card" data-game="xe-tang-thoi-gian" aria-labelledby="t-xe-tang-thoi-gian">
+            <img class="thumb" src="xe-tang-thoi-gian/icons/icon-192.png" width="192" height="192" alt="" decoding="async" loading="lazy">
+            <div class="body">
+              <h3 id="t-xe-tang-thoi-gian">Xe Tăng Thời Gian</h3>
+              <p class="tagline">Lái xe tăng bắn robot, trả lời câu hỏi về giờ.</p>
+              <p class="tags"><span class="tag grade">Lớp 2–3</span><span class="tag">🕐 Xem giờ</span><span class="tag">👨‍👩‍👧 Có góc phụ huynh</span></p>
+              <p class="topics">Giờ đúng · giờ rưỡi · 15 phút · ngày và giờ · 5 phút · giờ kém · điện tử · thời gian trôi qua</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="xe-tang-thoi-gian/" aria-label="Chơi Xe Tăng Thời Gian">▶ Chơi ngay</a>
+            </div>
+          </article>
+          <article class="game-card" data-game="cuoi-ho" aria-labelledby="t-cuoi-ho">
+            <img class="thumb" src="cuoi-ho/icons/icon-192.png" width="192" height="192" alt="" decoding="async" loading="lazy">
+            <div class="body">
+              <h3 id="t-cuoi-ho">Cưỡi Hổ Vượt Lửa</h3>
+              <p class="tagline">Cưỡi hổ nhảy qua vòng lửa, đọc giờ và tính thời gian.</p>
+              <p class="tags"><span class="tag grade">Lớp 2–3</span><span class="tag">🕐 Xem giờ</span><span class="tag">⏳ Tính thời gian</span></p>
+              <p class="topics">Giờ đúng · giờ rưỡi · 15 phút · 5 phút · giờ kém · từng phút · 24 giờ · tính thời gian</p>
+              <p class="progress empty" data-progress>Chưa chơi</p>
+              <p class="best" data-best hidden></p>
+              <div class="bar" aria-hidden="true"><span data-bar></span></div>
+              <a class="btn" href="cuoi-ho/" aria-label="Chơi Cưỡi Hổ Vượt Lửa">▶ Chơi ngay</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel parents" aria-labelledby="h-ph">
+        <h2 id="h-ph">👨‍👩‍👧 Dành cho phụ huynh</h2>
+        <p>Mỗi trò chơi có <b>bài học ngắn → chơi → hỏi đáp</b> để mở màn mới. Mỗi bé có hồ sơ riêng (nút tên ở góc trên): sao, kỷ lục và phần “📊 Kết quả” trong từng trò chơi theo từng bé. Dữ liệu chỉ lưu trên máy này, không gửi đi đâu.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer><p>© 2026 3hoa.com · Miễn phí, không quảng cáo, chơi tốt trên iPad</p></footer>
+</div>
+
+<!-- ================= NGƯỜI CHƠI (hộp thoại) ================= -->
+<div id="players" class="screen dim" role="dialog" aria-modal="true" aria-labelledby="players-title" hidden>
+  <div class="panel">
+    <div class="screen-head">
+      <button type="button" class="btn ghost small" id="btn-players-back">← Quay lại</button>
+      <h2 id="players-title">👋 Ai đang chơi?</h2>
+      <span></span>
+    </div>
+    <div class="player-list" id="player-list"></div>
+    <div class="btn-row">
+      <button type="button" class="btn small" id="btn-player-add">＋ Thêm bạn mới</button>
+      <button type="button" class="btn ghost small" id="btn-player-rename">✏️ Đổi tên</button>
+      <button type="button" class="btn ghost small" id="btn-player-avatar">🎭 Đổi hình</button>
+      <button type="button" class="btn ghost small" id="btn-player-remove">🗑 Xóa</button>
+    </div>
+    <form class="player-form" id="player-form" hidden autocomplete="off">
+      <label for="player-name" class="sr-only">Tên của con</label>
+      <input id="player-name" maxlength="16" placeholder="Tên của con" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+      <div class="avatar-grid" id="player-avatars"></div>
+      <div class="btn-row">
+        <button type="submit" class="btn small green" id="btn-player-save">💾 Lưu</button>
+        <button type="button" class="btn ghost small" id="btn-player-cancel">Hủy</button>
+      </div>
+    </form>
+    <p class="note">Xóa một bạn chỉ xóa tên trên trang này; tiến trình trong từng trò chơi của bạn đó vẫn còn cho tới khi phụ huynh xóa trong trò chơi.</p>
+  </div>
+</div>
+
+<!-- ================= CỔNG PHỤ HUYNH ================= -->
+<div id="parent-gate" class="screen dim" role="dialog" aria-modal="true" aria-labelledby="parent-gate-title" hidden>
+  <div class="panel">
+    <h2 id="parent-gate-title">👨‍👩‍👧 Dành cho phụ huynh</h2>
+    <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
+    <form id="parent-gate-form" class="gate-form" autocomplete="off">
+      <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off">
+      <div class="btn-row">
+        <button type="submit" class="btn small green">Xác nhận</button>
+        <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/profile.js"></script>
+<script src="js/hub.js"></script>
 </body>
 </html>

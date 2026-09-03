@@ -30,7 +30,8 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 | `js/clock.js` | Kiến thức xem giờ: mô hình thời gian, đọc giờ tiếng Việt, vẽ đồng hồ (Canvas + SVG), màn chơi, bài học, ngân hàng câu hỏi, đáp án nhiễu "giống lỗi thường gặp" |
 | `js/mazes.js` | Ba mê cung ASCII (có đường hầm), tự xoay khi màn hình dọc, BFS |
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
-| `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ |
+| `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) – sao chép nguyên văn, nạp trước `game.js` |
+| `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ theo từng bé, ôn lại thông minh, báo cáo |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi (mở khóa lần lượt)
@@ -52,9 +53,13 @@ Luật chơi: có 3 tim ❤️. Bị ma bắt hoặc ăn nhầm đồng hồ m�
 
 Màn **📖 Học xem giờ** ở menu chính cho bé quay kim (+5 phút, +15 phút, +30 phút, +1 giờ), xem cách đọc, đồng hồ điện tử tương ứng và nghe đọc.
 
+## Nhiều bé chơi chung một máy
+
+Nút **người chơi** (hình + tên) ở góc menu chính mở màn *Ai đang chơi?*: thêm bạn mới (tối đa 8), đổi tên, đổi hình. Mỗi bé có tiến độ, kỷ lục, sao và danh sách *cần ôn lại* riêng; tên và hình dùng chung cho mọi game trên 3hoa.com. Khoảng 25% số lượt trong một màn (1–3 lượt, không bao giờ lượt đầu) được lấy từ những giờ bé từng đọc nhầm (gắn nhãn *📝 Ôn lại*); một câu hỏi đáp cũng ôn lại mục đó. Đọc đúng 2 lần thì mục được bỏ khỏi danh sách.
+
 ## Dành cho phụ huynh
 
-Ở màn **Chọn màn chơi** có nút *mở khóa tất cả các màn* (khi bé lớp 3 muốn học ngay giờ kém) và *học lại từ đầu* (xóa tiến độ trên thiết bị).
+Ở màn **Chọn màn chơi** có nút **📊 Kết quả** (số ván, tỉ lệ đúng, phút luyện tập, sao và tỉ lệ đúng từng màn, màn cần luyện thêm, danh sách cần ôn lại của bé đang chơi), nút *mở khóa tất cả các màn* (khi bé lớp 3 muốn học ngay giờ kém) và *học lại từ đầu* (xóa tiến độ của bé đang chơi). Các thao tác này hỏi một phép nhân (ví dụ *7 × 8 = ?*) để bé không tự bấm. Trên menu chính có nút **✨ Hiệu ứng: Nhiều/Ít** cho máy yếu hoặc bé nhạy với chuyển động (game cũng tự giảm hiệu ứng khi hệ thống bật *Reduce Motion*).
 
 ## Tùy chỉnh nhanh
 

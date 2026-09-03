@@ -26,7 +26,7 @@ rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính: phím
 2. Truy cập `https://3hoa.com/xe-tang-thoi-gian/` để chơi.
 3. Website nên chạy qua **HTTPS** để bật được chế độ chơi ngoại tuyến (service worker) và tính năng "Thêm vào Màn hình chính" trên iPad.
 
-Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, điểm cao) được lưu ngay trên thiết bị (localStorage) của từng máy.
+Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, điểm cao, kho "cần ôn lại", thống kê) được lưu ngay trên thiết bị (localStorage) của từng máy, **riêng cho từng bé**: chạm vào **tên bé** trên trang chính để thêm bạn mới, đổi tên, đổi hình (hồ sơ dùng chung cho mọi game trên 3hoa.com). Dữ liệu của phiên bản cũ được tự động chuyển sang bé đầu tiên.
 
 ## Cấu trúc thư mục
 
@@ -37,7 +37,8 @@ Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, đi
 | `js/clock.js` | Mô hình thời gian: đọc giờ tiếng Việt, vẽ đồng hồ kim/điện tử, sinh câu hỏi và đáp án nhiễu "giống lỗi thường gặp" |
 | `js/levels.js` | 9 màn chơi: bài học, bộ sinh câu hỏi và ngân hàng câu hỏi đáp có giải thích |
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
-| `js/game.js` | Bộ máy trò chơi: xe tăng, robot, đạn, hiệu ứng, điểm, combo, hỏi đáp, lưu tiến trình |
+| `js/profile.js` | Hồ sơ người chơi dùng chung giữa các game (tên, hình đại diện) – giống hệt ở mọi game |
+| `js/game.js` | Bộ máy trò chơi: xe tăng, robot, đạn, hiệu ứng, điểm, combo, hỏi đáp, lưu tiến trình, ôn lại thông minh, bảng kết quả |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi
@@ -54,7 +55,13 @@ Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, đi
 | 8. Thời gian trôi qua | Từ 7 giờ đến 7 giờ 30 phút là 30 phút; giờ kết thúc | Lớp 3 |
 | 9. Siêu Xe Tăng | Trộn tất cả, robot tiến nhanh hơn | Thử thách |
 
-Các màn mở khóa lần lượt. Nút **👨‍👩‍👧** ở màn chọn màn (có câu hỏi nhân để trẻ không tự bấm) cho phép phụ huynh, thầy cô **mở khóa tất cả màn** để bé học đúng phần của lớp mình, hoặc xóa tiến trình.
+Các màn mở khóa lần lượt. Nút **👨‍👩‍👧** ở màn chọn màn (có câu hỏi nhân để trẻ không tự bấm) cho phép phụ huynh, thầy cô **mở khóa tất cả màn** để bé học đúng phần của lớp mình, hoặc xóa tiến trình của bé đang chơi.
+
+**Ôn lại thông minh**: câu bé làm sai được ghi vào kho "cần ôn lại"; ở các ván sau, khoảng 1/4 số câu (1–3 câu, chỉ những câu thuộc màn đã học) được lấy từ kho này với đáp án nhiễu mới và gắn nhãn **📝 Ôn lại** trên HUD. Trả lời đúng hai lần thì câu đó ra khỏi kho.
+
+**📊 Kết quả** (màn chọn màn hoặc màn người chơi): số ván, tỉ lệ đúng, phút luyện tập, sao/điểm/hỏi đáp từng màn, dấu **Đã thuộc** (đúng ≥ 90 % trên ≥ 20 câu), chủ đề cần luyện thêm và kho cần ôn lại của bé. Nút xóa tiến trình ở đây (và xóa người chơi) đều qua **cổng phụ huynh** (câu nhân) trong trang.
+
+Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung màn hình, chớp sáng và số hạt; thiết bị bật "giảm chuyển động" cũng tự chuyển sang mức ít.
 
 ## Tùy chỉnh nhanh
 

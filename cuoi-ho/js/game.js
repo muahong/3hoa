@@ -9,7 +9,7 @@
   'use strict';
 
   const L = window.Lessons, Sfx = window.Sfx, Music = window.Music, Voice = window.Voice;
-  const rnd = L.rnd, chance = L.chance, pick = L.pick, esc = L.esc;
+  const pick = L.pick, esc = L.esc;
   const TAU = Math.PI * 2;
   const FONT = '"Baloo 2", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
   const $ = function (id) { return document.getElementById(id); };
@@ -22,37 +22,184 @@
   const LEARN_T = 2.8;        // giây dừng lại nhìn đáp án đúng sau khi sai
   const RUN_GAP_T = 1.4;      // giây chạy giữa hai cụm vòng lửa
   const LANES = 3;            // số vòng lửa mỗi cụm (trên, giữa, dưới)
+  const TAP_TIP_TEXT = '👆 Chạm vào vòng lửa có đáp án đúng để hổ nhảy qua!';
+  const REVIEW_FIELDS = ['h', 'm', 'r', 'v', 'w', 'd', 'k'];   // các trường số hợp lệ trong info của câu ôn lại
 
-  /* ================= LƯU TRỮ (localStorage) ================= */
+  /* ================= LƯU TRỮ (localStorage) =================
+     Thiết lập thiết bị ở cấp cao nhất (sound, music, voice, fx, seenTip). Tiến trình của từng bé nằm ở players[id]:
+     { unlocked, levels, badge } (hình dạng cũ) + missed (câu từng sai để ôn lại thông minh) + stats (kết quả của bé).
+     Dữ liệu cũ (progress ở cấp cao nhất) được chuyển sang bé mặc định p1. KHÔNG tin bất kỳ giá trị nào đọc từ máy:
+     mọi trường đều được ép kiểu/kẹp khoảng, khóa __proto__/constructor/prototype bị loại bỏ khi đọc JSON. */
   const Store = {
     key: 'cuoi-ho-v1',
-    data: { sound: true, music: true, voice: true, seenTip: false, progress: { unlocked: 1, levels: {}, badge: false } },
+    data: { sound: true, music: true, voice: true, fx: 'full', seenTip: false, players: {} },
+    blank() {
+      return { unlocked: 1, levels: {}, badge: false, missed: {}, stats: { plays: 0, correct: 0, wrong: 0, seconds: 0, byTopic: {}, last: 0 } };
+    },
+    reviver(k, v) { return (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v; },
+    int(v, lo, hi, def) { v = Math.floor(Number(v)); return Number.isFinite(v) ? clamp(v, lo, hi) : def; },
+    mkey(k) { return String(k == null ? '' : k).slice(0, 80); },
     load() {
-      try {
-        const raw = localStorage.getItem(this.key);
-        if (raw) {
-          const d = JSON.parse(raw);
-          if (d && typeof d === 'object') Object.assign(this.data, d);
-        }
-      } catch (e) { /* bỏ qua */ }
-      if (!this.data.progress || typeof this.data.progress !== 'object') this.data.progress = { unlocked: 1, levels: {}, badge: false };
-      if (!this.data.progress.levels) this.data.progress.levels = {};
-      if (!(this.data.progress.unlocked >= 1)) this.data.progress.unlocked = 1;
+      let d = null;
+      try { const raw = localStorage.getItem(this.key); if (raw) d = JSON.parse(raw, this.reviver); } catch (e) { d = null; }
+      if (!d || typeof d !== 'object') d = {};
+      this.data.sound = d.sound !== false;
+      this.data.music = d.music !== false;
+      this.data.voice = d.voice !== false;
+      this.data.fx = d.fx === 'lite' ? 'lite' : 'full';
+      this.data.seenTip = d.seenTip === true;
+      this.data.players = {};
+      const src = d.players && typeof d.players === 'object' ? d.players : null;
+      if (src) {
+        Object.keys(src).forEach(function (id) {
+          if (/^[A-Za-z0-9_-]{1,24}$/.test(id) && src[id] && typeof src[id] === 'object') Store.data.players[id] = Store.sanitize(src[id]);
+        });
+      } else if (d.progress && typeof d.progress === 'object') {
+        // Di trú dữ liệu cũ (chưa có players): tiến trình cũ thuộc về bé mặc định p1
+        this.data.players.p1 = this.sanitize(d.progress);
+        this.save();
+      }
+    },
+    /** Ép một bucket tiến trình về đúng kiểu/khoảng. */
+    sanitize(b) {
+      const out = this.blank();
+      if (!b || typeof b !== 'object') return out;
+      out.unlocked = this.int(b.unlocked, 1, L.LEVELS.length, 1);
+      out.badge = b.badge === true;
+      const lv = b.levels && typeof b.levels === 'object' ? b.levels : {};
+      L.LEVELS.forEach(function (l) {
+        const r = lv[l.id];
+        if (!r || typeof r !== 'object') return;
+        out.levels[l.id] = Store.cleanRec(r);
+      });
+      const ms = b.missed && typeof b.missed === 'object' ? b.missed : {};
+      Object.keys(ms).slice(0, 120).forEach(function (k) {
+        const e = ms[k], key = Store.mkey(k);
+        if (!key || !e || typeof e !== 'object') return;
+        const info = Store.cleanInfo(e.info);
+        if (!info) return;
+        const q = L.regen(info);
+        if (!q || Store.mkey(q.key) !== key) return;   // info phải sinh lại đúng câu đã lưu
+        out.missed[key] = { n: Store.int(e.n, 1, 9999, 1), ok: Store.int(e.ok, 0, 9, 0), last: Store.int(e.last, 0, 9e15, 0), info: info };
+      });
+      Store.capMissed(out.missed);
+      const st = b.stats && typeof b.stats === 'object' ? b.stats : {};
+      out.stats.plays = this.int(st.plays, 0, 9999999, 0);
+      out.stats.correct = this.int(st.correct, 0, 99999999, 0);
+      out.stats.wrong = this.int(st.wrong, 0, 99999999, 0);
+      out.stats.seconds = this.int(st.seconds, 0, 999999999, 0);
+      out.stats.last = this.int(st.last, 0, 9e15, 0);
+      const bt = st.byTopic && typeof st.byTopic === 'object' ? st.byTopic : {};
+      Object.keys(bt).slice(0, 40).forEach(function (k) {
+        const t = bt[k];
+        if (!L.levelById(k) || !t || typeof t !== 'object') return;
+        out.stats.byTopic[k] = { c: Store.int(t.c, 0, 99999999, 0), w: Store.int(t.w, 0, 99999999, 0) };
+      });
+      return out;
+    },
+    cleanRec(r) {
+      r = r && typeof r === 'object' ? r : {};
+      return { best: this.int(r.best, 0, 999999, 0), stars: this.int(r.stars, 0, 3, 0), quiz: r.quiz === true, done: r.done === true, plays: this.int(r.plays, 0, 99999, 0) };
+    },
+    cleanInfo(info) {
+      if (!info || typeof info !== 'object' || typeof info.lv !== 'string' || !L.levelById(info.lv)) return null;
+      const out = { lv: info.lv };
+      for (let i = 0; i < REVIEW_FIELDS.length; i++) {
+        const f = REVIEW_FIELDS[i], v = Number(info[f]);
+        if (info[f] != null && Number.isFinite(v) && v >= 0 && v <= 1000) out[f] = v;
+      }
+      return out;
+    },
+    capMissed(m) {
+      const keys = Object.keys(m);
+      if (keys.length <= 60) return;
+      keys.sort(function (a, b) { return m[a].last - m[b].last; });
+      for (let i = 0; i < keys.length - 60; i++) delete m[keys[i]];
     },
     save() {
       try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* bỏ qua */ }
     },
+    activeId() {
+      try { if (window.Players) return Players.active().id; } catch (e) { /* bỏ qua */ }
+      return 'p1';
+    },
+    /** Bucket tiến trình của bé đang chơi (tạo mới nếu chưa có). */
+    p() {
+      const id = this.activeId();
+      if (!this.data.players[id]) this.data.players[id] = this.blank();
+      return this.data.players[id];
+    },
     lv(id) {
-      return this.data.progress.levels[id] || { best: 0, stars: 0, quiz: false, done: false, plays: 0 };
+      const r = this.p().levels[id];
+      return r ? this.cleanRec(r) : { best: 0, stars: 0, quiz: false, done: false, plays: 0 };
     },
     setLv(id, rec) {
-      this.data.progress.levels[id] = rec;
+      try {
+        if (!L.levelById(id)) return;
+        this.p().levels[id] = this.cleanRec(rec);
+        this.save();
+      } catch (e) { /* bỏ qua: lỗi lưu trữ không được làm hỏng ván chơi */ }
+    },
+    isUnlocked(level) { return level.index + 1 <= this.p().unlocked; },
+    unlockUpTo(n) {
+      const b = this.p();
+      n = this.int(n, 1, L.LEVELS.length, 1);
+      if (n > b.unlocked) { b.unlocked = n; this.save(); return true; }
+      return false;
+    },
+    /* ---- Ôn lại thông minh ---- */
+    noteMissed(key, info) {
+      const m = this.p().missed; key = this.mkey(key);
+      const clean = this.cleanInfo(info);
+      if (!key || !clean) return;
+      const q = L.regen(clean);
+      if (!q || this.mkey(q.key) !== key) return;   // info phải sinh lại được đúng câu này (không lưu rác)
+      const e = m[key] || { n: 0, ok: 0, last: 0, info: null };
+      e.n = Math.min(9999, e.n + 1); e.ok = 0; e.last = Date.now(); e.info = clean; m[key] = e;
+      this.capMissed(m);
       this.save();
     },
-    isUnlocked(level) { return level.index + 1 <= this.data.progress.unlocked; },
-    unlockUpTo(n) {
-      if (n > this.data.progress.unlocked) { this.data.progress.unlocked = n; this.save(); return true; }
-      return false;
+    noteOk(key) {
+      const m = this.p().missed; key = this.mkey(key);
+      const e = m[key];
+      if (!e) return;
+      e.ok++;
+      if (e.ok >= 2) delete m[key];
+      this.save();
+    },
+    /** Danh sách câu cần ôn (nhiều sai nhất trước); filterFn(info, key) để lọc theo màn. */
+    reviewPool(filterFn) {
+      const m = this.p().missed;
+      return Object.keys(m)
+        .filter(function (k) { return !filterFn || filterFn(m[k].info, k); })
+        .sort(function (a, b) { return m[b].n - m[a].n || m[b].last - m[a].last; })
+        .map(function (k) { return { key: k, info: m[k].info, n: m[k].n }; });
+    },
+    /* ---- Thống kê cho báo cáo phụ huynh ---- */
+    addStats(round) {
+      const s = this.p().stats;
+      s.plays++; s.correct += round.correct || 0; s.wrong += round.wrong || 0; s.seconds += Math.round(round.seconds || 0); s.last = Date.now();
+      const bump = function (topic, c, w) {
+        if (!topic || !L.levelById(topic)) return;
+        const t = s.byTopic[topic] || { c: 0, w: 0 };
+        t.c += c; t.w += w; s.byTopic[topic] = t;
+      };
+      if (round.topic) bump(round.topic, round.correct || 0, round.wrong || 0);
+      if (round.perTopic) Object.keys(round.perTopic).forEach(function (k) { bump(k, round.perTopic[k].c || 0, round.perTopic[k].w || 0); });
+      this.save();
+    },
+    resetActive() { this.data.players[this.activeId()] = this.blank(); this.save(); }
+  };
+
+  /* ================= CHUYỂN ĐỘNG GIẢM =================
+     Tôn trọng prefers-reduced-motion và thiết lập "✨ Hiệu ứng: Ít": ít hạt hơn, không rung/chớp màn hình, tắt hoạt ảnh CSS. */
+  const Motion = {
+    lite: false,
+    refresh() {
+      let pref = false;
+      try { pref = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { /* bỏ qua */ }
+      this.lite = pref || Store.data.fx === 'lite';
+      try { document.documentElement.classList.toggle('lite-fx', this.lite); } catch (e) { /* bỏ qua */ }
     }
   };
 
@@ -68,11 +215,11 @@
     gates: [], gateIdx: 0, gateTime: 0, jumpT: 0, learnT: 0, finishX: 0, doneT: 0, gap: 600,
     tiger: { y: 0, phase: 0, state: 'run', hurt: 0, cheer: 0, blink: 0, tilt: 0, jumpH: 0 },
     parts: [], texts: [], bg: null, tileGround: null, tileAud: null, tileW: 480, audW: 720,
-    shake: 0, flash: null, glowCache: {},
+    shake: 0, flash: null, glowCache: {}, flameCache: {}, clockCache: {}, layers: {}, builtKey: '', vignette: null, tigerGfx: null,
     score: 0, hearts: MAX_HEARTS, streak: 0, bestStreak: 0, correct: 0, wrong: 0, review: [], firstChoice: true,
     hud: { score: -1, hearts: -1, stage: -1, mult: -1, time: '' },
     cdTimer: 0, resultShown: false, overAt: -1, endReason: '', wakeLock: null, cursor: 1, attractT: 0,
-    lastCrackle: 0, lastStep: 0, quizPassedNow: false,
+    lastCrackle: 0, lastStep: 0, quizPassedNow: false, cdPending: false, stars: 0, isRecord: false, welcomed: false,
     perf: { n: 0, update: 0, render: 0, avgUpdate: 0, avgRender: 0 }
   };
 
@@ -96,12 +243,13 @@
     quizTitle: $('quiz-title'), quizDots: $('quiz-dots'), quizBody: $('quiz-body'), quizVisual: $('quiz-visual'), quizText: $('quiz-text'),
     quizAnswers: $('quiz-answers'), quizFeedback: $('quiz-feedback'), quizNext: $('btn-quiz-next'), quizRetry: $('btn-quiz-retry'),
     quizDone: $('quiz-done'), unlockArt: $('unlock-art'), unlockTitle: $('unlock-title'), unlockDesc: $('unlock-desc'), quizPlayNext: $('btn-quiz-play-next'),
-    ipadTip: $('ipad-tip')
+    ipadTip: $('ipad-tip'),
+    players: $('players'), report: $('report'), parentGate: $('parent-gate')
   };
-  const SCREENS = ['menu', 'levels', 'lesson', 'notes', 'countdown', 'pause', 'gameover', 'quiz'];
+  const SCREENS = ['menu', 'levels', 'lesson', 'notes', 'countdown', 'pause', 'gameover', 'quiz', 'players', 'report'];
 
   function showScreen(name) {
-    SCREENS.forEach(function (k) { ui[k].classList.toggle('hidden', k !== name); });
+    SCREENS.forEach(function (k) { if (ui[k]) ui[k].classList.toggle('hidden', k !== name); });
   }
   function showHud(on) { ui.hud.classList.toggle('hidden', !on); }
   function toast(msg, ms) {
@@ -118,7 +266,9 @@
     const w = app.clientWidth || window.innerWidth;
     const h = app.clientHeight || window.innerHeight;
     if (!w || !h) return;
-    G.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (w === G.W && h === G.H && dpr === G.dpr && G.bg) return;   // không đổi gì → không dựng lại các lớp
+    G.dpr = dpr;
     G.W = w; G.H = h;
     canvas.width = Math.round(w * G.dpr);
     canvas.height = Math.round(h * G.dpr);
@@ -137,19 +287,59 @@
     }
     G.hudBottom = hudBottom;
     const avail = G.ground - 12 - hudBottom - 10;
-    G.r = clamp(Math.min(avail / 6.9, W * 0.14, 84), 34, 84);
-    // Cú nhảy ngắn hơn trên màn hình hẹp để sau khi nhảy, cụm vòng vẫn còn trên màn hình (bé nhìn thấy vòng đúng)
+    // Màn hình hẹp: vòng nhỏ hơn một chút và cú nhảy dài hơn để đầu hổ không che vòng dưới cùng
     const narrow = W < H || W < 700;
-    G.jumpDist = clamp(G.r * (narrow ? 1.7 : 2.4), 90, 260);
+    const rMax = H > W ? 100 : 84;
+    G.r = clamp(Math.min(avail / 6.9, W * (narrow ? 0.125 : 0.14), rMax), 34, rMax);
+    G.jumpDist = clamp(G.r * (narrow ? 2.25 : 2.4), 90, 260);
     G.tigerX = Math.round(clamp(W * (narrow ? 0.24 : 0.27), G.jumpDist + G.r * 1.35, Math.max(G.jumpDist + G.r * 1.35, W - G.r * 1.3 - G.jumpDist)));
     G.stopX = G.tigerX + G.jumpDist;
     const low = G.ground - G.r - 10;
     G.laneY = [low - G.r * 4.6, low - G.r * 2.3, low];
     setSpeed();
-    G.glowCache = {};
-    buildBackground();
-    buildTiles();
+    // Chỉ dựng lại các lớp đồ họa khi kích thước/bán kính thực sự thay đổi (xoay máy, đổi HUD)
+    const key = [W, H, Math.round(G.ground), Math.round(G.r * 10), G.dpr].join(',');
+    if (key !== G.builtKey) {
+      G.builtKey = key;
+      dropCache(G.glowCache); G.glowCache = {};
+      dropCache(G.flameCache); G.flameCache = {};
+      dropCache(G.clockCache); G.clockCache = {};
+      buildBackground();
+      buildTiles();
+      buildTigerGfx();
+      buildVignette();
+    }
     repositionGates();
+  }
+
+  /** Giải phóng bộ nhớ của các sprite đã dựng. */
+  function dropCache(obj) {
+    for (const k in obj) { try { obj[k].width = 0; obj[k].height = 0; } catch (e) { /* bỏ qua */ } }
+  }
+
+  /** Gradient đầu/thân hổ tạo một lần theo bán kính (tọa độ cục bộ khi vẽ hổ). */
+  function buildTigerGfx() {
+    const u = G.r * 0.5;
+    const hx = 1.55 * u, hy = -1.75 * u, R = 0.72 * u;
+    const head = ctx.createRadialGradient(hx - 0.2 * u, hy - 0.25 * u, 0.1 * u, hx, hy, R);
+    head.addColorStop(0, '#ffb347'); head.addColorStop(1, '#f28c1b');
+    const body = ctx.createLinearGradient(0, -1.9 * u, 0, -0.3 * u);
+    body.addColorStop(0, '#ffa63d'); body.addColorStop(1, '#f07f14');
+    G.tigerGfx = { u: u, head: head, body: body };
+  }
+
+  /** Viền đỏ khi còn 1 tim: vẽ sẵn ở độ phân giải thấp (gradient mượt nên phóng to không lộ). */
+  function buildVignette() {
+    const W = G.W, H = G.H;
+    if (!W || !H) return;
+    const vw = Math.max(2, Math.ceil(W / 4)), vh = Math.max(2, Math.ceil(H / 4));
+    G.vignette = layer(vw, vh, function (c) {
+      const g = c.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * 0.45, vw / 2, vh / 2, Math.max(vw, vh) * 0.75);
+      g.addColorStop(0, 'rgba(255,40,80,0)');
+      g.addColorStop(1, 'rgba(255,40,80,0.22)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, vw, vh);
+    }, 'vignette', 1);
   }
 
   function setSpeed() {
@@ -170,11 +360,17 @@
     G.finishX = G.gates[G.gates.length - 1].wx + G.gap * 0.9;
   }
 
-  function layer(w, h, fn) {
-    const c = document.createElement('canvas');
-    c.width = Math.round(w * G.dpr); c.height = Math.round(h * G.dpr);
+  /** Canvas phụ (vẽ 1 lần). name: dùng lại canvas cũ cùng tên (không cấp phát mới khi cùng kích thước); dpr: ép tỉ lệ. */
+  function layer(w, h, fn, name, dpr) {
+    dpr = dpr || G.dpr;
+    const pw = Math.max(1, Math.round(w * dpr)), ph = Math.max(1, Math.round(h * dpr));
+    let c = name ? G.layers[name] : null;
+    if (!c) { c = document.createElement('canvas'); if (name) G.layers[name] = c; }
+    if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
     const cx = c.getContext('2d');
-    cx.scale(G.dpr, G.dpr);
+    cx.setTransform(1, 0, 0, 1, 0, 0);
+    cx.clearRect(0, 0, pw, ph);
+    cx.scale(dpr, dpr);
     fn(cx);
     return c;
   }
@@ -241,7 +437,7 @@
       const sg = c.createLinearGradient(0, base - 10, 0, gr);
       sg.addColorStop(0, '#3a1447'); sg.addColorStop(1, '#5c2a5a');
       c.fillStyle = sg; c.fillRect(0, base - 6, W, gr - base + 6);
-    });
+    }, 'bg');
   }
 
   /** Các lớp cuộn được (lặp theo chiều ngang): khán giả + dây cờ, và mặt đất sân xiếc. */
@@ -284,7 +480,7 @@
         c.fillStyle = cols[i % cols.length];
         c.beginPath(); c.moveTo(x - 9, y - 2); c.lineTo(x + 9, y - 2); c.lineTo(x, y + 14); c.closePath(); c.fill();
       }
-    });
+    }, 'aud');
     // --- Mặt đất ---
     const TW = G.tileW = 480;
     const TH = H - gr + 2;
@@ -311,7 +507,7 @@
       }
       // ngôi sao vàng trên sàn
       for (let i = 0; i < 3; i++) star(c, 60 + i * 160 + rand() * 40, bh + 14 + rand() * (TH - bh - 30), 6 + rand() * 5, 'rgba(255,209,102,0.45)');
-    });
+    }, 'ground');
   }
 
   function star(c, x, y, r, color) {
@@ -336,25 +532,26 @@
     if (G.parts.length >= MAX_PARTS) G.parts.shift();
     G.parts.push(p);
   }
+  function fxCount(n) { return Motion.lite ? Math.max(1, Math.round(n * 0.3)) : n; }
   function spawnBurst(x, y, r) {
-    for (let i = 0; i < 34; i++) {
+    for (let i = 0, n = fxCount(34); i < n; i++) {
       const a = Math.random() * TAU, sp = 120 + Math.random() * 360;
       addPart({ kind: 'spark', x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, size: r * (0.05 + Math.random() * 0.07),
         color: pick(['#ffd166', '#ff9f1c', '#ffffff', '#ffe66d', '#ff6b35']), life: 0.5 + Math.random() * 0.5, max: 1 });
     }
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0, n = fxCount(10); i < n; i++) {
       const a = Math.random() * TAU, sp = 60 + Math.random() * 160;
       addPart({ kind: 'star', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, size: r * (0.12 + Math.random() * 0.14), rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 8,
         color: pick(['#ffd166', '#ffffff', '#ffe066']), life: 0.8 + Math.random() * 0.5, max: 1.3 });
     }
   }
   function spawnSmoke(x, y, r) {
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0, n = fxCount(12); i < n; i++) {
       const a = Math.random() * TAU, sp = 30 + Math.random() * 80;
-      addPart({ kind: 'puff', x: x + Math.cos(a) * r * 0.6, y: y + Math.sin(a) * r * 0.6, vx: Math.cos(a) * sp * 0.4, vy: -40 - Math.random() * 60, size: r * (0.2 + Math.random() * 0.25), grow: r * 0.5,
-        color: pick(['rgba(70,60,80,0.6)', 'rgba(110,100,120,0.55)', 'rgba(50,40,60,0.6)']), life: 0.8 + Math.random() * 0.6, max: 1.4 });
+      addPart({ kind: 'puff', x: x + Math.cos(a) * r * 0.6, y: y + Math.sin(a) * r * 0.6, vx: Math.cos(a) * sp * 0.4, vy: -40 - Math.random() * 60, size: r * (0.2 + Math.random() * 0.25), grow: r * 0.25,
+        color: pick(['rgba(70,60,80,0.6)', 'rgba(110,100,120,0.55)', 'rgba(50,40,60,0.6)']), life: 0.5 + Math.random() * 0.3, max: 0.8 });
     }
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0, n = fxCount(14); i < n; i++) {
       const a = Math.random() * TAU, sp = 100 + Math.random() * 220;
       addPart({ kind: 'spark', x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 80, size: r * (0.05 + Math.random() * 0.06), color: pick(['#ff3d00', '#ff7b1c', '#ffb703']), life: 0.4 + Math.random() * 0.4, max: 0.8 });
     }
@@ -364,26 +561,57 @@
   }
   function spawnConfetti(n) {
     const cols = ['#ff6b35', '#ffd166', '#06d6a0', '#118ab2', '#ef476f', '#7b5ea7', '#2ec4b6'];
+    n = fxCount(n);
     for (let i = 0; i < n; i++) {
       addPart({ kind: 'confetti', x: Math.random() * G.W, y: -20 - Math.random() * G.H * 0.5, vx: (Math.random() - 0.5) * 80, vy: 80 + Math.random() * 160,
         size: 6 + Math.random() * 8, color: pick(cols), rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 8, life: 4 + Math.random() * 2, max: 6, sway: Math.random() * TAU });
     }
   }
   function spawnHearts(x, y, r) {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0, n = fxCount(8); i < n; i++) {
       addPart({ kind: 'heart', x: x + (Math.random() - 0.5) * r, y: y, vx: (Math.random() - 0.5) * 60, vy: -60 - Math.random() * 80, size: r * (0.12 + Math.random() * 0.1), color: pick(['#ff6b8b', '#ff8fb1']), life: 0.8 + Math.random() * 0.5, max: 1.3 });
     }
   }
 
   /* ================= CỤM VÒNG LỬA (GATE) ================= */
+  /** Danh sách câu cần ôn phù hợp với màn (chỉ những câu thuộc màn này hoặc màn trước, ví dụ "giờ kém" không xuất hiện trước màn 5). */
+  function reviewPoolFor(level) {
+    return Store.reviewPool(function (info) {
+      const lv = info && L.levelById(info.lv);
+      return !!lv && lv.index <= level.index;
+    });
+  }
+
   function buildGates() {
     G.gates = [];
     const n = G.level.gates || 10;
     const first = G.stopX + G.speed * 1.3;
+    const used = Object.create(null);
+    const qs = [];
     for (let i = 0; i < n; i++) {
-      const q = L.fresh(G.level.gen);
+      let q = L.fresh(G.level.gen), tries = 0;
+      while (used[q.key] && ++tries < 12) q = L.fresh(G.level.gen);   // không hỏi lại cùng một câu trong một ván
+      used[q.key] = true;
+      qs.push(q);
+    }
+    // Ôn lại thông minh: khoảng 25% câu (1–3) lấy từ những câu bé từng làm sai, sinh lại với đáp án nhiễu mới
+    const pool = reviewPoolFor(G.level);
+    if (pool.length) {
+      const k = Math.min(pool.length, clamp(Math.round(n * 0.25), 1, 3));
+      const step = Math.max(1, Math.floor(n / (k + 1)));
+      let placed = 0;
+      for (let j = 0; j < pool.length && placed < k; j++) {
+        const q = L.regen(pool[j].info);
+        if (!q || used[q.key]) continue;
+        q.review = true;
+        qs[Math.min(n - 1, 1 + placed * step)] = q;
+        used[q.key] = true;
+        placed++;
+      }
+    }
+    for (let i = 0; i < n; i++) {
       G.gates.push({
-        i: i, q: q, wx: first + i * G.gap, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0,
+        i: i, q: qs[i], wx: first + i * G.gap, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0,
         rings: [0, 1, 2].map(function () { return { burst: -1, flare: 0, reveal: false }; })
       });
     }
@@ -401,7 +629,8 @@
     G.kbd = false;
     renderQuestion(gate.q);
     Sfx.play('whoosh');
-    Voice.say(gate.q.speech);
+    // Sau một câu sai: không cắt ngang lời giải thích đang đọc, xếp câu hỏi mới đọc nối tiếp
+    Voice.say(gate.q.speech, { queue: gate.i > 0 && !!G.gates[gate.i - 1] && G.gates[gate.i - 1].result !== 'ok' });
     if (!Store.data.seenTip && G.firstChoice) ui.tapTip.hidden = false;
   }
 
@@ -473,10 +702,19 @@
     if (praise.indexOf('Combo') === 0) { Sfx.play('combo'); Voice.say('Combo nhân ' + mult + '!'); }
     else { Sfx.play('correct'); Voice.say(praise + ' ' + q.answerSpeech + '.'); }
     Sfx.play('fire');
+    if (G.streak % 3 === 0) spawnHearts(x, y - G.r, G.r);
     showHint('✓ ' + q.answerText, 'ok', 1800);
     cardFx('ok');
-    G.flash = { c: '120,255,180', a: 0.14 };
+    if (!Motion.lite) G.flash = { c: '120,255,180', a: 0.14 };
     G.tiger.cheer = 0.9;
+    Store.noteOk(q.key);   // trả lời đúng câu từng sai → tiến gần đến "đã thuộc"
+  }
+
+  /** Lời giải thích (chữ + giọng đọc) khi sai/hết giờ; giữ trên màn hình đến khi hổ chạy tiếp. Bé có thể chạm để chạy tiếp. */
+  function explainHint(prefix, q) {
+    showHint('<b>' + esc(prefix + q.answerText) + '</b> · ' + esc(q.explain), 'bad', 0, true);
+    ui.tapTip.textContent = '👆 Chạm để chạy tiếp';
+    ui.tapTip.hidden = false;
   }
 
   function onWrong(gate) {
@@ -488,31 +726,32 @@
     G.wrong++;
     G.streak = 0;
     G.tiger.hurt = 1.0;
-    G.shake = 0.8;
-    G.flash = { c: '255,60,60', a: 0.32 };
+    if (!Motion.lite) { G.shake = 0.8; G.flash = { c: '255,60,60', a: 0.32 }; }
     Sfx.play('burn');
     Sfx.play('roar');
-    addText('Ái! Nóng quá!', Math.max(G.tigerX + G.r * 0.4, Math.min(G.W / 2, G.r * 4.5)), G.ground - G.r * 2.4, { color: '#ff5c7a', size: G.r * 0.85, life: 1.3 });
+    // Chữ bay đặt phía trên, bên phải hổ (sau cú nhảy cụm vòng nằm bên trái hổ) để không che vòng đúng đang hé lộ
+    addText('Ái! Nóng quá!', G.tigerX + G.r * 0.2, G.ground - G.r * 2.5, { color: '#ff5c7a', size: G.r * 0.55, life: 1.3, vy: -20, align: 'left' });
     cardFx('shake');
     loseHeart();
-    showHint('Đáp án: ' + q.answerText, 'bad', LEARN_T * 1000 + 600);
+    explainHint('Đáp án: ', q);
     Voice.say('Chưa đúng. Đáp án là ' + q.answerSpeech + '. ' + q.explain);
     noteReview(q);
+    Store.noteMissed(q.key, q.info);
   }
 
   function onMiss(gate) {
-    const q = gate.q, lane = gate.chosen;
-    const x = gateX(gate), y = G.laneY[lane];
+    const q = gate.q;
     gate.rings[q.answer].reveal = true;
     G.wrong++;
     G.streak = 0;
-    G.flash = { c: '255,180,60', a: 0.25 };
-    addText('Hết giờ!', Math.max(G.tigerX + G.r * 0.4, Math.min(G.W / 2, G.r * 4.5)), G.ground - G.r * 2.4, { color: '#ffb703', size: G.r * 0.9, life: 1.3 });
+    if (!Motion.lite) G.flash = { c: '255,180,60', a: 0.25 };
+    addText('Hết giờ!', G.tigerX + G.r * 0.2, G.ground - G.r * 2.5, { color: '#ffb703', size: G.r * 0.6, life: 1.3, vy: -20, align: 'left' });
     Sfx.play('wrong');
     loseHeart();
-    showHint('Hết giờ! Đáp án: ' + q.answerText, 'bad', LEARN_T * 1000 + 600);
+    explainHint('Hết giờ! Đáp án: ', q);
     Voice.say('Hết giờ rồi. Đáp án là ' + q.answerSpeech + '. ' + q.explain);
     noteReview(q);
+    Store.noteMissed(q.key, q.info);
   }
 
   function loseHeart() {
@@ -592,11 +831,14 @@
       case 'learn':
         G.learnT += dt;
         tg.state = 'idle';
-        if (G.learnT >= LEARN_T) {
+        // Đợi đọc xong lời giải thích (tối đa thêm 6 giây); bé có thể chạm màn hình để chạy tiếp ngay
+        if (G.learnT >= LEARN_T && !(Voice.speaking() && G.learnT < LEARN_T + 6)) {
           if (G.hearts <= 0) { endGame('nolife'); return; }
           G.gateIdx++;
           G.phase = 'run';
           ui.hint.hidden = true;
+          ui.tapTip.hidden = true;
+          ui.tapTip.textContent = TAP_TIP_TEXT;
         }
         break;
       case 'finish':
@@ -746,12 +988,14 @@
     return spr;
   }
 
-  function drawFlames(c, x, y, r, intensity, hue, seed) {
+  const FLAME_PHASES = 6;
+  /** Lửa quanh vòng: 14 ngọn lửa hai lớp. t = thời điểm hoạt hình (sprite dùng thời điểm cố định cho từng pha). */
+  function drawFlames(c, x, y, r, intensity, hue, seed, t) {
     const cols = FIRE_COLORS[hue] || FIRE_COLORS.orange;
     const N = 14;
     for (let i = 0; i < N; i++) {
-      const a = (i / N) * TAU + Math.sin(G.anim * 0.9 + i + seed) * 0.06;
-      const fl = 0.5 + 0.5 * Math.sin(G.anim * 12 + i * 2.3 + seed) * Math.sin(G.anim * 7.3 + i * 1.1);
+      const a = (i / N) * TAU + Math.sin(t * 0.9 + i + seed) * 0.06;
+      const fl = 0.5 + 0.5 * Math.sin(t * 12 + i * 2.3 + seed) * Math.sin(t * 7.3 + i * 1.1);
       const len = r * (0.24 + 0.3 * fl) * intensity;
       const ca = Math.cos(a), sa = Math.sin(a);
       const bx = x + ca * r, by = y + sa * r;
@@ -773,6 +1017,31 @@
     c.globalAlpha = 1;
   }
 
+  /** Sprite lửa dựng sẵn (mỗi màu × 6 pha) thay cho ~184 đường cong mỗi khung hình; dpr ≤ 1.5 vì lửa mềm, phóng to không lộ. */
+  function flameSprite(hue, phase) {
+    const key = hue + ':' + phase;
+    let spr = G.flameCache[key];
+    if (spr) return spr;
+    const r = G.r, S = r * 3.6;
+    spr = layer(S, S, function (c) { drawFlames(c, S / 2, S / 2, r, 1, hue, 0, phase * 0.37 + 1); }, null, Math.min(G.dpr, 1.5));
+    G.flameCache[key] = spr;
+    return spr;
+  }
+
+  /** Mặt đồng hồ nhỏ trong vòng lửa: vẽ một lần rồi dùng lại (60 vạch + 12 số mỗi khung hình là quá tốn). */
+  function drawClockCached(c, x, y, R, scale, h, m) {
+    const key = h + ':' + m + ':' + Math.round(R);
+    let spr = G.clockCache[key];
+    const S = Math.ceil(2 * R + 6);
+    if (!spr) {
+      if (Object.keys(G.clockCache).length >= 48) { dropCache(G.clockCache); G.clockCache = {}; }
+      spr = G.clockCache[key] = layer(S, S, function (cc) { drawClock(cc, S / 2, S / 2, R, h, m); });
+    }
+    const d = S * (scale || 1);
+    c.drawImage(spr, x - d / 2, y - d / 2, d, d);
+  }
+
+  /** Tách nhãn dài thành 2 dòng, không tách giữa số và đơn vị ("8 giờ 30 phút / chiều", "9 giờ kém / 15 phút"). */
   function splitLabel(s) {
     s = String(s);
     if (s.length <= 9 || s.indexOf(' ') < 0) return [s];
@@ -780,7 +1049,7 @@
     let best = null, bestDiff = Infinity;
     for (let i = 1; i < words.length; i++) {
       const a = words.slice(0, i).join(' '), b = words.slice(i).join(' ');
-      const d = Math.abs(a.length - b.length);
+      const d = Math.abs(a.length - b.length) + (/(giờ|phút|kém|Buổi|ngày|tháng|tuần|lễ)$/.test(a) ? 0 : 6);
       if (d < bestDiff) { bestDiff = d; best = [a, b]; }
     }
     return best || [s];
@@ -826,9 +1095,10 @@
     c.globalAlpha = alpha * (hue === 'dim' ? 0.4 : 0.9);
     c.drawImage(spr, x - gs / 2, y - gs / 2, gs, gs);
     c.globalAlpha = alpha;
-    // Lửa
-    drawFlames(c, x, y, r, intensity, hue, gate.i * 3 + lane * 7);
-    c.globalAlpha = alpha;
+    // Lửa: sprite dựng sẵn, đổi pha theo thời gian; to hơn khi bùng (sai) hoặc hé lộ (đúng)
+    const ph = Math.floor(G.anim * 9 + gate.i * 1.7 + lane * 2.3) % FLAME_PHASES;
+    const fs = 3.6 * r * (0.8 + 0.2 * intensity);
+    c.drawImage(flameSprite(hue, ph), x - fs / 2, y - fs / 2, fs, fs);
     // Vành vòng
     c.lineWidth = r * 0.2; c.strokeStyle = '#4a1a0c';
     c.beginPath(); c.arc(x, y, r, 0, TAU); c.stroke();
@@ -841,7 +1111,7 @@
     c.beginPath(); c.arc(x, y, r * 0.8, 0, TAU); c.fill();
     // Nhãn: chữ hoặc đồng hồ nhỏ
     if (opt) {
-      if (opt.clock) drawClock(c, x, y, r * 0.62, opt.clock.h, opt.clock.m);
+      if (opt.clock) drawClockCached(c, x, y, r0 * 0.62, scale, opt.clock.h, opt.clock.m);
       else drawLabel(c, opt.text, x, y, r, rg.reveal ? '#c8ffe0' : '#fff', rg.reveal ? 1.08 : 1);
     }
     // Vòng chọn (đang nhảy tới)
@@ -1020,10 +1290,8 @@
       c.fillStyle = '#f7931e'; c.beginPath(); c.arc(e[0], e[1], 0.25 * u, 0, TAU); c.fill();
       c.fillStyle = '#ffc7a0'; c.beginPath(); c.arc(e[0], e[1] + 0.02 * u, 0.13 * u, 0, TAU); c.fill();
     });
-    // Đầu
-    const g = c.createRadialGradient(hx - 0.2 * u, hy - 0.25 * u, 0.1 * u, hx, hy, R);
-    g.addColorStop(0, '#ffb347'); g.addColorStop(1, '#f28c1b');
-    c.fillStyle = g;
+    // Đầu (gradient dựng sẵn theo bán kính, không cấp phát mỗi khung hình)
+    c.fillStyle = tigerGfx(u).head;
     c.beginPath(); c.arc(hx, hy, R, 0, TAU); c.fill();
     // Sọc trán
     c.strokeStyle = '#2b1a12'; c.lineWidth = 0.1 * u; c.lineCap = 'round';
@@ -1069,13 +1337,18 @@
     });
   }
 
+  function tigerGfx(u) {
+    if (!G.tigerGfx || G.tigerGfx.u !== u) buildTigerGfx();
+    return G.tigerGfx;
+  }
+
   function drawTiger(c) {
     const tg = G.tiger, u = G.r * 0.5;
     const x = G.tigerX, y = G.ground + tg.y;
     const running = tg.state === 'run';
     const jumping = G.phase === 'jump' && G.state === 'playing';
     const ph = tg.phase;
-    const bob = running ? Math.abs(Math.sin(ph)) * 0.12 * u : (tg.state === 'idle' ? Math.sin(G.anim * 2.5) * 0.04 * u : tg.state === 'cheer' ? Math.abs(Math.sin(G.anim * 8)) * 0.35 * u : 0);
+    const bob = running ? Math.abs(Math.sin(ph)) * 0.12 * u : (tg.state === 'idle' ? (Motion.lite ? 0 : Math.sin(G.anim * 2.5) * 0.04 * u) : tg.state === 'cheer' ? Math.abs(Math.sin(G.anim * 8)) * 0.35 * u : 0);
     // Bóng đổ
     const sh = clamp(1 + tg.y / (G.r * 5), 0.3, 1);
     c.fillStyle = 'rgba(0,0,0,' + (0.22 * sh).toFixed(2) + ')';
@@ -1095,9 +1368,7 @@
     // Thân
     c.save();
     c.beginPath(); c.ellipse(0, -1.1 * u, 1.55 * u, 0.78 * u, 0, 0, TAU); c.clip();
-    const bg = c.createLinearGradient(0, -1.9 * u, 0, -0.3 * u);
-    bg.addColorStop(0, '#ffa63d'); bg.addColorStop(1, '#f07f14');
-    c.fillStyle = bg; c.fillRect(-2 * u, -2 * u, 4 * u, 2 * u);
+    c.fillStyle = tigerGfx(u).body; c.fillRect(-2 * u, -2 * u, 4 * u, 2 * u);
     c.fillStyle = '#fff3e0';
     c.beginPath(); c.ellipse(0.1 * u, -0.66 * u, 1.15 * u, 0.36 * u, 0, 0, TAU); c.fill();
     c.strokeStyle = '#2b1a12'; c.lineWidth = 0.17 * u; c.lineCap = 'round';
@@ -1171,6 +1442,7 @@
       if (t.t < 0.12) sc = 0.4 + (t.t / 0.12) * 0.8;
       else if (t.t < 0.24) sc = 1.2 - ((t.t - 0.12) / 0.12) * 0.2;
       c.globalAlpha = a;
+      c.textAlign = t.align || 'center';
       c.font = '800 ' + Math.round(t.size * sc) + 'px ' + FONT;
       c.lineWidth = Math.max(3, t.size * sc * 0.16);
       c.strokeStyle = t.stroke;
@@ -1211,16 +1483,15 @@
       for (let i = Math.max(0, G.gateIdx - 1); i < Math.min(G.gates.length, G.gateIdx + 3); i++) drawGate(c, G.gates[i]);
     }
     drawTiger(c);
+    // Khi đang xem đáp án đúng: vẽ lại cụm vòng lên trên hổ để đầu hổ không che vòng đúng (màn hình hẹp)
+    if (inGame() && G.phase === 'learn') { const cg = curGate(); if (cg) drawGate(c, cg); }
     drawParts(c);
     drawTexts(c);
     if (G.shake > 0) c.translate(-sx, -sy);
-    if (G.state === 'playing' && G.hearts === 1) {
-      const a = 0.14 + 0.08 * Math.sin(G.anim * 5);
-      const g = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.45, W / 2, H / 2, Math.max(W, H) * 0.75);
-      g.addColorStop(0, 'rgba(255,40,80,0)');
-      g.addColorStop(1, 'rgba(255,40,80,' + a.toFixed(2) + ')');
-      c.fillStyle = g;
-      c.fillRect(0, 0, W, H);
+    if (G.state === 'playing' && G.hearts === 1 && G.vignette) {
+      c.globalAlpha = 0.65 + 0.35 * Math.sin(G.anim * 5);
+      c.drawImage(G.vignette, 0, 0, W, H);
+      c.globalAlpha = 1;
     }
     if (G.flash) {
       c.fillStyle = 'rgba(' + G.flash.c + ',' + Math.max(0, G.flash.a).toFixed(2) + ')';
@@ -1230,7 +1501,7 @@
 
   /* ================= HUD ================= */
   function renderQuestion(q) {
-    ui.prompt.innerHTML = q ? q.prompt : 'Sẵn sàng…';
+    ui.prompt.innerHTML = q ? (q.review ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + q.prompt : 'Sẵn sàng…';
     const vis = q ? L.visualHtml(q, 104) : '';
     ui.visual.innerHTML = vis;
     ui.visual.hidden = !vis;
@@ -1241,16 +1512,17 @@
     ui.hint.hidden = true;
   }
 
-  function showHint(text, kind, ms) {
+  /** Chip thông báo dưới thẻ câu hỏi. ms = 0: không tự ẩn (ẩn khi hổ chạy tiếp); html = true: text đã là HTML an toàn (đã esc). */
+  function showHint(text, kind, ms, html) {
     const el = ui.hint;
-    el.textContent = text;
+    if (html) el.innerHTML = text; else el.textContent = text;
     el.className = 'hint ' + (kind || '');
     el.hidden = false;
     el.style.animation = 'none';
     void el.offsetWidth;
     el.style.animation = '';
     clearTimeout(showHint._t);
-    showHint._t = setTimeout(function () { el.hidden = true; }, ms || 2400);
+    if (ms !== 0) showHint._t = setTimeout(function () { el.hidden = true; }, ms || 2400);
   }
 
   function cardFx(cls) {
@@ -1275,6 +1547,7 @@
       h.hearts = G.hearts;
       const spans = ui.hearts.children;
       for (let i = 0; i < spans.length; i++) spans[i].classList.toggle('lost', i >= G.hearts);
+      ui.hearts.setAttribute('aria-label', 'Còn ' + G.hearts + ' tim');
     }
     const stage = Math.min(G.gates.length, G.gateIdx + 1);
     if (h.stage !== stage) { h.stage = stage; ui.stage.textContent = 'Vòng ' + stage + '/' + G.gates.length; }
@@ -1295,6 +1568,7 @@
     if (h.time !== tt) {
       h.time = tt;
       ui.time.textContent = tt;
+      ui.timer.setAttribute('aria-label', 'Còn ' + tt + ' giây');
       const frac = clamp(left / limit, 0, 1);
       ui.timerFill.style.width = (frac * 100).toFixed(1) + '%';
       ui.timerFill.classList.toggle('warn', left <= limit * 0.5 && left > 5);
@@ -1309,6 +1583,7 @@
     ui.combo.hidden = true;
     ui.hint.hidden = true;
     ui.tapTip.hidden = true;
+    ui.tapTip.textContent = TAP_TIP_TEXT;
     renderQuestion(null);
     ui.timer.classList.add('idle');
     ui.timerFill.style.width = '100%';
@@ -1331,7 +1606,7 @@
     G.state = 'countdown';
     G.score = 0; G.hearts = MAX_HEARTS; G.streak = 0; G.bestStreak = 0; G.correct = 0; G.wrong = 0;
     G.time = 0; G.review = []; G.scroll = 0; G.phase = 'run'; G.gateIdx = 0; G.gateTime = 0; G.jumpT = 0; G.learnT = 0;
-    G.overAt = -1; G.resultShown = false; G.resultSaved = false; G.quizPassedNow = false;
+    G.overAt = -1; G.resultShown = false; G.resultSaved = false; G.quizPassedNow = false; G.stars = 0; G.isRecord = false; G.cdPending = false;
     clearWorld();
     resetHud();
     showHud(true);
@@ -1358,6 +1633,9 @@
     let n = 3;
     const step = function () {
       if (G.state !== 'countdown') return;
+      // Tab bị ẩn giữa lúc đếm ngược: chờ hiện lại rồi mới đếm tiếp (không để ván bắt đầu chạy khi không ai nhìn)
+      if (document.hidden) { G.cdPending = true; G.cdTimer = setTimeout(step, 300); return; }
+      G.cdPending = false;
       el.style.animation = 'none';
       void el.offsetWidth;
       el.style.animation = '';
@@ -1375,6 +1653,7 @@
           if (G.state !== 'countdown') return;
           showScreen(null);
           cb();
+          if (document.hidden) pauseGame();
         }, 750);
       }
     };
@@ -1417,12 +1696,11 @@
     }
   }
 
+  /** Sao: về đích không sai câu nào 3 sao, sai 1 câu 2 sao, về đích 1 sao; không về đích 0 sao. */
   function starsFor(correct, total, finished) {
     if (!finished) return 0;
-    if (correct >= total - 1) return 3;
-    if (correct >= total - 3) return 2;
-    if (correct >= Math.ceil(total * 0.5)) return 1;
-    return 0;
+    const wrong = Math.max(0, total - correct);
+    return wrong === 0 ? 3 : wrong === 1 ? 2 : 1;
   }
 
   function starsHtml(n) {
@@ -1431,19 +1709,39 @@
     return h;
   }
 
-  function showResults() {
-    G.resultShown = true;
+  /** Lưu kết quả ván (đúng một lần mỗi ván): kỷ lục, sao, thống kê cho báo cáo. Lỗi lưu trữ không được làm mất màn kết quả. */
+  function persistResults() {
+    if (G.resultSaved || !G.level) return;
+    G.resultSaved = true;
     const lvl = G.level, score = G.score, finished = G.endReason === 'finish';
-    const rec = Store.lv(lvl.id);
-    const first = !G.resultSaved;
-    const isRecord = first && finished && score > 0 && score > (rec.best || 0);
-    const stars = starsFor(G.correct, G.gates.length, finished);
-    if (first) {
-      G.resultSaved = true;
-      rec.plays = (rec.plays || 0) + 1;
-      if (finished) { rec.done = true; rec.best = Math.max(rec.best || 0, score); rec.stars = Math.max(rec.stars || 0, stars); }
+    G.stars = starsFor(G.correct, G.gates.length, finished);
+    G.isRecord = false;
+    try {
+      const rec = Store.lv(lvl.id);
+      G.isRecord = finished && score > 0 && score > rec.best;
+      rec.plays = rec.plays + 1;
+      if (finished) { rec.done = true; rec.best = Math.max(rec.best, score); rec.stars = Math.max(rec.stars, G.stars); }
       Store.setLv(lvl.id, rec);
-    }
+      // Thống kê theo chủ đề; màn Siêu Hổ trộn nhiều chủ đề nên tính thêm theo từng câu
+      const per = {};
+      if (lvl.id === 'l9') {
+        G.gates.forEach(function (g) {
+          if (!g.evaluated || !g.q.topic) return;
+          const t = per[g.q.topic] || { c: 0, w: 0 };
+          if (g.result === 'ok') t.c++; else t.w++;
+          per[g.q.topic] = t;
+        });
+      }
+      Store.addStats({ correct: G.correct, wrong: G.wrong, seconds: G.time, topic: lvl.id, perTopic: per });
+    } catch (e) { /* bỏ qua: dữ liệu hỏng/hết chỗ không được che màn kết quả */ }
+  }
+
+  /** Vẽ màn kết quả (gọi lại được khi quay về từ bài học/hỏi đáp, không lưu lại và không phát lại hiệu ứng). */
+  function renderResults() {
+    const lvl = G.level;
+    if (!lvl) return;
+    const score = G.score, finished = G.endReason === 'finish', stars = G.stars;
+    const rec = Store.lv(lvl.id);
     const next = L.LEVELS[lvl.index + 1];
 
     ui.resultTitle.textContent = finished ? '🏁 Về đích!' : '😿 Hổ mệt rồi!';
@@ -1451,7 +1749,8 @@
     ui.resultLevel.textContent = lvl.icon + ' Màn ' + lvl.n + ': ' + lvl.title;
     ui.resultScore.textContent = fmt(score);
     ui.resultStars.innerHTML = starsHtml(stars);
-    ui.resultRecord.hidden = !isRecord;
+    ui.resultStars.setAttribute('aria-label', stars + ' sao');
+    ui.resultRecord.hidden = !G.isRecord;
     ui.stCorrect.textContent = G.correct;
     ui.stWrong.textContent = G.wrong;
     ui.stCombo.textContent = G.bestStreak;
@@ -1461,7 +1760,7 @@
     ui.review.hidden = !G.review.length;
     ui.reviewChips.innerHTML = G.review.map(function (r, i) {
       const vis = r.q.clock ? L.clockSvg(r.q.clock, 36, 'mini') : r.q.digital ? '<i class="dg">' + esc(r.q.digital) + '</i>' : '';
-      return '<span data-i="' + i + '">' + vis + '<span class="tx">' + esc(r.text) + ' → <b>' + esc(r.answer) + '</b></span></span>';
+      return '<span data-i="' + i + '" role="button" tabindex="0" aria-label="Nghe lại: ' + esc(r.text + ' ' + r.answer) + '">' + vis + '<span class="tx">' + esc(r.text) + ' → <b>' + esc(r.answer) + '</b></span></span>';
     }).join('');
 
     if (finished) {
@@ -1471,21 +1770,26 @@
       ui.btnAgain.className = 'btn ' + (rec.quiz ? 'small' : 'big');
       ui.btnNextLevel.hidden = !(rec.quiz && next);
       if (rec.quiz && next) ui.btnNextLevel.textContent = '▶ Màn ' + next.n + ': ' + next.title;
-      ui.resultMsg.textContent = rec.quiz
+      ui.resultMsg.textContent = (rec.quiz
         ? (next ? 'Con đã mở khóa màn tiếp theo rồi. Chơi lại để phá kỷ lục hoặc sang màn mới nhé!' : 'Con đã hoàn thành cả hành trình! Chơi lại để phá kỷ lục nhé.')
-        : (next ? 'Trả lời đúng các câu hỏi đáp để mở khóa màn ' + next.n + ': ' + next.title + '!' : 'Trả lời đúng các câu hỏi đáp cuối cùng để nhận Huy hiệu Hổ Vàng!');
+        : (next ? 'Trả lời đúng các câu hỏi đáp để mở khóa màn ' + next.n + ': ' + next.title + '!' : 'Trả lời đúng các câu hỏi đáp cuối cùng để nhận Huy hiệu Hổ Vàng!')) +
+        (stars < 3 ? ' Không sai câu nào để được 3 sao!' : '');
     } else {
       ui.btnQuiz.hidden = true;
       ui.btnAgain.className = 'btn big';
       ui.btnNextLevel.hidden = true;
       ui.resultMsg.textContent = 'Hết tim rồi! Xem lại bài học, ôn các câu sai rồi cưỡi hổ thử lại nhé. Cần về đích mới được vào phần hỏi đáp.';
     }
+  }
+
+  function showResults() {
+    G.resultShown = true;
+    persistResults();
+    renderResults();
     showScreen('gameover');
-    if (first) {
-      if (isRecord) { Sfx.play('record'); spawnConfetti(100); Voice.say('Kỷ lục mới! Giỏi quá!', { queue: true }); }
-      else if (stars >= 2) { spawnConfetti(60); Voice.say('Chơi tốt lắm!', { queue: true }); }
-      setTimeout(function () { if (G.state === 'over') Music.play('menu'); }, 2000);
-    } else Music.play('menu');
+    if (G.isRecord) { Sfx.play('record'); spawnConfetti(100); Voice.say('Kỷ lục mới! Giỏi quá!', { queue: true }); }
+    else if (G.stars >= 2) { spawnConfetti(60); Voice.say('Chơi tốt lắm!', { queue: true }); }
+    setTimeout(function () { if (G.state === 'over') Music.play('menu'); }, 2000);
     releaseWake();
   }
 
@@ -1508,6 +1812,7 @@
 
   function goMenu() {
     leaveGame();
+    G.reading = false;
     G.state = 'menu';
     showScreen('menu');
   }
@@ -1531,25 +1836,31 @@
   function gradeClass(g) { return g === 0 ? 'gx' : 'g' + g; }
 
   function renderLevels() {
-    const p = Store.data.progress;
+    const p = Store.p();
     let stars = 0, done = 0;
-    L.LEVELS.forEach(function (l) { const r = Store.lv(l.id); stars += r.stars || 0; if (r.quiz) done++; });
+    L.LEVELS.forEach(function (l) { const r = Store.lv(l.id); stars += r.stars; if (r.quiz) done++; });
     ui.journeyStats.innerHTML =
       '<span>⭐ ' + stars + '/' + (L.LEVELS.length * 3) + ' sao</span>' +
       '<span>✅ ' + done + '/' + L.LEVELS.length + ' màn đã hỏi đáp</span>' +
       (p.badge ? '<span class="badge">🏆 Huy hiệu Hổ Vàng</span>' : '');
+    // Màn "hiện tại" = màn đầu tiên đã mở mà chưa xong hỏi đáp (sau "mở khóa tất cả" vẫn là màn bé đang học dở)
+    let currentId = null;
+    for (let i = 0; i < L.LEVELS.length && !currentId; i++) { const l = L.LEVELS[i]; if (Store.isUnlocked(l) && !Store.lv(l.id).quiz) currentId = l.id; }
+    if (!currentId) currentId = L.LEVELS[clamp(p.unlocked, 1, L.LEVELS.length) - 1].id;
     ui.levelGrid.innerHTML = L.LEVELS.map(function (l) {
       const rec = Store.lv(l.id);
       const locked = !Store.isUnlocked(l);
-      const current = l.index + 1 === p.unlocked;
+      const current = l.id === currentId;
       const prev = L.LEVELS[l.index - 1];
-      return '<div class="level-card' + (locked ? ' locked' : '') + (current ? ' current' : '') + '" data-id="' + l.id + '" role="button">' +
+      const know = !locked && mastered(l.id);
+      const label = 'Màn ' + l.n + ': ' + l.title + ', ' + gradeLabel(l.grade) + (locked ? ', đang khóa' : ', ' + rec.stars + ' sao' + (rec.quiz ? ', đã hỏi đáp' : '') + (know ? ', đã thuộc' : ''));
+      return '<div class="level-card' + (locked ? ' locked' : '') + (current ? ' current' : '') + '" data-id="' + l.id + '" role="button" tabindex="' + (locked ? '-1' : '0') + '"' + (locked ? ' aria-disabled="true"' : '') + ' aria-label="' + esc(label) + '">' +
         '<span class="grade ' + gradeClass(l.grade) + '">' + gradeLabel(l.grade) + '</span>' +
-        (rec.quiz ? '<span class="quiz-ok">✅ Đã hỏi đáp</span>' : '') +
+        (rec.quiz ? '<span class="quiz-ok">✅ Đã hỏi<span class="long"> đáp</span></span>' : '') +
         '<div class="icon">' + l.icon + '</div>' +
         '<div class="name"><span class="num">Màn ' + l.n + ':</span> ' + esc(l.title) + '</div>' +
-        '<div class="desc">' + esc(l.desc) + '</div>' +
-        '<div class="meta"><span class="best">🏆 ' + fmt(rec.best || 0) + '</span><span class="stars">' + starsHtml(rec.stars || 0) + '</span></div>' +
+        '<div class="desc">' + esc(l.desc) + (know ? ' <b class="mastered">🎓 Đã thuộc</b>' : '') + '</div>' +
+        '<div class="meta"><span class="best">🏆 ' + fmt(rec.best) + '</span><span class="stars" aria-hidden="true">' + starsHtml(rec.stars) + '</span></div>' +
         (locked ? '<div class="lock"><div class="em">🔒</div><div class="lk-name">Màn ' + l.n + ': ' + esc(l.title) + '</div><div class="lk-how">Hoàn thành hỏi đáp màn ' + (prev ? prev.n : '') + ' để mở khóa</div></div>' : '') +
         '</div>';
     }).join('');
@@ -1583,7 +1894,7 @@
     ui.slidePrev.disabled = Lesson.i === 0;
     ui.slideNext.hidden = last;
     ui.lessonStart.hidden = !last || Lesson.from === 'pause';
-    ui.lessonBack.textContent = Lesson.from === 'pause' ? '← Chơi tiếp' : '← Quay lại';
+    ui.lessonBack.textContent = Lesson.from === 'pause' ? '← Tạm dừng' : Lesson.from === 'results' ? '← Kết quả' : '← Quay lại';
     Voice.say(L.strip(s.text));
   }
 
@@ -1599,7 +1910,7 @@
 
   function lessonBack() {
     if (Lesson.from === 'pause') { showScreen('pause'); Voice.stop(); return; }
-    if (Lesson.from === 'results') { G.state = 'over'; showScreen('gameover'); Voice.stop(); return; }
+    if (Lesson.from === 'results') { G.state = 'over'; renderResults(); showScreen('gameover'); Voice.stop(); return; }
     goLevels();
   }
 
@@ -1607,7 +1918,7 @@
   function renderNotes() {
     ui.notesList.innerHTML = L.LEVELS.filter(function (l) { return l.grade > 0; }).map(function (l) {
       return '<div class="note-group"><h3>' + l.icon + ' Màn ' + l.n + ': ' + esc(l.title) + '<span class="g">' + gradeLabel(l.grade) + '</span></h3>' +
-        l.notes.map(function (t, i) { return '<div class="note-line" data-l="' + l.id + '" data-i="' + i + '">' + esc(t) + '</div>'; }).join('') + '</div>';
+        l.notes.map(function (t, i) { return '<div class="note-line" role="button" tabindex="0" data-l="' + l.id + '" data-i="' + i + '">' + esc(t) + '</div>'; }).join('') + '</div>';
     }).join('');
   }
 
@@ -1630,13 +1941,20 @@
   const Quiz = { level: null, list: [], i: 0, wrongTotal: 0, answered: false };
 
   function startQuiz(level) {
+    if (!level) return;
     Quiz.level = level;
     Quiz.i = 0;
     Quiz.wrongTotal = 0;
     const list = level.quiz.map(function (z) { return L.mkQ(z); });
+    // 1–2 câu bé vừa làm sai trong ván này (sinh lại với đáp án nhiễu mới); không sai câu nào thì lấy một câu từ kho ôn lại, hoặc một câu thêm
     const rev = (G.level === level ? G.review : []).slice(0, 2);
-    rev.forEach(function (r) { r.q.review = true; list.push(r.q); });
-    if (!rev.length) { const q = L.fresh(level.gen); q.review = true; list.push(q); }
+    rev.forEach(function (r) { const q = (r.q.info && L.regen(r.q.info)) || r.q; q.review = true; list.push(q); });
+    if (!rev.length) {
+      const pool = reviewPoolFor(level);
+      let q = pool.length ? L.regen(pool[0].info) : null;
+      if (q) q.review = true; else { q = L.fresh(level.gen); q.extra = true; }
+      list.push(q);
+    }
     Quiz.list = list;
     G.state = 'quiz';
     ui.quizDone.hidden = true;
@@ -1661,11 +1979,12 @@
     const vis = L.visualHtml(q, 170);
     ui.quizVisual.innerHTML = vis;
     ui.quizVisual.hidden = !vis;
-    ui.quizText.innerHTML = (q.review ? '<span style="color:#b5640c">📝 Ôn lại:</span> ' : '') + q.prompt;
+    ui.quizText.innerHTML = (q.review ? '<span class="review-tag">📝 Ôn lại:</span> ' : q.extra ? '<span class="review-tag extra">🔥 Câu thêm:</span> ' : '') + q.prompt;
     ui.quizAnswers.innerHTML = q.options.map(function (o, i) {
-      return '<button type="button" data-i="' + i + '">' + L.optionHtml(o, 88) + '</button>';
+      return '<button type="button" data-i="' + i + '" aria-label="Đáp án ' + (i + 1) + ': ' + esc(L.optLabel(o)) + '">' + L.optionHtml(o, 88) + '</button>';
     }).join('');
-    ui.quizFeedback.hidden = true;
+    ui.quizFeedback.className = 'quiz-feedback is-empty';   // giữ chỗ để các nút không nhảy khi hiện lời giải
+    ui.quizFeedback.innerHTML = '';
     ui.quizNext.hidden = true;
     ui.quizRetry.hidden = true;
     Voice.say(q.speech);
@@ -1674,16 +1993,19 @@
   function onQuizAnswer(idx) {
     if (Quiz.answered) return;
     const q = Quiz.list[Quiz.i];
+    idx = Number(idx);
+    if (!q || !(idx >= 0 && idx < q.options.length)) return;
     const ok = idx === q.answer;
     Quiz.answered = true;
+    q.tries = (q.tries || 0) + 1;
+    const reveal = !ok && q.tries >= 2;   // sau 2 lần sai mới đánh dấu đáp án đúng (không "mò" được ngay lần đầu)
     const btns = ui.quizAnswers.querySelectorAll('button');
     for (let i = 0; i < btns.length; i++) {
       btns[i].disabled = true;
       if (i === idx) btns[i].classList.add(ok ? 'ok' : 'bad');
-      else if (ok || i !== q.answer) btns[i].classList.add('dim');
-      if (!ok && i === q.answer) btns[i].classList.add('ok');
+      else if (reveal && i === q.answer) btns[i].classList.add('ok');
+      else btns[i].classList.add('dim');
     }
-    ui.quizFeedback.hidden = false;
     const dots = ui.quizDots.children;
     if (ok) {
       ui.quizFeedback.className = 'quiz-feedback ok';
@@ -1693,20 +2015,30 @@
       if (dots[Quiz.i]) dots[Quiz.i].className = 'done';
       Sfx.play('correct');
       Voice.say('Đúng rồi! ' + q.explain);
+      if (q.tries === 1) Store.noteOk(q.key);
     } else {
       Quiz.wrongTotal++;
       ui.quizFeedback.className = 'quiz-feedback bad';
-      ui.quizFeedback.innerHTML = '❌ <b>Chưa đúng.</b> Đáp án đúng là <b>' + esc(q.answerText) + '</b>. ' + esc(q.explain) + ' <b>Thử lại nhé!</b>';
+      ui.quizFeedback.innerHTML = reveal
+        ? '❌ <b>Chưa đúng.</b> Đáp án đúng là <b>' + esc(q.answerText) + '</b>. ' + esc(q.explain) + ' <b>Thử lại nhé!</b>'
+        : '❌ <b>Chưa đúng.</b> ' + esc(q.explain) + ' <b>Nghĩ kỹ rồi thử lại nhé!</b>';
       ui.quizRetry.hidden = false;
       if (dots[Quiz.i]) dots[Quiz.i].className = 'bad';
       Sfx.play('wrong');
-      Voice.say('Chưa đúng. Đáp án đúng là ' + q.answerSpeech + '. ' + q.explain + ' Thử lại nhé!');
+      Voice.say(reveal ? 'Chưa đúng. Đáp án đúng là ' + q.answerSpeech + '. ' + q.explain + ' Thử lại nhé!' : 'Chưa đúng. ' + q.explain + ' Nghĩ kỹ rồi thử lại nhé!');
+      Store.noteMissed(q.key, q.info);   // chỉ lưu được câu sinh tự động (có info); câu hỏi đáp cố định bị bỏ qua
     }
   }
 
   function quizRetry() {
     const q = Quiz.list[Quiz.i];
-    reshuffleQ(q);
+    if (!q) return;
+    if ((q.review || q.extra) && (q.tries || 0) < 2 && q.info) {
+      // Câu sinh tự động: sinh lại cùng câu hỏi với đáp án nhiễu mới (không mò theo vị trí cũ)
+      const nq = L.regen(q.info);
+      if (nq) { nq.review = q.review; nq.extra = q.extra; nq.tries = q.tries; Quiz.list[Quiz.i] = nq; }
+      else reshuffleQ(q);
+    } else reshuffleQ(q);
     Sfx.play('page');
     renderQuizQ();
   }
@@ -1726,7 +2058,7 @@
     const next = L.LEVELS[level.index + 1];
     let unlocked = false;
     if (next) unlocked = Store.unlockUpTo(next.index + 1);
-    else if (!Store.data.progress.badge) { Store.data.progress.badge = true; Store.save(); unlocked = true; }
+    else { const b = Store.p(); if (!b.badge) { b.badge = true; Store.save(); unlocked = true; } }
     G.quizPassedNow = true;
     ui.quizBody.hidden = true;
     ui.quizDone.hidden = false;
@@ -1744,19 +2076,195 @@
     spawnConfetti(140);
     Voice.stop();
     Voice.say(next ? (unlocked ? 'Mở khóa màn ' + next.n + ': ' + next.title + '. Giỏi lắm!' : 'Giỏi lắm! Con đã hiểu bài rồi.') : 'Chúc mừng! Con đã nhận Huy hiệu Hổ Vàng!');
-    if (firstTime && Store.data.progress.badge && !next) spawnConfetti(100);
+    if (firstTime && !next) spawnConfetti(100);
   }
 
   function quizBack() {
     Voice.stop();
     G.reading = false;
-    if (G.level && G.resultShown) { G.state = 'over'; showResults(); }
+    if (G.level && G.resultShown) { G.state = 'over'; renderResults(); showScreen('gameover'); Music.play('menu'); }
     else goLevels();
   }
 
+  /* ================= NGƯỜI CHƠI (hồ sơ dùng chung, js/profile.js) ================= */
+  const PlayersUI = { mode: null, avatar: null, from: 'menu' };
+
+  function sumStars(bucket) {
+    let s = 0;
+    if (!bucket || !bucket.levels) return 0;
+    L.LEVELS.forEach(function (l) { const r = bucket.levels[l.id]; if (r) s += Store.int(r.stars, 0, 3, 0); });
+    return s;
+  }
+
+  function renderPlayerChip() {
+    const b = $('btn-player');
+    if (!b || !window.Players) return;
+    b.innerHTML = Players.chipHtml() + '<span class="pl-hint" aria-hidden="true">▾</span>';
+  }
+
+  function renderPlayers() {
+    if (!window.Players || !ui.players) return;
+    const act = Players.active();
+    $('player-list').innerHTML = Players.list().map(function (p) {
+      const stars = sumStars(Store.data.players[p.id]);
+      return '<button type="button" class="player-item' + (p.id === act.id ? ' active' : '') + '" data-id="' + esc(p.id) + '" aria-pressed="' + (p.id === act.id) + '">' +
+        '<span class="pl-avatar" aria-hidden="true">' + esc(p.avatar) + '</span><span class="pl-name">' + esc(p.name) + '<span class="pl-sub">⭐ ' + stars + ' sao</span></span></button>';
+    }).join('');
+    $('btn-player-remove').disabled = Players.list().length <= 1;
+    $('player-form').hidden = !PlayersUI.mode;
+  }
+
+  function openPlayers(from) {
+    PlayersUI.mode = null;
+    PlayersUI.from = from || 'menu';
+    renderPlayers();
+    showScreen('players');
+  }
+  function closePlayers() { PlayersUI.mode = null; showScreen(PlayersUI.from === 'levels' ? 'levels' : 'menu'); }
+
+  function openPlayerForm(mode) {
+    PlayersUI.mode = mode;                                   // 'add' | 'rename' | 'avatar'
+    const act = Players.active();
+    PlayersUI.avatar = mode === 'add' ? Players.AVATARS[Players.list().length % Players.AVATARS.length] : act.avatar;
+    const input = $('player-name');
+    input.value = mode === 'add' ? '' : act.name;
+    input.hidden = mode === 'avatar';
+    $('player-avatars').hidden = mode === 'rename';
+    $('player-avatars').innerHTML = Players.AVATARS.map(function (a) {
+      return '<button type="button" class="avatar" data-avatar="' + esc(a) + '" aria-pressed="' + (a === PlayersUI.avatar) + '" aria-label="Hình ' + esc(a) + '">' + esc(a) + '</button>';
+    }).join('');
+    renderPlayers();
+    if (mode !== 'avatar') setTimeout(function () { try { input.focus(); } catch (e) { /* bỏ qua */ } }, 50);
+  }
+
+  function submitPlayerForm() {
+    const name = $('player-name').value;
+    let ok = false;
+    if (PlayersUI.mode === 'add') ok = !!Players.add(name, PlayersUI.avatar);
+    else if (PlayersUI.mode === 'rename') ok = Players.rename(Players.active().id, name);
+    else if (PlayersUI.mode === 'avatar') ok = Players.setAvatar(Players.active().id, PlayersUI.avatar);
+    if (!ok) {
+      toast(PlayersUI.mode === 'add' && Players.list().length >= Players.MAX_PLAYERS ? 'Chỉ được tối đa ' + Players.MAX_PLAYERS + ' bạn thôi' : 'Con nhập tên nhé (1–16 chữ)');
+      return;
+    }
+    PlayersUI.mode = null;
+    Sfx.play('correct');
+    renderPlayers();
+    Voice.say('Chào ' + Players.active().name + '!');
+  }
+
+  /** Lời chào theo tên, một lần mỗi lần mở trang (gọi sau thao tác chạm đầu tiên để iOS cho phép đọc). */
+  function welcome() {
+    if (G.welcomed || !window.Players) return;
+    G.welcomed = true;
+    Voice.say('Chào ' + Players.active().name + '! Cùng cưỡi hổ học xem đồng hồ nào!');
+  }
+
+  /* ================= KẾT QUẢ CỦA BÉ (báo cáo cho phụ huynh) ================= */
+  const Report = { from: 'levels' };
+
+  /** "Đã thuộc" một chủ đề: đúng ≥ 90% trên ít nhất 20 câu. */
+  function mastered(topic) {
+    const t = Store.p().stats.byTopic[topic];
+    if (!t) return false;
+    const n = t.c + t.w;
+    return n >= 20 && t.c / n >= 0.9;
+  }
+
+  /** Mô tả câu cần ôn cho phụ huynh, ví dụ "🕘 Màn 5 · 🕒 7 giờ 45 phút: Đọc theo cách “giờ kém” → 8 giờ kém 15 phút". */
+  function describeReview(it) {
+    const q = L.regen(it.info);
+    const lv = it.info && L.levelById(it.info.lv);
+    const head = lv ? lv.icon + ' Màn ' + lv.n + ' · ' : '';
+    if (!q) return head + String(it.key).split('|')[0];
+    const vis = q.clock ? '🕒 ' + L.plain(q.clock.h, q.clock.m) + ': ' : q.digital ? '⏱ ' + q.digital + ': ' : '';
+    return head + vis + L.strip(q.prompt) + ' → ' + q.answerText;
+  }
+
+  function renderReport() {
+    if (!window.Players || !ui.report) return;
+    const p = Players.active(), b = Store.p(), s = b.stats;
+    $('report-title').textContent = '📊 Kết quả của ' + p.name;
+    const total = s.correct + s.wrong, acc = total ? Math.round(s.correct / total * 100) : 0;
+    let stars = 0;
+    L.LEVELS.forEach(function (l) { stars += Store.lv(l.id).stars; });
+    $('report-stats').innerHTML =
+      '<div class="report-stat"><div class="v">' + fmt(s.plays) + '</div><div class="k">ván đã chơi</div></div>' +
+      '<div class="report-stat"><div class="v">' + acc + '%</div><div class="k">trả lời đúng</div></div>' +
+      '<div class="report-stat"><div class="v">' + Math.round(s.seconds / 60) + '</div><div class="k">phút luyện tập</div></div>' +
+      '<div class="report-stat"><div class="v">' + stars + '/' + (L.LEVELS.length * 3) + '</div><div class="k">sao</div></div>';
+    $('report-levels').innerHTML = L.LEVELS.map(function (l) {
+      const r = Store.lv(l.id), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
+      return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
+        '<span class="stars" aria-label="' + r.stars + ' sao">' + starsHtml(r.stars) + '</span><span>🏆 ' + fmt(r.best) + '</span>' +
+        (n ? '<span>' + Math.round(t.c / n * 100) + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
+        (mastered(l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
+        (r.quiz ? '<span class="quiz-tag">❓ đã hỏi đáp</span>' : '') + '</div>';
+    }).join('');
+    // Chủ đề yếu nhất: đã làm ≥ 5 câu mà đúng dưới 70%
+    const weak = L.LEVELS.filter(function (l) { const t = s.byTopic[l.id]; return t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7; })
+      .map(function (l) { return l.icon + ' ' + l.title; });
+    const pool = Store.reviewPool();
+    $('report-review').innerHTML =
+      (weak.length ? '<div class="report-row weak"><span class="t">Chủ đề cần luyện thêm: ' + esc(weak.join(', ')) + '</span></div>' : '') +
+      (pool.length
+        ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
+        : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>');
+  }
+
+  function openReport(from) {
+    Report.from = from || 'levels';
+    renderReport();
+    showScreen('report');
+  }
+  function closeReport() {
+    if (Report.from === 'players') { renderPlayers(); showScreen('players'); }
+    else if (Report.from === 'menu') showScreen('menu');
+    else { renderLevels(); showScreen('levels'); }
+  }
+
+  /* ================= CỔNG PHỤ HUYNH (một phép nhân, không dùng window.prompt/confirm) ================= */
+  const Gate = { cb: null, answer: 0 };
+  function adultGate(cb) {
+    if (!ui.parentGate) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
+    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
+    Gate.cb = cb; Gate.answer = a * b;
+    $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
+    $('parent-gate-input').value = '';
+    ui.parentGate.classList.remove('hidden');
+    setTimeout(function () { try { $('parent-gate-input').focus(); } catch (e) { /* bỏ qua */ } }, 50);
+  }
+  function closeGate() { if (ui.parentGate) ui.parentGate.classList.add('hidden'); Gate.cb = null; }
+  function submitGate() {
+    const v = Number($('parent-gate-input').value);
+    if (v === Gate.answer) { const cb = Gate.cb; closeGate(); Sfx.play('correct'); if (cb) cb(); }
+    else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); $('parent-gate-input').value = ''; }
+  }
+
+  /* ================= LỖI TOÀN CỤC: một lỗi không được làm treo ván chơi ================= */
+  let errShown = 0, errLast = 0;
+  function onFatal(msg) {
+    const now = Date.now();
+    if (now - errLast < 1000) return;         // lỗi lặp mỗi khung hình chỉ xử lý mỗi giây một lần
+    errLast = now;
+    if (errShown++ < 3) {                     // không spam thông báo
+      try { console.error('[cuoi-ho]', msg); } catch (e) { /* bỏ qua */ }
+      try { toast('Có lỗi nhỏ, con thử lại nhé! 🙏', 2600); } catch (e) { /* bỏ qua */ }
+    }
+    try { if (inGame()) goMenu(); } catch (e) { /* bỏ qua */ }   // kết thúc ván an toàn thay vì đứng hình
+  }
+
   /* ================= ĐẦU VÀO ================= */
+  /** Bé chạm/ấn để chạy tiếp ngay khi đang xem đáp án đúng (sau ít nhất 0,9 giây để kịp nhìn). */
+  function skipLearn() {
+    if (G.state !== 'playing' || G.phase !== 'learn' || G.learnT < 0.9) return;
+    G.learnT = Math.max(G.learnT, LEARN_T + 6);
+    Voice.stop();
+  }
+
   function onCanvasDown(e) {
     Sfx.unlock();
+    if (G.state === 'playing' && G.phase === 'learn') { skipLearn(); if (e.cancelable) e.preventDefault(); return; }
     if (G.state !== 'playing' || G.phase !== 'choose') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const gate = curGate();
@@ -1774,34 +2282,53 @@
 
   function bindInput() {
     canvas.addEventListener('pointerdown', onCanvasDown);
-    document.addEventListener('touchmove', function (e) { if (e.target === canvas && e.cancelable) e.preventDefault(); }, { passive: false });
-    document.addEventListener('touchstart', function (e) { if (e.target === canvas && e.cancelable) e.preventDefault(); }, { passive: false });
+    // Chặn cuộn/zoom chỉ trên canvas (không chặn toàn trang để các bảng vẫn cuộn được)
+    canvas.addEventListener('touchmove', function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchstart', function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('dblclick', function (e) { if (e.target === canvas) e.preventDefault(); });
     document.addEventListener('contextmenu', function (e) { if (e.target === canvas) e.preventDefault(); });
-    document.addEventListener('pointerdown', function () { Sfx.unlock(); }, true);
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-        if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
-        return;
-      }
-      if (G.state === 'lesson') {
-        if (e.key === 'ArrowRight') { slideStep(1); e.preventDefault(); }
-        else if (e.key === 'ArrowLeft') { slideStep(-1); e.preventDefault(); }
-        else if (e.key === 'Enter' && !ui.lessonStart.hidden) { startGame(Lesson.level); e.preventDefault(); }
-        return;
-      }
-      if (G.state === 'quiz' && !ui.quizBody.hidden) {
-        if (/^[1-3]$/.test(e.key) && !Quiz.answered) { onQuizAnswer(Number(e.key) - 1); e.preventDefault(); }
-        else if (e.key === 'Enter') { if (!ui.quizNext.hidden) quizNext(); else if (!ui.quizRetry.hidden) quizRetry(); e.preventDefault(); }
-        return;
-      }
-      if (G.state !== 'playing' || G.phase !== 'choose') return;
-      if (/^[1-3]$/.test(e.key)) { choose(Number(e.key) - 1); e.preventDefault(); }
-      else if (e.key === 'ArrowUp') { G.kbd = true; G.cursor = clamp(G.cursor - 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
-      else if (e.key === 'ArrowDown') { G.kbd = true; G.cursor = clamp(G.cursor + 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
-      else if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { G.kbd = true; choose(G.cursor); e.preventDefault(); }
-    });
+    document.addEventListener('pointerdown', function () { Sfx.unlock(); }, { passive: true, capture: true });
+    document.addEventListener('keydown', onKey);
+  }
+
+  function isOpen(el) { return !!el && !el.classList.contains('hidden'); }
+
+  function onKey(e) {
+    const t = e.target;
+    // Escape đóng cổng phụ huynh / biểu mẫu tên ngay cả khi đang ở trong ô nhập
+    if (e.key === 'Escape' && isOpen(ui.parentGate)) { closeGate(); e.preventDefault(); return; }
+    if (e.key === 'Escape' && isOpen(ui.players) && PlayersUI.mode) { PlayersUI.mode = null; renderPlayers(); e.preventDefault(); return; }
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;   // đang gõ tên / đáp án
+    // Các lớp phủ (điều khiển theo màn hình đang hiện, không theo G.state: bài học/hỏi đáp có thể mở từ tạm dừng hay kết quả)
+    if (isOpen(ui.parentGate)) { if (e.key === 'Escape') { closeGate(); e.preventDefault(); } return; }
+    if (isOpen(ui.howto)) { if (e.key === 'Escape' || e.key === 'Enter') { ui.howto.classList.add('hidden'); e.preventDefault(); } return; }
+    if (isOpen(ui.report)) { if (e.key === 'Escape') { closeReport(); e.preventDefault(); } return; }
+    if (isOpen(ui.players)) { if (e.key === 'Escape') { closePlayers(); e.preventDefault(); } return; }
+    if (isOpen(ui.lesson)) {
+      if (e.key === 'ArrowRight') { slideStep(1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft') { slideStep(-1); e.preventDefault(); }
+      else if (e.key === 'Enter' && !ui.lessonStart.hidden) { startGame(Lesson.level); e.preventDefault(); }
+      else if (e.key === 'Escape') { lessonBack(); e.preventDefault(); }
+      return;
+    }
+    if (isOpen(ui.quiz)) {
+      if (ui.quizBody.hidden) return;
+      if (/^[1-3]$/.test(e.key) && !Quiz.answered) { onQuizAnswer(Number(e.key) - 1); e.preventDefault(); }
+      else if (e.key === 'Enter') { if (!ui.quizNext.hidden) quizNext(); else if (!ui.quizRetry.hidden) quizRetry(); e.preventDefault(); }
+      else if (e.key === 'Escape') { quizBack(); e.preventDefault(); }
+      return;
+    }
+    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+      if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
+      return;
+    }
+    if (G.state === 'playing' && G.phase === 'learn') { if (e.key === 'Enter' || e.key === ' ') { skipLearn(); e.preventDefault(); } return; }
+    if (G.state !== 'playing' || G.phase !== 'choose') return;
+    if (/^[1-3]$/.test(e.key)) { choose(Number(e.key) - 1); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { G.kbd = true; G.cursor = clamp(G.cursor - 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { G.kbd = true; G.cursor = clamp(G.cursor + 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
+    else if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { G.kbd = true; choose(G.cursor); e.preventDefault(); }
   }
 
   /* ================= GIAO DIỆN ================= */
@@ -1819,25 +2346,26 @@
 
   function renderAudioToggles() {
     const defs = [
-      { key: 'sound', on: '🔊 Hiệu ứng: Bật', off: '🔇 Hiệu ứng: Tắt' },
+      { key: 'sound', on: '🔊 Âm thanh: Bật', off: '🔇 Âm thanh: Tắt' },
       { key: 'music', on: '🎵 Nhạc nền: Bật', off: '🎵 Nhạc nền: Tắt' },
-      { key: 'voice', on: '🗣️ Giọng đọc: Bật', off: '🗣️ Giọng đọc: Tắt' }
+      { key: 'voice', on: '🗣️ Giọng đọc: Bật', off: '🗣️ Giọng đọc: Tắt' },
+      { key: 'fx', on: '✨ Hiệu ứng: Nhiều', off: '✨ Hiệu ứng: Ít' }
     ];
     const boxes = document.querySelectorAll('[data-audio-toggles]');
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
         const noVoice = d.key === 'voice' && !Voice.available;
-        const on = Store.data[d.key] !== false && !noVoice;
+        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
         if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
-        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '"' +
+        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + (d.key === 'fx' ? ' fx' : '') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' +
           (noVoice ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
 
   function bindUi() {
-    click('btn-play', function () { goLevels(); });
+    click('btn-play', function () { welcome(); goLevels(); });   // lời chào theo tên ở thao tác đầu tiên
     click('btn-notes', function () { goNotes(); });
     click('btn-notes-back', function () { G.reading = false; Voice.stop(); goMenu(); });
     click('btn-notes-read', function () { readNotes(); });
@@ -1849,27 +2377,28 @@
       if (!b || b.disabled) return;
       const k = b.getAttribute('data-set');
       Sfx.unlock();
-      Store.data[k] = !(Store.data[k] !== false);
+      if (k === 'fx') { Store.data.fx = Store.data.fx === 'lite' ? 'full' : 'lite'; Motion.refresh(); }
+      else Store.data[k] = !(Store.data[k] !== false);
       Store.save();
       applyAudioSettings();
       renderAudioToggles();
-      if (Store.data[k] !== false) {
+      if (k === 'fx') { Sfx.play('click'); toast(Motion.lite ? 'Hiệu ứng ít: bớt rung, chớp và tia lửa ✨' : 'Hiệu ứng đầy đủ ✨'); }
+      else if (Store.data[k] !== false) {
         if (k === 'sound') Sfx.play('correct');
-        if (k === 'voice') Voice.say('Xin chào! Cùng cưỡi hổ học xem đồng hồ nào!');
+        if (k === 'voice') Voice.say('Xin chào ' + (window.Players ? Players.active().name : 'con') + '! Cùng cưỡi hổ học xem đồng hồ nào!');
       } else {
         Sfx.play('click');
       }
     });
     click('btn-levels-back', function () { goMenu(); });
     click('btn-unlock-all', function () {
-      if (!window.confirm('Mở khóa tất cả các màn? (Dành cho phụ huynh, giáo viên)')) return;
-      Store.unlockUpTo(L.LEVELS.length);
-      renderLevels();
-      toast('Đã mở khóa tất cả các màn 🔓');
+      adultGate(function () {
+        Store.unlockUpTo(L.LEVELS.length);
+        renderLevels();
+        toast('Đã mở khóa tất cả các màn 🔓');
+      });
     });
-    ui.levelGrid.addEventListener('click', function (e) {
-      const card = e.target.closest('.level-card');
-      if (!card) return;
+    const openCard = function (card) {
       const lvl = L.levelById(card.getAttribute('data-id'));
       if (!lvl) return;
       Sfx.unlock();
@@ -1881,6 +2410,14 @@
       }
       Sfx.play('click');
       showLesson(lvl, 'levels');
+    };
+    ui.levelGrid.addEventListener('click', function (e) { const card = e.target.closest('.level-card'); if (card) openCard(card); });
+    ui.levelGrid.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest ? e.target.closest('.level-card') : null;
+      if (!card) return;
+      e.preventDefault();
+      openCard(card);
     });
     // Bài học
     click('btn-lesson-back', function () { lessonBack(); });
@@ -1902,15 +2439,24 @@
     click('btn-result-lesson', function () { if (G.level) showLesson(G.level, 'results'); });
     click('btn-other-level', function () { goLevels(); });
     click('btn-home', function () { goMenu(); });
-    ui.reviewChips.addEventListener('click', function (e) {
-      const s = e.target.closest('span[data-i]');
-      if (!s) return;
+    const speakChip = function (s) {
       const r = G.review[Number(s.getAttribute('data-i'))];
       if (r) { Sfx.unlock(); Voice.say(r.text + ' ' + r.answer + '. ' + r.q.explain); }
+    };
+    ui.reviewChips.addEventListener('click', function (e) { const s = e.target.closest('span[data-i]'); if (s) speakChip(s); });
+    ui.reviewChips.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const s = e.target.closest ? e.target.closest('span[data-i]') : null;
+      if (s) { e.preventDefault(); speakChip(s); }
     });
     // Hỏi đáp
     click('btn-quiz-back', function () { quizBack(); });
-    click('btn-quiz-read', function () { const q = Quiz.list[Quiz.i]; if (q) Voice.say(q.speech + '. ' + q.options.map(L.optSpeech).join('. ')); });
+    click('btn-quiz-read', function () {
+      const q = Quiz.list[Quiz.i];
+      if (!q) return;
+      // Không đọc lần lượt các đồng hồ (đọc ra là lộ đáp án); câu chữ thì đọc đủ ba lựa chọn
+      Voice.say(q.options.some(function (o) { return o.clock; }) ? q.speech + '. Chọn đồng hồ đúng trong ba đồng hồ.' : q.speech + '. ' + q.options.map(L.optSpeech).join('. '));
+    });
     click('btn-quiz-next', function () { quizNext(); });
     click('btn-quiz-retry', function () { quizRetry(); });
     ui.quizAnswers.addEventListener('click', function (e) {
@@ -1923,9 +2469,7 @@
     click('btn-quiz-levels', function () { goLevels(); });
     click('btn-quiz-home', function () { goMenu(); });
     // Ghi nhớ
-    ui.notesList.addEventListener('click', function (e) {
-      const line = e.target.closest('.note-line');
-      if (!line) return;
+    const speakLine = function (line) {
       Sfx.unlock(); Sfx.play('click');
       G.reading = false;
       if (!Voice.available) { toast('Thiết bị chưa có giọng đọc tiếng Việt 🙁'); return; }
@@ -1933,11 +2477,74 @@
         onstart: function () { line.classList.add('speaking'); },
         onend: function () { line.classList.remove('speaking'); }
       });
+    };
+    ui.notesList.addEventListener('click', function (e) { const line = e.target.closest('.note-line'); if (line) speakLine(line); });
+    ui.notesList.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const line = e.target.closest ? e.target.closest('.note-line') : null;
+      if (line) { e.preventDefault(); speakLine(line); }
     });
 
+    // Người chơi (hồ sơ dùng chung giữa các game)
+    click('btn-player', function () { welcome(); openPlayers('menu'); });
+    click('btn-players-back', function () { closePlayers(); });
+    $('player-list').addEventListener('click', function (e) {
+      const b = e.target.closest('.player-item');
+      if (!b) return;
+      Sfx.unlock(); Sfx.play('click');
+      Players.setActive(b.getAttribute('data-id'));
+      renderPlayers();
+    });
+    click('btn-player-add', function () { openPlayerForm('add'); });
+    click('btn-player-rename', function () { openPlayerForm('rename'); });
+    click('btn-player-avatar', function () { openPlayerForm('avatar'); });
+    click('btn-player-cancel', function () { PlayersUI.mode = null; renderPlayers(); });
+    $('player-form').addEventListener('submit', function (e) { e.preventDefault(); Sfx.unlock(); submitPlayerForm(); });
+    $('player-avatars').addEventListener('click', function (e) {
+      const b = e.target.closest('.avatar');
+      if (!b) return;
+      Sfx.unlock(); Sfx.play('click');
+      PlayersUI.avatar = b.getAttribute('data-avatar');
+      const all = $('player-avatars').children;
+      for (let i = 0; i < all.length; i++) all[i].setAttribute('aria-pressed', String(all[i] === b));
+    });
+    click('btn-player-remove', function () {
+      if (Players.list().length <= 1) return;
+      adultGate(function () {
+        const p = Players.active();
+        if (Players.remove(p.id)) { delete Store.data.players[p.id]; Store.save(); toast('Đã xóa ' + p.name); renderPlayers(); }
+      });
+    });
+    Players.onChange(function () {
+      renderPlayerChip();
+      if (isOpen(ui.players)) renderPlayers();
+      if (isOpen(ui.report)) renderReport();
+      if (G.state === 'levels') renderLevels();
+    });
+    // Kết quả của bé (phụ huynh)
+    click('btn-report', function () { openReport('players'); });
+    click('btn-report-levels', function () { openReport('levels'); });
+    click('btn-report-back', function () { closeReport(); });
+    click('btn-report-reset', function () {
+      adultGate(function () {
+        const name = Players.active().name;
+        Store.resetActive();
+        toast('Đã xóa tiến trình của ' + name);
+        renderReport();
+      });
+    });
+    // Cổng phụ huynh
+    $('parent-gate-form').addEventListener('submit', function (e) { e.preventDefault(); Sfx.unlock(); submitGate(); });
+    click('btn-parent-gate-cancel', function () { closeGate(); });
+
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden && G.state === 'playing') pauseGame();
-      if (!document.hidden) Sfx.unlock();
+      if (document.hidden) {
+        if (G.state === 'playing') pauseGame();
+        Music._halt();                 // ngừng lập lịch nốt khi tab ẩn; 'wanted' giữ nguyên để phát lại khi hiện
+      } else {
+        Sfx.unlock();
+        if (inGame() && G.state !== 'over') requestWake();   // hệ thống thu hồi wake lock khi ẩn → xin lại
+      }
     });
     window.addEventListener('blur', function () { if (G.state === 'playing') pauseGame(); });
   }
@@ -1946,7 +2553,10 @@
   function requestWake() {
     try {
       if ('wakeLock' in navigator && navigator.wakeLock.request) {
-        navigator.wakeLock.request('screen').then(function (l) { G.wakeLock = l; }).catch(function () { /* bỏ qua */ });
+        navigator.wakeLock.request('screen').then(function (l) {
+          G.wakeLock = l;
+          try { l.addEventListener('release', function () { if (G.wakeLock === l) G.wakeLock = null; }); } catch (e) { /* bỏ qua */ }
+        }).catch(function () { /* bỏ qua */ });
       }
     } catch (e) { /* bỏ qua */ }
   }
@@ -1985,9 +2595,15 @@
     }
     if (!G.bg) return;
     const t0 = performance.now();
-    update(dt);
-    const t1 = performance.now();
-    render();
+    let t1 = t0;
+    try {
+      update(dt);
+      t1 = performance.now();
+      render();
+    } catch (e) {
+      onFatal(e && e.message ? e.message : String(e));   // một khung hình lỗi không được làm chết vòng lặp
+      return;
+    }
     const t2 = performance.now();
     const p = G.perf;
     p.n++; p.update += t1 - t0; p.render += t2 - t1;
@@ -1996,7 +2612,20 @@
 
   function boot() {
     Store.load();
+    Motion.refresh();
+    try {
+      const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (mq && mq.addEventListener) mq.addEventListener('change', function () { Motion.refresh(); });
+    } catch (e) { /* bỏ qua */ }
     Voice.init();
+    // Khi giọng đọc bị dừng (bất kỳ đâu): dọn trạng thái "đang đọc" của màn Ghi nhớ để không kẹt
+    Voice.onstop = function () {
+      G.reading = false;
+      try { ui.notesList.querySelectorAll('.speaking').forEach(function (el) { el.classList.remove('speaking'); }); } catch (e) { /* bỏ qua */ }
+    };
+    window.addEventListener('error', function (e) { onFatal(e && e.message ? e.message : 'error'); });
+    window.addEventListener('unhandledrejection', function (e) { onFatal(e && e.reason && e.reason.message ? e.reason.message : 'unhandledrejection'); });
+    renderPlayerChip();
     applyAudioSettings();
     renderAudioToggles();
     setTimeout(renderAudioToggles, 1200);
@@ -2018,7 +2647,12 @@
   }
 
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
-  window.__CuoiHo = { G: G, Store: Store, Quiz: Quiz, Lesson: Lesson, startGame: startGame, choose: choose, endGame: endGame, startQuiz: startQuiz, onQuizAnswer: onQuizAnswer, quizNext: quizNext, quizRetry: quizRetry, showLesson: showLesson, goLevels: goLevels, curGate: curGate, update: update, render: render, layout: layout };
+  window.__CuoiHo = {
+    G: G, Store: Store, Quiz: Quiz, Lesson: Lesson, Gate: Gate, Motion: Motion, Report: Report, PlayersUI: PlayersUI,
+    startGame: startGame, choose: choose, endGame: endGame, startQuiz: startQuiz, onQuizAnswer: onQuizAnswer, quizNext: quizNext, quizRetry: quizRetry,
+    showLesson: showLesson, goLevels: goLevels, goMenu: goMenu, curGate: curGate, update: update, render: render, layout: layout,
+    renderLevels: renderLevels, renderReport: renderReport, adultGate: adultGate, persistResults: persistResults, onFatal: onFatal, skipLearn: skipLearn
+  };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

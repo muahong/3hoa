@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -39,15 +41,15 @@
           <div class="q-visual" id="hud-visual" hidden></div>
           <div class="q-text" id="hud-prompt">Sẵn sàng…</div>
         </div>
-        <div class="timer" id="hud-timer">
+        <div class="timer" id="hud-timer" role="timer" aria-label="Thời gian chọn">
           <span>🔥</span>
           <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
           <span class="time" id="hud-time">15</span>
         </div>
-        <div class="hint" id="hud-hint" hidden></div>
+        <div class="hint" id="hud-hint" role="status" aria-live="polite" hidden></div>
       </div>
       <div class="hud-right">
-        <div class="hearts" id="hud-hearts"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+        <div class="hearts" id="hud-hearts" role="img" aria-label="Còn 3 tim"><span>❤️</span><span>❤️</span><span>❤️</span></div>
         <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
     </div>
@@ -63,11 +65,14 @@
           <h1 class="title">CƯỠI HỔ<br>VƯỢT LỬA<small>CHINH PHỤC ĐỒNG HỒ</small></h1>
         </div>
       </div>
+      <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi">
+        <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
+      </button>
       <p class="subtitle">Học xem đồng hồ &amp; tính thời gian cho các bạn lớp 2, lớp 3 🐯🔥</p>
       <div class="btn-row">
         <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
       </div>
-      <div class="btn-row" style="margin-top:12px">
+      <div class="btn-row tight">
         <button class="btn teal small" id="btn-notes">📖 Ghi nhớ</button>
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
@@ -82,7 +87,8 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
         <h2>🗺️ Hành trình</h2>
-        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+        <button class="btn teal small" id="btn-report-levels" aria-label="Kết quả của bé">📊</button>
+        <button class="btn ghost small" id="btn-levels-howto" aria-label="Cách chơi">❓</button>
       </div>
       <p class="mode-desc" id="journey-desc">Mỗi màn: <b>học bài</b> → <b>vượt vòng lửa</b> → <b>hỏi đáp</b> để mở khóa màn tiếp theo.</p>
       <div class="journey-stats" id="journey-stats"></div>
@@ -103,13 +109,13 @@
         <div class="slide-visual" id="slide-visual"></div>
         <div class="slide-text" id="slide-text"></div>
       </div>
-      <div class="dots" id="slide-dots"></div>
+      <div class="dots" id="slide-dots" aria-hidden="true"></div>
       <div class="btn-row lesson-nav">
         <button class="btn ghost small" id="btn-slide-prev">◀ Trước</button>
         <button class="btn small" id="btn-slide-next">Tiếp ▶</button>
         <button class="btn big green" id="btn-lesson-start" hidden>🐯 Lên hổ thôi!</button>
       </div>
-      <div class="btn-row" style="margin-top:8px">
+      <div class="btn-row tight">
         <button class="btn ghost small" id="btn-lesson-skip">⏩ Bỏ qua bài học, chơi luôn</button>
       </div>
     </div>
@@ -209,14 +215,14 @@
         <h2 id="quiz-title">❓ Hỏi đáp</h2>
         <button class="btn teal small" id="btn-quiz-read" aria-label="Đọc câu hỏi">🔊</button>
       </div>
-      <div class="dots" id="quiz-dots"></div>
+      <div class="dots" id="quiz-dots" aria-hidden="true"></div>
       <div id="quiz-body">
         <div class="quiz-q">
           <div class="quiz-visual" id="quiz-visual" hidden></div>
           <div class="quiz-text" id="quiz-text"></div>
         </div>
         <div class="quiz-answers" id="quiz-answers"></div>
-        <div class="quiz-feedback" id="quiz-feedback" hidden></div>
+        <div class="quiz-feedback is-empty" id="quiz-feedback" role="status" aria-live="polite"></div>
         <div class="btn-row">
           <button class="btn small" id="btn-quiz-next" hidden>Tiếp ▶</button>
           <button class="btn small green" id="btn-quiz-retry" hidden>🔄 Thử lại</button>
@@ -237,11 +243,71 @@
     </div>
   </div>
 
-  <div id="toast"></div>
+  <!-- ================= NGƯỜI CHƠI ================= -->
+  <div id="players" class="screen hidden dim">
+    <div class="panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-players-back">← Quay lại</button>
+        <h2>👋 Ai đang chơi?</h2>
+        <button class="btn teal small" id="btn-report" aria-label="Xem kết quả">📊</button>
+      </div>
+      <div class="player-list" id="player-list"></div>
+      <div class="btn-row tight">
+        <button class="btn small green" id="btn-player-add">＋ Thêm bạn mới</button>
+        <button class="btn ghost small" id="btn-player-rename">✏️ Đổi tên</button>
+        <button class="btn ghost small" id="btn-player-avatar">🎭 Đổi hình</button>
+        <button class="btn ghost small" id="btn-player-remove">🗑 Xóa</button>
+      </div>
+      <form class="player-form" id="player-form" hidden autocomplete="off">
+        <label for="player-name" class="sr-only">Tên của con</label>
+        <input id="player-name" maxlength="16" placeholder="Tên của con" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+        <div class="avatar-grid" id="player-avatars"></div>
+        <div class="btn-row tight">
+          <button type="submit" class="btn small green" id="btn-player-save">💾 Lưu</button>
+          <button type="button" class="btn ghost small" id="btn-player-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ CỦA BÉ (phụ huynh) ================= -->
+  <div id="report" class="screen hidden dim">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-report-back">← Quay lại</button>
+        <h2 id="report-title">📊 Kết quả của Bé</h2>
+        <span class="head-spacer"></span>
+      </div>
+      <div class="report-grid" id="report-stats"></div>
+      <h3 class="report-h">Từng màn</h3>
+      <div class="report-rows" id="report-levels"></div>
+      <h3 class="report-h">📝 Cần ôn lại</h3>
+      <div class="report-rows" id="report-review"></div>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+    </div>
+  </div>
+
+  <!-- ================= CỔNG PHỤ HUYNH ================= -->
+  <div id="parent-gate" class="screen hidden dim">
+    <div class="panel">
+      <h2>👨‍👩‍👧 Dành cho phụ huynh</h2>
+      <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
+      <form id="parent-gate-form" class="gate-form" autocomplete="off">
+        <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off">
+        <div class="btn-row tight">
+          <button type="submit" class="btn small green">Xác nhận</button>
+          <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script src="js/audio.js"></script>
 <script src="js/lessons.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

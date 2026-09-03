@@ -21,6 +21,12 @@ rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính: phím
 
 Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao và số sao được lưu ngay trên thiết bị (localStorage) của từng máy.
 
+## Hồ sơ người chơi, ôn lại thông minh và kết quả của bé
+
+- **Nhiều bé dùng chung một máy**: chạm vào nút tên (🐯 Bé ▾) trên trang chính để thêm bạn mới, đổi tên, đổi hình hoặc chọn bạn đang chơi. Mỗi bạn có tiến trình, sao, kỷ lục và kho ôn lại riêng. Danh sách người chơi (`js/profile.js`, khóa `3hoa-players-v1`) dùng chung cho mọi trò chơi của 3hoa.com trên cùng thiết bị, nên bé chỉ cần tạo tên một lần.
+- **Ôn lại thông minh**: đồng hồ bé đọc nhầm được ghi lại; ở lượt kế tiếp bé được hỏi lại ngay, và ở các màn sau khoảng 25 % số câu (1–3 câu mỗi màn, gắn nhãn 📝 Ôn lại) lấy từ kho này cho tới khi bé đọc đúng 2 lần.
+- **📊 Kết quả** (màn hình chọn màn hoặc màn hình người chơi): số ván, tỉ lệ đúng, phút luyện tập, sao và kỷ lục từng màn, màn cần luyện thêm, danh hiệu ✅ Đã thuộc (đúng ≥ 90 % trên ít nhất 20 đồng hồ) và danh sách đồng hồ cần ôn. Nút xóa tiến trình và nút mở khóa tất cả các màn nằm sau **cổng phụ huynh** (một phép nhân đơn giản).
+
 ## Cấu trúc thư mục
 
 | Tệp | Nội dung |
@@ -29,6 +35,7 @@ Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao v�
 | `style.css` | Giao diện thị trấn tươi sáng thân thiện với trẻ em, tự đổi bố cục theo màn hình ngang/dọc |
 | `js/clock.js` | Kiến thức xem giờ: cách đọc tiếng Việt (giờ đúng, rưỡi, kém, 24 giờ), sinh mốc giờ và đáp án nhiễu theo màn, vẽ đồng hồ SVG, bài học, ngân hàng câu hỏi |
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
+| `js/profile.js` | Hồ sơ người chơi dùng chung cho các trò chơi 3hoa.com (tên, hình đại diện, người đang chơi) – giống hệt nhau ở mọi game |
 | `js/game.js` | Bộ máy trò chơi: bảng 4 cột × 6 hàng, đồng hồ rơi, tháp đá, điểm, combo, bài học, hỏi đáp, mở khóa màn |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
@@ -45,7 +52,7 @@ Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao v�
 | 7. Một ngày 24 giờ | 3 giờ chiều = 15 giờ; đồng hồ điện tử | Lớp 3 |
 | 8. Siêu Tháp | Trộn tất cả, đồng hồ rơi nhanh hơn | Tổng hợp |
 
-Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất định (8–15). Thả đúng được 100 điểm nhân với combo (x2, x3, x4 khi đúng liên tiếp) cộng thưởng nhanh. Thả sai, đồng hồ hóa đá chồng lên cột đó, đồng thời hiện đáp án đúng và cột đúng sáng lên. Thả đúng dọn bớt 1 viên đá của cột đó; đúng 5 lần liên tiếp dọn sạch tháp. Sai 2 lần liên tiếp, cột đúng sẽ nhấp nháy gợi ý (được ít điểm hơn). Kết thúc màn: 3 sao nếu không sai, 2 sao nếu sai không quá 2 lần.
+Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất định (8–15). Thả đúng được 100 điểm nhân với combo (x2, x3, x4 khi đúng liên tiếp) cộng thưởng nhanh. Thả sai, đồng hồ hóa đá chồng lên cột đó, đồng thời hiện đáp án đúng và cột đúng sáng lên. Thả đúng dọn bớt 1 viên đá của cột đó; đúng 5 lần liên tiếp dọn sạch tháp. Sai 2 lần liên tiếp, cột đúng sẽ nhấp nháy gợi ý (được ít điểm hơn). Đồng hồ không được chạm tới mà rơi hết giờ cũng tính là sai (⏰ hết giờ). Sau mỗi lần sai, trò chơi dừng 3 giây để đọc và giải thích cách xem, rồi hỏi lại chính đồng hồ đó. Kết thúc màn: 3 sao nếu không sai, 2 sao nếu sai không quá 2 lần.
 
 **Hỏi đáp sau màn**: 3 câu hỏi gồm 1 câu đọc đồng hồ (ưu tiên lấy từ chính đồng hồ bé đã đọc nhầm) và 2 câu kiến thức về bài vừa học. Trả lời sai sẽ hiện lời giải thích và cho thử lại; trả lời đúng cả 3 câu mới mở khóa màn tiếp theo. Phụ huynh, thầy cô có thể mở khóa tất cả các màn ở màn hình chọn màn (có câu hỏi kiểm tra người lớn).
 
@@ -55,4 +62,5 @@ Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất đị
 - **Bài học và câu hỏi**: sửa `LESSONS` và `CONCEPT` trong `js/clock.js`.
 - **Kích thước bảng**: `COLS`, `ROWS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `thap-dong-ho-v2`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (hiện là `thap-dong-ho-v2`, lần sau đổi thành `thap-dong-ho-v3`) để thiết bị đã cài nhận bản mới.
+- **Ít hiệu ứng**: nút ✨ Hiệu ứng: Nhiều/Ít trên trang chính (và tự động khi hệ thống bật "giảm chuyển động") giảm hạt, tắt rung/chớp màn hình.

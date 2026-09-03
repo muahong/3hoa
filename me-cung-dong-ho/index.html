@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Mê Cung Đồng Hồ">
 <meta name="application-name" content="Mê Cung Đồng Hồ">
 <meta name="theme-color" content="#121a4a">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="description" content="Mê Cung Đồng Hồ – trò chơi mê cung kiểu Pacman giúp bé lớp 2, lớp 3 học xem đồng hồ: giờ đúng, giờ rưỡi, giờ 15 phút, buổi trong ngày, xem đúng 5 phút, giờ kém, đồng hồ điện tử. Sau mỗi màn có phần hỏi đáp để mở màn tiếp theo.">
 <title>Mê Cung Đồng Hồ – Cú Tí đi tìm giờ đúng (học xem đồng hồ lớp 2, 3)</title>
 <link rel="manifest" href="manifest.json">
@@ -53,7 +55,7 @@
   </div>
 
   <!-- ================= NÚT DI CHUYỂN ================= -->
-  <div id="dpad" class="off" aria-label="Nút di chuyển">
+  <div id="dpad" class="off" role="group" aria-label="Nút di chuyển">
     <button type="button" class="d up" data-dir="up" aria-label="Lên">▲</button>
     <button type="button" class="d left" data-dir="left" aria-label="Trái">◀</button>
     <button type="button" class="d center" tabindex="-1" aria-hidden="true">🦉</button>
@@ -110,11 +112,14 @@
           <h1 class="title">MÊ CUNG<br>ĐỒNG HỒ<small>CÚ TÍ ĐI TÌM GIỜ ĐÚNG</small></h1>
         </div>
       </div>
+      <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi">
+        <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
+      </button>
       <p class="subtitle">Học xem đồng hồ cho các bạn lớp 2, lớp 3 🕐🦉</p>
       <div class="btn-row">
         <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
       </div>
-      <div class="btn-row" style="margin-top:12px">
+      <div class="btn-row mt-12">
         <button class="btn teal small" id="btn-learn">📖 Học xem giờ</button>
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
@@ -129,11 +134,14 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
         <h2>Chọn màn chơi</h2>
-        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+        <div class="head-actions">
+          <button class="btn teal small" id="btn-report-levels" aria-label="Xem kết quả của bé">📊 Kết quả</button>
+          <button class="btn ghost small" id="btn-levels-howto" aria-label="Cách chơi">❓</button>
+        </div>
       </div>
       <p class="mode-desc">📘 Học bài → 🦉 vào mê cung → 🧠 trả lời câu hỏi để <b>mở màn tiếp theo</b>!</p>
       <div class="level-grid" id="level-grid"></div>
-      <p class="parent-note">Dành cho phụ huynh: <button type="button" class="link-btn" id="btn-unlock-all">mở khóa tất cả các màn</button> · <button type="button" class="link-btn" id="btn-reset-progress">học lại từ đầu</button></p>
+      <div class="parent-note"><span>Dành cho phụ huynh:</span> <button type="button" class="btn ghost small" id="btn-unlock-all">🔓 Mở khóa tất cả các màn</button> <button type="button" class="btn ghost small" id="btn-reset-progress">🔄 Học lại từ đầu</button></div>
     </div>
   </div>
 
@@ -176,7 +184,7 @@
             <button type="button" data-step="30">+30 phút</button>
             <button type="button" data-step="60">+1 giờ</button>
           </div>
-          <div class="btn-row" style="margin-top:8px">
+          <div class="btn-row mt-8">
             <button class="btn purple small" id="btn-learn-random">🎲 Giờ ngẫu nhiên</button>
             <button class="btn ghost small" id="btn-learn-minutes">🔢 Hiện số phút</button>
           </div>
@@ -233,7 +241,10 @@
       <div class="screen-head">
         <span class="quiz-progress" id="quiz-progress">Câu 1/3</span>
         <h2>🧠 Hỏi đáp</h2>
-        <button class="btn ghost small" id="btn-quiz-speak" aria-label="Đọc câu hỏi">🔊</button>
+        <div class="head-actions">
+          <button class="btn ghost small" id="btn-quiz-speak" aria-label="Đọc câu hỏi">🔊</button>
+          <button type="button" class="btn ghost small" id="btn-quiz-quit" aria-label="Thoát hỏi đáp, về chọn màn">🏠</button>
+        </div>
       </div>
       <p class="quiz-intro" id="quiz-intro">Trả lời đúng hết để mở màn tiếp theo. Sai thì đọc lời giải thích rồi thử lại nhé!</p>
       <div class="quiz-q" id="quiz-q"></div>
@@ -252,7 +263,7 @@
     <div class="panel">
       <h2 class="result-title" id="result-title">Qua màn!</h2>
       <p id="result-level">Màn 1: Giờ đúng</p>
-      <div class="result-score-label">ĐIỂM CỦA BẠN</div>
+      <div class="result-score-label">ĐIỂM CỦA CON</div>
       <div class="result-score" id="result-score">0</div>
       <div class="result-stars" id="result-stars"></div>
       <div id="result-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
@@ -275,12 +286,73 @@
     </div>
   </div>
 
-  <div id="toast"></div>
+  <!-- ================= NGƯỜI CHƠI (hồ sơ của từng bé) ================= -->
+  <div id="players" class="screen hidden dim">
+    <div class="panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-players-back">← Quay lại</button>
+        <h2>👋 Ai đang chơi?</h2>
+        <button class="btn teal small" id="btn-report" aria-label="Xem kết quả của bé">📊</button>
+      </div>
+      <div class="player-list" id="player-list"></div>
+      <div class="btn-row">
+        <button class="btn small green" id="btn-player-add">＋ Thêm bạn mới</button>
+        <button class="btn ghost small" id="btn-player-rename">✏️ Đổi tên</button>
+        <button class="btn ghost small" id="btn-player-avatar">🎭 Đổi hình</button>
+        <button class="btn ghost small" id="btn-player-remove">🗑 Xóa</button>
+      </div>
+      <form class="player-form" id="player-form" hidden autocomplete="off">
+        <label for="player-name" class="sr-only">Tên của con</label>
+        <input id="player-name" maxlength="16" placeholder="Tên của con" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+        <div class="avatar-grid" id="player-avatars"></div>
+        <div class="btn-row">
+          <button type="submit" class="btn small green" id="btn-player-save">💾 Lưu</button>
+          <button type="button" class="btn ghost small" id="btn-player-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ CỦA BÉ (dành cho phụ huynh) ================= -->
+  <div id="report" class="screen hidden dim">
+    <div class="panel wide report-panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-report-back">← Quay lại</button>
+        <h2 id="report-title">📊 Kết quả của Bé</h2>
+        <span class="head-spacer"></span>
+      </div>
+      <div class="report-grid" id="report-stats"></div>
+      <p class="report-weak" id="report-weak"></p>
+      <h3>Từng màn</h3>
+      <div class="report-rows" id="report-levels"></div>
+      <h3>Cần ôn lại</h3>
+      <div class="report-rows" id="report-review"></div>
+      <p class="parent-row"><button type="button" class="btn ghost small" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+    </div>
+  </div>
+
+  <!-- ================= CỔNG PHỤ HUYNH ================= -->
+  <div id="parent-gate" class="screen hidden dim">
+    <div class="panel">
+      <h2>👨‍👩‍👧 Dành cho phụ huynh</h2>
+      <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
+      <form id="parent-gate-form" class="gate-form" autocomplete="off">
+        <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off">
+        <div class="btn-row">
+          <button type="submit" class="btn small green">Xác nhận</button>
+          <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script src="js/audio.js"></script>
 <script src="js/clock.js"></script>
 <script src="js/mazes.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

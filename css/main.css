@@ -104,6 +104,6 @@ footer {
     user-select: none;
 }
 
-#tetris-board, #tank-arena {
+#tank-arena {
     margin: 0 auto;
 }

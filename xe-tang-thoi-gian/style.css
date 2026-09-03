@@ -610,7 +610,9 @@ html, body {
   .hud-left { flex-direction: row; align-items: center; }
   .hud-center { justify-self: center; }
   .hint { font-size: 17px; padding: 5px 14px; }
-  .screen-head h2 { font-size: 22px; white-space: nowrap; }
+  .screen-head h2 { font-size: 22px; }
+  .lesson-panel .screen-head { flex-wrap: wrap; justify-content: space-between; }
+  .lesson-panel .screen-head h2 { flex: 1 1 100%; order: 1; }
   .screen-head .btn { font-size: 16px; padding: 10px 14px; min-height: 44px; white-space: nowrap; }
   .mode-desc { font-size: 16px; }
   .level-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

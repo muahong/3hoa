@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="3hoa.com – Ninja Toán Học (cộng trừ), Vệ Binh Cửu Chương (bảng nhân, bảng chia), Mê Cung Đồng Hồ và Tháp Đồng Hồ (học xem đồng hồ) cho bé lớp 1 đến lớp 3, cùng trò chơi arcade cổ điển Tank.">
-    <title>3hoa.com – Ninja Toán Học, Vệ Binh Cửu Chương, Mê Cung Đồng Hồ, Tháp Đồng Hồ &amp; Classic Arcade Games</title>
+    <meta name="description" content="3hoa.com – Ninja Toán Học (cộng trừ), Vệ Binh Cửu Chương (bảng nhân, bảng chia), Mê Cung Đồng Hồ, Tháp Đồng Hồ và Xe Tăng Thời Gian (học xem đồng hồ) cho bé lớp 1 đến lớp 3. Chơi tốt trên iPad!">
+    <title>3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3</title>
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="css/main.css">
@@ -12,21 +12,21 @@
 </head>
 <body>
     <header>
-        <h1>Classic Arcade Games</h1>
+        <h1>3hoa.com – Trò chơi học Toán</h1>
         <nav>
             <ul>
                 <li><a href="math-ninja/">Ninja Toán Học</a></li>
                 <li><a href="cuu-chuong/">Vệ Binh Cửu Chương</a></li>
                 <li><a href="me-cung-dong-ho/">Mê Cung Đồng Hồ</a></li>
                 <li><a href="thap-dong-ho/">Tháp Đồng Hồ</a></li>
-                <li><a href="#tank">Tank</a></li>
+                <li><a href="xe-tang-thoi-gian/">Xe Tăng Thời Gian</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <section id="game-selection">
-            <h2>Choose a Game</h2>
+            <h2>Chọn trò chơi</h2>
             <div class="game-grid">
                 <div class="game-card featured" id="ninja-toan">
                     <img src="math-ninja/icons/icon-512.png" alt="Ninja Toán Học">
@@ -60,27 +60,20 @@
                         <button onclick="location.href='thap-dong-ho/'">Chơi ngay</button>
                     </div>
                 </div>
-                <div class="game-card" id="tank">
-                    <img src="images/tank-thumbnail.jpg" alt="Tank" onerror="this.onerror=null; this.src='images/placeholder.png';">
+                <div class="game-card featured" id="xe-tang">
+                    <img src="xe-tang-thoi-gian/icons/icon-512.png" alt="Xe Tăng Thời Gian">
                     <div class="game-info">
-                        <h3>Tank</h3>
-                        <p>Battle other tanks in this action-packed game</p>
-                        <button onclick="loadGame('tank')">Play Tank</button>
+                        <h3>Xe Tăng Thời Gian</h3>
+                        <p>Bắn robot, học xem đồng hồ (giờ đúng, giờ rưỡi, giờ kém, 24 giờ…) cho bé lớp 2, lớp 3. Sau mỗi màn có hỏi đáp để mở màn mới. Chơi tốt trên iPad!</p>
+                        <button onclick="location.href='xe-tang-thoi-gian/'">Chơi ngay</button>
                     </div>
                 </div>
             </div>
         </section>
-
-        <section id="game-container">
-            <!-- Game will be loaded here -->
-        </section>
     </main>
 
     <footer>
-        <p>&copy; 2023 Classic Arcade Games. All rights reserved.</p>
+        <p>&copy; 2026 3hoa.com</p>
     </footer>
-
-    <script src="scripts/tank.js"></script>
-    <script src="scripts/main.js"></script>
 </body>
 </html>

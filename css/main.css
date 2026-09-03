@@ -95,15 +95,3 @@ footer {
     text-align: center;
     width: 100%;
 }
-
-#game-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    user-select: none;
-}
-
-#tank-arena {
-    margin: 0 auto;
-}

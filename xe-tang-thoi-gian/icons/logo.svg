@@ -1,0 +1,50 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tk-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ed957"/>
+      <stop offset="1" stop-color="#3f9c3a"/>
+    </linearGradient>
+    <linearGradient id="tk-turret" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5cc24a"/>
+      <stop offset="1" stop-color="#2e7d32"/>
+    </linearGradient>
+    <linearGradient id="tk-track" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b5f7a"/>
+      <stop offset="1" stop-color="#2b2d42"/>
+    </linearGradient>
+  </defs>
+  <!-- Lấp lánh -->
+  <path d="M170 30 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#ffe66d"/>
+  <path d="M28 52 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
+  <!-- Nòng pháo -->
+  <rect x="128" y="86" width="60" height="14" rx="7" fill="#2b2d42"/>
+  <rect x="172" y="82" width="20" height="22" rx="6" fill="#5b5f7a"/>
+  <!-- Xích -->
+  <rect x="22" y="128" width="156" height="42" rx="21" fill="url(#tk-track)" stroke="#1b1c2c" stroke-width="3"/>
+  <circle cx="46" cy="149" r="12" fill="#9aa2c2"/><circle cx="46" cy="149" r="5" fill="#2b2d42"/>
+  <circle cx="80" cy="149" r="12" fill="#9aa2c2"/><circle cx="80" cy="149" r="5" fill="#2b2d42"/>
+  <circle cx="114" cy="149" r="12" fill="#9aa2c2"/><circle cx="114" cy="149" r="5" fill="#2b2d42"/>
+  <circle cx="148" cy="149" r="12" fill="#9aa2c2"/><circle cx="148" cy="149" r="5" fill="#2b2d42"/>
+  <!-- Thân -->
+  <path d="M34 130 L46 104 H156 L170 130 Z" fill="url(#tk-body)" stroke="#256b22" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Ba bông hoa (3hoa) -->
+  <g fill="#ff6fa5"><circle cx="58" cy="114" r="3"/><circle cx="62.3" cy="117" r="3"/><circle cx="60.7" cy="122" r="3"/><circle cx="55.3" cy="122" r="3"/><circle cx="53.7" cy="117" r="3"/></g>
+  <circle cx="58" cy="118.5" r="2.2" fill="#ffd94a"/>
+  <g fill="#ffffff"><circle cx="74" cy="114" r="3"/><circle cx="78.3" cy="117" r="3"/><circle cx="76.7" cy="122" r="3"/><circle cx="71.3" cy="122" r="3"/><circle cx="69.7" cy="117" r="3"/></g>
+  <circle cx="74" cy="118.5" r="2.2" fill="#ffd94a"/>
+  <g fill="#ffa94d"><circle cx="90" cy="114" r="3"/><circle cx="94.3" cy="117" r="3"/><circle cx="92.7" cy="122" r="3"/><circle cx="87.3" cy="122" r="3"/><circle cx="85.7" cy="117" r="3"/></g>
+  <circle cx="90" cy="118.5" r="2.2" fill="#ffd94a"/>
+  <!-- Tháp pháo + đồng hồ -->
+  <circle cx="104" cy="88" r="38" fill="url(#tk-turret)" stroke="#256b22" stroke-width="3"/>
+  <circle cx="104" cy="88" r="28" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
+  <g stroke="#2b2d42" stroke-width="2.5" stroke-linecap="round">
+    <line x1="104" y1="64" x2="104" y2="69"/><line x1="104" y1="107" x2="104" y2="112"/>
+    <line x1="80" y1="88" x2="85" y2="88"/><line x1="123" y1="88" x2="128" y2="88"/>
+  </g>
+  <line x1="104" y1="88" x2="104" y2="72" stroke="#2b2d42" stroke-width="4" stroke-linecap="round"/>
+  <line x1="104" y1="88" x2="120" y2="88" stroke="#ef476f" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="104" cy="88" r="3" fill="#2b2d42"/>
+  <!-- Ăng-ten -->
+  <line x1="70" y1="60" x2="78" y2="80" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="69" cy="58" r="4" fill="#ff6b35"/>
+</svg>

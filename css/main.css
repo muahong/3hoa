@@ -95,22 +95,3 @@ footer {
     text-align: center;
     width: 100%;
 }
-
-#game-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    user-select: none;
-}
-
-#tetris-board, #pacman-maze {
-    margin: 0 auto;
-}
-
-#pacman-board {
-    display: block;
-    margin: 0 auto;
-    background-color: black;
-    border: 2px solid red;
-}

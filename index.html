@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="3hoa.com – Ninja Toán Học (cộng trừ), Vệ Binh Cửu Chương (bảng nhân, bảng chia) và Xe Tăng Thời Gian (học xem đồng hồ) cho bé lớp 1 đến lớp 3, cùng các trò chơi arcade cổ điển Tetris, Pacman.">
-    <title>3hoa.com – Ninja Toán Học, Vệ Binh Cửu Chương, Xe Tăng Thời Gian &amp; Classic Arcade Games</title>
+    <meta name="description" content="3hoa.com – Ninja Toán Học (cộng trừ), Vệ Binh Cửu Chương (bảng nhân, bảng chia), Mê Cung Đồng Hồ, Tháp Đồng Hồ và Xe Tăng Thời Gian (học xem đồng hồ) cho bé lớp 1 đến lớp 3. Chơi tốt trên iPad!">
+    <title>3hoa.com – Trò chơi học Toán cho bé lớp 1 đến lớp 3</title>
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="css/main.css">
@@ -12,21 +12,21 @@
 </head>
 <body>
     <header>
-        <h1>Classic Arcade Games</h1>
+        <h1>3hoa.com – Trò chơi học Toán</h1>
         <nav>
             <ul>
                 <li><a href="math-ninja/">Ninja Toán Học</a></li>
                 <li><a href="cuu-chuong/">Vệ Binh Cửu Chương</a></li>
+                <li><a href="me-cung-dong-ho/">Mê Cung Đồng Hồ</a></li>
+                <li><a href="thap-dong-ho/">Tháp Đồng Hồ</a></li>
                 <li><a href="xe-tang-thoi-gian/">Xe Tăng Thời Gian</a></li>
-                <li><a href="#tetris">Tetris</a></li>
-                <li><a href="#pacman">Pacman</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <section id="game-selection">
-            <h2>Choose a Game</h2>
+            <h2>Chọn trò chơi</h2>
             <div class="game-grid">
                 <div class="game-card featured" id="ninja-toan">
                     <img src="math-ninja/icons/icon-512.png" alt="Ninja Toán Học">
@@ -44,6 +44,22 @@
                         <button onclick="location.href='cuu-chuong/'">Chơi ngay</button>
                     </div>
                 </div>
+                <div class="game-card featured" id="me-cung-dong-ho">
+                    <img src="me-cung-dong-ho/icons/icon-512.png" alt="Mê Cung Đồng Hồ">
+                    <div class="game-info">
+                        <h3>Mê Cung Đồng Hồ</h3>
+                        <p>Mê cung kiểu Pacman: Cú Tí tránh ma, tìm đúng đồng hồ để học xem giờ cho bé lớp 2, lớp 3. Sau mỗi màn có hỏi đáp để mở màn mới!</p>
+                        <button onclick="location.href='me-cung-dong-ho/'">Chơi ngay</button>
+                    </div>
+                </div>
+                <div class="game-card featured" id="thap-dong-ho">
+                    <img src="thap-dong-ho/icons/icon-512.png" alt="Tháp Đồng Hồ">
+                    <div class="game-info">
+                        <h3>Tháp Đồng Hồ</h3>
+                        <p>Xếp đồng hồ kiểu Tetris, học xem giờ cho bé lớp 2, lớp 3. Có bài học và hỏi đáp sau mỗi màn. Chơi tốt trên iPad!</p>
+                        <button onclick="location.href='thap-dong-ho/'">Chơi ngay</button>
+                    </div>
+                </div>
                 <div class="game-card featured" id="xe-tang">
                     <img src="xe-tang-thoi-gian/icons/icon-512.png" alt="Xe Tăng Thời Gian">
                     <div class="game-info">
@@ -52,36 +68,12 @@
                         <button onclick="location.href='xe-tang-thoi-gian/'">Chơi ngay</button>
                     </div>
                 </div>
-                <div class="game-card" id="tetris">
-                    <img src="images/tetris-thumbnail.jpg" alt="Tetris">
-                    <div class="game-info">
-                        <h3>Tetris</h3>
-                        <p>Classic block-stacking puzzle game</p>
-                        <button onclick="loadGame('tetris')">Play Tetris</button>
-                    </div>
-                </div>
-                <div class="game-card" id="pacman">
-                    <img src="images/pacman-thumbnail.jpg" alt="Pacman">
-                    <div class="game-info">
-                        <h3>Pacman</h3>
-                        <p>Navigate mazes and eat dots in this iconic game</p>
-                        <button onclick="loadGame('pacman')">Play Pacman</button>
-                    </div>
-                </div>
             </div>
-        </section>
-
-        <section id="game-container">
-            <!-- Game will be loaded here -->
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2023 Classic Arcade Games. All rights reserved.</p>
+        <p>&copy; 2026 3hoa.com</p>
     </footer>
-
-    <script src="scripts/tetris.js"></script>
-    <script src="scripts/pacman.js"></script>
-    <script src="scripts/main.js"></script>
 </body>
 </html>

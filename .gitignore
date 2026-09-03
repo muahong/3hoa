@@ -4,3 +4,4 @@ math-ninja.zip
 chat-log-*.md
 Thumbs.db
 .DS_Store
+tests/e2e/out/

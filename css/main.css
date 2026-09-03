@@ -104,7 +104,7 @@ footer {
     user-select: none;
 }
 
-#tetris-board, #tank-arena, #pacman-maze {
+#tetris-board, #pacman-maze {
     margin: 0 auto;
 }
 

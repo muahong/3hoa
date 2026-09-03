@@ -1,0 +1,17 @@
+{
+  "name": "Xe Tăng Thời Gian",
+  "short_name": "Xe Tăng",
+  "description": "Bắn robot, học xem đồng hồ cho bé lớp 2, lớp 3. Sau mỗi màn có phần hỏi đáp để mở khóa màn tiếp theo.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#1b4332",
+  "theme_color": "#1b4332",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

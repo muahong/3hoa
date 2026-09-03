@@ -7,8 +7,6 @@ function loadGame(gameName) {
 
     if (gameName === 'tetris') {
         tetris();
-    } else if (gameName === 'tank') {
-        tank();
     } else if (gameName === 'pacman') {
         pacman();
     } else {

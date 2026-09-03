@@ -652,3 +652,31 @@ html, body {
   .quiz-visual .clock { width: 120px; height: 120px; }
   .question-card .q-visual .clock { width: 72px; height: 72px; }
 }
+/* Điện thoại xoay ngang (màn hình rất thấp): HUD gọn một hàng để chừa chỗ cho cột 3 vòng lửa */
+@media (max-height: 480px) and (orientation: landscape) {
+  #hud { padding-top: calc(var(--sat) + 4px); }
+  /* Luôn 3 cột (điểm | câu hỏi + đếm giờ | tim) kể cả khi màn hình hẹp, để thẻ câu hỏi không bị đẩy xuống hàng dưới */
+  .hud-top { grid-template-columns: auto 1fr auto; grid-template-areas: "left center right"; gap: 6px 10px; }
+  .hud-left { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .hud-center { position: relative; flex-direction: row; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 8px; }
+  .question-card {
+    flex: 0 1 auto; padding: 4px 12px; min-width: 0; max-width: min(520px, 56vw); gap: 8px; border-radius: 18px;
+    box-shadow: 0 5px 0 #dfe3ef, 0 10px 22px rgba(0,0,0,0.3);
+  }
+  .question-card .q-visual .clock { width: 54px; height: 54px; }
+  .question-card .q-visual .digital { font-size: 22px; padding: 2px 10px; border-width: 2px; }
+  .question-card .q-visual .emoji-art { font-size: 32px; }
+  .question-card .q-text { font-size: 17px; }
+  .timer { flex: 0 0 auto; padding: 3px 10px 3px 6px; }
+  .timer .bar { width: 80px; height: 10px; }
+  .timer .time { font-size: 17px; }
+  .score-box { min-width: 90px; padding: 4px 12px 3px; }
+  .score-box .label { font-size: 11px; }
+  .score-box .value { font-size: 24px; }
+  .stage-chip, .combo-chip { font-size: 13px; padding: 3px 10px; }
+  .hearts { padding: 4px 10px; }
+  .hearts span { font-size: 21px; }
+  /* Gợi ý hiện ngay dưới hàng câu hỏi, không làm hàng này cao thêm */
+  .hint { position: absolute; top: calc(100% + 6px); left: 0; right: 0; margin: auto; width: fit-content; max-width: 90vw; font-size: 16px; padding: 4px 12px; }
+  .tap-tip { font-size: 15px; padding: 6px 12px; bottom: calc(var(--sab) + 10px); }
+}

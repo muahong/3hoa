@@ -130,14 +130,19 @@
   /** Tính mặt đất, bán kính vòng lửa, vị trí hổ, độ dài cú nhảy theo kích thước màn hình. */
   function layout() {
     const W = G.W, H = G.H;
-    G.ground = H - clamp(H * 0.13, 56, 120);
-    let hudBottom = clamp(H * 0.24, 130, 210);
+    // Điện thoại xoay ngang (màn hình rất thấp): HUD xếp gọn một hàng (CSS), mặt đất và vòng lửa được phép nhỏ hơn
+    const shortLand = W > H && H < 480;
+    G.ground = H - clamp(H * 0.13, shortLand ? 48 : 56, 120);
+    let hudBottom = clamp(H * 0.24, shortLand ? 80 : 130, 210);
     if (inGame()) {
-      try { hudBottom = Math.max(110, ui.timer.getBoundingClientRect().bottom + 8); } catch (e) { /* bỏ qua */ }
+      try {
+        // Khi xếp ngang (điện thoại nằm ngang), thẻ câu hỏi có thể thấp hơn ô đếm giờ nên lấy mép dưới thấp nhất của cả hai
+        hudBottom = Math.max(shortLand ? 64 : 110, hudCenterBottom() + 8);
+      } catch (e) { /* bỏ qua */ }
     }
     G.hudBottom = hudBottom;
     const avail = G.ground - 12 - hudBottom - 10;
-    G.r = clamp(Math.min(avail / 6.9, W * 0.14, 84), 34, 84);
+    G.r = clamp(Math.min(avail / 6.9, W * 0.14, 84), shortLand ? 28 : 34, 84);
     // Cú nhảy ngắn hơn trên màn hình hẹp để sau khi nhảy, cụm vòng vẫn còn trên màn hình (bé nhìn thấy vòng đúng)
     const narrow = W < H || W < 700;
     G.jumpDist = clamp(G.r * (narrow ? 1.7 : 2.4), 90, 260);
@@ -150,6 +155,16 @@
     buildBackground();
     buildTiles();
     repositionGates();
+  }
+
+  /** Mép dưới của một phần tử theo hộp bố cục (bỏ qua transform của hiệu ứng pop/lắc). */
+  function layoutBottom(el) {
+    const parent = el.offsetParent;
+    return (parent ? parent.getBoundingClientRect().top : 0) + el.offsetTop + el.offsetHeight;
+  }
+  /** Mép dưới thấp nhất của thẻ câu hỏi và ô đếm giờ (không tính gợi ý tạm thời). */
+  function hudCenterBottom() {
+    return Math.max(layoutBottom(ui.question), layoutBottom(ui.timer));
   }
 
   function setSpeed() {
@@ -1237,6 +1252,10 @@
     ui.question.classList.remove('ok', 'shake', 'pop');
     void ui.question.offsetWidth;
     ui.question.classList.add('pop');
+    // Câu hỏi dài làm thẻ cao hơn lúc đo ở đầu ván (màn hình thấp): tính lại bố cục để vòng lửa không bị HUD che
+    if (q && inGame()) {
+      try { if (hudCenterBottom() + 8 > G.hudBottom + 1) layout(); } catch (e) { /* bỏ qua */ }
+    }
     ui.timer.classList.remove('idle');
     ui.hint.hidden = true;
   }

@@ -469,7 +469,10 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     const obs = await playRound(page, hook);
     assert.ok(obs.reviewQ && obs.reviewSeen, 'có câu ôn lại được chèn và HUD hiện "📝 Ôn lại"');
     const missed = await hook('X.Store.p().missed');
-    assert.ok(missed['match|Bắn đồng hồ chỉ 3 giờ!|3 giờ'].ok === 1 && missed['read|Đồng hồ chỉ mấy giờ?|5 giờ'].ok === 1, 'trả lời đúng câu ôn → ok = 1');
+    // Trả lời đúng câu ôn → ok = 1; nếu bộ sinh màn 1 tình cờ hỏi lại đúng câu đó lần nữa (đúng 2 lần) thì mục đã ra khỏi kho
+    ['match|Bắn đồng hồ chỉ 3 giờ!|3 giờ', 'read|Đồng hồ chỉ mấy giờ?|5 giờ'].forEach(function (k) {
+      assert.ok(!missed[k] || missed[k].ok >= 1, 'câu ôn "' + k + '" phải được ghi nhận đúng: ' + JSON.stringify(missed[k]));
+    });
     assert.equal(missed['kem|7 giờ 50 phút còn gọi là?|8 giờ kém 10 phút'].n, 3, 'mục màn 6 không bị đụng ở màn 1');
     assert.equal(await hook('X.Store.p().stats.plays'), 3);
     await hook('X.goLevels()');

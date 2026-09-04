@@ -2,13 +2,15 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ninja Toán">
 <meta name="application-name" content="Ninja Toán Học">
-<meta name="theme-color" content="#6ec6ff">
+<meta name="theme-color" content="#3d9df5">
 <meta name="description" content="Ninja Toán Học – trò chơi chém trái cây giúp bé lớp 1 đến lớp 3 luyện phép cộng, trừ, nhân. Chơi trên iPad, điện thoại hoặc máy tính.">
 <title>Ninja Toán Học – Chém trái cây, học cộng trừ nhân</title>
 <link rel="manifest" href="manifest.json">
@@ -35,16 +37,17 @@
         <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
       </div>
       <div class="hud-center">
-        <div class="question-card" id="hud-question">7 + 5 = <span class="q">?</span></div>
+        <span id="hud-review" class="review-tag" hidden>📝 Ôn lại</span>
+        <div class="question-card" id="hud-question" aria-live="polite">7 + 5 = <span class="q">?</span></div>
         <div class="timer" id="hud-timer">
           <span>⏱</span>
           <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
           <span class="time" id="hud-time">1:30</span>
         </div>
-        <div class="hint" id="hud-hint" hidden></div>
+        <div class="hint" id="hud-hint" role="status" hidden></div>
       </div>
       <div class="hud-right">
-        <div class="hearts" id="hud-hearts"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+        <div class="hearts" id="hud-hearts" role="img" aria-label="Còn 3 tim"><span aria-hidden="true">❤️</span><span aria-hidden="true">❤️</span><span aria-hidden="true">❤️</span></div>
         <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
     </div>
@@ -100,11 +103,15 @@
         </div>
       </div>
       <p class="subtitle">Dành cho các bạn nhỏ lớp 1, lớp 2, lớp 3 🍎🍊🍉</p>
+      <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi">
+        <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
+      </button>
       <div class="btn-row">
         <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
       </div>
-      <div class="btn-row" style="margin-top:12px">
+      <div class="btn-row mt-12">
         <button class="btn teal small" id="btn-howto">📖 Cách chơi</button>
+        <button class="btn ghost small" id="btn-report" aria-label="Kết quả của bé">📊 Kết quả</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
       <div class="menu-options">
@@ -125,11 +132,14 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
         <h2>Chọn màn chơi</h2>
-        <button class="btn ghost small" id="btn-levels-howto">📖</button>
+        <span class="head-actions">
+          <button class="btn ghost small" id="btn-levels-report" aria-label="Kết quả của bé">📊</button>
+          <button class="btn ghost small" id="btn-levels-howto" aria-label="Cách chơi">📖</button>
+        </span>
       </div>
-      <div class="tabs">
-        <button class="tab on" data-mode="answer">🎯 Chém đáp án</button>
-        <button class="tab" data-mode="pair">🤝 Ghép đôi</button>
+      <div class="tabs" role="tablist" aria-label="Chế độ chơi">
+        <button class="tab on" role="tab" aria-selected="true" data-mode="answer">🎯 Chém đáp án</button>
+        <button class="tab" role="tab" aria-selected="false" data-mode="pair">🤝 Ghép đôi</button>
       </div>
       <p class="mode-desc" id="mode-desc">Nhìn phép tính, chém quả có <b>đáp án đúng</b>!</p>
       <div class="level-grid" id="level-grid"></div>
@@ -144,6 +154,8 @@
         <div class="howto-item"><div class="em">🔢</div><div class="tx">Nhìn <b>phép tính</b> ở phía trên màn hình, ví dụ <b>7 + 5 = ?</b></div></div>
         <div class="howto-item"><div class="em">👆</div><div class="tx"><b>Vuốt ngón tay</b> qua quả có <b>đáp án đúng</b> để chém nó. Chém nhanh được thêm điểm!</div></div>
         <div class="howto-item"><div class="em">❌</div><div class="tx">Chém <b>số sai</b> hoặc chém <b>bom 💣</b> sẽ mất 1 tim ❤️. Hết 3 tim là thua.</div></div>
+        <div class="howto-item"><div class="em">🍃</div><div class="tx">Quả rơi mất thì không sao — quả sẽ bay lại. Lỡ 2 lần, đáp án đúng có <b>vòng vàng</b> gợi ý.</div></div>
+        <div class="howto-item"><div class="em">📝</div><div class="tx">Phép tính từng sai sẽ quay lại với nhãn <b>Ôn lại</b>. Trả lời đúng 2 lần là thuộc!</div></div>
         <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Chém tim 💗 để hồi lại mạng.</div></div>
         <div class="howto-item"><div class="em">🤝</div><div class="tx">Chế độ <b>Ghép đôi</b>: chém <b>2 quả</b> mà cộng, trừ hoặc nhân với nhau bằng số cho trước.</div></div>
       </div>
@@ -187,12 +199,14 @@
       <div class="stats">
         <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
         <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat bomb"><div class="v" id="st-bomb">0</div><div class="k">Bom 💣</div></div>
         <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Combo cao nhất 🔥</div></div>
         <div class="stat acc"><div class="v" id="st-acc">0%</div><div class="k">Chính xác 🎯</div></div>
       </div>
+      <div id="result-review" class="review-list" hidden></div>
       <div id="name-entry" class="name-entry" hidden>
-        <span style="font-weight:800;font-size:18px">Tên của bạn:</span>
-        <input id="name-input" type="text" maxlength="14" placeholder="Bé tên gì?" autocomplete="off" autocorrect="off" autocapitalize="words">
+        <label class="name-label" for="name-input">✏️ Tên trên bảng vàng:</label>
+        <input id="name-input" type="text" maxlength="16" placeholder="Bé tên gì?" autocomplete="off" autocorrect="off" autocapitalize="words">
         <button class="btn teal small" id="btn-save-name">Lưu</button>
         <div class="name-chips" id="name-chips"></div>
       </div>
@@ -207,12 +221,73 @@
     </div>
   </div>
 
-  <div id="toast"></div>
+  <!-- ================= NGƯỜI CHƠI ================= -->
+  <div id="players" class="screen hidden dim">
+    <div class="panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-players-back">← Quay lại</button>
+        <h2>👋 Ai đang chơi?</h2>
+        <button class="btn teal small" id="btn-players-report" aria-label="Xem kết quả">📊</button>
+      </div>
+      <div class="player-list" id="player-list"></div>
+      <div class="btn-row">
+        <button class="btn small green" id="btn-player-add">＋ Thêm bạn mới</button>
+        <button class="btn ghost small" id="btn-player-rename">✏️ Đổi tên</button>
+        <button class="btn ghost small" id="btn-player-avatar">🎭 Đổi hình</button>
+        <button class="btn ghost small" id="btn-player-remove">🗑 Xóa</button>
+      </div>
+      <form class="player-form" id="player-form" hidden autocomplete="off">
+        <label for="player-name" class="sr-only">Tên của con</label>
+        <input id="player-name" maxlength="16" placeholder="Tên của con" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+        <div class="avatar-grid" id="player-avatars"></div>
+        <div class="btn-row">
+          <button type="submit" class="btn small green" id="btn-player-save">💾 Lưu</button>
+          <button type="button" class="btn ghost small" id="btn-player-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ CỦA BÉ (phụ huynh) ================= -->
+  <div id="report" class="screen hidden dim">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-report-back">← Quay lại</button>
+        <h2 id="report-title">📊 Kết quả của Bé</h2>
+        <span></span>
+      </div>
+      <div class="report-grid" id="report-stats"></div>
+      <p class="report-weak" id="report-weak"></p>
+      <h3>Từng màn</h3>
+      <div class="report-rows" id="report-levels"></div>
+      <h3>Cần ôn lại</h3>
+      <div class="report-rows" id="report-review"></div>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+    </div>
+  </div>
+
+  <!-- ================= CỔNG PHỤ HUYNH ================= -->
+  <div id="parent-gate" class="screen hidden dim">
+    <div class="panel">
+      <h2>👨‍👩‍👧 Dành cho phụ huynh</h2>
+      <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
+      <form id="parent-gate-form" autocomplete="off">
+        <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off">
+        <div class="btn-row">
+          <button type="submit" class="btn small green">Xác nhận</button>
+          <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script src="js/audio.js"></script>
 <script src="js/math.js"></script>
 <script src="js/fruits.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

@@ -353,7 +353,7 @@
 
   function layout() {
     const W = G.W, H = G.H;
-    const oldW = G.field.w, oldH = G.field.h, oldSpawnY = G.spawnY, oldLineY = G.lineY;
+    const oldW = G.field.w, oldH = G.field.h, oldLineY = G.lineY;
     G.field = { x: 0, y: 0, w: W, h: H };
     G.horizon = H * 0.3;
     const size = clamp(Math.min(W, H) * 0.11, 44, 78);
@@ -368,7 +368,6 @@
     G.tankGrad = null; G.vignette = null;
     // Xoay màn hình giữa câu hỏi: xếp lại robot vào lưới mới
     if (inGame() && G.q && (oldW !== W || oldH !== H)) regridRobots(oldLineY);
-    void oldSpawnY;
   }
 
   /** Sau khi đổi kích thước giữa câu hỏi: đặt lại bảng, cột và hàng cho robot đang sống (đầu robot vẫn nằm dưới thẻ câu hỏi),

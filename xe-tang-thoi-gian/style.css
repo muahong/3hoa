@@ -325,6 +325,13 @@ html, body {
   cursor: pointer; touch-action: manipulation;
 }
 .avatar-grid .avatar[aria-pressed="true"] { border-color: var(--orange); background: var(--paper); }
+/* Màn rộng: chip người chơi ở góc trên bên phải bảng menu (bảng chừa chỗ phía trên để không đè lên tên game);
+   màn hẹp/thấp giữ vị trí dưới dòng phụ đề */
+@media (min-width: 701px) and (min-height: 521px) {
+  #menu .panel { padding-top: 64px; }
+  .player-row { position: absolute; top: 14px; right: 16px; margin: 0; }
+  .player-chip { max-width: 200px; }
+}
 
 /* ---------- Bảng kết quả của bé (phụ huynh) ---------- */
 .report-panel h3 { margin: 12px 0 6px; font-size: 19px; color: var(--ink-soft); text-align: left; }

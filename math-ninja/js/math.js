@@ -90,8 +90,8 @@
       const a = rnd(11, 19);
       return chance(0.5) ? mk(a, 10, '-', 24) : mk(a, a % 10, '-', 24);
     }
-    const a = rnd(12, 20);                  // 18 - 13
-    const b = rnd(11, a);
+    const a = rnd(12, 19);                  // 18 - 13 (không ra "20 − 0" hay "a − a")
+    const b = rnd(11, a - 1);
     if (a % 10 < b % 10) return mk(a, a % 10, '-', 24);
     return mk(a, b, '-', 24);
   }
@@ -217,9 +217,9 @@
     { id: 'a2', title: 'Phạm vi 20', desc: 'Ví dụ: 12 + 5, 17 − 4', icon: '🍊', grade: 1, speed: 0.88, fruits: 3, bomb: 0.05, big: false, gen: gen20 },
     { id: 'a3', title: 'Cộng trừ có nhớ', desc: 'Ví dụ: 8 + 7, 15 − 9', icon: '🍋', grade: 2, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genCarry20 },
     { id: 'a4', title: 'Phạm vi 100', desc: 'Ví dụ: 36 + 27, 62 − 38', icon: '🍉', grade: 2, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: gen100 },
-    { id: 'm1', title: 'Nhân 2 và 5', desc: 'Ví dụ: 2 × 7, 5 × 4', icon: '🍑', grade: 2, speed: 0.9, fruits: 3, bomb: 0.06, big: false, gen: genMul25 },
-    { id: 'm2', title: 'Nhân 3 và 4', desc: 'Ví dụ: 3 × 6, 4 × 8', icon: '🍇', grade: 2, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genMul34 },
+    { id: 'm1', title: 'Nhân 2 và 5', desc: 'Ví dụ: 2 × 7, 5 × 4 (đôi khi × 10)', icon: '🍑', grade: 2, speed: 0.9, fruits: 3, bomb: 0.06, big: false, gen: genMul25 },
     { id: 'a5', title: 'Phạm vi 1000', desc: 'Ví dụ: 456 + 287, 703 − 458', icon: '🥝', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: true, gen: gen1000 },
+    { id: 'm2', title: 'Nhân 3 và 4', desc: 'Ví dụ: 3 × 6, 4 × 8', icon: '🍇', grade: 3, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genMul34 },
     { id: 'm3', title: 'Bảng cửu chương', desc: 'Ví dụ: 6 × 7, 9 × 8', icon: '🍓', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: genMul9 },
     { id: 'm4', title: 'Nhân số lớn', desc: 'Ví dụ: 23 × 4, 120 × 3', icon: '🥭', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: true, gen: genMulBig },
     { id: 'a6', title: 'Siêu Ninja', desc: 'Trộn cộng, trừ, nhân, bay nhanh hơn!', icon: '🥷', grade: 0, speed: 1.12, fruits: 5, bomb: 0.16, big: true, gen: genMix }
@@ -259,6 +259,14 @@
     return Math.abs(u - v) === q.target;
   }
 
+  /** Chuỗi phép tính của một cặp: "3 + 7 = 10", "8 − 5 = 3" (số lớn luôn đứng trước), "6 × 7 = 42". */
+  function pairResultText(q, u, v) {
+    if (q.op === '+') return u + ' + ' + v + ' = ' + (u + v);
+    if (q.op === '*') return u + ' ' + TIMES + ' ' + v + ' = ' + (u * v);
+    const big = Math.max(u, v), small = Math.min(u, v);
+    return big + ' ' + MINUS + ' ' + small + ' = ' + (big - small);
+  }
+
   /** Sinh giá trị các quả cho 1 đợt ở chế độ Ghép đôi (có đúng 1 cặp hợp lệ). */
   function pairWave(q, count) {
     const vals = [q.pair[0], q.pair[1]];
@@ -296,7 +304,8 @@
   window.MathGen = {
     rnd, chance, pick, shuffle, MINUS, TIMES, opSymbol,
     ANSWER_LEVELS, PAIR_LEVELS,
-    distractors, isPair, pairWave, pairText,
+    distractors, isPair, pairWave, pairText, pairResultText,
+    make: mk,
     levelById(id) {
       return ANSWER_LEVELS.find((l) => l.id === id) || PAIR_LEVELS.find((l) => l.id === id) || null;
     }

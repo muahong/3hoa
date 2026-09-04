@@ -467,6 +467,10 @@
 
     build(r, dpr) {
       if (this.r === r && this.dpr === dpr && this.bomb) return;
+      // Giải phóng bộ nhớ của sprite cũ (đổi hướng màn hình dựng lại nhiều lần)
+      const release = function (sp) { if (sp && sp.canvas) sp.canvas.width = 0; };
+      for (const t in this.fruits) { release(this.fruits[t].skin); release(this.fruits[t].inner); }
+      release(this.bomb); release(this.heart);
       this.r = r;
       this.dpr = dpr;
       this.fruits = {};

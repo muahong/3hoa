@@ -355,6 +355,12 @@ html, body {
 .report-stat { background: var(--paper-soft); border-radius: 14px; padding: 8px 10px; text-align: center; }
 .report-stat .v { font-size: 26px; font-weight: 800; color: var(--orange-dark); line-height: 1.1; }
 .report-stat .k { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+/* Dòng "Cần luyện thêm": ngay dưới các ô thống kê, ẩn khi chưa đủ dữ liệu */
+.report-weak {
+  margin: 0 0 10px; padding: 8px 12px; border-radius: 12px;
+  background: #fff4d6; color: #7a4a00; text-align: left;
+  font-weight: 800; font-size: 16px;
+}
 .report-h { margin: 12px 0 6px; font-size: 19px; color: var(--purple-dark); text-align: left; }
 .report-rows { display: grid; gap: 6px; text-align: left; }
 .report-row {
@@ -367,6 +373,7 @@ html, body {
 .report-row .stars .off { color: #c3c8d8; }
 .report-row .muted { color: #6b7190; font-size: 14px; }
 .report-row.weak { background: #fff4d6; color: #7a4a00; }
+.report-row .warn { color: #a35a00; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
 .mastered { color: #04785a; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
 
 /* ---------- Chọn màn ---------- */
@@ -868,6 +875,7 @@ html, body {
   .screen-head .btn { font-size: 16px; padding: 10px 14px; min-height: 44px; }
   .player-chip { font-size: 15px; max-width: 200px; }
   .report-row { font-size: 15px; padding: 8px 10px; }
+  .report-weak { font-size: 15px; padding: 8px 10px; }
   .tab { font-size: 17px; padding: 10px 16px; }
   .mode-desc { font-size: 16px; }
   .level-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }

@@ -25,6 +25,7 @@
   const QUIZ_PASS = 3;           // số câu đúng để mở khóa màn sau
   const REVIEW_CHIPS = 4;        // số chip "cần ôn lại" hiện trên bảng kết quả (còn lại xem ở 📊 Kết quả)
   const OPT_COLORS = ['#ff6b35', '#118ab2', '#7b5ea7', '#06d6a0', '#ef476f'];
+  const MAX_STARS = L.LEVELS.length * 3;   // tổng số sao có thể đạt: 3 sao mỗi màn
 
   /* ================= LƯU TRỮ (localStorage) =================
      Thiết lập thiết bị (sound, music, voice, fx) ở cấp cao nhất; tiến trình từng bé nằm trong players[<id>]
@@ -56,8 +57,8 @@
       this.data.players = {};
       const src = d.players && typeof d.players === 'object' ? d.players : null;
       if (src) for (const id in src) if (/^[A-Za-z0-9_-]{1,24}$/.test(id)) this.data.players[id] = this.sanitize(src[id]);
-      // Di trú dữ liệu cũ (chưa có players): đưa vào người chơi mặc định p1
-      if (d.players == null && (d.progress || d.unlockAll != null)) {
+      // Di trú dữ liệu cũ (chưa có người chơi nào hợp lệ): đưa vào người chơi mặc định p1
+      if (!Object.keys(this.data.players).length && (d.progress || d.unlockAll != null)) {
         this.data.players.p1 = this.sanitize({ progress: d.progress, unlockAll: d.unlockAll });
         this.save();
       }
@@ -2237,6 +2238,7 @@
   /** Cổng phụ huynh dùng chung (xóa tiến trình, xóa người chơi): câu nhân trong trang – không dùng window.prompt/confirm. */
   const Gate = { cb: null, answer: 0 };
   function adultGate(cb) {
+    if (!ui.gate) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
     const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
     Gate.cb = cb; Gate.answer = a * b;
     $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
@@ -2298,7 +2300,7 @@
     renderPlayers();
     if (Voice.available) Voice.say('Chào ' + Players.active().name + '!');
   }
-  /** Lời chào theo tên, một lần mỗi lần mở trang (khi bé bấm Chơi ngay) */
+  /** Lời chào theo tên, một lần mỗi lần mở trang (sau thao tác chạm đầu tiên để iOS cho phép đọc). */
   function welcome() {
     if (G.welcomed) return;
     G.welcomed = true;
@@ -2340,22 +2342,40 @@
     const p = Players.active(), b = Store.p(), s = b.stats;
     $('report-title').textContent = '📊 Kết quả của ' + p.name;
     const total = s.correct + s.wrong, acc = total ? Math.round(s.correct / total * 100) : 0;
-    const passedN = L.LEVELS.filter(function (l) { return Store.prog(l.id).passed; }).length;
     $('report-stats').innerHTML =
       '<div class="report-stat"><div class="v">' + s.plays + '</div><div class="k">ván đã chơi</div></div>' +
       '<div class="report-stat"><div class="v">' + acc + '%</div><div class="k">trả lời đúng</div></div>' +
       '<div class="report-stat"><div class="v">' + Math.round(s.seconds / 60) + '</div><div class="k">phút luyện tập</div></div>' +
-      '<div class="report-stat"><div class="v">' + passedN + '/' + L.LEVELS.length + '</div><div class="k">màn đã qua</div></div>';
+      '<div class="report-stat"><div class="v">' + Store.sumStars(b) + '/' + MAX_STARS + '</div><div class="k">sao</div></div>';
+    // "Cần luyện thêm": đã làm ≥ 5 câu mà đúng dưới 70 % (cùng một quy tắc ở cả sáu game)
+    const isWeak = function (id) {
+      const t = s.byTopic[id];
+      return !!(t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7);
+    };
+    // 3 màn yếu nhất, kém nhất đứng trước
+    const weakLevels = L.LEVELS.filter(function (l) { return isWeak(l.id); }).sort(function (x, y) {
+      const a = s.byTopic[x.id], c = s.byTopic[y.id];
+      return a.c / (a.c + a.w) - c.c / (c.c + c.w);
+    }).slice(0, 3);
+    const weakLine = $('report-weak');
+    if (weakLine) {
+      weakLine.textContent = weakLevels.length ? 'Cần luyện thêm: ' + weakLevels.map(function (l) { return l.icon + ' Màn ' + l.n + ': ' + l.title; }).join(', ') : '';
+      weakLine.hidden = !weakLevels.length;
+    }
+    const reviewH = $('report-review-h');
+    if (reviewH) reviewH.textContent = '📝 Cần ôn lại';
+    const resetBtn = $('btn-report-reset');
+    if (resetBtn) resetBtn.textContent = '🗑 Xóa tiến trình của ' + p.name;
     $('report-levels').innerHTML = L.LEVELS.map(function (l) {
       const r = Store.prog(l.id), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
       const acc1 = n ? Math.round(t.c / n * 100) : 0;
-      const weak = n >= 5 && acc1 < 70;                       // chủ đề yếu: cần luyện thêm
+      const weak = isWeak(l.id);                              // chủ đề yếu: cần luyện thêm
       return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
         '<span class="stars" aria-label="' + r.stars + ' sao">' + starsHtml(r.stars) + '</span>' +
         '<span>🏆 ' + fmt(r.best) + '</span><span>🧠 ' + r.quizBest + '/' + QUIZ_N + '</span>' +
         (n ? '<span>🎯 ' + acc1 + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
         (r.passed ? '<span class="passed">✅ Đã qua</span>' : '') +
-        (mastered(l.id) ? '<span class="mastered">🏅 Đã thuộc</span>' : '') +
+        (mastered(l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
         (weak ? '<span class="n">⚠️ Cần luyện thêm</span>' : '') + '</div>';
     }).join('');
     const pool = Store.reviewPool();
@@ -2443,7 +2463,7 @@
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('dblclick', function (e) { if (e.target === canvas) e.preventDefault(); });
     document.addEventListener('contextmenu', function (e) { if (e.target === canvas) e.preventDefault(); });
-    document.addEventListener('pointerdown', function () { Sfx.unlock(); }, true);
+    document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu') welcome(); }, true);
     document.addEventListener('keydown', function (e) {
       G.usedKeys = true;
       const tag = e.target && e.target.tagName;
@@ -2505,18 +2525,21 @@
     const defs = [
       { key: 'sound', on: '🔊 Âm thanh: Bật', off: '🔇 Âm thanh: Tắt' },
       { key: 'music', on: '🎵 Nhạc nền: Bật', off: '🎵 Nhạc nền: Tắt' },
-      { key: 'voice', on: '🗣️ Đọc câu hỏi: Bật', off: '🗣️ Đọc câu hỏi: Tắt' },
+      { key: 'voice', on: '🗣️ Giọng đọc: Bật', off: '🗣️ Giọng đọc: Tắt' },
       { key: 'fx', on: '✨ Hiệu ứng: Nhiều', off: '✨ Hiệu ứng: Ít' }        // hiệu ứng hình ảnh (rung, hạt, chớp)
     ];
     const boxes = document.querySelectorAll('[data-audio-toggles]');
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
         const noVoice = d.key === 'voice' && !Voice.available;
-        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : (Store.data[d.key] !== false && !noVoice);
+        // Máy đang bật "giảm chuyển động": hiệu ứng luôn ở mức Ít, công tắc phải báo đúng như vậy và bị khóa
+        const forced = d.key === 'fx' && Motion.lite && Store.data.fx !== 'lite';
+        const on = d.key === 'fx' ? !Motion.lite : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
-        if (noVoice) label = '🗣️ Đọc câu hỏi: chưa có giọng Việt';
+        if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
+        if (forced) label = '✨ Hiệu ứng: Ít (theo cài đặt máy)';
         return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + (d.key === 'fx' && !on ? ' lite' : '') + '" data-set="' + d.key + '"' +
-          ' aria-pressed="' + (on ? 'true' : 'false') + '"' + (noVoice ? ' disabled' : '') + '>' + label + '</button>';
+          ' aria-pressed="' + (on ? 'true' : 'false') + '"' + (noVoice || forced ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
@@ -2542,7 +2565,7 @@
   }
 
   function bindUi() {
-    click('btn-play', function () { welcome(); goLevels(); });
+    click('btn-play', function () { goLevels(); });
     click('btn-howto', function () { ui.howto.classList.remove('hidden'); focusFirst(ui.howto); });
     click('btn-howto-close', function () { ui.howto.classList.add('hidden'); });
     click('btn-levels-back', function () { goMenu(); });
@@ -2592,8 +2615,8 @@
       });
     });
     // Kết quả của bé
+    click('btn-report-levels', function () { openReport(); });
     click('btn-report', function () { openReport(); });
-    click('btn-players-report', function () { openReport(); });
     click('btn-report-back', function () { ui.report.classList.add('hidden'); });
     click('btn-report-reset', function () { adultGate(function () { resetProgress(); }); });
     // Chọn màn (chạm hoặc Enter/Space)

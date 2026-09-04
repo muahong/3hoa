@@ -77,3 +77,12 @@ Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung 
 - **Điểm khi đã xem gợi ý**: hằng số `HINT_POINTS` trong `js/game.js` (mặc định 20).
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `xe-tang-thoi-gian-v3`) để thiết bị đã cài nhận bản mới.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```
+node --test tests/xe-tang-thoi-gian.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/xe-tang-thoi-gian.e2e.js
+```

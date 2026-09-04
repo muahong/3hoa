@@ -351,7 +351,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await sleep(page, 300);
     assert.equal(await page.$eval('.level-card[data-id="l2"]', (c) => c.classList.contains('locked')), true, 'l2 khóa với Mai');
     // Bảng kết quả của Mai (trống) + xóa tiến trình sau cổng phụ huynh
-    await page.click('#btn-report');
+    await page.click('#btn-report-levels');
     await sleep(page, 200);
     assert.ok(await shown(page, '#report'));
     assert.ok((await page.$eval('#report-title', (e) => e.textContent)).indexOf('Mai') >= 0);
@@ -384,7 +384,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await page.click('#btn-play');
     await sleep(page, 300);
     assert.equal(await page.$eval('.level-card[data-id="l2"]', (c) => c.classList.contains('locked')), false);
-    await page.click('#btn-report');
+    await page.click('#btn-report-levels');
     await sleep(page, 300);
     const rep = await page.$eval('#report', (e) => e.textContent);
     assert.ok(rep.indexOf('Kết quả của Bé') >= 0 && rep.indexOf('Cần ôn lại') >= 0);
@@ -527,7 +527,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok((await page.$eval('.level-card[data-id="l1"] .num', (e) => e.textContent)).indexOf('✅') >= 0, 'màn đã qua có dấu ✅');
     await checkLevelHead(page, 'điện thoại 390×844');
     await shot('levels-phone');
-    await page.click('#btn-report');
+    await page.click('#btn-report-levels');
     await sleep(page, 300);
     await shot('report-phone');
   }, { viewport: { width: 390, height: 844 }, initScript: seed(LEGACY) });
@@ -537,7 +537,10 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
   const log4 = await withGame(DIR, async ({ page, hook }) => {
     assert.equal(await page.$eval('html', (h) => h.classList.contains('lite-fx')), true, 'prefers-reduced-motion → lite-fx');
     assert.equal(await hook('X.Motion.lite'), true);
-    assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.getAttribute('aria-pressed')), 'true', 'thiết lập fx vẫn là "Nhiều"');
+    // Máy đã bật "giảm chuyển động": công tắc phải nói đúng sự thật (Ít) và bị khóa, không hứa suông
+    assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.getAttribute('aria-pressed')), 'false', 'công tắc Hiệu ứng báo đúng trạng thái thật');
+    assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.disabled), true, 'công tắc bị khóa vì máy đang giảm chuyển động');
+    assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.textContent), '✨ Hiệu ứng: Ít (theo cài đặt máy)', 'nhãn nói rõ lý do');
     assert.equal(await page.$eval('#menu .panel', (e) => getComputedStyle(e).animationName), 'none', 'ít chuyển động: bảng không chạy hiệu ứng hiện ra');
     await hook('X.startGame(Levels.LEVELS[5])');
     await waitState(page, hook, 'playing');
@@ -603,7 +606,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await hook('X.Store.p().stats.plays'), 3);
     await hook('X.goLevels()');
     await sleep(page, 200);
-    await page.click('#btn-report');
+    await page.click('#btn-report-levels');
     await sleep(page, 300);
     const rev = await page.$eval('#report-review', (e) => e.textContent);
     assert.ok(rev.indexOf('7 giờ 50 phút → 8 giờ kém 10 phút') >= 0 && rev.indexOf('✖ 3') >= 0, 'kho ôn lại đọc được: ' + rev);
@@ -784,7 +787,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await page.$eval('.level-card[data-id="l1"] .mastered', (e) => e.textContent), '✅ Đã thuộc');
     assert.equal(await page.$('.level-card[data-id="l2"] .mastered'), null, 'màn 2 mới 3 câu → chưa "Đã thuộc"');
     assert.ok((await page.$eval('.level-card[data-id="l1"]', (e) => e.getAttribute('aria-label'))).indexOf('đã thuộc') >= 0, 'aria-label nêu "đã thuộc"');
-    await page.click('#btn-report');
+    await page.click('#btn-report-levels');
     await sleep(page, 300);
     assert.ok((await page.$eval('#report-levels', (e) => e.textContent)).indexOf('Đã thuộc') >= 0, 'bảng kết quả cũng nêu "Đã thuộc"');
     await page.click('#btn-report-back');

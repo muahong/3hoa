@@ -304,6 +304,20 @@ test('Store: dữ liệu cũ ở cấp cao nhất chuyển sang players.p1 và �
   assert.equal(S.p(), p1);
 });
 
+test('Store: players rỗng hoặc chỉ có id hỏng vẫn nhận được dữ liệu cũ (CANON.md §7)', () => {
+  const legacy = { records: { 'answer:a1:90': { best: 800, stars: 2, top: [] } }, names: ['Bo'] };
+  for (const players of [undefined, {}, { 'khóa xấu!': { records: {} } }]) {
+    const seed = players === undefined ? legacy : Object.assign({ players: players }, legacy);
+    const { S } = bootWith(seed);
+    assert.ok(S.data.players.p1, 'players = ' + JSON.stringify(players) + ': phải di trú sang p1');
+    assert.equal(S.data.players.p1.records['answer:a1:90'].best, 800, 'kỷ lục cũ phải giữ lại');
+    same(S.data.players.p1.names, ['Bo']);
+  }
+  // Đã có bé thật thì không ghi đè bằng dữ liệu cũ
+  const kept = bootWith(Object.assign({ players: { p2: { records: {}, names: ['Na'] } } }, legacy)).S;
+  assert.equal(kept.data.players.p1, undefined, 'đã có hồ sơ hợp lệ thì không tạo thêm p1');
+});
+
 test('Store: dữ liệu rác hoặc độc hại không ném lỗi và cho bucket trắng', () => {
   const seeds = ['{not json', '[]', '42', 'null', '"abc"', {}, { records: 5 }, { records: { 'answer:a1:90': { top: 'abc' } } },
     { records: { 'answer:a1:90': { top: [null, 5], best: 'abc', stars: null } } }, { players: [] },
@@ -456,14 +470,15 @@ test('style.css: chữ trong báo cáo đủ tương phản (không dùng cam/xa
 test('README mô tả đúng số nút bật/tắt hiện có trong game.js', () => {
   const js = readGameFile('js/game.js');
   const defs = js.match(/const TOGGLE_DEFS = \[[\s\S]*?\];/);
-  const short = js.match(/const TOGGLE_DEFS_SHORT = \[[\s\S]*?\];/);
-  assert.ok(defs && short, 'thiếu bảng nhãn công tắc');
+  assert.ok(defs, 'thiếu bảng nhãn công tắc');
   const keys = (b) => (b.match(/key: '/g) || []).length;
   assert.equal(keys(defs[0]), 4, 'phải có 4 công tắc');
-  assert.equal(keys(short[0]), 4, 'bản nhãn ngắn cũng phải có 4 công tắc');
-  // Nhãn ngắn phải thật sự ngắn hơn để 4 nút vừa hai hàng trên điện thoại
-  const longest = (b) => Math.max.apply(null, (b.match(/on: '([^']*)'/g) || []).map((x) => x.length));
-  assert.ok(longest(short[0]) < longest(defs[0]), 'nhãn ngắn phải ngắn hơn nhãn đầy đủ');
+  // Nhãn dùng chung cho cả sáu game (scratchpad/CANON.md §3): một bộ duy nhất, không rút gọn theo bề rộng
+  assert.doesNotMatch(js, /TOGGLE_DEFS_SHORT/, 'không còn bảng nhãn rút gọn riêng cho điện thoại');
+  for (const label of ['🔊 Âm thanh: Bật', '🔇 Âm thanh: Tắt', '🎵 Nhạc nền: Bật', '🎵 Nhạc nền: Tắt',
+    '🗣️ Giọng đọc: Bật', '🗣️ Giọng đọc: Tắt', '✨ Hiệu ứng: Nhiều', '✨ Hiệu ứng: Ít']) {
+    assert.ok(defs[0].indexOf(label) >= 0, 'thiếu nhãn công tắc "' + label + '"');
+  }
   assert.match(readGameFile('README.md'), /Bốn nút bật\/tắt/, 'README phải nói "Bốn nút bật/tắt"');
 });
 

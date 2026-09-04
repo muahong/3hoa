@@ -79,7 +79,7 @@ Câu nào bé trả lời sai (hoặc để thiên thạch chạm khiên) sẽ �
 
 ## Kết quả của bé (cho phụ huynh) 📊
 
-Nút **📊 Kết quả** ở menu chính (hoặc biểu tượng 📊 ở màn người chơi) hiện: số ván đã chơi, tỉ lệ đúng, số phút luyện tập, tổng sao, kỷ lục và tỉ lệ đúng từng bảng (kèm nhãn **✅ Đã thuộc** khi bé đúng ≥ 90% trên ít nhất 20 câu), bảng nên luyện thêm (bảng đã thuộc thì thôi) và danh sách câu cần ôn.
+Nút **📊 Kết quả** ở màn chọn màn chơi và ở menu chính (hoặc biểu tượng 📊 ở màn người chơi) hiện: số ván đã chơi, tỉ lệ đúng, số phút luyện tập, tổng sao (dạng `n/45`), dòng **Cần luyện thêm** (màn đã làm ≥ 5 câu mà đúng dưới 70%, tối đa 3 màn — chưa đủ dữ liệu thì ẩn), kỷ lục và tỉ lệ đúng từng bảng (kèm nhãn **✅ Đã thuộc** khi bé đúng ≥ 90% trên ít nhất 20 câu, nhãn **⚠️ Cần luyện thêm** ở dòng còn yếu) và mục **📝 Cần ôn lại**.
 Mỗi dòng chỉ nói về đúng màn đó: màn luyện bảng cộng dồn mọi câu của bảng ấy, màn thử thách có sổ riêng, màn chưa chơi ghi **chưa chơi**.
 Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân dành cho người lớn (không dùng hộp thoại của trình duyệt).
 
@@ -100,3 +100,12 @@ Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân d�
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuu-chuong-v2` → `cuu-chuong-v3`) để thiết bị đã cài nhận bản mới.
 - **`js/profile.js` là tệp dùng chung**: khi sửa, phải sao chép y nguyên sang tất cả các game (kiểm thử `tests/consistency.test.js` sẽ báo lỗi nếu khác nhau).
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```bash
+node --test tests/cuu-chuong.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/cuu-chuong.e2e.js
+```

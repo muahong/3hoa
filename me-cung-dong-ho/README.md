@@ -59,7 +59,7 @@ Màn **📖 Học xem giờ** ở menu chính cho bé quay kim (−5 phút, +5 p
 
 ## Nhiều bé chơi chung một máy
 
-Game **chào bé theo tên** bằng giọng đọc ở lần chạm đầu tiên. Nút **người chơi** (hình + tên) ở góc menu chính mở màn *Ai đang chơi?*: thêm bạn mới (tối đa 8), đổi tên, đổi hình. Mỗi bé có tiến độ, kỷ lục, sao và danh sách *cần ôn lại* riêng; tên và hình dùng chung cho mọi game trên 3hoa.com. Khoảng 25% số lượt trong một màn (1–3 lượt, không bao giờ lượt đầu) được lấy từ những giờ bé từng đọc nhầm (gắn nhãn *📝 Ôn lại*); một câu hỏi đáp cũng ôn lại mục đó. Đọc đúng 2 lần thì mục được bỏ khỏi danh sách. Khi bé đạt **≥ 90% đúng trong ít nhất 20 câu** của một màn, thẻ màn đó (và bảng kết quả) hiện huy hiệu **✅ Đã thuộc**.
+Game **chào bé theo tên** (chữ và giọng đọc) ở lần chạm đầu tiên. Nút **người chơi** (hình + tên) ở góc menu chính mở màn *Ai đang chơi?*: thêm bạn mới (tối đa 8), đổi tên, đổi hình. Mỗi bé có tiến độ, kỷ lục, sao và danh sách *cần ôn lại* riêng; tên và hình dùng chung cho mọi game trên 3hoa.com. Khoảng 25% số lượt trong một màn (1–3 lượt, không bao giờ lượt đầu) được lấy từ những giờ bé từng đọc nhầm (gắn nhãn *📝 Ôn lại*); một câu hỏi đáp cũng ôn lại mục đó. Đọc đúng 2 lần thì mục được bỏ khỏi danh sách. Khi bé đạt **≥ 90% đúng trong ít nhất 20 câu** của một màn, thẻ màn đó (và bảng kết quả) hiện huy hiệu **✅ Đã thuộc**.
 
 ## Dành cho phụ huynh
 
@@ -73,3 +73,12 @@ Game **chào bé theo tên** bằng giọng đọc ở lần chạm đầu tiên
 - **Tốc độ Cú Tí, thời gian ma buồn ngủ, điểm**: `PLAYER_SPEED`, `FRIGHT_TIME`, `POINTS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `me-cung-dong-ho-v2`) để thiết bị đã cài nhận bản mới.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```bash
+node --test tests/me-cung-dong-ho.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/me-cung-dong-ho.e2e.js
+```

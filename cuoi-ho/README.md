@@ -18,7 +18,7 @@ Tiến độ (màn đã mở, sao, điểm cao, huy hiệu) được lưu trên 
 python -m http.server 8787 --directory cuoi-ho
 ```
 
-rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính có thể bấm phím **1, 2, 3** (vòng trên, giữa, dưới) hoặc **↑ ↓ + Enter** để chọn vòng, **Enter/Space** (hoặc chạm màn hình) để chạy tiếp sau khi xem đáp án, **Esc** để tạm dừng hoặc đóng màn hình đang mở; trong bài học dùng **← →**, trong hỏi đáp dùng **1, 2, 3** và **Enter**; thẻ màn, dòng ghi nhớ và chip ôn lại đều dùng được bằng **Tab + Enter**. Kiểm thử tự động: `node --test tests/cuoi-ho.test.js` và `NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/cuoi-ho.e2e.js` (chạy từ thư mục gốc của kho).
+rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính có thể bấm phím **1, 2, 3** (vòng trên, giữa, dưới) hoặc **↑ ↓ + Enter** để chọn vòng, **Enter/Space** (hoặc chạm màn hình) để chạy tiếp sau khi xem đáp án, **Esc** để tạm dừng hoặc đóng màn hình đang mở; trong bài học dùng **← →**, trong hỏi đáp dùng **1, 2, 3** và **Enter**; thẻ màn, dòng ghi nhớ và chip ôn lại đều dùng được bằng **Tab + Enter**.
 
 ## Đưa lên website 3hoa.com
 
@@ -65,3 +65,12 @@ Thiết lập thiết bị (dùng chung cho mọi bé): 🔊 Âm thanh, 🎵 Nh�
 - **Độ khó chung**: `JUMP_T`, `LEARN_T`, `RUN_GAP_T`, số tim `MAX_HEARTS` (hoặc `hearts` của từng màn trong `js/lessons.js`), ngưỡng sao `starsFor` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuoi-ho-v2`) để thiết bị đã cài nhận bản mới.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```bash
+node --test tests/cuoi-ho.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/cuoi-ho.e2e.js
+```

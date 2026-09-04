@@ -456,6 +456,14 @@ test('me-cung Store: dữ liệu cũ (unlocked/records ở mức trên) di trú 
   assert.equal(S.rec(C.LEVELS[0]).best, 1200);
 });
 
+test('me-cung Store: players rỗng hoặc chỉ có id sai vẫn di trú dữ liệu cũ vào p1', () => {
+  for (const players of [{}, { 'id sai!': { unlocked: 8 } }]) {
+    const { S } = loadStore({ players: players, unlocked: 4, records: { l1: { best: 900, stars: 2, passed: true } } });
+    assert.equal(S.data.players.p1 && S.data.players.p1.unlocked, 4, 'di trú với players = ' + JSON.stringify(players));
+    assert.equal(S.data.players.p1.records.l1.best, 900);
+  }
+});
+
 test('me-cung Store: dữ liệu hỏng / độc hại không làm sập, __proto__ bị bỏ', () => {
   for (const raw of ['{"records":"abc"}', '{"records":{"l1":5},"unlocked":"1e400"}', 'not json', '[1,2]', '{"players":"x"}', '{"players":{"p1":{"unlocked":99,"records":{"l1":{"best":"1e400","stars":-4}},"missed":{"k":{"n":"x"}},"stats":{"plays":-1,"byTopic":{"l1":{"c":"a","w":3}}}}}}']) {
     const { S } = loadStore(raw);

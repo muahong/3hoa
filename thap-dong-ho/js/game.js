@@ -242,10 +242,13 @@
     hudSpeed: $('hud-speed'), hudReview: $('hud-review'), btnPause: $('btn-pause'),
     players: $('players'), report: $('report'), parentGate: $('parent-gate'),
     playerChip: $('btn-player'), playerList: $('player-list'), playerForm: $('player-form'), playerName: $('player-name'), playerAvatars: $('player-avatars'),
-    reportTitle: $('report-title'), reportStats: $('report-stats'), reportLevels: $('report-levels'), reportReview: $('report-review'),
+    reportTitle: $('report-title'), reportStats: $('report-stats'), reportWeak: $('report-weak'), reportLevels: $('report-levels'),
+    reportReviewH: $('report-review-h'), reportReview: $('report-review'), reportReset: $('btn-report-reset'),
     gateQ: $('parent-gate-q'), gateInput: $('parent-gate-input'), gateForm: $('parent-gate-form')
   };
-  const SCREENS = ['menu', 'players', 'report', 'levels', 'lesson', 'countdown', 'pause', 'summary', 'fail', 'quiz'];
+  /** Tổng số sao có thể đạt được: 3 sao mỗi màn. */
+  const MAX_STARS = K.LEVELS.length * 3;
+  const SCREENS =['menu', 'players', 'report', 'levels', 'lesson', 'countdown', 'pause', 'summary', 'fail', 'quiz'];
 
   function showScreen(name) {
     SCREENS.forEach(function (k) { if (ui[k]) ui[k].classList.toggle('hidden', k !== name); });
@@ -2399,6 +2402,8 @@
       if (G.state === 'menu' && !(e.target && e.target.closest && e.target.closest('#btn-player'))) welcome();
     }, true);
     document.addEventListener('keydown', function (e) {
+      // Escape đóng cổng phụ huynh ngay cả khi con trỏ đang ở trong ô nhập đáp án
+      if (e.key === 'Escape' && !ui.parentGate.classList.contains('hidden')) { closeGate(); e.preventDefault(); return; }
       const tag = e.target && e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;    // đang gõ tên bé / đáp án cổng phụ huynh
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
@@ -2445,10 +2450,15 @@
     const boxes = document.querySelectorAll('[data-audio-toggles]');
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
-        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : Store.data[d.key] !== false;
+        const noVoice = d.key === 'voice' && !Voice.available;
+        // Máy đang bật "giảm chuyển động": hiệu ứng luôn ở mức Ít, công tắc phải báo đúng như vậy và bị khóa
+        const forced = d.key === 'fx' && Motion.lite && Store.data.fx !== 'lite';
+        const on = d.key === 'fx' ? !Motion.lite : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
-        if (d.key === 'voice' && on && !Voice.available) label = '🗣️ Giọng đọc: đang tìm giọng…';   // iOS nạp giọng muộn – không khóa nút
-        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '" aria-pressed="' + on + '">' + label + '</button>';
+        if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
+        if (forced) label = '✨ Hiệu ứng: Ít (theo cài đặt máy)';
+        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' +
+          (noVoice || forced ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
@@ -2601,21 +2611,31 @@
     ui.reportTitle.textContent = '📊 Kết quả của ' + name;
     const total = s.correct + s.wrong, acc = total ? Math.round(s.correct / total * 100) : 0;
     const stat = function (v, k) { return '<div class="report-stat"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>'; };
-    // Dưới một phút thì ghi theo giây (báo "0 phút luyện tập" sau ba ván là sai)
-    const timeV = s.seconds < 60 ? s.seconds : Math.round(s.seconds / 60 * 10) / 10;
-    ui.reportStats.innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') + stat(timeV, s.seconds < 60 ? 'giây luyện tập' : 'phút luyện tập') + stat(sumStars(b) + (b.badge ? ' 👑' : ''), 'sao');
-    // 3 màn yếu nhất: ít nhất 8 câu đã trả lời VÀ sai từ 20 % trở lên – đúng 89 % thì không phải "cần luyện thêm"
-    const weak = K.LEVELS.map(function (l) { const t = s.byTopic[l.id]; return t && t.c + t.w >= 8 && t.w / (t.c + t.w) >= 0.2 ? { id: l.id, r: t.w / (t.c + t.w) } : null; })
-      .filter(function (x) { return x; }).sort(function (a, c) { return c.r - a.r; }).slice(0, 3);
+    ui.reportStats.innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') +
+      stat(Math.round(s.seconds / 60), 'phút luyện tập') + stat(sumStars(b) + '/' + MAX_STARS, 'sao');
+    // "Cần luyện thêm": đã làm ≥ 5 câu mà đúng dưới 70 % (cùng một quy tắc ở cả sáu game)
+    const isWeak = function (id) {
+      const t = s.byTopic[id];
+      return !!(t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7);
+    };
+    // 3 màn yếu nhất, kém nhất đứng trước
+    const weak = K.LEVELS.filter(function (l) { return isWeak(l.id); }).sort(function (x, y) {
+      const a = s.byTopic[x.id], c = s.byTopic[y.id];
+      return a.c / (a.c + a.w) - c.c / (c.c + c.w);
+    }).slice(0, 3);
+    if (ui.reportWeak) {
+      ui.reportWeak.textContent = weak.length ? 'Cần luyện thêm: ' + weak.map(function (l) { return l.icon + ' Màn ' + l.n + ': ' + l.title; }).join(', ') : '';
+      ui.reportWeak.hidden = !weak.length;
+    }
+    if (ui.reportReviewH) ui.reportReviewH.textContent = '📝 Cần ôn lại';
     ui.reportLevels.innerHTML = K.LEVELS.map(function (l) {
       const r = Store.rec(l.id), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
-      const isWeak = weak.some(function (w) { return w.id === l.id; });
       return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
         '<span class="stars">' + starsHtml(r.stars || 0) + '</span><span>🏆 ' + fmt(r.best || 0) + '</span>' +
         (n ? '<span>' + Math.round(t.c / n * 100) + '% đúng · ' + n + ' câu</span>'
           : r.done ? '<span class="rv-explain">đã chơi ' + r.done + ' lần</span>' : '<span class="rv-explain">chưa chơi</span>') +
         (mastered(l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
-        (isWeak ? '<span class="weak">📌 Cần luyện thêm</span>' : '') + '</div>';
+        (isWeak(l.id) ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') + '</div>';
     }).join('');
     const pool = Store.reviewPool();
     ui.reportReview.innerHTML = pool.length ? pool.slice(0, 12).map(function (it) {
@@ -2624,6 +2644,7 @@
         '<span class="t">' + esc(describeReview(it)) + (t ? '<span class="rv-explain">' + esc(K.explainShort(t)) + '</span>' : '') + '</span>' +
         '<span>✖ ' + it.n + '</span></div>';
     }).join('') : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+    if (ui.reportReset) ui.reportReset.textContent = '🗑 Xóa tiến trình của ' + name;
   }
 
   function bindReviewList(el, listGetter) {

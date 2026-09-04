@@ -172,11 +172,17 @@ html, body {
   background: none; border: none; padding: 0; color: var(--blue); font-family: var(--font); font-weight: 700; font-size: inherit;
   text-decoration: underline; cursor: pointer; touch-action: manipulation;
 }
+/* Nút kiểu đường dẫn dùng chung cho mọi game (ví dụ "🗑 Xóa tiến trình của bé" ở màn kết quả) */
+.linkish {
+  font: inherit; font-weight: 800; font-size: 16px;
+  background: none; border: none; color: var(--ink-soft); text-decoration: underline;
+  cursor: pointer; min-height: 44px; padding: 8px 12px; touch-action: manipulation;
+}
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* Viền tiêu điểm rõ ràng (bàn phím) theo bảng màu game */
 .btn:focus-visible, .toggle:focus-visible, .opt:focus-visible, .level-card:focus-visible, #dpad .d:focus-visible,
 .chip-group button:focus-visible, .lesson-demos button:focus-visible, .player-item:focus-visible, .avatar:focus-visible,
-.player-chip:focus-visible, .speak-btn:focus-visible, .link-btn:focus-visible, input:focus-visible {
+.player-chip:focus-visible, .speak-btn:focus-visible, .link-btn:focus-visible, .linkish:focus-visible, input:focus-visible {
   outline: 4px solid var(--yellow); outline-offset: 3px;
 }
 
@@ -266,7 +272,7 @@ html, body {
 .level-card .num .done { color: var(--green-dark); }
 .level-card .stars { color: #ffbf1f; letter-spacing: 2px; font-size: 20px; }
 .level-card .stars .off { color: #d5d9e6; }
-.level-card .mastery { display: inline-block; align-self: flex-start; background: #e3fff4; color: #05603f; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+.level-card .mastered { display: inline-block; align-self: flex-start; background: #e3fff4; color: #05603f; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
 .parent-note { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; font-size: 14px; color: var(--ink-soft); margin: 14px 0 0; font-weight: 700; }
 .parent-note .btn.small { font-size: 15px; padding: 8px 14px; min-height: 44px; }
 
@@ -673,6 +679,7 @@ html, body {
 .report-row .stars { color: #ffbf1f; letter-spacing: 2px; }
 .report-row .stars .off { color: #d5d9e6; }
 .report-row .mastered { color: #05603f; font-size: 13px; font-weight: 800; }
+.report-row .weak { color: #8a3b00; font-size: 13px; font-weight: 800; }
 .parent-row { margin-top: 14px; }
 
 /* ---------- Cổng phụ huynh ---------- */

@@ -377,11 +377,17 @@ async function profiles() {
     ok((await page.textContent('.level-card[data-id="t7"] .best')).indexOf('3.200') >= 0, 'quay lại bé cũ phải thấy kỷ lục');
     assert.equal(await page.locator('.level-card[data-id="t7"] .mastered').count(), 1, 'thẻ bảng 7 phải có nhãn ✅ Đã thuộc trên lưới chọn màn');
     ok((await page.textContent('.level-card[data-id="t7"] .mastered')).indexOf('Đã thuộc') >= 0);
+    // Lối vào 📊 Kết quả ngay ở màn chọn màn chơi: mở được và ← quay lại đúng màn đó
+    await page.click('#btn-report-levels');
+    await page.waitForSelector('#report:not(.hidden)');
+    await page.click('#btn-report-back');
+    await page.waitForTimeout(200);
+    ok(await page.isHidden('#report') && await page.isVisible('#levels'), 'mở báo cáo từ màn chọn màn thì ← phải quay lại đó');
     await page.click('#btn-levels-back');
     await page.waitForSelector('#menu:not(.hidden)');
 
     await page.click('#btn-player');
-    await page.click('#btn-players-report');
+    await page.click('#btn-report');
     await page.waitForSelector('#report:not(.hidden)');
     await page.waitForTimeout(500);
     ok((await page.textContent('#report-title')).indexOf('Bé') >= 0, 'tiêu đề báo cáo phải có tên bé');
@@ -397,13 +403,13 @@ async function profiles() {
     await page.click('#btn-players-back');
     await page.waitForSelector('#menu:not(.hidden)');
     // Mở từ menu thì ← đóng hẳn về menu
-    await page.click('#btn-report');
+    await page.click('#btn-report-menu');
     await page.waitForSelector('#report:not(.hidden)');
     await page.click('#btn-report-back');
     await page.waitForTimeout(200);
     ok(await page.isHidden('#report') && await page.isHidden('#players'), 'mở báo cáo từ menu thì ← phải về menu');
     await page.click('#btn-player');
-    await page.click('#btn-players-report');
+    await page.click('#btn-report');
     await page.waitForSelector('#report:not(.hidden)');
 
     // Cổng phụ huynh: Escape và nút Hủy chỉ đóng cổng, bảng kết quả vẫn mở
@@ -453,7 +459,7 @@ async function reportScope() {
   const rowsOf = (page) => page.locator('#report-levels .report-row').allTextContents();
   const rowOf = (rows, head) => rows.find((r) => r.indexOf(head) === 0) || '';
   return withGame('cuu-chuong', async ({ page, hook, shot }) => {
-    await page.click('#btn-report');
+    await page.click('#btn-report-menu');
     await page.waitForSelector('#report:not(.hidden)');
     await page.waitForTimeout(400);
     const rows = await rowsOf(page);
@@ -476,7 +482,7 @@ async function reportScope() {
     ok((await hook('X.Store.p().stats.byTopic.c5.c')) >= 3, 'phải ghi thống kê riêng cho màn Tìm thừa số');
     await page.click('#btn-home');
     await page.waitForSelector('#menu:not(.hidden)');
-    await page.click('#btn-report');
+    await page.click('#btn-report-menu');
     await page.waitForSelector('#report:not(.hidden)');
     await page.waitForTimeout(300);
     const rows2 = await rowsOf(page);
@@ -754,7 +760,7 @@ async function sharedProfilesAndReview() {
     ok(subs[1].indexOf('0 sao') >= 0, 'bé mới không được mượn sao của bé khác: ' + subs[1]);
     await shot('players-shared');
 
-    await page.click('#btn-players-report');
+    await page.click('#btn-report');
     await page.waitForSelector('#report:not(.hidden)');
     await page.waitForTimeout(500);
     await page.evaluate(() => { const p = document.querySelector('#report .panel'); p.scrollTop = p.scrollHeight; });

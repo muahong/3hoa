@@ -143,7 +143,7 @@
       </div>
       <div class="btn-row mt-12">
         <button class="btn teal small" id="btn-tables">📖 Bảng cửu chương</button>
-        <button class="btn purple small" id="btn-report">📊 Kết quả</button>
+        <button class="btn purple small" id="btn-report-menu">📊 Kết quả</button>
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
@@ -165,6 +165,7 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-levels-back">← <span class="txt">Quay lại</span></button>
         <h2>Chọn màn chơi</h2>
+        <button class="btn teal small" id="btn-report-levels" aria-label="Xem kết quả">📊 Kết quả</button>
         <button class="btn ghost small" id="btn-levels-howto" aria-label="Cách chơi">❓</button>
       </div>
       <div class="tabs" role="tablist" aria-label="Kiểu màn chơi">
@@ -224,7 +225,7 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-players-back">← <span class="txt">Quay lại</span></button>
         <h2>👋 Ai đang chơi?</h2>
-        <button class="btn teal small" id="btn-players-report" aria-label="Xem kết quả">📊</button>
+        <button class="btn teal small" id="btn-report" aria-label="Xem kết quả">📊</button>
       </div>
       <div class="player-list" id="player-list"></div>
       <div class="btn-row">
@@ -254,11 +255,12 @@
         <span class="head-spacer"></span>
       </div>
       <div class="report-grid" id="report-stats"></div>
+      <p class="report-weak" id="report-weak" hidden></p>
       <h3 class="report-h">Từng màn</h3>
       <div class="report-rows" id="report-levels"></div>
-      <h3 class="report-h">📝 Cần ôn lại</h3>
+      <h3 class="report-h" id="report-review-h">📝 Cần ôn lại</h3>
       <div class="report-rows" id="report-review"></div>
-      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé</button></p>
     </div>
   </div>
 

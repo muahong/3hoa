@@ -79,9 +79,9 @@ Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 tim. Chém số sai hoặc
 
 - **Âm thanh** (nút 🔊): tiếng chém, nước bắn, chuông đúng/sai, bom, tim, combo... (tổng hợp bằng Web Audio, không cần file mp3).
 - **Nhạc nền** (nút 🎵): nhạc chiptune tự tổng hợp, bài nhẹ ở menu và bài sôi động khi chơi, tăng tốc ở 10 giây cuối.
-- **Đọc phép tính** (nút 🗣️): đọc to phép tính, lời khen, đáp án đúng khi sai... bằng giọng tiếng Việt của thiết bị (Web Speech API). Trên iPad/iPhone dùng giọng "Linh" có sẵn; máy tính cần có giọng tiếng Việt (Windows: cài gói ngôn ngữ Tiếng Việt, Chrome: giọng Google). Nếu thiết bị không có giọng Việt, nút này tự vô hiệu.
+- **Giọng đọc** (nút 🗣️): đọc to phép tính, lời khen, đáp án đúng khi sai... bằng giọng tiếng Việt của thiết bị (Web Speech API). Trên iPad/iPhone dùng giọng "Linh" có sẵn; máy tính cần có giọng tiếng Việt (Windows: cài gói ngôn ngữ Tiếng Việt, Chrome: giọng Google). Nếu thiết bị không có giọng Việt, nút này tự vô hiệu.
 
-Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Đọc phép tính** và **✨ Hiệu ứng: Nhiều/Ít** cho máy yếu hoặc bé nhạy với chuyển động) nằm ở menu chính và màn hình tạm dừng, được ghi nhớ trên thiết bị. Trên điện thoại hẹp (≤ 420 px) nhãn được rút gọn (🔊 Âm thanh · 🎵 Nhạc · 🗣️ Đọc · ✨ Nhiều/Ít) để bốn nút vừa hai hàng. Nếu máy đã bật "Giảm chuyển động" trong Cài đặt, nút ✨ hiển thị **Ít (theo cài đặt máy)** và bị khóa.
+Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Giọng đọc** và **✨ Hiệu ứng: Nhiều/Ít** cho máy yếu hoặc bé nhạy với chuyển động) nằm ở menu chính và màn hình tạm dừng, được ghi nhớ trên thiết bị. Nếu thiết bị không có giọng tiếng Việt, nút 🗣️ hiển thị **Giọng đọc: chưa có giọng Việt** và bị khóa; nếu máy đã bật "Giảm chuyển động" trong Cài đặt, nút ✨ hiển thị **Ít (theo cài đặt máy)** và cũng bị khóa.
 
 ## Tùy chỉnh nhanh
 
@@ -91,3 +91,12 @@ Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Đ�
 - **Ngưỡng sao**: hàm `starThresholds` và bảng `STAR_FACTOR` trong `js/game.js`.
 - **Thời gian mỗi ván**: nhóm nút trong `index.html` (`data-sec`).
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `ninja-toan-v2`) để thiết bị đã cài nhận bản mới.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```
+node --test tests/math-ninja.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/math-ninja.e2e.js
+```

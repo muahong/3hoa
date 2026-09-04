@@ -119,7 +119,7 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
         <h2>Chọn màn chơi</h2>
-        <button class="btn ghost small" id="btn-report" aria-label="Kết quả của bé">📊<span class="btn-text"> Kết quả</span></button>
+        <button class="btn ghost small" id="btn-report-levels" aria-label="Kết quả của bé">📊 Kết quả</button>
         <button class="btn ghost small" id="btn-parent" aria-label="Dành cho phụ huynh">👨‍👩‍👧</button>
       </div>
       <p class="mode-desc" id="levels-desc">Vượt qua phần <b>hỏi đáp</b> của mỗi màn để mở khóa màn tiếp theo!</p>
@@ -301,7 +301,7 @@
       <div class="screen-head">
         <button class="btn ghost small" id="btn-players-back">← Quay lại</button>
         <h2>👋 Ai đang chơi?</h2>
-        <button class="btn teal small" id="btn-players-report" aria-label="Xem kết quả">📊</button>
+        <button class="btn teal small" id="btn-report" aria-label="Xem kết quả">📊</button>
       </div>
       <div class="player-list" id="player-list"></div>
       <div class="btn-row">
@@ -331,11 +331,12 @@
         <span class="head-spacer"></span>
       </div>
       <div class="report-grid" id="report-stats"></div>
+      <p class="report-weak" id="report-weak" hidden></p>
       <h3>Từng màn</h3>
       <div class="report-rows" id="report-levels"></div>
-      <h3>Cần ôn lại</h3>
+      <h3 id="report-review-h">📝 Cần ôn lại</h3>
       <div class="report-rows" id="report-review"></div>
-      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé</button></p>
     </div>
   </div>
 
@@ -346,7 +347,7 @@
       <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
       <form id="parent-gate-form" class="name-entry" autocomplete="off">
         <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off" placeholder="?">
-        <button type="submit" class="btn teal small">Xác nhận</button>
+        <button type="submit" class="btn small green">Xác nhận</button>
         <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
       </form>
     </div>

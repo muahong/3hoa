@@ -62,8 +62,8 @@
       this.data.players = {};
       const src = d.players && typeof d.players === 'object' ? d.players : {};
       for (const id in src) if (/^[A-Za-z0-9_-]{1,24}$/.test(id)) this.data.players[id] = this.sanitize(src[id]);
-      // Di trú dữ liệu cũ (chưa có players): đưa vào người chơi mặc định p1
-      if (!d.players && (d.unlocked != null || d.records)) {
+      // Di trú dữ liệu cũ (chưa có bé nào hợp lệ): đưa vào người chơi mặc định p1
+      if (!Object.keys(this.data.players).length && (d.unlocked != null || d.records)) {
         this.data.players.p1 = this.sanitize({ unlocked: d.unlocked, records: d.records });
         this.save();
       }
@@ -1177,7 +1177,7 @@
       });
     } catch (e) { /* bỏ qua */ }
     ui.resultReview.innerHTML = rows.length
-      ? '<b>Cần ôn lại:</b><ul>' + rows.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>'
+      ? '<b>📝 Cần ôn lại:</b><ul>' + rows.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>'
       : '';
     ui.resultReview.hidden = !rows.length;
     $('btn-result-lesson').hidden = win;                 // thua thì mời bé xem lại bài học rồi chơi tiếp
@@ -1743,7 +1743,7 @@
         '<div class="num">MÀN ' + esc(l.n) + (rec.passed ? ' <span class="done" aria-hidden="true">✅</span>' : '') + '</div>' +
         '<div class="name">' + esc(l.title) + '</div>' +
         '<div class="desc">' + esc(l.desc) + '</div>' +
-        (mastered(b, l.id) ? '<span class="mastery">✅ Đã thuộc</span>' : '') +
+        (mastered(b, l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
         '<div class="meta"><span class="best">' + (unlocked ? '🏆 ' + fmt(rec.best || 0) : '🔒 Qua màn ' + (l.n - 1)) + '</span><span class="stars" aria-label="' + (rec.stars || 0) + ' sao">' + starsHtml(rec.stars || 0) + '</span></div>' +
         '</div>';
     }).join('');
@@ -1955,6 +1955,8 @@
       // Chào bé theo tên ở lần chạm đầu tiên (mỗi lần mở trang một lần)
       if (!G.welcomed && G.state === 'menu' && Players) {
         G.welcomed = true;
+        // Máy không có giọng Việt vẫn phải thấy lời chào, nên luôn hiện bằng chữ
+        toast('Chào ' + Players.active().name + ' 👋');
         Voice.say('Chào ' + Players.active().name + '! Cùng Cú Tí đi tìm giờ đúng nào!');
       }
     }, true);
@@ -2004,10 +2006,14 @@
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
         const noVoice = d.key === 'voice' && !Voice.available;
-        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : (Store.data[d.key] !== false && !noVoice);
+        // Máy đang bật "giảm chuyển động": hiệu ứng luôn ở mức Ít, công tắc phải báo đúng như vậy và bị khóa
+        const forced = d.key === 'fx' && Motion.lite && Store.data.fx !== 'lite';
+        const on = d.key === 'fx' ? !Motion.lite : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
         if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
-        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' + (noVoice ? ' disabled' : '') + '>' + label + '</button>';
+        if (forced) label = '✨ Hiệu ứng: Ít (theo cài đặt máy)';
+        return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' +
+          (noVoice || forced ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
@@ -2034,6 +2040,7 @@
 
   /* ================= NGƯỜI CHƠI (hồ sơ) ================= */
   const PlayersUI = { mode: null, avatar: null };
+  const MAX_STARS = C.LEVELS.length * 3;              // tổng số sao tối đa của game (mỗi màn 3 sao)
   function sumStars(bucket) {
     let n = 0;
     if (bucket && bucket.records) for (const id in bucket.records) n += Number(bucket.records[id].stars) || 0;
@@ -2122,27 +2129,33 @@
     const stat = function (v, k) { return '<div class="report-stat"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>'; };
     $('report-title').textContent = '📊 Kết quả của ' + p.name;
     const total = s.correct + s.wrong, acc = total ? Math.round(s.correct / total * 100) : 0;
-    const mins = s.seconds > 0 ? Math.max(1, Math.round(s.seconds / 60)) : 0;
-    $('report-stats').innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') + stat(mins, 'phút luyện tập') + stat(sumStars(b), 'sao đạt được');
+    $('report-stats').innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') +
+      stat(Math.round(s.seconds / 60), 'phút luyện tập') + stat(sumStars(b) + '/' + MAX_STARS, 'sao');
+    // Màn còn yếu: đã làm ≥ 5 câu mà đúng dưới 70% (dùng chung cho dòng tóm tắt và huy hiệu từng dòng)
+    const isWeak = function (id) {
+      const t = s.byTopic[id];
+      return !!(t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7);
+    };
     $('report-levels').innerHTML = C.LEVELS.map(function (l) {
       const r = Store.rec(l), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
       return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
         '<span class="stars" aria-label="' + (r.stars || 0) + ' sao">' + starsHtml(r.stars || 0) + '</span><span>🏆 ' + fmt(r.best || 0) + '</span>' +
         (n ? '<span>' + Math.round(t.c / n * 100) + '% đúng (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
-        (mastered(b, l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') + '</div>';
+        (mastered(b, l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
+        (isWeak(l.id) ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') + '</div>';
     }).join('');
-    const weak = C.LEVELS.map(function (l) {
-      const t = s.byTopic[l.id]; if (!t) return null;
-      const n = t.c + t.w; return n >= 5 && t.c / n < 0.9 ? { l: l, acc: t.c / n } : null;
-    }).filter(function (x) { return !!x; }).sort(function (a, c) { return a.acc - c.acc; }).slice(0, 3);
-    $('report-weak').textContent = weak.length
-      ? 'Cần luyện thêm: ' + weak.map(function (x) { return 'Màn ' + x.l.n + ' – ' + x.l.title + ' (' + Math.round(x.acc * 100) + '% đúng)'; }).join(' · ')
-      : (total ? 'Bé làm tốt ở mọi màn đã chơi. 👏' : 'Chưa có dữ liệu – hãy chơi vài màn nhé!');
+    const weak = C.LEVELS.filter(function (l) { return isWeak(l.id); }).sort(function (x, y) {
+      const a = s.byTopic[x.id], c = s.byTopic[y.id];
+      return a.c / (a.c + a.w) - c.c / (c.c + c.w);
+    }).slice(0, 3);
+    const weakLine = $('report-weak');
+    weakLine.textContent = weak.length ? 'Cần luyện thêm: ' + weak.map(function (l) { return l.icon + ' Màn ' + l.n + ': ' + l.title; }).join(', ') : '';
+    weakLine.hidden = !weak.length;
     const pool = Store.reviewPool();
     $('report-review').innerHTML = pool.length
-      ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + ' lần</span></div>'; }).join('')
+      ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
       : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
-    $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name + ' (phụ huynh)';
+    $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name;
   }
   function openReport(from) {
     G.reportFrom = from || '';
@@ -2238,7 +2251,7 @@
     click('btn-report-levels', function () { openReport('levels'); });
     click('btn-report-back', function () { closeOverlay(); });
     click('btn-report-reset', function () {
-      adultGate(function () { Store.resetActive(); renderReport(); if (G.state === 'levels') renderLevels(); toast('🗑 Đã xóa tiến trình của ' + Players.active().name); });
+      adultGate(function () { Store.resetActive(); renderReport(); if (G.state === 'levels') renderLevels(); toast('Đã xóa tiến trình của ' + Players.active().name); });
     });
     // ----- cổng phụ huynh -----
     $('parent-gate-form').addEventListener('submit', function (e) {

@@ -347,6 +347,7 @@ html, body {
 .report-stat { background: var(--paper-soft); border-radius: 14px; padding: 8px 10px; text-align: center; }
 .report-stat .v { font-size: 26px; font-weight: 800; color: var(--orange-dark); line-height: 1.1; }
 .report-stat .k { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.report-weak { margin: 6px 0; padding: 8px 12px; border-radius: 14px; background: #fff4d6; color: #6a4a00; font-size: 16px; font-weight: 700; text-align: left; }
 .report-rows { display: grid; gap: 6px; }
 .report-row {
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px;
@@ -824,7 +825,6 @@ html, body {
   .say-btn { width: 46px; height: 46px; font-size: 20px; }
   .hint { font-size: 17px; padding: 5px 14px; }
   .screen-head h2 { font-size: 22px; }
-  .btn-text { display: none; }
   .player-chip { font-size: 16px; max-width: 200px; }
   .lesson-panel .screen-head, #levels .screen-head, #report .screen-head, #players .screen-head { flex-wrap: wrap; justify-content: space-between; }
   .lesson-panel .screen-head h2, #levels .screen-head h2, #report .screen-head h2, #players .screen-head h2 { flex: 1 1 100%; order: 1; }

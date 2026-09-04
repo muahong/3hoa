@@ -77,13 +77,23 @@ async function run1() {
     assert.ok(cta.ratio >= 4.5, 'chữ trên nút cam ≥ 4,5:1 – đo được ' + cta.ratio.toFixed(2) + ' với ' + cta.color);
     assert.ok(cta.linkH >= 44, 'liên kết chân trang cao ≥ 44 px: ' + cta.linkH);
     await shot('landscape-menu');
-    // Hiệu ứng: Ít ↔ Nhiều
-    await page.click('#menu .toggle[data-set="fx"]');
-    assert.equal(await hook('X.Store.data.fx'), 'lite');
+    // Máy đang bật "giảm chuyển động": nút ✨ phải báo đúng mức Ít và bị khóa (cài đặt máy thắng)
     assert.ok(await page.$eval('html', (e) => e.classList.contains('lite-fx')), 'lite-fx trên <html>');
     assert.equal(await hook('X.Motion.lite'), true);
-    await page.click('#menu .toggle[data-set="fx"]');
-    assert.equal(await hook('X.Store.data.fx'), 'full');
+    const fxBtn = await page.$eval('#menu .toggle[data-set="fx"]', (b) => ({ text: b.textContent, pressed: b.getAttribute('aria-pressed'), disabled: b.disabled }));
+    assert.equal(fxBtn.text, '✨ Hiệu ứng: Ít (theo cài đặt máy)', 'nút ✨ báo đúng mức đang dùng: ' + fxBtn.text);
+    assert.equal(fxBtn.pressed, 'false', 'aria-pressed của nút ✨ khớp trạng thái thật');
+    assert.equal(fxBtn.disabled, true, 'nút ✨ bị khóa khi máy ép giảm chuyển động');
+    // Máy chưa có giọng Việt: nút 🗣️ nói rõ và bị khóa, không được báo "Bật"
+    const voiceBtn = await page.$eval('#menu .toggle[data-set="voice"]', (b) => ({ text: b.textContent, pressed: b.getAttribute('aria-pressed'), disabled: b.disabled }));
+    if (!(await page.evaluate(() => !!(window.Voice && window.Voice.available)))) {
+      assert.equal(voiceBtn.text, '🗣️ Giọng đọc: chưa có giọng Việt', 'nút 🗣️ khi máy chưa có giọng Việt: ' + voiceBtn.text);
+      assert.equal(voiceBtn.pressed, 'false', 'aria-pressed của nút 🗣️ khớp trạng thái thật');
+      assert.equal(voiceBtn.disabled, true, 'nút 🗣️ bị khóa khi máy chưa có giọng Việt');
+    }
+    // Nút đầu tiên là "Âm thanh" – chữ "Hiệu ứng" chỉ dành cho nút ✨
+    const soundBtn = await page.$eval('#menu .toggle[data-set="sound"]', (b) => b.textContent);
+    assert.ok(soundBtn.indexOf('Âm thanh') >= 0 && soundBtn.indexOf('Hiệu ứng') < 0, 'nút âm thanh: ' + soundBtn);
     await page.click('#btn-play');
     await page.waitForTimeout(300);
     assert.ok(await vis(page, '#levels'), 'màn hình chọn màn');
@@ -557,11 +567,15 @@ async function run1() {
     assert.ok(rv.indexOf('8 giờ kém 15 phút') >= 0 && rv.indexOf('7 giờ 45 phút') >= 0, 'kho ôn lại hiện cách đọc: ' + rv);
     assert.ok(await page.$('#report-review svg.clock-svg'));
     assert.ok((await page.$eval('#report-stats', (e) => e.textContent)).indexOf('ván đã chơi') >= 0);
-    // "0 phút luyện tập" sau khi đã chơi là sai: dưới một phút thì ghi theo giây
+    // Bốn ô thống kê giống hệt năm game kia: ván đã chơi · trả lời đúng · phút luyện tập · sao dạng n/24
     const stats = await page.$$eval('#report-stats .report-stat', (ds) => ds.map((d) => ({ v: d.querySelector('.v').textContent, k: d.querySelector('.k').textContent })));
-    const time = stats.filter((x) => x.k.indexOf('luyện tập') >= 0)[0];
-    assert.ok(time && Number(time.v) > 0, 'thời gian luyện tập phải > 0: ' + JSON.stringify(stats));
-    // 📌 "Cần luyện thêm" chỉ dành cho màn thật sự yếu (sai ≥ 20 %), không phải màn đúng 89 %
+    assert.deepEqual(stats.map((x) => x.k), ['ván đã chơi', 'trả lời đúng', 'phút luyện tập', 'sao'], 'nhãn 4 ô thống kê: ' + JSON.stringify(stats));
+    assert.ok(/^\d+$/.test(stats[2].v), 'thời gian luyện tập ghi theo phút tròn: ' + stats[2].v);
+    assert.ok(/^\d+\/24$/.test(stats[3].v), 'ô sao ghi dạng n/24: ' + stats[3].v);
+    // Dòng tóm tắt và huy hiệu từng dòng luôn đi cùng nhau (cùng một quy tắc)
+    const weak0 = await page.evaluate(() => ({ hidden: document.getElementById('report-weak').hidden, badges: document.querySelectorAll('#report-levels .weak').length }));
+    assert.equal(weak0.hidden, weak0.badges === 0, 'dòng "Cần luyện thêm" ẩn/hiện đúng theo số màn yếu: ' + JSON.stringify(weak0));
+    // ⚠️ "Cần luyện thêm" chỉ dành cho màn thật sự yếu (đúng < 70 % trên ≥ 5 câu), không phải màn đúng 89 %
     await page.evaluate(() => {
       const X = window.__ThapDongHo, s = X.Store.p().stats;
       s.byTopic.L2 = { c: 16, w: 2, t: 0, plays: 2, cleared: 2 };
@@ -570,7 +584,14 @@ async function run1() {
     });
     const rows = await page.$$eval('#report-levels .report-row', (r) => r.map((x) => x.textContent.replace(/\s+/g, ' ')));
     assert.ok(!/Cần luyện thêm/.test(rows[1]), 'đúng 89 % không phải "cần luyện thêm": ' + rows[1]);
-    assert.ok(/Cần luyện thêm/.test(rows[2]), 'đúng 56 % thì phải nhắc phụ huynh: ' + rows[2]);
+    assert.ok(/⚠️ Cần luyện thêm/.test(rows[2]), 'đúng 56 % thì phải nhắc phụ huynh: ' + rows[2]);
+    const weakLine = await page.$eval('#report-weak', (e) => ({ text: e.textContent, hidden: e.hidden }));
+    assert.equal(weakLine.hidden, false, 'có màn yếu thì hiện dòng "Cần luyện thêm"');
+    assert.ok(/^Cần luyện thêm: /.test(weakLine.text) && weakLine.text.indexOf('Màn 3') >= 0 && weakLine.text.indexOf('Màn 2') < 0,
+      'dòng tóm tắt chỉ nêu màn yếu: ' + weakLine.text);
+    // Tiêu đề mục ôn lại và nút xóa tiến trình dùng đúng một cách nói ở cả sáu game
+    assert.equal(await page.$eval('#report-review-h', (e) => e.textContent), '📝 Cần ôn lại');
+    assert.equal(await page.$eval('#btn-report-reset', (e) => e.textContent), '🗑 Xóa tiến trình của Bé');
     await shot('landscape-report');
     await page.click('#btn-report-back');
     await page.waitForTimeout(300);
@@ -726,6 +747,7 @@ async function run2() {
     assert.ok(/1\.?200/.test(rows[0]) && /đã chơi 2 lần/.test(rows[0]) && !/chưa chơi/.test(rows[0]), 'màn 1 (dữ liệu cũ): ' + rows[0]);
     assert.ok(/chưa chơi/.test(rows[2]), 'màn chưa từng chơi vẫn ghi "chưa chơi": ' + rows[2]);
     assert.ok(!/Cần luyện thêm/.test(rows.join(' ')), 'chưa đủ câu thì chưa gắn nhãn cần luyện thêm');
+    assert.equal(await page.$eval('#report-weak', (e) => e.hidden), true, 'hồ sơ chưa có dữ liệu thì ẩn hẳn dòng "Cần luyện thêm"');
     await shot('legacy-report');
   }, { initScript: "localStorage.setItem('thap-dong-ho-v1', " + JSON.stringify(JSON.stringify(legacy)) + ");", reducedMotion: 'reduce' });
   const ok1 = assertClean(log, 'run 2a – di trú dữ liệu cũ');

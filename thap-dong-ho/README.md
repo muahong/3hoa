@@ -66,3 +66,12 @@ Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất đị
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (hiện là `thap-dong-ho-v4`, lần sau đổi thành `thap-dong-ho-v5`) để thiết bị đã cài nhận bản mới.
 - **Ít hiệu ứng**: nút ✨ Hiệu ứng: Nhiều/Ít trên trang chính (và tự động khi hệ thống bật "giảm chuyển động") giảm hạt, tắt rung/chớp màn hình, tắt pháo giấy.
 - **Điện thoại dựng đứng**: cụm ◀ ⬇ ▶ được thu gọn còn mỗi nút 💡 đặt bên lề trái (chạm thẳng vào cột để đưa đồng hồ tới, chạm lần nữa để thả) – nhờ vậy ô bảng rộng thêm khoảng 30 % và chữ trên đĩa đáp án đọc được. Máy tính bảng và máy tính vẫn có đủ bốn nút.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```
+node --test tests/thap-dong-ho.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/thap-dong-ho.e2e.js
+```

@@ -2189,6 +2189,8 @@
   function welcome() {
     if (G.welcomed || !window.Players) return;
     G.welcomed = true;
+    // Nhiều máy không có giọng Việt: lời chào vẫn phải hiện thành chữ
+    toast('Chào ' + Players.active().name + ' 👋');
     Voice.say('Chào ' + Players.active().name + '! Cùng bảo vệ hành tinh Ba Hoa nào!');
   }
 
@@ -2201,25 +2203,48 @@
     return esc(q.text).replace('?', '<b>' + esc(q.answer) + '</b>');
   }
 
+  /** Khóa thống kê của một màn: màn luyện bảng dùng chung khóa của bảng đó. */
+  function topicKey(l) { return l.table ? 't' + l.table : l.id; }
+
+  /** "Cần luyện thêm": đã làm ≥ 5 câu mà đúng dưới 70% (cùng một quy tắc ở cả sáu game). */
+  function isWeak(l) {
+    const t = Store.p().stats.byTopic[topicKey(l)];
+    if (!t) return false;
+    const n = t.c + t.w;
+    return n >= 5 && t.c / n < 0.7;
+  }
+
+  /** Tối đa 3 màn yếu nhất (tỉ lệ đúng thấp nhất trước) để ghi thành một dòng dưới ô thống kê. */
+  function weakTopics() {
+    const st = Store.p().stats.byTopic;
+    const acc = function (l) { const t = st[topicKey(l)]; return t.c / (t.c + t.w); };
+    return T.TABLE_LEVELS.concat(T.CHALLENGE_LEVELS).filter(isWeak)
+      .sort(function (x, y) { return acc(x) - acc(y); })
+      .slice(0, 3).map(function (l) { return l.icon + ' ' + l.title; });
+  }
+
   function reportRow(l) {
     const any = Store.bestFor(l.id);
     const st = Store.p().stats.byTopic;
     // Màn luyện bảng: lấy số liệu của chính bảng đó (mọi màn có bảng ấy đều cộng vào).
     // Màn thử thách: chỉ lấy số liệu của riêng màn, chưa chơi thì ghi "chưa chơi".
-    const t = l.table ? st['t' + l.table] : st[l.id];
+    const t = st[topicKey(l)];
     const c = t ? t.c : 0, w = t ? t.w : 0;
     const n = c + w;
     return '<div class="report-row"><span class="t">' + esc(l.icon + ' ' + l.title) + '</span>' +
       '<span class="stars" aria-label="' + any.stars + ' sao">' + starsHtml(any.stars) + '</span>' +
       '<span>🏆 ' + fmt(any.best) + '</span>' +
       (n ? '<span>' + Math.round(c / n * 100) + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
-      (l.table && mastered('t' + l.table) ? '<span class="mastered">✅ Đã thuộc</span>' : '') + '</div>';
+      (l.table && mastered('t' + l.table) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
+      (isWeak(l) ? '<span class="warn">⚠️ Cần luyện thêm</span>' : '') + '</div>';
   }
 
   function renderReport() {
     if (!ui.report) return;
     const b = Store.p(), st = b.stats;
     $('report-title').textContent = '📊 Kết quả của ' + activeName();
+    const resetBtn = $('btn-report-reset');
+    if (resetBtn) resetBtn.textContent = '🗑 Xóa tiến trình của ' + activeName();
     const total = st.correct + st.wrong, acc = total ? Math.round(st.correct / total * 100) : 0;
     let stars = 0;
     T.TABLE_LEVELS.concat(T.CHALLENGE_LEVELS).forEach(function (l) { stars += Store.bestFor(l.id).stars; });
@@ -2228,11 +2253,18 @@
       '<div class="report-stat"><div class="v">' + acc + '%</div><div class="k">trả lời đúng</div></div>' +
       '<div class="report-stat"><div class="v">' + Math.round(st.seconds / 60) + '</div><div class="k">phút luyện tập</div></div>' +
       '<div class="report-stat"><div class="v">' + stars + '/45</div><div class="k">sao</div></div>';
+    // Dòng "Cần luyện thêm" ngay dưới ô thống kê; chưa đủ 5 câu ở màn nào thì ẩn hẳn
+    const weak = weakTopics(), weakEl = $('report-weak');
+    if (weakEl) {
+      weakEl.textContent = weak.length ? 'Cần luyện thêm: ' + weak.join(', ') : '';
+      weakEl.hidden = !weak.length;
+    }
     $('report-levels').innerHTML = T.TABLE_LEVELS.map(reportRow).join('') + T.CHALLENGE_LEVELS.map(reportRow).join('');
-    const weak = weakestTable(), wl = weak ? T.levelById(weak) : null;
+    // Tiêu đề mục ôn lại giữ đúng một cách nói ở cả sáu game
+    const reviewH = $('report-review-h');
+    if (reviewH) reviewH.textContent = '📝 Cần ôn lại';
     const pool = Store.reviewPool();
     $('report-review').innerHTML =
-      (wl && wl.table ? '<div class="report-row weak"><span class="t">Bảng nên luyện thêm: ' + esc(wl.title) + '</span></div>' : '') +
       (pool.length
         ? pool.slice(0, 12).map(function (it) {
           return '<div class="report-row"><span class="t">' + reviewHtml(it) + '</span><span>✖ ' + it.n + '</span></div>';
@@ -2339,12 +2371,17 @@
     document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu') welcome(); }, { passive: true, capture: true });
     document.addEventListener('keydown', function (e) {
       const gateOpen = !!(ui.parentGate && !ui.parentGate.classList.contains('hidden'));
-      if (e.target && e.target.tagName === 'INPUT') {              // đang gõ tên / cổng phụ huynh
-        // Escape ở cổng phụ huynh chỉ đóng cổng (như nút "Hủy"), bảng kết quả vẫn mở
-        if (e.key === 'Escape') { if (gateOpen) closeGate(); else closeOverlays(); e.target.blur(); }
+      // Escape luôn đóng cổng phụ huynh, kể cả khi con trỏ đang ở trong ô nhập (bảng kết quả vẫn mở)
+      if (e.key === 'Escape' && gateOpen) {
+        closeGate();
+        if (e.target && e.target.blur) e.target.blur();
+        e.preventDefault();
         return;
       }
-      if (e.key === 'Escape' && gateOpen) { closeGate(); return; }
+      if (e.target && e.target.tagName === 'INPUT') {              // đang gõ tên / cổng phụ huynh
+        if (e.key === 'Escape') { closeOverlays(); e.target.blur(); }
+        return;
+      }
       if (e.key === 'Escape' && anyOverlay() === 'report') { closeReport(); return; }
       if (e.key === 'Escape' && anyOverlay()) { closeOverlays(); return; }
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
@@ -2374,20 +2411,23 @@
 
   function renderAudioToggles() {
     const defs = [
-      { key: 'sound', on: '🔊 Hiệu ứng: Bật', off: '🔇 Hiệu ứng: Tắt' },
+      { key: 'sound', on: '🔊 Âm thanh: Bật', off: '🔇 Âm thanh: Tắt' },
       { key: 'music', on: '🎵 Nhạc nền: Bật', off: '🎵 Nhạc nền: Tắt' },
-      { key: 'voice', on: '🗣️ Đọc phép tính: Bật', off: '🗣️ Đọc phép tính: Tắt' },
+      { key: 'voice', on: '🗣️ Giọng đọc: Bật', off: '🗣️ Giọng đọc: Tắt' },
       { key: 'fx', on: '✨ Hiệu ứng: Nhiều', off: '✨ Hiệu ứng: Ít' }
     ];
     const boxes = document.querySelectorAll('[data-audio-toggles]');
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
         const noVoice = d.key === 'voice' && !Voice.available;
-        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : (Store.data[d.key] !== false && !noVoice);
+        // Máy đang bật "giảm chuyển động": hiệu ứng luôn ở mức Ít, công tắc phải báo đúng như vậy và bị khóa
+        const forced = d.key === 'fx' && Motion.lite && Store.data.fx !== 'lite';
+        const on = d.key === 'fx' ? !Motion.lite : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
-        if (noVoice) label = '🗣️ Đọc phép tính: chưa có giọng Việt';
+        if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
+        if (forced) label = '✨ Hiệu ứng: Ít (theo cài đặt máy)';
         return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + (d.key === 'fx' ? ' fx' : '') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' +
-          (noVoice ? ' disabled' : '') + '>' + label + '</button>';
+          (noVoice || forced ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
@@ -2484,8 +2524,9 @@
     });
 
     /* ---- Kết quả của bé (phụ huynh) ---- */
-    click('btn-report', function () { openReport('menu'); });
-    click('btn-players-report', function () { openReport('players'); });
+    click('btn-report-menu', function () { openReport('menu'); });
+    click('btn-report-levels', function () { openReport('levels'); });
+    click('btn-report', function () { openReport('players'); });
     click('btn-report-back', function () { closeReport(); });
     click('btn-report-reset', function () {
       adultGate(function () {

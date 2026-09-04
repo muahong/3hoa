@@ -278,11 +278,14 @@ async function run1() {
     assert.ok((await page.locator('#report-levels .report-row').count()) >= 8);
     assert.ok((await page.locator('#report-review .report-row').count()) >= 1);
     assert.ok((await page.textContent('#report-stats')).includes('1'));
+    // Ô thời gian luôn là số phút tròn (dùng chung cho cả sáu game), không bao giờ là giây hay số lẻ
     const mins = await page.evaluate(() => {
       const box = Array.from(document.querySelectorAll('#report-stats .report-stat')).find((el) => el.textContent.indexOf('phút luyện tập') >= 0);
-      return { v: box.querySelector('.v').textContent, sec: window.__MeCung.Store.p().stats.seconds };
+      const star = Array.from(document.querySelectorAll('#report-stats .report-stat')).find((el) => el.textContent.indexOf('sao') >= 0);
+      return { v: box.querySelector('.v').textContent, sec: window.__MeCung.Store.p().stats.seconds, star: star.querySelector('.v').textContent };
     });
-    assert.ok(mins.sec > 0 && Number(mins.v) >= 1, 'ván ngắn vẫn hiện ít nhất 1 phút luyện tập: ' + JSON.stringify(mins));
+    assert.ok(mins.sec > 0 && Number(mins.v) === Math.round(mins.sec / 60), 'phút luyện tập làm tròn theo phút: ' + JSON.stringify(mins));
+    assert.match(mins.star, /^\d+\/24$/, 'ô sao ở dạng n/24: ' + mins.star);
     await shot('report');
     await page.click('#btn-report-back');
     assert.ok(!(await H.visible('#report')) && (await H.visible('#levels')), 'quay lại chọn màn');
@@ -359,15 +362,14 @@ async function run1() {
     await page.click('#btn-levels-back');
     await H.waitState('menu');
 
-    // 8. Nút hiệu ứng (✨) và lớp lite-fx
+    // 8. Máy đang bật "giảm chuyển động": nút ✨ Hiệu ứng phải báo đúng mức Ít và bị khóa (không nói dối "Nhiều")
     const fxBtn = page.locator('#menu .toggle[data-set="fx"]');
-    assert.equal(await fxBtn.getAttribute('aria-pressed'), 'true');
-    await fxBtn.click();
-    assert.equal(await hook('X.Store.data.fx'), 'lite');
-    assert.equal(await page.locator('#menu .toggle[data-set="fx"]').getAttribute('aria-pressed'), 'false');
+    assert.equal(await fxBtn.getAttribute('aria-pressed'), 'false');
+    assert.equal(await fxBtn.isDisabled(), true, 'giảm chuyển động thì nút hiệu ứng bị khóa');
+    const fxLabel = await fxBtn.textContent();
+    assert.ok(fxLabel.includes('Ít (theo cài đặt máy)'), 'nhãn nút hiệu ứng: ' + fxLabel);
     assert.ok(await page.evaluate(() => document.documentElement.classList.contains('lite-fx')));
-    await page.locator('#menu .toggle[data-set="fx"]').click();
-    assert.equal(await hook('X.Store.data.fx'), 'full');
+    assert.equal(await hook('X.Store.data.fx'), 'full', 'nút bị khóa nên không đổi thiết lập của máy');
     assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('me-cung-dong-ho-v1')).fx), 'full');
     await page.locator('#menu .toggle[data-set="music"]').click();
     assert.equal(await hook('X.Store.data.music'), false);
@@ -873,7 +875,7 @@ async function run7() {
     // C7: nhãn nhỏ trên thẻ màn (kỷ lục, "Lớp n") cũng phải đủ tương phản 4,5:1
     const small = await page.evaluate(() => {
       const of = (sel) => { const el = document.querySelector(sel); const c = getComputedStyle(el); const p = getComputedStyle(el.closest('.level-card')); return { fg: c.color, bg: c.backgroundColor === 'rgba(0, 0, 0, 0)' ? p.backgroundColor : c.backgroundColor, size: parseFloat(c.fontSize) }; };
-      return { best: of('.level-card .best'), grade: of('.level-card .grade'), mastery: of('.level-card .mastery') };
+      return { best: of('.level-card .best'), grade: of('.level-card .grade'), mastery: of('.level-card .mastered') };
     });
     Object.keys(small).forEach((k) => {
       const c = small[k], bg = c.bg === 'rgba(0, 0, 0, 0)' ? 'rgb(255, 255, 255)' : c.bg;
@@ -882,8 +884,8 @@ async function run7() {
     console.log('tương phản nhãn thẻ màn: kỷ lục=' + contrast(small.best.fg, 'rgb(255, 255, 255)').toFixed(2) + ' lớp=' + contrast(small.grade.fg, small.grade.bg).toFixed(2));
 
     const mast = await page.evaluate(() => ({
-      l1: (document.querySelector('.level-card[data-id="l1"] .mastery') || {}).textContent || '',
-      l2: !!document.querySelector('.level-card[data-id="l2"] .mastery')
+      l1: (document.querySelector('.level-card[data-id="l1"] .mastered') || {}).textContent || '',
+      l2: !!document.querySelector('.level-card[data-id="l2"] .mastered')
     }));
     assert.ok(mast.l1.indexOf('Đã thuộc') >= 0, 'màn 1 có huy hiệu "Đã thuộc": ' + mast.l1);
     assert.equal(mast.l2, false, 'màn chưa đạt 90% thì không có huy hiệu');
@@ -894,13 +896,35 @@ async function run7() {
     const rep = await page.evaluate(() => ({
       mastered: document.querySelectorAll('#report-levels .mastered').length,
       weak: document.getElementById('report-weak').textContent,
+      weakHidden: document.getElementById('report-weak').hidden,
+      weakBadges: Array.from(document.querySelectorAll('#report-levels .weak')).map((el) => el.textContent),
       review: document.getElementById('report-review').textContent
     }));
     assert.equal(rep.mastered, 1, 'báo cáo có đúng một màn "Đã thuộc"');
+    assert.equal(rep.weakHidden, false, 'có màn yếu thì dòng "Cần luyện thêm" phải hiện');
+    assert.ok(rep.weak.startsWith('Cần luyện thêm: '), 'dòng cần luyện thêm: ' + rep.weak);
     assert.ok(rep.weak.indexOf('Màn 2') > 0, 'báo cáo nêu màn cần luyện thêm: ' + rep.weak);
+    assert.deepEqual(rep.weakBadges, ['⚠️ Cần luyện thêm'], 'đúng một dòng có huy hiệu cần luyện thêm');
     assert.ok(rep.review.length > 5, 'báo cáo có danh sách cần ôn lại');
     await page.waitForTimeout(450);
     await shot('report-mastery');
+
+    // Máy KHÔNG bật "giảm chuyển động": nút ✨ Hiệu ứng bấm được, đổi qua lại Nhiều ⇄ Ít
+    await page.click('#btn-report-back');
+    await page.waitForTimeout(200);
+    assert.ok(!(await H.visible('#report')), 'đóng bảng kết quả về màn chọn màn');
+    await page.click('#btn-levels-back');
+    await H.waitState('menu');
+    const fxBtn = page.locator('#menu .toggle[data-set="fx"]');
+    assert.equal(await fxBtn.getAttribute('aria-pressed'), 'true');
+    assert.equal(await fxBtn.isDisabled(), false);
+    await fxBtn.click();
+    assert.equal(await hook('X.Store.data.fx'), 'lite');
+    assert.equal(await page.locator('#menu .toggle[data-set="fx"]').getAttribute('aria-pressed'), 'false');
+    assert.ok(await page.evaluate(() => document.documentElement.classList.contains('lite-fx')));
+    await page.locator('#menu .toggle[data-set="fx"]').click();
+    assert.equal(await hook('X.Store.data.fx'), 'full');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('me-cung-dong-ho-v1')).fx), 'full');
     console.log('perf (lượt 7) =', JSON.stringify(await hook('X.G.perf')));
   }, { viewport: { width: 1180, height: 820 } });
   return assertClean(log, 'me-cung run 7 (đã thuộc, ôn lại, ăn mừng, buổi & 24 giờ, nét mặt)');

@@ -586,7 +586,7 @@ async function answerGate(page, hook) {
     await waitOver(page);
     await page.click('#btn-home');
     await page.waitForTimeout(250);
-    await page.click('#btn-report');
+    await page.click('#btn-report-menu');
     await page.waitForTimeout(250);
     ok(await vis(page, '#report'), 'màn báo cáo mở ra');
     ok((await text(page, '#report-title')).indexOf('Bé') > 0, 'tiêu đề có tên bé');
@@ -742,7 +742,7 @@ async function answerGate(page, hook) {
     // Escape đóng màn báo cáo
     await page.click('#btn-home');
     await page.waitForTimeout(200);
-    await page.click('#btn-report');
+    await page.click('#btn-report-menu');
     await page.waitForTimeout(200);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(250);
@@ -893,8 +893,9 @@ async function answerGate(page, hook) {
     ok(menu.sw <= menu.cw + 1, 'bảng menu không tràn ngang (' + menu.sw + '/' + menu.cw + ')');
     ok(menu.durBottom <= menu.vh, 'nhóm chọn thời gian nằm trong màn hình (đáy ' + Math.round(menu.durBottom) + ' ≤ ' + menu.vh + ')');
     ok(menu.footBottom <= menu.vh, 'dòng chân trang nằm trong màn hình (đáy ' + Math.round(menu.footBottom) + ')');
-    eq(menu.togRows, 2, '4 công tắc xếp vừa hai hàng nhờ nhãn ngắn');
-    ok(menu.togLabels.every((t) => t.indexOf(': Bật') < 0 && t.indexOf(': Tắt') < 0), 'nhãn công tắc rút gọn trên điện thoại (' + menu.togLabels.join(' · ') + ')');
+    ok(menu.togRows <= 3, '4 công tắc xếp gọn trong tối đa ba hàng (' + menu.togRows + ')');
+    ok(menu.togLabels.some((t) => t.indexOf('🔊 Âm thanh') === 0) && menu.togLabels.some((t) => t.indexOf('✨ Hiệu ứng') === 0),
+      'nhãn công tắc giữ nguyên như các game khác trên điện thoại (' + menu.togLabels.join(' · ') + ')');
     ok(menu.linkH >= 44 && menu.linkW >= 44, 'liên kết chân trang đủ 44×44 (' + Math.round(menu.linkW) + '×' + Math.round(menu.linkH) + ')');
     await shot('phone-menu');
 
@@ -923,7 +924,7 @@ async function answerGate(page, hook) {
   for (const vp of [LAND, PHONE]) {
     log = await withGame('math-ninja', async ({ page, hook, shot }) => {
       console.log('[14b] tương phản báo cáo + nút bị khóa @' + vp.width + '×' + vp.height);
-      await page.click('#btn-report');
+      await page.click('#btn-report-menu');
       await page.waitForTimeout(350);
       ok(await vis(page, '#report'), 'màn báo cáo mở ra');
       ok(await page.evaluate(() => !!document.querySelector('#report-levels .mastered')), 'có huy hiệu "Đã thuộc" để đo');

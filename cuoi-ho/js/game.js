@@ -54,8 +54,9 @@
         Object.keys(src).forEach(function (id) {
           if (/^[A-Za-z0-9_-]{1,24}$/.test(id) && src[id] && typeof src[id] === 'object') Store.data.players[id] = Store.sanitize(src[id]);
         });
-      } else if (d.progress && typeof d.progress === 'object') {
-        // Di trú dữ liệu cũ (chưa có players): tiến trình cũ thuộc về bé mặc định p1
+      }
+      // Di trú dữ liệu cũ: players thiếu, rỗng hoặc chỉ toàn id sai → tiến trình cũ thuộc về bé mặc định p1
+      if (!Object.keys(this.data.players).length && d.progress && typeof d.progress === 'object') {
         this.data.players.p1 = this.sanitize(d.progress);
         this.save();
       }
@@ -2082,7 +2083,7 @@
         (rec.quiz ? '<span class="quiz-ok">✅ Đã hỏi<span class="long"> đáp</span></span>' : '') +
         '<div class="icon">' + l.icon + '</div>' +
         '<div class="name"><span class="num">Màn ' + l.n + ':</span> ' + esc(l.title) + '</div>' +
-        '<div class="desc">' + esc(l.desc) + (know ? ' <b class="mastered">🎓 Đã thuộc</b>' : '') + '</div>' +
+        '<div class="desc">' + esc(l.desc) + (know ? ' <b class="mastered">✅ Đã thuộc</b>' : '') + '</div>' +
         '<div class="meta"><span class="best">🏆 ' + fmt(rec.best) + '</span><span class="stars" aria-hidden="true">' + starsHtml(rec.stars) + '</span></div>' +
         (locked ? '<div class="lock"><div class="em">🔒</div><div class="lk-name">Màn ' + l.n + ': ' + esc(l.title) + '</div><div class="lk-how">Hoàn thành hỏi đáp màn ' + (prev ? prev.n : '') + ' để mở khóa</div></div>' : '') +
         '</div>';
@@ -2392,7 +2393,10 @@
   function welcome() {
     if (G.welcomed || !window.Players) return;
     G.welcomed = true;
-    Voice.say('Chào ' + Players.active().name + '! Cùng cưỡi hổ học xem đồng hồ nào!');
+    // Nhiều máy không có giọng Việt: lời chào vẫn phải hiện thành chữ
+    const name = Players.active().name;
+    toast('Chào ' + name + ' 👋');
+    Voice.say('Chào ' + name + '! Cùng cưỡi hổ học xem đồng hồ nào!');
   }
 
   /* ================= KẾT QUẢ CỦA BÉ (báo cáo cho phụ huynh) ================= */
@@ -2428,23 +2432,37 @@
       '<div class="report-stat"><div class="v">' + acc + '%</div><div class="k">trả lời đúng</div></div>' +
       '<div class="report-stat"><div class="v">' + Math.round(s.seconds / 60) + '</div><div class="k">phút luyện tập</div></div>' +
       '<div class="report-stat"><div class="v">' + stars + '/' + (L.LEVELS.length * 3) + '</div><div class="k">sao</div></div>';
+    // Chủ đề còn yếu: đã làm ≥ 5 câu mà đúng dưới 70% (dùng chung cho dòng tóm tắt và huy hiệu từng dòng)
+    const isWeak = function (id) {
+      const t = s.byTopic[id];
+      return !!(t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7);
+    };
+    const weak = L.LEVELS.filter(function (l) {
+      return isWeak(l.id);
+    }).sort(function (x, y) {
+      const a = s.byTopic[x.id], c = s.byTopic[y.id];
+      return a.c / (a.c + a.w) - c.c / (c.c + c.w);
+    }).slice(0, 3);
+    const weakLine = $('report-weak');
+    weakLine.textContent = weak.length ? 'Cần luyện thêm: ' + weak.map(function (l) { return l.icon + ' ' + l.title; }).join(', ') : '';
+    weakLine.hidden = !weak.length;
     $('report-levels').innerHTML = L.LEVELS.map(function (l) {
       const r = Store.lv(l.id), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
       return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
         '<span class="stars" aria-label="' + r.stars + ' sao">' + starsHtml(r.stars) + '</span><span>🏆 ' + fmt(r.best) + '</span>' +
         (n ? '<span>' + Math.round(t.c / n * 100) + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
         (mastered(l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
+        (isWeak(l.id) ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') +
         (r.quiz ? '<span class="quiz-tag">❓ đã hỏi đáp</span>' : '') + '</div>';
     }).join('');
-    // Chủ đề yếu nhất: đã làm ≥ 5 câu mà đúng dưới 70%
-    const weak = L.LEVELS.filter(function (l) { const t = s.byTopic[l.id]; return t && t.c + t.w >= 5 && t.c / (t.c + t.w) < 0.7; })
-      .map(function (l) { return l.icon + ' ' + l.title; });
+    // Tiêu đề mục ôn lại giữ đúng một cách nói ở cả sáu game
+    const reviewH = $('report-review-h');
+    if (reviewH) reviewH.textContent = '📝 Cần ôn lại';
     const pool = Store.reviewPool();
-    $('report-review').innerHTML =
-      (weak.length ? '<div class="report-row weak"><span class="t">Chủ đề cần luyện thêm: ' + esc(weak.join(', ')) + '</span></div>' : '') +
-      (pool.length
-        ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
-        : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>');
+    $('report-review').innerHTML = pool.length
+      ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
+      : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+    $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name;
   }
 
   function openReport(from) {
@@ -2464,7 +2482,7 @@
     if (!ui.parentGate) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
     const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
     Gate.cb = cb; Gate.answer = a * b;
-    $('parent-gate-q').textContent = 'Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
+    $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
     $('parent-gate-input').value = '';
     ui.parentGate.classList.remove('hidden');
     setTimeout(function () { try { $('parent-gate-input').focus(); } catch (e) { /* bỏ qua */ } }, 50);
@@ -2564,7 +2582,7 @@
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('dblclick', function (e) { if (e.target === canvas) e.preventDefault(); });
     document.addEventListener('contextmenu', function (e) { if (e.target === canvas) e.preventDefault(); });
-    document.addEventListener('pointerdown', function () { Sfx.unlock(); }, { passive: true, capture: true });
+    document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu') welcome(); }, { passive: true, capture: true });
     document.addEventListener('keydown', onKey);
   }
 

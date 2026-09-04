@@ -925,7 +925,7 @@ async function answerGate(page, hook, expr) {
     await page.waitForTimeout(250);
     await page.click('#btn-play');
     await page.waitForTimeout(300);
-    eq(await count(page, '.level-card[data-id="l5"] .mastered'), 1, 'thẻ màn 5 có huy hiệu 🎓 Đã thuộc');
+    eq(await count(page, '.level-card[data-id="l5"] .mastered'), 1, 'thẻ màn 5 có huy hiệu ✅ Đã thuộc');
     eq(await count(page, '.level-card[data-id="l1"] .mastered'), 0, 'màn chưa đủ số câu thì không có huy hiệu');
     ok((await page.evaluate(() => document.querySelector('.level-card[data-id="l5"]').getAttribute('aria-label'))).indexOf('đã thuộc') > 0, 'aria-label nói rõ "đã thuộc"');
     await page.click('#btn-report-levels');

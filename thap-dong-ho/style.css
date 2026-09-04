@@ -704,6 +704,8 @@ html, body {
 .report-stat { background: var(--paper-soft); border-radius: 14px; padding: 8px 10px; text-align: center; }
 .report-stat .v { font-size: 26px; font-weight: 800; color: var(--orange-dark); line-height: 1.1; }
 .report-stat .k { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+/* Dòng "Cần luyện thêm" ngay dưới ô thống kê (ẩn hẳn khi bé chưa làm đủ câu) */
+.report-panel .report-weak { margin: 6px 0; padding: 8px 12px; border-radius: 14px; background: #fff4d6; color: #6a4a00; font-size: 16px; font-weight: 700; text-align: left; }
 .report-rows { display: grid; gap: 6px; }
 .report-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 12px; background: var(--paper-soft); font-weight: 700; font-size: 16px; flex-wrap: wrap; }
 .report-row .t { flex: 1; min-width: 140px; }

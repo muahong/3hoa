@@ -956,6 +956,7 @@ html, body {
 .report-row .stars { color: #ffbf1f; letter-spacing: 2px; }
 .report-row .stars .off { color: #d5d9e6; }
 .report-row .mastered { color: #05603f; font-size: 0.8rem; }
+.report-row .weak { color: #8a3b00; font-size: 0.8rem; }
 .report-row .muted { color: var(--ink-soft); font-weight: 700; opacity: 0.75; }
 /* Cảnh báo còn 1 tim (tắt khi bé chọn Hiệu ứng: Ít) */
 .hearts.low span:not(.lost) { animation: heart-low 1s ease-in-out infinite; }

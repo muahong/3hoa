@@ -235,7 +235,7 @@
     countdown: $('countdown'), pause: $('pause'), gameover: $('gameover'), quiz: $('quiz'), toast: $('toast'),
     score: $('hud-score'), stage: $('hud-stage'), combo: $('hud-combo'), question: $('hud-question'), visual: $('hud-visual'), prompt: $('hud-prompt'),
     timer: $('hud-timer'), timerFill: $('hud-timer-fill'), time: $('hud-time'), hearts: $('hud-hearts'), hint: $('hud-hint'), tapTip: $('tap-tip'),
-    btnHint: $('btn-hint'), btnPractice: $('btn-practice'), btnDrill: $('btn-drill'),
+    btnHint: $('btn-hint'), btnPause: $('btn-pause'), btnPractice: $('btn-practice'), btnDrill: $('btn-drill'),
     countNum: $('count-num'), levelGrid: $('level-grid'), journeyStats: $('journey-stats'),
     lessonTitle: $('lesson-title'), slideVisual: $('slide-visual'), slideText: $('slide-text'), slideDots: $('slide-dots'),
     slidePrev: $('btn-slide-prev'), slideNext: $('btn-slide-next'), lessonStart: $('btn-lesson-start'), lessonSkip: $('btn-lesson-skip'), lessonBack: $('btn-lesson-back'),
@@ -256,6 +256,15 @@
     SCREENS.forEach(function (k) { if (ui[k]) ui[k].classList.toggle('hidden', k !== name); });
   }
   function showHud(on) { ui.hud.classList.toggle('hidden', !on); }
+  /** Bảng kết quả/hỏi đáp/tạm dừng đang che ván chơi: ⏸ và 💡 bấm vào không có tác dụng → làm mờ HUD và tắt hẳn hai nút. */
+  function lockHud(on) {
+    ui.hud.classList.toggle('locked', !!on);
+    if (ui.btnPause) ui.btnPause.disabled = !!on;
+    if (ui.btnHint) {
+      const gate = curGate();
+      ui.btnHint.disabled = !!on || !(G.state === 'playing' && G.phase === 'choose' && gate && !gate.hinted);
+    }
+  }
   function toast(msg, ms) {
     ui.toast.textContent = msg;
     ui.toast.classList.add('show');
@@ -812,7 +821,9 @@
   }
 
   function loseHeart() {
-    G.hearts = Math.max(G.practice ? 1 : 0, G.hearts - 1);   // tập luyện: luôn còn 1 tim, ván không bao giờ kết thúc sớm
+    // Tập luyện / luyện câu sai: KHÔNG trừ tim (đúng như nhãn "không mất tim"), ván không bao giờ kết thúc sớm
+    if (G.practice) { Sfx.play('heart'); return; }
+    G.hearts = Math.max(0, G.hearts - 1);
     ui.hearts.classList.remove('hit');
     void ui.hearts.offsetWidth;
     ui.hearts.classList.add('hit');
@@ -1257,8 +1268,11 @@
       c.beginPath(); c.arc(x, y, r * 1.12, 0, TAU); c.stroke();
       c.setLineDash([]);
       drawBadge(c, x + r * 0.8, y - r * 0.8, r * 0.3, '#06d6a0', true);
-    } else if (rg.flare > 0 || (gate.evaluated && gate.chosen === lane)) {
-      // Dấu ✕ đỏ ở lại trên vòng bé chọn sai (giống dấu ✓ ở vòng đúng): phân biệt được mà không cần nhìn màu
+    } else if (gate.evaluated && gate.result === 'ok' && gate.chosen === lane) {
+      // Chọn ĐÚNG: dấu ✓ xanh nở ra cùng vòng lửa vừa tắt (không bao giờ đóng dấu ✕ lên câu trả lời đúng)
+      drawBadge(c, x + r * 0.8, y - r * 0.8, r * 0.3, '#06d6a0', true);
+    } else if (gate.evaluated && gate.result === 'bad' && gate.chosen === lane) {
+      // Dấu ✕ đỏ ở lại trên vòng bé chọn SAI (giống dấu ✓ ở vòng đúng): phân biệt được mà không cần nhìn màu
       drawBadge(c, x + r * 0.8, y - r * 0.8, r * 0.3, '#ef476f', false);
     }
     c.globalAlpha = 1;
@@ -1664,21 +1678,29 @@
     ui.visual.innerHTML = vis;
     ui.visual.hidden = !vis;
     ui.question.classList.remove('ok', 'shake', 'pop', 'zoomed');
+    syncZoomAria();
     void ui.question.offsetWidth;
     ui.question.classList.add('pop');
     ui.timer.classList.remove('idle');
     ui.hint.hidden = true;
   }
 
+  /** Thẻ câu hỏi là một nút (chạm hoặc Enter/Space/phím Z): trạng thái phóng to phải báo cho trình đọc màn hình. */
+  function syncZoomAria() {
+    if (ui.question) ui.question.setAttribute('aria-pressed', ui.question.classList.contains('zoomed') ? 'true' : 'false');
+  }
+
   /** Chạm vào thẻ câu hỏi để phóng to đồng hồ (kim to, dễ đọc); đo lại bố cục vì HUD cao hơn. */
   function toggleZoom() {
     if (G.state !== 'playing' || !G.level) return;   // sau bảng kết quả/tạm dừng thẻ bị che → chạm vào không được dựng lại bố cục
     ui.question.classList.toggle('zoomed');
+    syncZoomAria();
     layout();
   }
   function unzoom() {
     if (!ui.question.classList.contains('zoomed')) return;
     ui.question.classList.remove('zoomed');
+    syncZoomAria();
     layout();
   }
 
@@ -1759,6 +1781,8 @@
     }
     if (ui.btnHint) ui.btnHint.disabled = true;
     ui.question.classList.remove('zoomed');
+    syncZoomAria();
+    lockHud(false);
     ui.combo.hidden = true;
     ui.hint.hidden = true;
     ui.tapTip.hidden = true;
@@ -1851,12 +1875,14 @@
     Voice.stop();
     Music.setDuck('pause', 0.25);
     $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · Vòng ' + Math.min(G.gates.length, G.gateIdx + 1) + '/' + G.gates.length;
+    lockHud(true);
     showScreen('pause');
   }
 
   function resumeGame() {
     if (G.state !== 'paused') return;
     G.state = 'playing';
+    lockHud(false);
     showScreen(null);
     Sfx.unlock();
     Music.setDuck('pause', null);
@@ -1981,6 +2007,7 @@
     G.resultShown = true;
     persistResults();
     renderResults();
+    lockHud(true);
     showScreen('gameover');
     if (G.drill) toast('Đã luyện xong ' + G.gates.length + ' câu! 🔁', 2600);
     if (G.isRecord) { Sfx.play('record'); spawnConfetti(100); Voice.say('Kỷ lục mới! Giỏi quá!', { queue: true }); }
@@ -2164,6 +2191,7 @@
     }
     Quiz.list = list;
     G.state = 'quiz';
+    lockHud(true);
     ui.quizDone.hidden = true;
     ui.quizBody.hidden = false;
     showScreen('quiz');
@@ -2515,14 +2543,17 @@
   /** Con trỏ bàn phím: đi tiếp một bậc, bỏ qua vòng đã tắt vì gợi ý (không để bé kẹt ở vòng vô hình). */
   function moveCursor(d) {
     const gate = curGate();
+    const live = function (i) { return !gate || gate.rings[i].burst < 0; };   // vòng đã tắt (do 💡 Gợi ý) thì không chọn được
     let n = G.cursor;
     for (let i = 0; i < LANES; i++) {
       const t = clamp(n + d, 0, LANES - 1);
       if (t === n) break;
       n = t;
-      if (!gate || gate.rings[n].burst < 0) break;
+      if (live(n)) break;
     }
-    G.cursor = n;
+    if (live(n)) { G.cursor = n; return; }
+    if (live(G.cursor)) return;                                              // cả hướng đó đã tắt -> giữ nguyên chỗ cũ
+    for (let i = 0; i < LANES; i++) if (live(i)) { G.cursor = i; return; }   // đang đứng ở vòng đã tắt -> nhảy tới vòng còn sáng
   }
 
   function bindInput() {
@@ -2570,6 +2601,9 @@
     }
     if (G.state === 'playing' && G.phase === 'learn') { if (e.key === 'Enter' || e.key === ' ') { skipLearn(); e.preventDefault(); } return; }
     if (G.state !== 'playing' || G.phase !== 'choose') return;
+    // Thẻ câu hỏi đang được chọn bằng bàn phím: Enter/Space phóng to đồng hồ thay vì chọn vòng lửa
+    if ((e.key === 'Enter' || e.key === ' ') && ui.question && document.activeElement === ui.question) { toggleZoom(); e.preventDefault(); return; }
+    if (e.key === 'z' || e.key === 'Z') { toggleZoom(); e.preventDefault(); return; }
     if (e.key === 'h' || e.key === 'H') { useHint(); e.preventDefault(); return; }
     if (/^[1-3]$/.test(e.key)) { choose(Number(e.key) - 1); e.preventDefault(); }
     else if (e.key === 'ArrowUp') { G.kbd = true; moveCursor(-1); Sfx.play('click'); e.preventDefault(); }
@@ -2677,7 +2711,11 @@
     click('btn-lesson-skip', function () { if (Lesson.level) startGame(Lesson.level); });
     // Chơi
     click('btn-hint', function () { useHint(); });
-    if (ui.question) ui.question.addEventListener('pointerdown', function (e) { Sfx.unlock(); toggleZoom(); if (e.cancelable) e.preventDefault(); });
+    if (ui.question) {
+      ui.question.addEventListener('pointerdown', function (e) { Sfx.unlock(); toggleZoom(); if (e.cancelable) e.preventDefault(); });
+      // Space không được cuộn trang khi thẻ câu hỏi đang được chọn (onKey xử lý việc phóng to)
+      ui.question.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') e.preventDefault(); });
+    }
     click('btn-pause', function () { pauseGame(); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { const l = G.level; if (l) startGame(l); });
@@ -2873,7 +2911,7 @@
     Motion.refresh();
     try {
       const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-      if (mq && mq.addEventListener) mq.addEventListener('change', function () { Motion.refresh(); });
+      if (mq && mq.addEventListener) mq.addEventListener('change', function () { Motion.refresh(); renderAudioToggles(); });
     } catch (e) { /* bỏ qua */ }
     Voice.init();
     // Khi giọng đọc bị dừng (bất kỳ đâu): dọn trạng thái "đang đọc" của màn Ghi nhớ để không kẹt
@@ -2919,7 +2957,7 @@
     startGame: startGame, choose: choose, endGame: endGame, startQuiz: startQuiz, onQuizAnswer: onQuizAnswer, quizNext: quizNext, quizRetry: quizRetry,
     showLesson: showLesson, goLevels: goLevels, goMenu: goMenu, curGate: curGate, update: update, render: render, layout: layout,
     renderLevels: renderLevels, renderReport: renderReport, renderNotes: renderNotes, adultGate: adultGate, persistResults: persistResults, onFatal: onFatal,
-    skipLearn: skipLearn, useHint: useHint, toggleZoom: toggleZoom, gateLimit: gateLimit
+    skipLearn: skipLearn, useHint: useHint, toggleZoom: toggleZoom, gateLimit: gateLimit, lockHud: lockHud, renderAudioToggles: renderAudioToggles
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

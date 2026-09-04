@@ -548,6 +548,7 @@ html, body {
 .question-card.ok { background: #e3fff4; }
 /* Chạm vào thẻ câu hỏi để phóng to đồng hồ (bé nhìn kim rõ hơn); chạm lần nữa hoặc chọn vòng để thu lại */
 #hud-question { pointer-events: auto; cursor: zoom-in; }
+#hud-question:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; box-shadow: 0 0 0 8px rgba(255,209,102,0.35); }
 #hud-question.zoomed { cursor: zoom-out; }
 .question-card.zoomed .q-visual .clock { width: 220px; height: 220px; }
 .question-card.zoomed .q-visual .digital { font-size: 42px; }
@@ -598,6 +599,9 @@ html, body {
 #btn-pause:active, #btn-hint:active { box-shadow: 0 1px 0 #cfd4e6; }
 #btn-hint { background: linear-gradient(180deg, #ffe08a, #ffd166); box-shadow: 0 5px 0 #d8a92e, 0 8px 16px rgba(0,0,0,0.2); }
 #btn-hint:disabled { opacity: 0.4; box-shadow: 0 2px 0 #d8a92e; }
+/* Bảng kết quả/hỏi đáp/tạm dừng đang che ván chơi: HUD chỉ còn là hình nền, không bấm được */
+#hud.locked .hud-top { opacity: 0.35; }
+#hud.locked .hud-right .btn { pointer-events: none; }
 .tap-tip {
   align-self: center; margin-top: auto; margin-bottom: calc(var(--sab) + 14px);
   background: rgba(255,255,255,0.94); color: var(--ink); font-weight: 800; font-size: 18px;
@@ -840,5 +844,9 @@ html, body {
   .score-box .label { display: none; }
   .score-box .value { font-size: 22px; }
   .hint { font-size: 15px; padding: 4px 12px; }
-  .tap-tip { display: none; }
+  /* Mẹo "Chạm để chạy tiếp" phải còn nhìn thấy khi nằm ngang: thu gọn thay vì ẩn hẳn */
+  .tap-tip { font-size: 14px; padding: 4px 12px; margin-bottom: calc(var(--sab) + 4px); }
+}
+@media (max-height: 360px) {
+  .tap-tip { display: none; }   /* thật sự không còn chỗ */
 }

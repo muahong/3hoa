@@ -24,8 +24,23 @@ const SPEECH_STUB = `
   } });
 `;
 
+/* Phép đo hiệu năng cố định: dựng cảnh nặng rồi vẽ 300 khung hình, trả về ms trung bình mỗi khung. */
+const BENCH = '(function(){' +
+  'X.G.meteors.length = 0; X.G.parts.length = 0;' +
+  'for (var i = 0; i < 6; i++) X.spawnForQuestion();' +
+  'for (var j = 0; j < 200; j++) X.G.parts.push({kind: "spark", x: Math.random() * X.G.W, y: Math.random() * X.G.H,' +
+  ' vx: 0, vy: 0, size: 4, color: "#ffd166", life: 99, max: 99});' +
+  'X.render(); X.render();' +
+  'var t0 = performance.now();' +
+  'for (var k = 0; k < 300; k++) { X.G.anim += 0.016; X.render(); }' +
+  'return (performance.now() - t0) / 300;})()';
+
 const HIT = '(function(){var t=X.getTarget(); if(!t||!t.q) return false; String(t.q.answer).split("").forEach(X.typeDigit); X.fire(); return true;})()';
 const SPAWN = '(function(){X.spawnForQuestion(); return X.liveMeteors().length;})()';
+/* Gõ một số chắc chắn SAI (không trùng đáp án của bất kỳ thiên thạch nào đang bay) rồi bắn. */
+const WRONG = '(function(){var live = X.liveMeteors(); var v = 1;' +
+  ' while (live.some(function (m) { return m.q && m.q.answer === v; })) v++;' +
+  ' String(v).split("").forEach(X.typeDigit); X.fire(); return v;})()';
 
 function ok(cond, msg) { assert.ok(cond, msg); }
 
@@ -115,7 +130,11 @@ async function wrongAndHint() {
     await hook('(function(){X.startGame(window.Tables.levelById("t8")); return 1;})()');
     await waitPlaying(page);
     await hook(SPAWN);
-    const text = await hook('(function(){var t=X.getTarget(); X.typeDigit("1"); X.fire(); X.typeDigit("1"); X.fire(); return t.q.text;})()');
+    const text = await hook('X.getTarget().q.text');
+    await hook(WRONG);
+    await page.waitForTimeout(60);
+    ok((await page.textContent('#hud-hint')).indexOf('Chưa đúng') === 0, 'sai lần đầu phải mách cách nghĩ: ' + (await page.textContent('#hud-hint')));
+    await hook(WRONG);
     await page.waitForTimeout(100);
     ok(await hook('X.getTarget().hint'), 'sai 2 lần phải hiện đáp án trên thiên thạch');
     ok(await page.isVisible('#hud-hint'), 'ô nhắc đáp án phải hiện');
@@ -194,8 +213,9 @@ async function hintButton() {
     const tip = await page.textContent('#hud-hint');
     ok(tip.indexOf('💡') === 0 && tip.length > 14, 'phải mách cách nghĩ: ' + tip);
     ok(tip.indexOf('= ' + answer) < 0, 'gợi ý lần đầu không được nói thẳng đáp án: ' + tip);
-    const sp = await page.evaluate(() => window.SPEECH_LOG || []);
-    ok(sp.some((x) => x.indexOf('speak:') === 0 && x.indexOf('nhân') > 0 || x.indexOf('chia') > 0), 'gợi ý phải được đọc lên: ' + sp.join('|'));
+    const sp = (await page.evaluate(() => window.SPEECH_LOG || [])).filter((x) => x.indexOf('speak:') === 0);
+    ok(sp.length >= 1, 'gợi ý phải được đọc lên');
+    ok(sp[sp.length - 1].indexOf('×') < 0 && sp[sp.length - 1].indexOf(':') === 5, 'lời đọc gợi ý phải bỏ ký hiệu toán: ' + sp.join('|'));
 
     /* Trả lời đúng sau khi xin gợi ý: vẫn tính là tự làm được nhưng chỉ được nửa điểm, không thưởng nhanh */
     const before = await hook('X.G.score');
@@ -624,6 +644,11 @@ async function screens() {
   }, { viewport: PORT });
 
   return withGame('cuu-chuong', async ({ page, hook, shot }) => {
+    // menu trên điện thoại phải vừa một màn hình (bé thấy được cả nút chơi lẫn ô chọn thời gian)
+    await page.waitForTimeout(400);
+    const mp = await page.evaluate(() => { const p = document.querySelector('#menu .panel'); return { s: p.scrollHeight, c: p.clientHeight }; });
+    ok(mp.s <= mp.c + 20, 'menu trên điện thoại phải hiện đủ trong một màn: ' + JSON.stringify(mp));
+
     // bảng cửu chương không tràn ngang
     await page.click('#btn-tables');
     await page.waitForSelector('#tables:not(.hidden)');
@@ -648,7 +673,8 @@ async function screens() {
     await shot('phone-play');
 
     // sai 2 lần: đáp án phải to, rõ trên màn hình nhỏ
-    await hook('(function(){var t=X.getTarget(); X.typeDigit("1"); X.fire(); X.typeDigit("1"); X.fire(); return 1;})()');
+    await hook(WRONG);
+    await hook(WRONG);
     await page.waitForTimeout(600);
     ok(await page.isVisible('#hud-hint'), 'ô nhắc phải hiện trên điện thoại');
     ok((await hook('X.G.lastLabelPx')) >= 20, 'chữ trên thiên thạch quá nhỏ: ' + (await hook('X.G.lastLabelPx')));
@@ -740,6 +766,29 @@ async function sharedProfilesAndReview() {
   }, { viewport: LAND, initScript: seed });
 }
 
+/* ---------------- Ảnh chụp: menu · HUD giữa ván · kết quả ở cả ba khổ màn hình ---------------- */
+async function gallery() {
+  for (const [name, vp] of [['land', LAND], ['port', PORT], ['phone', PHONE]]) {
+    const log = await withGame('cuu-chuong', async ({ page, hook, shot }) => {
+      await page.waitForTimeout(600);
+      await shot(name + '-1-menu');
+      await hook('(function(){X.startGame(window.Tables.levelById("t7")); return 1;})()');
+      await waitPlaying(page);
+      await hook('(function(){X.G.streak = 4; X.G.score = 2350; X.G.stage = 2;' +
+        ' X.spawnForQuestion(); X.spawnForQuestion(); X.typeDigit("5"); X.update(0.016); return 1;})()');
+      await page.waitForTimeout(800);
+      await shot(name + '-2-hud');
+      await playUntil(page, hook, 4, 25);
+      await hook('X.endGame("timeup")');
+      await page.waitForSelector('#gameover:not(.hidden)', { timeout: 10000 });
+      await page.waitForTimeout(1000);
+      await shot(name + '-3-results');
+    }, { viewport: vp });
+    assertClean(log, 'ảnh chụp ' + name);
+  }
+  return null;
+}
+
 /* ---------------- perf ---------------- */
 async function perf() {
   return withGame('cuu-chuong', async ({ page, hook }) => {
@@ -748,6 +797,9 @@ async function perf() {
     await hook('(function(){X.spawnForQuestion(); X.spawnForQuestion(); X.spawnForQuestion(); return 1;})()');
     await page.waitForTimeout(3000);
     console.log('  perf (c7, 3 giây chơi):', JSON.stringify(await hook('X.perf()')));
+    // Phép đo cố định để so sánh giữa các bản: 6 thiên thạch + 200 hạt, vẽ 300 khung hình
+    const ms = await hook(BENCH);
+    console.log('  render 6 thiên thạch + 200 hạt: ' + ms.toFixed(3) + ' ms/khung hình');
   }, { viewport: LAND });
 }
 
@@ -767,6 +819,7 @@ async function perf() {
     ['hướng màn hình và điện thoại', screens],
     ['bảng cửu chương', tablesScreen],
     ['hồ sơ dùng chung và dòng ôn lại', sharedProfilesAndReview],
+    ['ảnh chụp ba khổ màn hình', gallery],
     ['hiệu năng', perf]
   ];
   for (const [name, fn] of blocks) {

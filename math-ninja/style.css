@@ -8,16 +8,18 @@
   --orange: #ff6b35;
   --orange-dark: #d84f1d;
   --orange-ink: #a83a08;     /* chữ cam trên nền sáng của bảng kết quả (≥ 4.5:1) */
+  --orange-deep: #8c300a;    /* viền 3-D nút cam (đậm hơn cả hai đầu nền nút) */
   --teal: #2ec4b6;
   --teal-dark: #1e9a8e;
-  --teal-deep: #14655c;      /* viền 3-D nút xanh ngọc (đậm hơn cả hai đầu nền nút) */
+  --teal-deep: #0d443e;      /* viền 3-D nút xanh ngọc (đậm hơn cả hai đầu nền nút) */
   --yellow: #ffd166;
   --yellow-dark: #e0a800;
   --purple: #7b5ea7;
   --purple-dark: #5a3f85;
   --green: #06d6a0;
   --green-dark: #04a67c;
-  --green-deep: #026a4f;     /* viền 3-D nút xanh lá + chữ số "Đúng" trên bảng kết quả (≥ 4.5:1) */
+  --green-ink: #026a4f;      /* chữ số "Đúng" trên bảng kết quả (≥ 4.5:1) */
+  --green-deep: #01503c;     /* viền 3-D nút xanh lá (đậm hơn cả hai đầu nền nút) */
   --red: #ef476f;
   --red-dark: #c42b52;
   --blue: #118ab2;
@@ -132,9 +134,10 @@ html, body {
   padding: 18px 34px;
   min-height: 62px;
   color: #fff;
-  /* Chữ trắng nằm giữa nút nên cả dải màu (không chỉ đầu đậm) phải đạt 3:1 — xem tests/e2e */
-  background: linear-gradient(180deg, #dd5312 0%, #f26a2c 100%);
-  box-shadow: 0 7px 0 var(--orange-dark), 0 12px 24px rgba(0, 0, 0, 0.18);
+  /* Chữ trắng nằm giữa nút nên cả dải màu (không chỉ đầu đậm) phải đạt 4.5:1 ở MỌI khổ màn hình:
+     trên điện thoại nhãn nút thu còn 15–17 px nên không được dựa vào ngoại lệ "chữ to" 3:1 — xem tests/e2e */
+  background: linear-gradient(180deg, #b23f0c 0%, #c74a12 100%);
+  box-shadow: 0 7px 0 var(--orange-deep), 0 12px 24px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   touch-action: manipulation;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s;
@@ -147,14 +150,14 @@ html, body {
 }
 .btn:active, .btn.pressed {
   transform: translateY(5px);
-  box-shadow: 0 2px 0 var(--orange-dark), 0 4px 10px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 0 var(--orange-deep), 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 .btn.big { font-size: 32px; padding: 22px 46px; min-height: 78px; }
-.btn.teal { background: linear-gradient(180deg, #17786f, #1e9a8e); box-shadow: 0 7px 0 var(--teal-deep), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.teal { background: linear-gradient(180deg, #145f57, #1a8175); box-shadow: 0 7px 0 var(--teal-deep), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.teal:active { box-shadow: 0 2px 0 var(--teal-deep), 0 4px 10px rgba(0,0,0,0.18); }
 .btn.purple { background: linear-gradient(180deg, var(--purple), #9b7fc7); box-shadow: 0 7px 0 var(--purple-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.purple:active { box-shadow: 0 2px 0 var(--purple-dark), 0 4px 10px rgba(0,0,0,0.18); }
-.btn.green { background: linear-gradient(180deg, #03835f, #04a67c); box-shadow: 0 7px 0 var(--green-deep), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.green { background: linear-gradient(180deg, #026a4f, #03835f); box-shadow: 0 7px 0 var(--green-deep), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.green:active { box-shadow: 0 2px 0 var(--green-deep), 0 4px 10px rgba(0,0,0,0.18); }
 .btn.blue { background: linear-gradient(180deg, var(--blue), #2aa8d4); box-shadow: 0 7px 0 var(--blue-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.blue:active { box-shadow: 0 2px 0 var(--blue-dark), 0 4px 10px rgba(0,0,0,0.18); }
@@ -252,7 +255,7 @@ html, body {
 }
 .chip-group button.on {
   background: #fff;
-  color: var(--orange-dark);
+  color: var(--orange-ink);
   box-shadow: 0 3px 8px rgba(0,0,0,0.12);
 }
 .chip-label { font-size: 17px; font-weight: 800; color: var(--ink-soft); margin-right: 4px; }
@@ -278,7 +281,7 @@ html, body {
 .btn[disabled] { opacity: 0.45; cursor: default; box-shadow: none; }
 .footer-note { margin-top: 14px; font-size: 15px; color: #6b7090; font-weight: 700; }
 .footer-note a {
-  color: var(--blue); text-decoration: none;
+  color: var(--blue-dark); text-decoration: none;
   display: inline-flex; align-items: center; min-height: 44px; padding: 10px 8px;
 }
 .btn-row.mt-12 { margin-top: 12px; }
@@ -362,7 +365,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: auto; padding-top: 10px; font-size: 16px; font-weight: 800;
 }
-.level-card .best { color: var(--orange-dark); }
+.level-card .best { color: var(--orange-ink); }
 .level-card .best small { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
 .level-card .new { color: var(--blue-dark); font-size: 14px; font-weight: 800; }
 .level-card.done { border-color: var(--yellow); }
@@ -434,7 +437,7 @@ html, body {
   white-space: nowrap;
   transition: transform 0.15s ease, background 0.2s;
 }
-.question-card .q { color: var(--orange); display: inline-block; animation: q-bounce 0.9s ease-in-out infinite; }
+.question-card .q { color: var(--orange-dark); display: inline-block; animation: q-bounce 0.9s ease-in-out infinite; }
 .question-card .q.reveal { color: var(--red); animation: none; }
 .question-card .held { color: var(--teal-dark); }
 @keyframes q-bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
@@ -476,7 +479,7 @@ html, body {
   60% { transform: translateX(-50%) scale(1.06); }
   100% { transform: translateX(-50%) scale(1); }
 }
-.hint.bad { background: var(--red); }
+.hint.bad { background: var(--red-dark); }
 .hint.ok { background: var(--green); color: #063b2c; }
 .hearts { display: flex; gap: 4px; background: rgba(255,255,255,0.9); border-radius: 999px; padding: 6px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 .hearts span { font-size: 28px; line-height: 1; transition: transform 0.2s, filter 0.2s; display: inline-block; }
@@ -574,7 +577,7 @@ html, body {
 }
 .stat .v { font-size: 30px; font-weight: 800; line-height: 1; }
 .stat .k { font-size: 14px; font-weight: 800; color: var(--ink-soft); margin-top: 4px; }
-.stat.ok .v { color: var(--green-deep); }
+.stat.ok .v { color: var(--green-ink); }
 .stat.bad .v { color: var(--red-dark); }
 .stat.combo .v { color: var(--orange-ink); }
 .stat.acc .v { color: var(--blue-dark); }
@@ -599,16 +602,16 @@ html, body {
 .name-chips button {
   font-family: var(--font); font-weight: 800; font-size: 17px;
   background: #eef1f8; border: none; border-radius: 999px; padding: 10px 16px; color: var(--ink-soft);
-  cursor: pointer; touch-action: manipulation; min-height: 44px;
+  cursor: pointer; touch-action: manipulation; min-height: 44px; min-width: 44px;
 }
 .leader {
   margin: 10px auto 0; max-width: 420px; text-align: left;
   background: #fffaf0; border-radius: 18px; padding: 10px 16px;
 }
-.leader h3 { margin: 0 0 6px; font-size: 18px; color: var(--orange-dark); text-align: center; }
+.leader h3 { margin: 0 0 6px; font-size: 18px; color: var(--orange-ink); text-align: center; }
 .leader ol { margin: 0; padding-left: 26px; font-size: 18px; font-weight: 700; }
 .leader li { display: flex; justify-content: space-between; padding: 3px 0; }
-.leader li.me { color: var(--orange-dark); }
+.leader li.me { color: var(--orange-ink); }
 .leader li span:last-child { font-variant-numeric: tabular-nums; }
 .leader .empty { text-align: center; font-size: 16px; color: var(--ink-soft); }
 
@@ -769,14 +772,15 @@ html, body {
   .name-entry .name-label { font-size: 15px; }
   .name-entry input { width: 140px; font-size: 17px; padding: 6px 12px; }
   .name-chips { margin-top: 2px; }
-  .name-chips button { font-size: 15px; min-height: 38px; padding: 7px 12px; }
+  .name-chips button { font-size: 15px; min-height: 44px; padding: 7px 12px; }
   .leader { padding: 3px 10px; margin-top: 4px; }
   .leader h3 { font-size: 14px; margin-bottom: 0; }
   .leader ol { font-size: 14px; padding-left: 20px; }
   .leader li { padding: 1px 0; }
   #gameover .btn-row { margin-top: 6px; gap: 8px; }
-  #gameover .btn.big { font-size: 18px; min-height: 42px; padding: 10px 20px; }
-  #gameover .btn.small, #gameover .btn { font-size: 15px; min-height: 40px; padding: 9px 14px; }
+  /* Vùng chạm vẫn phải ≥ 44 px kể cả khi màn hình rất thấp */
+  #gameover .btn.big { font-size: 18px; min-height: 44px; padding: 10px 20px; }
+  #gameover .btn.small, #gameover .btn { font-size: 15px; min-height: 44px; padding: 9px 14px; }
 }
 
 /* Điện thoại nằm ngang (rất thấp, ví dụ 844×390): bảng kết quả gọn hết mức để không phải cuộn */

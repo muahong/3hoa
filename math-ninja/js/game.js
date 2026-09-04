@@ -760,9 +760,10 @@
       const idx = want.indexOf(f.value);
       if (idx >= 0) { f.hint = true; want.splice(idx, 1); }
     });
-    wave.hintByButton = !!byButton;
     if (!q.hintNoted) {
       q.hintNoted = true;
+      // Chỉ để nhìn từ ngoài vào (window.__NinjaToan trong tests/e2e): trò chơi dùng thẳng
+      // tham số byButton ở ngay dưới, không đọc lại trường này.
       q.hintByButton = !!byButton;
       const txt = G.mode === 'answer' ? q.text + ' = ' + q.answer : MG.pairResultText(q, q.pair[0], q.pair[1]);
       const why = G.mode === 'answer' ? MG.explain(q) : '';
@@ -773,6 +774,8 @@
       Store.noteMissed(q.key, q.info);
       noteReview(txt);
     }
+    // Đợt quả bay lại vẫn giữ nguyên "ai xin gợi ý" của câu hỏi này (dành cho debug hook)
+    wave.hintByButton = !!q.hintByButton;
     syncHintBtn(true);
   }
 

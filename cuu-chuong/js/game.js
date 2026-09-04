@@ -271,7 +271,7 @@
     pause: $('pause'), gameover: $('gameover'), toast: $('toast'), numpad: $('numpad'),
     score: $('hud-score'), stage: $('hud-stage'), combo: $('hud-combo'), answer: $('hud-answer'),
     timer: $('hud-timer'), timerFill: $('hud-timer-fill'), time: $('hud-time'), shields: $('hud-shields'), hint: $('hud-hint'),
-    stageBanner: $('hud-stage-banner'), resultTables: $('btn-result-tables'), hintBtn: $('btn-hint'),
+    stageBanner: $('hud-stage-banner'), resultTables: $('btn-result-tables'),
     countNum: $('count-num'), levelGrid: $('level-grid'), modeDesc: $('mode-desc'), opRow: $('op-row'), opGroup: $('op-group'),
     tableTabs: $('table-tabs'), tableBody: $('table-body'),
     resultTitle: $('result-title'), resultLevel: $('result-level'), resultScore: $('result-score'),
@@ -558,8 +558,6 @@
     this.spawnT = 0;
     this.hint = false;
     this.asked = false;          // đã bấm 💡 Gợi ý cho câu này (mất thưởng nhanh, điểm giảm nửa)
-    this.sprite = null;          // ảnh viên đá dựng sẵn (không vẽ lại đa giác + hố mỗi khung hình)
-    this.spriteR = 0;
     this.wrongs = 0;
     this.missed = false;
     this.born = G.time;
@@ -868,7 +866,6 @@
     if (!m || !m.q || m.hint) return;
     m.hint = true;
     m.r = Math.max(m.r, radiusFor(m.q.full) * 1.15);
-    m.sprite = null;                             // đá to lên: dựng lại ảnh
     m.vy *= 0.6;
     G.holdUntil = Math.max(G.holdUntil, G.time + 1.2);
     showHint('Đáp án: ' + m.q.full + ' – gõ theo nhé!', 'info', 1e9);
@@ -1407,49 +1404,39 @@
     c.fillText(s, x, y + size * 0.05);
   }
 
-  /** Vẽ thân đá quanh gốc tọa độ (dùng để dựng ảnh sẵn, không gọi mỗi khung hình). */
+  let ROCK_GRAD = null;
+  /** Vẽ thân viên đá (đa giác lởm chởm + hố) quanh gốc tọa độ.
+      Vẽ trong hệ tọa độ bán kính 1 rồi phóng to theo r nên chỉ cần MỘT dải màu dùng chung
+      cho mọi thiên thạch, thay vì cấp phát một dải màu mỗi viên đá mỗi khung hình. */
   function paintRock(c, m, r) {
-    const g = c.createRadialGradient(-r * 0.35, -r * 0.35, r * 0.1, 0, 0, r);
-    g.addColorStop(0, '#c4ae95');
-    g.addColorStop(0.55, '#7a5f4b');
-    g.addColorStop(1, '#3e2d22');
-    c.fillStyle = g;
+    if (!ROCK_GRAD) {
+      ROCK_GRAD = c.createRadialGradient(-0.35, -0.35, 0.1, 0, 0, 1);
+      ROCK_GRAD.addColorStop(0, '#c4ae95');
+      ROCK_GRAD.addColorStop(0.55, '#7a5f4b');
+      ROCK_GRAD.addColorStop(1, '#3e2d22');
+    }
+    c.save();
+    c.scale(r, r);
+    c.fillStyle = ROCK_GRAD;
     c.beginPath();
     for (let i = 0; i < 9; i++) {
       const a = i / 9 * TAU;
-      const rr = r * (0.94 + 0.08 * Math.sin(i * 2.3 + m.id));
+      const rr = 0.94 + 0.08 * Math.sin(i * 2.3 + m.id);
       if (i === 0) c.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); else c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
     }
     c.closePath();
     c.fill();
     c.strokeStyle = '#2a1d15';
-    c.lineWidth = Math.max(2, r * 0.07);
+    c.lineWidth = Math.max(2 / r, 0.07);
     c.stroke();
     for (let i = 0; i < m.craters.length; i++) {
       const k = m.craters[i];
       c.fillStyle = 'rgba(40,25,15,0.45)';
-      c.beginPath(); c.arc(k.dx * r, k.dy * r, k.r * r, 0, TAU); c.fill();
+      c.beginPath(); c.arc(k.dx, k.dy, k.r, 0, TAU); c.fill();
       c.fillStyle = 'rgba(255,230,200,0.18)';
-      c.beginPath(); c.arc(k.dx * r - k.r * r * 0.3, k.dy * r - k.r * r * 0.3, k.r * r * 0.55, 0, TAU); c.fill();
+      c.beginPath(); c.arc(k.dx - k.r * 0.3, k.dy - k.r * 0.3, k.r * 0.55, 0, TAU); c.fill();
     }
-  }
-
-  /** Ảnh viên đá dùng lại; chỉ dựng lại khi bán kính đổi (xoay máy, hiện đáp án). */
-  function rockSprite(m) {
-    if (m.sprite && m.spriteR === m.r) return m.sprite;
-    const S = m.r * 1.2;                         // chừa chỗ cho viền và hố sát mép
-    const px = Math.max(8, Math.ceil(S * 2 * G.dpr));
-    const cv = m.sprite || document.createElement('canvas');
-    if (cv.width !== px || cv.height !== px) { cv.width = px; cv.height = px; }
-    const x = cv.getContext('2d');
-    const k = px / (S * 2);
-    x.setTransform(k, 0, 0, k, 0, 0);
-    x.clearRect(0, 0, S * 2, S * 2);
-    x.translate(S, S);
-    paintRock(x, m, m.r);
-    m.sprite = cv;
-    m.spriteR = m.r;
-    return cv;
+    c.restore();
   }
 
   function drawMeteor(c, m) {
@@ -1485,11 +1472,10 @@
       c.beginPath(); c.ellipse(m.x - r * 0.45, m.y - r * 0.45, r * 0.28, r * 0.18, -0.6, 0, TAU); c.fill();
       c.restore();
     } else {
-      const S = m.r * 1.2 * sc;
       c.save();
       c.translate(m.x, m.y);
       c.rotate(m.rot);
-      c.drawImage(rockSprite(m), -S, -S, S * 2, S * 2);
+      paintRock(c, m, r);
       c.restore();
     }
     if (m.q && sc > 0.5) {

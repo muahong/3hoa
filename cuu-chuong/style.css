@@ -847,6 +847,22 @@ html, body {
   .stage-chip, .combo-chip { white-space: nowrap; font-size: 13px; padding: 4px 9px; }
   #btn-pause, #btn-hint { width: 46px; height: 46px; min-height: 46px; font-size: 20px; }
   .hud-right { gap: 6px; }
+  /* Menu trên điện thoại: gọn lại để bé thấy được cả nút chơi lẫn ô chọn thời gian */
+  #menu .panel { padding: 14px 14px 16px; }
+  #menu .logo-row { gap: 10px; }
+  #menu .logo-row svg { width: 82px; height: 82px; }
+  #menu .title { font-size: clamp(30px, 8.4vw, 44px); }
+  #menu .subtitle { font-size: 15px; margin: 6px 0 8px; }
+  #menu .player-chip { margin: 0 auto 8px; }
+  #menu .btn-row { margin-top: 10px; gap: 8px; }
+  #menu .btn.big { font-size: 24px; padding: 14px 28px; min-height: 58px; }
+  #menu .btn.small { font-size: 16px; padding: 10px 14px; min-height: 46px; }
+  #menu .toggle-row { gap: 6px; margin-top: 10px; }
+  #menu .toggle { font-size: 13px; padding: 6px 11px; min-height: 44px; }
+  #menu .menu-options { margin-top: 10px; gap: 8px; }
+  #menu .chip-label { font-size: 15px; }
+  #menu .chip-group button { font-size: 15px; padding: 8px 12px; }
+  #menu .footer-note { margin-top: 10px; font-size: 13px; }
   .hint { font-size: 17px; padding: 6px 14px; min-height: 33px; }
   .screen-head h2 { font-size: clamp(18px, 5.6vw, 24px); }
   .screen-head .btn { font-size: 16px; padding: 10px 14px; min-height: 44px; }

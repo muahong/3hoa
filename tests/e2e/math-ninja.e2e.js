@@ -29,15 +29,66 @@ function contrast(fg, bg) {
   const a = lum(fg), b = lum(bg);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
-/** Màu chữ + màu nền thật (leo lên cha khi nền trong suốt) của phần tử đầu tiên khớp bộ chọn */
+/** Màu ở chính giữa hai màu 'rgb(...)' — dùng để đo chỗ chữ thật sự nằm trên nền chuyển sắc */
+function mixColor(c1, c2) {
+  const p = (c) => String(c).match(/[\d.]+/g).slice(0, 3).map(Number);
+  const a = p(c1), b = p(c2);
+  return 'rgb(' + a.map((v, i) => Math.round((v + b[i]) / 2)).join(', ') + ')';
+}
+/** Màu chữ + màu nền thật (leo lên cha khi nền trong suốt) của phần tử đầu tiên khớp bộ chọn.
+    Nếu nền là dải chuyển sắc thì trả về CẢ các mốc màu: đo chữ trên một màu đặc của cha
+    (backgroundColor của phần tử có gradient là trong suốt) cho tỉ lệ đẹp hơn thực tế. */
 const colorsOf = (page, sel) => page.evaluate((q) => {
   const el = document.querySelector(q);
   if (!el) return null;
-  let bg = 'rgba(0, 0, 0, 0)', n = el;
-  while (n && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) { bg = getComputedStyle(n).backgroundColor; n = n.parentElement; }
   const st = getComputedStyle(el);
-  return { fg: st.color, bg: bg, size: st.fontSize, weight: st.fontWeight };
+  let bg = 'rgb(255, 255, 255)', stops = [], n = el;
+  while (n) {
+    const cs = getComputedStyle(n);
+    const img = cs.backgroundImage || '';
+    const clip = cs.backgroundClip || cs.webkitBackgroundClip;
+    if (img.indexOf('gradient') >= 0 && clip !== 'text') {      // gradient cắt theo chữ (.title) không phải nền
+      const g = (img.match(/rgba?\([^)]+\)/g) || []).filter((c) => {
+        const parts = c.match(/[\d.]+/g) || [];
+        return !(parts.length > 3 && Number(parts[3]) === 0);       // bỏ mốc trong suốt
+      });
+      if (g.length) { stops = g; bg = g[0]; break; }
+    }
+    const c = cs.backgroundColor;
+    if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
+    n = n.parentElement;
+  }
+  return { fg: st.color, bg: bg, stops: stops, size: parseFloat(st.fontSize), weight: Number(st.fontWeight) };
 }, sel);
+/** Tỉ lệ tương phản THẤP NHẤT: lấy mẫu cả hai đầu và điểm giữa mỗi đoạn của dải chuyển sắc */
+function worstContrast(c) {
+  if (!c) return 0;
+  const bgs = (c.stops && c.stops.length ? c.stops : [c.bg]).slice();
+  const n = bgs.length;
+  for (let i = 1; i < n; i++) bgs.push(mixColor(bgs[i - 1], bgs[i]));
+  return Math.min.apply(null, bgs.map((b) => contrast(c.fg, b)));
+}
+/** Ngưỡng WCAG suy từ chính khổ chữ đo được (chữ to đậm mới được hưởng ngoại lệ 3:1) */
+const wantRatio = (c) => (c && (c.size >= 24 || (c.size >= 18.66 && c.weight >= 700)) ? 3 : 4.5);
+/** Kiểm tra chữ trắng trên các nút nền chuyển sắc — phải chạy ở NHIỀU khổ màn hình,
+    vì cùng bộ CSS này thu nhãn nút xuống 15–17 px trên điện thoại (hết ngoại lệ "chữ to"). */
+async function checkButtons(page, where) {
+  for (const [name, sel] of [['cam', '#btn-play'], ['xanh ngọc', '#btn-howto'], ['xanh lá', '#btn-next'],
+    ['cam nhỏ', '#btn-again'], ['xanh ngọc nhỏ', '#btn-save-name']]) {
+    const c = await colorsOf(page, sel);
+    if (!c || !c.stops.length) { ok(false, 'không đọc được nền chuyển sắc của nút ' + name + ' @' + where); continue; }
+    const worst = worstContrast(c);
+    const mid = contrast(c.fg, mixColor(c.stops[0], c.stops[c.stops.length - 1]));
+    const need = wantRatio(c);
+    console.log('    ' + sel + ' @' + where + ': ' + c.size + 'px/' + c.weight
+      + ' → thấp nhất ' + worst.toFixed(2) + ':1 (ngưỡng theo khổ chữ: ' + need + ')');
+    ok(mid >= need, 'chữ trắng trên nút ' + name + ' đạt ' + need + ':1 ở GIỮA dải màu @' + where + ' (' + mid.toFixed(2) + ':1)');
+    ok(worst >= need, 'chữ trắng trên nút ' + name + ' đạt ' + need + ':1 ở MỌI điểm dải màu @' + where + ' (' + worst.toFixed(2) + ':1)');
+    // Không dựa vào ngoại lệ "chữ to": phải đạt 4.5:1 kể cả khi nhãn nút bị thu nhỏ
+    ok(worst >= 4.5, 'nút ' + name + ' đạt 4.5:1 ở MỌI điểm dải màu, không cần ngoại lệ chữ to @' + where
+      + ' (' + worst.toFixed(2) + ':1)');
+  }
+}
 const seed = (obj) => NO_DIALOG + "localStorage.setItem('ninja-toan-v1', " + JSON.stringify(JSON.stringify(obj)) + ');';
 
 async function startLevel(page, hook, id) {
@@ -878,7 +929,7 @@ async function answerGate(page, hook) {
       ok(await page.evaluate(() => !!document.querySelector('#report-levels .mastered')), 'có huy hiệu "Đã thuộc" để đo');
       for (const sel of ['.report-stat .v', '#report-levels .report-row .mastered', '.report-weak', '.linkish']) {
         const c = await colorsOf(page, sel);
-        const r = c ? contrast(c.fg, c.bg) : 0;
+        const r = worstContrast(c);
         ok(r >= 4.5, 'tương phản ' + sel + ' ≥ 4.5:1 (' + r.toFixed(2) + ':1, ' + (c && c.fg) + ' trên ' + (c && c.bg) + ')');
       }
       if (vp === PHONE) await shot('phone-report');
@@ -908,6 +959,9 @@ async function answerGate(page, hook) {
   log = await withGame('math-ninja', async ({ page, hook, shot }) => {
     console.log('[15a] nút 💡 Gợi ý, lộ đáp án và lời giải thích');
     await startLevel(page, hook, 'a3');
+    const cq0 = await colorsOf(page, '.question-card .q');
+    ok(worstContrast(cq0) >= wantRatio(cq0), 'dấu "?" trong thẻ phép tính đạt ' + wantRatio(cq0) + ':1 ('
+      + worstContrast(cq0).toFixed(2) + ':1, ' + cq0.fg + ' trên ' + cq0.bg + ', ' + cq0.size + 'px)');
     ok(!(await page.evaluate(() => document.getElementById('btn-hint').disabled)), 'nút 💡 bật khi đang có đợt quả');
     await page.click('#btn-hint');
     await page.waitForTimeout(250);
@@ -915,6 +969,10 @@ async function answerGate(page, hook) {
     eq(await hook('X.G.wave.fruits.some(function (f) { return f.hint; })'), true, 'quả đúng được đánh dấu vòng vàng');
     ok(await vis(page, '#hud-hint'), 'dải gợi ý hiện đáp án');
     ok((await text(page, '#hud-hint')).indexOf('💡') === 0, 'dải gợi ý bắt đầu bằng 💡');
+    // markHint(wave, byButton): tham số phải được dùng thật, không chỉ khai báo
+    eq(await hook('X.G.wave.hintByButton'), true, 'đợt quả ghi nhận bé chủ động bấm 💡');
+    eq(await hook('X.G.question.hintByButton'), true, 'câu hỏi ghi nhận bé chủ động bấm 💡');
+    ok((await text(page, '#hud-hint')).indexOf('Lỡ 2 lần') < 0, 'gợi ý do bé xin không trách bé "lỡ 2 lần"');
     ok(await page.evaluate(() => document.getElementById('btn-hint').disabled), 'dùng gợi ý rồi thì nút 💡 khoá lại');
     eq((await hook('X.G.missedList')).length, 1, 'câu phải nhờ gợi ý được ghi vào "Cần ôn lại"');
     const ansHint = await hook('X.G.question.answer');
@@ -986,6 +1044,21 @@ async function answerGate(page, hook) {
     ok((await text(page, '#btn-next')).indexOf('Phạm vi 20') > 0, 'nút chỉ đúng màn kế tiếp');
     ok(await vis(page, '#result-fx'), 'có mưa giấy màu chúc mừng (C12)');
     eq(await count(page, '#result-fx i'), 24, 'mưa giấy màu có 24 mảnh');
+    // Giấy màu phải rơi PHÍA SAU bảng, không đè lên chữ
+    const zz = await page.evaluate(() => {
+      const p = document.querySelector('#gameover .panel'), f = document.getElementById('result-fx');
+      const ps = getComputedStyle(p), fs = getComputedStyle(f);
+      return { pz: ps.zIndex, pp: ps.position, fz: fs.zIndex, fp: fs.position };
+    });
+    ok(zz.pp !== 'static' && zz.fp !== 'static', 'cả bảng và lớp giấy màu đều được định vị (' + zz.pp + ' / ' + zz.fp + ')');
+    ok(Number(zz.pz) > Number(zz.fz), 'bảng kết quả xếp trên lớp mưa giấy màu (z-index ' + zz.pz + ' > ' + zz.fz + ')');
+    // Các con số trên bảng kết quả phải đọc rõ trên nền ô xám nhạt (C4/C10)
+    for (const sel of ['.stat.ok .v', '.stat.bad .v', '.stat.combo .v', '.stat.acc .v', '.stat.bomb .v',
+      '.leader h3', '.leader li.me', '#result-review']) {
+      const c = await colorsOf(page, sel);
+      const r = worstContrast(c);
+      ok(r >= 4.5, 'tương phản ' + sel + ' ≥ 4.5:1 (' + r.toFixed(2) + ':1, ' + (c && c.fg) + ' trên ' + (c && c.bg) + ')');
+    }
     await shot('results-3sao');
     await page.click('#btn-next');
     await page.waitForFunction(() => window.__NinjaToan.G.level && window.__NinjaToan.G.level.id === 'a2', null, { timeout: 20000 });
@@ -1029,43 +1102,61 @@ async function answerGate(page, hook) {
     ok((await text(page, '.level-card.next .next-badge')).indexOf('Chơi tiếp') > 0, 'thẻ gợi ý có nhãn 👉 Chơi tiếp');
     await shot('levels-next');
     // Tương phản của nhãn lớp và các chữ phụ (C4, C10)
-    for (const sel of ['.level-card .grade.g1', '.level-card .grade.g2', '.level-card .grade.gx']) {
+    // .level-card có nền chuyển sắc → worstContrast đo cả mốc tối nhất (#f4f6fc), không chỉ nền trắng của .panel
+    for (const sel of ['.level-card .grade.g1', '.level-card .grade.g2', '.level-card .grade.gx', '.level-card .new', '.level-card .best']) {
       const c = await colorsOf(page, sel);
-      const r = c ? contrast(c.fg, c.bg) : 0;
+      const r = worstContrast(c);
+      // .new và .best nằm thẳng trên nền chuyển sắc của thẻ → phải đo cả mốc tối nhất (#f4f6fc),
+      // không phải nền trắng của .panel (nhãn .grade có nền đặc riêng nên không có mốc nào)
+      if (sel.indexOf('.grade') < 0) ok(c && c.stops.length >= 2, 'đo ' + sel + ' trên chính nền chuyển sắc của thẻ màn');
       ok(r >= 4.5, 'tương phản ' + sel + ' ≥ 4.5:1 (' + r.toFixed(2) + ':1)');
     }
     await page.click('#btn-levels-back');
     await page.waitForTimeout(300);
-    for (const sel of ['.footer-note', '.title small', '.chip-label']) {
+    for (const sel of ['.footer-note', '.footer-note a', '.title small', '.chip-label', '#duration-group button.on']) {
       const c = await colorsOf(page, sel);
-      const r = c ? contrast(c.fg, c.bg) : 0;
+      const r = worstContrast(c);
       ok(r >= 4.5, 'tương phản ' + sel + ' ≥ 4.5:1 (' + r.toFixed(2) + ':1, ' + (c && c.fg) + ')');
     }
-    // Chữ trên nền chuyển sắc (nút, huy hiệu, chip combo): đo với cả hai đầu của gradient
-    const grad = await page.evaluate(() => {
-      const out = {};
-      const read = (sel) => {
-        const el = document.querySelector(sel);
-        if (!el) return null;
-        const st = getComputedStyle(el);
-        const stops = (st.backgroundImage.match(/rgba?\([^)]+\)/g) || []);
-        return { fg: st.color, stops: stops };
-      };
-      out.btn = read('#btn-play');
-      out.teal = read('#btn-howto');
-      return out;
-    });
-    for (const k of Object.keys(grad)) {
-      const g = grad[k];
-      if (!g || !g.stops.length) { ok(false, 'không đọc được nền chuyển sắc của ' + k); continue; }
-      const rs = g.stops.map((c) => contrast(g.fg, c));
-      const best = Math.max.apply(null, rs), worst = Math.min.apply(null, rs);
-      // Chữ nút là chữ to và đậm (≥ 19 px, weight 800): ngưỡng WCAG là 3:1 ở phần nền đậm
-      ok(best >= 3, 'chữ trắng trên nút ' + k + ' đạt 3:1 ở nửa đậm (' + best.toFixed(2) + ':1)');
-      ok(worst >= 2.4, 'nửa sáng của nút ' + k + ' vẫn đủ nổi (' + worst.toFixed(2) + ':1)');
-    }
+    // Chữ trên nền chuyển sắc (nút): nhãn nằm GIỮA nút nên phải đo cả điểm giữa dải màu, không chỉ đầu đậm
+    await checkButtons(page, 'ngang 1180×820');
   }, { viewport: LAND, initScript: AGG });
   assertClean(log, '[15d] lưới màn + tương phản');
+
+  /* Cùng bộ CSS ấy thu nhãn nút xuống 15–17 px ở khổ điện thoại: phải đo lại ở đúng những khổ đó,
+     nếu không phép thử chỉ đạt ở khổ màn hình thuận lợi (nơi ngưỡng 3:1 luôn được áp dụng). */
+  for (const vp of [PORT, PHONE, PHONE_LAND]) {
+    log = await withGame('math-ninja', async ({ page }) => {
+      console.log('[15d2] tương phản nút ở ' + vp.width + '×' + vp.height);
+      await checkButtons(page, vp.width + '×' + vp.height);
+    }, { viewport: vp, initScript: NO_DIALOG });
+    assertClean(log, '[15d2] tương phản nút @' + vp.width);
+  }
+
+  /* 900×500: khối @media (max-height:520px) áp dụng nhưng khối 430px thì KHÔNG —
+     đúng chỗ vùng chạm của bảng kết quả từng tụt xuống 38/40/42 px (SPEC §4 đòi ≥ 44). */
+  log = await withGame('math-ninja', async ({ page, hook, shot }) => {
+    console.log('[15d3] vùng chạm bảng kết quả ở 900×500');
+    await startLevel(page, hook, 'a1');
+    await hook('X.G.score = 1200');
+    await hook('X.endGame("timeup")');
+    await waitOver(page);
+    ok(await vis(page, '#name-entry'), 'kỷ lục mới nên có ô nhập tên');
+    ok((await count(page, '#name-chips button')) > 0, 'có chip tên cũ để đo vùng chạm');
+    const small = await page.evaluate(() => {
+      const out = [];
+      document.querySelectorAll('#gameover button').forEach((b) => {
+        if (b.hidden || b.offsetParent === null) return;
+        const r = b.getBoundingClientRect();
+        out.push({ id: b.id || (b.className + ' "' + b.textContent.trim() + '"'), w: Math.round(r.width), h: Math.round(r.height) });
+      });
+      return out;
+    });
+    ok(small.length >= 5, 'đo được ' + small.length + ' nút trên bảng kết quả');
+    for (const b of small) ok(b.h >= 44 && b.w >= 44, 'nút ' + b.id + ' đủ vùng chạm 44×44 (' + b.w + '×' + b.h + ')');
+    await shot('results-900x500');
+  }, { viewport: { width: 900, height: 500 }, initScript: seed({ players: { p1: { names: ['Tí', 'Na'] } } }) });
+  assertClean(log, '[15d3] vùng chạm 900×500');
 
   log = await withGame('math-ninja', async ({ page, hook }) => {
     console.log('[15e] giảm chuyển động: không mưa giấy màu, thông báo không bị bảng che');
@@ -1117,9 +1208,41 @@ async function answerGate(page, hook) {
     ok(box.hint <= box.W, 'nút 💡 vẫn trong màn hình');
     ok(box.hintW >= 44, 'nút 💡 đủ lớn để chạm (' + Math.round(box.hintW) + ' px)');
     ok(box.stageH < 34, 'chip "Màn N" không xuống hai dòng');
+    // Ở khổ này .hint thu còn 18 px (< 18.66 px nên KHÔNG được hưởng ngoại lệ "chữ to" 3:1)
+    const cq = await colorsOf(page, '.question-card .q');
+    ok(worstContrast(cq) >= wantRatio(cq), 'dấu "?" đạt ' + wantRatio(cq) + ':1 trên điện thoại ('
+      + worstContrast(cq).toFixed(2) + ':1, ' + cq.size + 'px)');
+    const wrongV = await findWrongValue(page);
+    ok(wrongV != null, 'tìm được quả sai để chém');
+    await sliceValue(page, wrongV);
+    await page.waitForTimeout(300);
+    ok(await vis(page, '#hud-hint'), 'dải giải thích hiện ra sau khi chém sai');
+    const ch = await colorsOf(page, '#hud-hint.hint.bad');
+    ok(ch != null, 'dải giải thích mang lớp .bad');
+    ok(worstContrast(ch) >= wantRatio(ch), 'dải giải thích sai đạt ' + wantRatio(ch) + ':1 trên điện thoại ('
+      + worstContrast(ch).toFixed(2) + ':1, ' + (ch && ch.fg) + ' trên ' + (ch && ch.bg) + ', ' + (ch && ch.size) + 'px)');
     await shot('phone-hud-hint');
   }, { viewport: PHONE, initScript: NO_DIALOG });
   assertClean(log, '[15g] HUD điện thoại');
+
+  log = await withGame('math-ninja', async ({ page, hook }) => {
+    console.log('[15h] gợi ý tự bật sau 2 lần lỡ nói khác lời gợi ý do bé bấm 💡');
+    await startLevel(page, hook, 'a1');
+    // Lỡ lần thứ hai: cho cả đợt quả rơi hết để trò chơi tự bật vòng gợi ý
+    await page.evaluate(() => {
+      const X = window.__NinjaToan;
+      X.G.misses = 1;
+      X.G.wave.fruits.forEach((f) => { f.dead = true; });
+    });
+    await page.waitForFunction(() => { const w = window.__NinjaToan.G.wave; return !!(w && w.hint); }, null, { timeout: 8000 });
+    eq(await hook('X.G.misses >= 2'), true, 'đã lỡ 2 lần');
+    eq(await hook('X.G.wave.hintByButton'), false, 'gợi ý tự bật không bị ghi là bé xin');
+    eq(await hook('X.G.question.hintByButton'), false, 'câu hỏi nhớ rằng gợi ý đến từ 2 lần lỡ');
+    const t = (await text(page, '#hud-hint')) || '';
+    ok(t.indexOf('Lỡ 2 lần rồi') > 0, 'lời gợi ý tự bật nói rõ vì sao: "' + t + '"');
+    ok(t.indexOf(' = ') > 0, 'gợi ý tự bật vẫn cho biết đáp án');
+  }, { viewport: LAND, initScript: NO_DIALOG });
+  assertClean(log, '[15h] gợi ý tự bật');
   }
 
   if (failures) { console.error('\nmath-ninja e2e: ' + failures + ' kiểm tra thất bại'); process.exitCode = 1; }

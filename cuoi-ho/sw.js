@@ -1,6 +1,6 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'cuoi-ho-v4';
+const CACHE = 'cuoi-ho-v5';
 const CORE = [
   './',
   './index.html',

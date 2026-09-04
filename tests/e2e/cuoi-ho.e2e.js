@@ -101,6 +101,31 @@ async function answerGate(page, hook, expr) {
     eq(await hook('X.G.hearts'), 4, 'màn 1 có 4 tim');
     eq(await count(page, '#hud-hearts span'), 4, 'HUD vẽ đủ 4 tim');
     ok(await vis(page, '#btn-hint'), 'nút 💡 Gợi ý hiện khi chơi');
+    // Thẻ câu hỏi là một nút thật: phím Z, hoặc Enter khi thẻ đang được chọn bằng Tab, phóng to đồng hồ (không chọn nhầm vòng lửa)
+    eq(await page.evaluate(() => document.getElementById('hud-question').getAttribute('role')), 'button', 'thẻ câu hỏi có role=button');
+    eq(await page.evaluate(() => document.getElementById('hud-question').getAttribute('tabindex')), '0', 'thẻ câu hỏi bấm được bằng bàn phím');
+    ok((await page.evaluate(() => document.getElementById('hud-question').getAttribute('aria-label') || '')).length > 4, 'thẻ câu hỏi có aria-label');
+    eq(await page.evaluate(() => document.getElementById('hud-question').getAttribute('aria-pressed')), 'false', 'aria-pressed ban đầu = false');
+    await page.keyboard.press('z');
+    await page.waitForTimeout(200);
+    ok(await page.evaluate(() => document.getElementById('hud-question').classList.contains('zoomed')), 'phím Z phóng to thẻ câu hỏi');
+    eq(await page.evaluate(() => document.getElementById('hud-question').getAttribute('aria-pressed')), 'true', 'aria-pressed = true khi đang phóng to');
+    ok(await hook('X.G.laneY[0] - X.G.r > X.G.hudBottom'), 'phóng to xong vòng trên vẫn không đè HUD');
+    await page.keyboard.press('z');
+    await page.waitForTimeout(200);
+    ok(!(await page.evaluate(() => document.getElementById('hud-question').classList.contains('zoomed'))), 'ấn Z lần nữa thu lại');
+    const gi0 = await hook('X.G.gateIdx');
+    await page.focus('#hud-question');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(200);
+    ok(await page.evaluate(() => document.getElementById('hud-question').classList.contains('zoomed')), 'Enter khi thẻ đang được chọn → phóng to');
+    eq(await hook('X.G.phase'), 'choose', 'Enter trên thẻ KHÔNG làm hổ nhảy');
+    eq(await hook('X.G.gateIdx'), gi0, 'vẫn ở cụm vòng cũ');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(200);
+    ok(!(await page.evaluate(() => document.getElementById('hud-question').classList.contains('zoomed'))), 'Enter lần nữa thu lại');
+    eq(await page.evaluate(() => document.getElementById('hud-question').getAttribute('aria-pressed')), 'false', 'aria-pressed về false');
+    await page.evaluate(() => document.getElementById('hud-question').blur());
     await playRound(page, hook, {});
     await waitOver(page);
     await shot('ipad-land-results');
@@ -232,9 +257,11 @@ async function answerGate(page, hook, expr) {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(120);
     eq(await hook('X.G.state'), 'paused', 'Escape tạm dừng');
+    ok(await page.evaluate(() => document.getElementById('btn-pause').disabled), 'đang tạm dừng → ⏸ không còn là nút chết');
     await page.keyboard.press('Escape');
     await page.waitForTimeout(120);
     eq(await hook('X.G.state'), 'playing', 'Escape chơi tiếp');
+    ok(!(await page.evaluate(() => document.getElementById('btn-pause').disabled)), 'chơi tiếp → ⏸ dùng lại được');
     await page.keyboard.press(String((await hook('X.curGate().q.answer')) + 1));
     await page.waitForTimeout(120);
     eq(await hook('X.G.phase'), 'jump', 'phím số chọn vòng');
@@ -252,6 +279,15 @@ async function answerGate(page, hook, expr) {
     await playRound(page, hook, { wrongAt: [0, 1, 2, 3] });   // màn 1 có 4 tim
     await waitOver(page);
     ok(await page.evaluate(() => document.getElementById('result-title').classList.contains('nolife')), 'hết tim → Hổ mệt rồi');
+    // Bảng kết quả che ván chơi: ⏸ và 💡 phải tắt hẳn và mờ đi, không để bé bấm vào nút chết
+    const hudOver = await page.evaluate(() => ({
+      locked: document.getElementById('hud').classList.contains('locked'),
+      pause: document.getElementById('btn-pause').disabled,
+      hint: document.getElementById('btn-hint').disabled,
+      op: Number(getComputedStyle(document.querySelector('#hud .hud-top')).opacity)
+    }));
+    ok(hudOver.locked && hudOver.pause && hudOver.hint, 'bảng kết quả → ⏸ và 💡 bị khóa: ' + JSON.stringify(hudOver));
+    ok(hudOver.op < 0.6, 'HUD mờ đi khi bị bảng kết quả che (opacity ' + hudOver.op + ')');
     ok(!(await vis(page, '#btn-quiz')), 'không có hỏi đáp khi chưa về đích');
     eq(await count(page, '#result-stars .on'), 0, '0 sao');
     eq(await hook('X.Store.p().levels.l1.plays'), 1, 'vẫn đếm lượt chơi');
@@ -261,9 +297,11 @@ async function answerGate(page, hook, expr) {
     await page.click('#btn-practice');
     await waitChoose(page);
     eq(await hook('X.G.practice'), true, 'vào chế độ tập luyện');
+    ok(!(await page.evaluate(() => document.getElementById('btn-pause').disabled)), 'vào ván mới → ⏸ dùng lại được');
     for (let i = 0; i < 4; i++) { await waitChoose(page); await hook('X.choose((X.curGate().q.answer + 1) % 3)'); await page.waitForTimeout(1500); }
     eq(await hook('X.G.state'), 'playing', 'sai 4 câu vẫn chơi tiếp (không mất tim)');
-    eq(await hook('X.G.hearts'), 1, 'tập luyện: luôn còn ít nhất 1 tim');
+    eq(await hook('X.G.hearts'), 4, 'tập luyện: KHÔNG mất tim nào (đúng như nhãn của nút)');
+    eq(await count(page, '#hud-hearts span.lost'), 0, 'HUD không có quả tim nào bị mờ đi');
     const recBefore = await hook('X.Store.p().levels.l1.plays');
     await playRound(page, hook, {});
     await waitOver(page);
@@ -278,6 +316,7 @@ async function answerGate(page, hook, expr) {
     await waitOver(page);
     await page.click('#btn-quiz');
     await page.waitForTimeout(250);
+    ok(await page.evaluate(() => document.getElementById('btn-pause').disabled && document.getElementById('btn-hint').disabled), 'bảng hỏi đáp che ván chơi → ⏸ và 💡 cũng bị khóa');
     const kinds = await hook('X.Quiz.list.map(function (q) { return q.review ? "R" : q.extra ? "E" : "-"; }).join("")');
     ok(/^-{4}R$/.test(kinds), 'câu cuối lấy từ kho ôn lại (đã sai 4 câu ở ván trước): ' + kinds);
     await hook('X.onQuizAnswer((X.Quiz.list[0].answer + 1) % 3)');
@@ -929,10 +968,117 @@ async function answerGate(page, hook, expr) {
     ok(lc.top > lc.hb - 1, 'vòng trên không đè HUD khi máy nằm ngang (top=' + lc.top.toFixed(0) + ' > hud=' + lc.hb.toFixed(0) + ')');
     ok(lc.low <= lc.gr + 1, 'vòng dưới không lún xuống đất');
     ok(lc.tiger, 'đầu hổ không che vòng dưới cùng');
+    // Mẹo "👆 Chạm để chạy tiếp" phải còn nhìn thấy khi máy nằm ngang (trước đây bị ẩn hẳn)
+    await hook('X.choose((X.curGate().q.answer + 1) % 3)');
+    await page.waitForFunction(() => window.__CuoiHo.G.phase === 'learn', null, { timeout: 8000 });
+    await page.waitForTimeout(250);
+    const tip = await page.evaluate(() => {
+      const el = document.getElementById('tap-tip'), cs = getComputedStyle(el), r = el.getBoundingClientRect();
+      return { hidden: el.hidden, display: cs.display, text: el.textContent, h: Math.round(r.height), bottom: Math.round(r.bottom) };
+    });
+    ok(!tip.hidden && tip.display !== 'none' && tip.h > 10, 'mẹo chạm để chạy tiếp vẫn hiện khi nằm ngang: ' + JSON.stringify(tip));
+    ok(tip.text.indexOf('Chạm') >= 0, 'mẹo nói đúng việc cần làm');
+    ok(tip.bottom <= 390, 'mẹo nằm gọn trong màn hình');
     await shot('phone-landscape-play');
     await hook('X.goMenu()');
   }, { viewport: LAND, initScript: NO_CONFIRM + " localStorage.setItem('cuoi-ho-v1', JSON.stringify({ seenTip: true, players: { p1: { unlocked: 9 } } }));" });
   assertClean(log, '[13] về đích/luyện câu sai/ghi nhớ');
+  }
+
+  /* ===== 14. Tín hiệu đúng/sai trên vòng lửa: câu trả lời ĐÚNG không bao giờ bị đóng dấu ✕ đỏ ===== */
+  if (want(14)) {
+  console.log('\n[14] Dấu ✓ xanh / ✕ đỏ đúng tín hiệu');
+  // Đếm điểm ảnh đúng màu huy hiệu trong ô nhỏ ở góc trên-phải của một vòng lửa (cài vào trang, CSP không cho eval)
+  const INSTALL_COUNT = () => {
+    window.badgeCount = function (c2, G, gx, lane) {
+      var bx = (gx + G.r * 0.8) * G.dpr, by = (G.laneY[lane] - G.r * 0.8) * G.dpr;
+      var s = Math.max(4, Math.round(G.r * 0.26 * G.dpr));
+      var d = c2.getImageData(Math.round(bx - s), Math.round(by - s), s * 2, s * 2).data;
+      var red = 0, green = 0;
+      for (var i = 0; i < d.length; i += 4) {
+        var R = d[i], Gc = d[i + 1], B = d[i + 2];
+        if (Math.abs(R - 239) < 25 && Math.abs(Gc - 71) < 25 && Math.abs(B - 111) < 25) red++;      // #ef476f = dấu ✕
+        if (Math.abs(R - 6) < 45 && Math.abs(Gc - 214) < 45 && Math.abs(B - 160) < 45) green++;     // #06d6a0 = dấu ✓
+      }
+      return { red: red, green: green };
+    };
+  };
+  log = await withGame('cuoi-ho', async ({ page, hook, shot }) => {
+    await page.click('#btn-play');
+    await hook('X.startGame(window.Lessons.LEVELS[0])');
+    await waitChoose(page);
+    await page.waitForTimeout(300);
+    await page.evaluate(INSTALL_COUNT);
+    // Trả lời ĐÚNG: theo dõi từng khung hình trong lúc vòng lửa tắt dần (burst 0 → 1)
+    const good = await page.evaluate(() => new Promise((resolve) => {
+      const count = window.badgeCount;
+      const X = window.__CuoiHo, G = X.G, g = X.curGate(), lane = g.q.answer;
+      const c2 = document.getElementById('game').getContext('2d');
+      const samples = [];
+      X.choose(lane);
+      const t0 = Date.now();
+      (function step() {
+        const rg = g.rings[lane];
+        if (g.evaluated && rg.burst >= 0 && rg.burst < 0.95) samples.push(Object.assign({ burst: Math.round(rg.burst * 100) / 100 }, count(c2, G, g.wx - G.scroll, lane)));
+        G.parts.length = 0; G.texts.length = 0;   // dọn tia lửa/chữ bay để phép đo bớt nhiễu (chỉ trong lúc kiểm thử)
+        if (rg.burst >= 0.95 || Date.now() - t0 > 5000) {
+          return resolve({
+            result: g.result, n: samples.length,
+            redMax: samples.reduce((a, x) => Math.max(a, x.red), 0),
+            greenMax: samples.reduce((a, x) => Math.max(a, x.green), 0)
+          });
+        }
+        requestAnimationFrame(step);
+      })();
+    }));
+    eq(good.result, 'ok', 'chọn đúng thì kết quả là ok');
+    ok(good.n > 3, 'đo được nhiều khung hình lúc vòng lửa tắt (' + good.n + ')');
+    ok(good.greenMax > 6, 'vòng bé chọn ĐÚNG mang dấu ✓ XANH (' + good.greenMax + ' điểm ảnh #06d6a0)');
+    ok(good.redMax < 100, 'không có huy hiệu ✕ ĐỎ nào nở ra trên vòng trả lời đúng (đỏ nhiều nhất ' + good.redMax + ' điểm ảnh; một huy hiệu thật ~800)');
+    await shot('ipad-land-ok-badge');
+    // Phép đo tất định trên một cụm vòng chưa trả lời: dựng đúng trạng thái vẽ rồi vẽ một khung hình,
+    // hổ được dời ra ngoài khung để trong ô đo chỉ còn huy hiệu (không lẫn màu áo của bé hay tia lửa).
+    await waitChoose(page);
+    await page.waitForTimeout(250);
+    const stamp = await page.evaluate(() => {
+      const X = window.__CuoiHo, G = X.G, g = X.curGate();
+      const c2 = document.getElementById('game').getContext('2d');
+      const lane = g.q.answer, wrong = (lane + 1) % 3;
+      const tigerX = G.tigerX;
+      G.tigerX = -9999;
+      function measure(setup) {
+        g.chosen = -1; g.result = null; g.evaluated = false;
+        g.rings.forEach(function (r) { r.burst = -1; r.flare = 0; r.reveal = false; });
+        G.parts.length = 0; G.texts.length = 0;
+        setup();
+        X.render();
+        const gx = g.wx - G.scroll;
+        return { onAnswer: window.badgeCount(c2, G, gx, lane), onWrong: window.badgeCount(c2, G, gx, wrong) };
+      }
+      const out = {
+        correct: measure(function () { g.chosen = lane; g.result = 'ok'; g.evaluated = true; g.rings[lane].burst = 0.05; }),
+        wrong: measure(function () { g.chosen = wrong; g.result = 'bad'; g.evaluated = true; g.rings[wrong].flare = 1; g.rings[lane].reveal = true; })
+      };
+      measure(function () {});                     // trả cụm vòng về đúng nguyên trạng (chưa trả lời)
+      G.tigerX = tigerX;
+      X.render();
+      return out;
+    });
+    ok(stamp.correct.onAnswer.green > 20, 'vẽ lại: vòng trả lời đúng có dấu ✓ xanh (' + stamp.correct.onAnswer.green + ' điểm ảnh)');
+    eq(stamp.correct.onAnswer.red, 0, 'vẽ lại: KHÔNG một điểm ảnh ✕ đỏ nào trên vòng trả lời đúng');
+    eq(stamp.correct.onWrong.red, 0, 'vẽ lại: vòng không được chọn cũng không mang dấu ✕');
+    ok(stamp.wrong.onWrong.red > 20, 'vẽ lại: chọn sai thì đúng vòng đó mang dấu ✕ đỏ (' + stamp.wrong.onWrong.red + ' điểm ảnh)');
+    eq(stamp.wrong.onWrong.green, 0, 'vẽ lại: vòng chọn sai không mang dấu ✓');
+    ok(stamp.wrong.onAnswer.green > 20, 'vẽ lại: vòng đúng được hé lộ với dấu ✓ xanh (' + stamp.wrong.onAnswer.green + ' điểm ảnh)');
+    eq(stamp.wrong.onAnswer.red, 0, 'vẽ lại: vòng đúng không mang dấu ✕');
+    // Ván vẫn chạy bình thường sau phép đo
+    await hook('X.choose(X.curGate().q.answer)');
+    await page.waitForTimeout(900);
+    eq(await hook('X.G.state'), 'playing', 'ván vẫn chơi tiếp bình thường sau phép đo');
+    ok((await hook('X.G.correct')) >= 2, 'hai câu trả lời đúng đều được tính');
+    await hook('X.goMenu()');
+  }, { viewport: LAND, initScript: NO_CONFIRM + " localStorage.setItem('cuoi-ho-v1', JSON.stringify({ seenTip: true, players: { p1: { unlocked: 9 } } }));" });
+  assertClean(log, '[14] dấu ✓/✕');
   }
 
   if (failures) { console.error('\ncuoi-ho e2e: ' + failures + ' kiểm tra thất bại'); process.exitCode = 1; }

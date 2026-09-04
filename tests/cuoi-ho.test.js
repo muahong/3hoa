@@ -503,3 +503,83 @@ test('cuoi-ho Store: noteMissed / noteOk / reviewPool / addStats', () => {
   assert.equal(S2.p().stats.correct, 7);
   assert.equal(Object.keys(S2.p().missed).length, Object.keys(S.p().missed).length);
 });
+
+/* ---------- 9. Sửa lỗi sau kiểm duyệt: tập luyện không mất tim, dấu ✓/✕ đúng tín hiệu, thẻ câu hỏi bấm được bằng bàn phím ---------- */
+const fs = require('node:fs');
+const path = require('node:path');
+const { ROOT } = require('./lib/load.js');
+const readGame = (f) => fs.readFileSync(path.join(ROOT, 'cuoi-ho', f), 'utf8');
+/** Cắt lấy thân một hàm trong game.js (từ tên hàm đến hàm kế tiếp) để soi đúng chỗ cần kiểm. */
+function fnBody(src, from, to) {
+  const a = src.indexOf(from), b = src.indexOf(to, a + 1);
+  assert.ok(a >= 0 && b > a, 'tìm thấy ' + from);
+  return src.slice(a, b);
+}
+
+/** Chạy một ván trong môi trường giả tới cụm vòng đầu tiên rồi trả lời sai n lần. */
+function playWrong(X, level, n, opts) {
+  X.startGame(level, opts);
+  X.G.state = 'playing';
+  const settle = function () { let g = 0; while (X.G.state === 'playing' && X.G.phase !== 'choose' && g++ < 3000) X.update(0.05); };
+  for (let i = 0; i < n; i++) {
+    settle();
+    if (X.G.state !== 'playing' || X.G.phase !== 'choose') break;
+    X.choose((X.curGate().q.answer + 1) % 3);
+  }
+  settle();
+  return X.G;
+}
+
+test('cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván thường vẫn mất tim)', () => {
+  const { X } = bootWith(undefined);
+  const lv = L.LEVELS[0];
+  // Ván thường: mỗi lần sai mất 1 tim, hết tim thì kết thúc
+  const g1 = playWrong(X, lv, 1);
+  assert.equal(g1.hearts, 3, 'màn 1 có 4 tim, sai 1 câu còn 3');
+  assert.equal(g1.wrong, 1);
+  playWrong(X, lv, 4);
+  assert.equal(X.G.state, 'over', 'sai hết tim → kết thúc ván');
+  // Tập luyện: KHÔNG trừ tim nào và ván không bao giờ kết thúc sớm
+  const g2 = playWrong(X, lv, 5, { practice: true });
+  assert.equal(g2.practice, true);
+  assert.equal(g2.hearts, 4, 'tập luyện: giữ nguyên đủ tim');
+  assert.equal(g2.state, 'playing', 'sai 5 câu vẫn chơi tiếp');
+  assert.ok(g2.wrong >= 5, 'vẫn đếm câu sai để ôn lại');
+});
+
+test('cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh', () => {
+  const body = fnBody(readGame('js/game.js'), 'function drawRingMark', 'function drawGate(');
+  const lines = body.split('\n');
+  const iBad = lines.findIndex((l) => l.indexOf("'#ef476f'") >= 0);
+  assert.ok(iBad > 0, 'có dấu ✕ đỏ');
+  const condBad = lines.slice(0, iBad).reverse().find((l) => /\bif \(/.test(l));
+  assert.match(condBad, /gate\.result === 'bad'/, 'dấu ✕ chỉ vẽ khi kết quả là SAI');
+  assert.match(condBad, /gate\.chosen === lane/, 'và chỉ trên vòng bé đã chọn');
+  const iOk = lines.findIndex((l) => /gate\.result === 'ok'/.test(l));
+  assert.ok(iOk > 0, 'có nhánh riêng cho vòng bé chọn ĐÚNG');
+  assert.match(lines.slice(iOk, iOk + 3).join('\n'), /'#06d6a0', true/, 'vòng chọn đúng mang dấu ✓ xanh');
+});
+
+test('cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; ⏸/💡 khóa khi bảng che ván chơi', () => {
+  const html = readGame('index.html');
+  const card = html.slice(html.indexOf('id="hud-question"') - 200, html.indexOf('id="hud-question"') + 200);
+  for (const attr of ['role="button"', 'tabindex="0"', 'aria-pressed=', 'aria-label=']) assert.ok(card.indexOf(attr) >= 0, 'thẻ câu hỏi có ' + attr);
+  const game = readGame('js/game.js');
+  assert.match(game, /e\.key === 'z' \|\| e\.key === 'Z'/, 'phím Z phóng to đồng hồ');
+  assert.match(game, /document\.activeElement === ui\.question/, 'Enter\/Space khi thẻ đang được chọn');
+  assert.match(fnBody(game, 'function toggleZoom', 'function unzoom'), /syncZoomAria\(\)/, 'cập nhật aria-pressed khi phóng to');
+  assert.match(game, /lockHud\(true\)/, 'khóa HUD khi bảng kết quả\/hỏi đáp che ván chơi');
+  const css = readGame('style.css');
+  assert.match(css, /#hud\.locked \.hud-top/, 'HUD bị khóa được làm mờ');
+  // Đổi "giảm chuyển động" ở hệ thống phải vẽ lại công tắc ✨ Hiệu ứng
+  assert.match(game, /addEventListener\('change', function \(\) \{ Motion\.refresh\(\); renderAudioToggles\(\); \}\)/, 'mq change vẽ lại công tắc');
+});
+
+test('cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"', () => {
+  const css = readGame('style.css');
+  const a = css.indexOf('@media (max-height: 480px)');
+  assert.ok(a > 0, 'có khối cho máy nằm ngang');
+  const block = css.slice(a, css.indexOf('}\n', css.indexOf('.tap-tip', a)));
+  assert.ok(!/\.tap-tip \{[^}]*display: none/.test(block), 'không ẩn hẳn mẹo ở 480px');
+  assert.match(block, /\.tap-tip \{[^}]*font-size/, 'chỉ thu gọn mẹo lại');
+});

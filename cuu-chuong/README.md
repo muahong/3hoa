@@ -51,12 +51,21 @@ Không cần cơ sở dữ liệu. Điểm cao và bảng vàng được lưu ng
 | Nhân chia số lớn | `23 × 4`, `84 : 4`, `125 × 3` |
 | Siêu Vệ Binh | Trộn tất cả, rơi nhanh hơn |
 
-Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 khiên 🛡️. Thiên thạch chạm khiên làm mất 1 khiên và hiện đáp án đúng. Trả lời sai 2 lần, thiên thạch sẽ hiện đáp án để bé gõ theo (được ít điểm hơn). Bắn thiên thạch 💗 để hồi khiên. Trả lời đúng liên tiếp để nhân điểm (Combo x2, x3, x4). Cứ 5 câu đúng lên một đợt, thiên thạch rơi nhanh hơn và xuất hiện nhiều hơn. Cuối ván có mục **Cần ôn lại** liệt kê các phép tính bé làm sai (chạm để nghe đọc).
+Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 khiên 🛡️. Thiên thạch chạm khiên làm mất 1 khiên và hiện lời giải thích. Trả lời sai lần đầu, game mách **cách nghĩ** (chưa lộ đáp án); sai lần thứ hai, thiên thạch hiện đáp án để bé gõ theo (được ít điểm hơn, thẻ trả lời hiện số mờ, gõ đúng chữ số nào thì chữ số đó xanh). Bắn thiên thạch 💗 để hồi khiên. Trả lời đúng liên tiếp để nhân điểm (Combo x2, x3, x4). Cứ 5 câu đúng lên một đợt, thiên thạch rơi nhanh hơn và xuất hiện nhiều hơn. Cuối ván có mục **Cần ôn lại** liệt kê các phép tính bé làm sai (chạm để nghe đọc).
 
 Màn **📖 Bảng cửu chương** ở menu chính cho bé xem bảng nhân và bảng chia từ 2 đến 9, chạm vào từng dòng để nghe đọc, hoặc bấm **🔊 Đọc cả bảng** (đọc lần lượt cả bảng nhân rồi bảng chia). Bấm **🚀 Luyện bảng này** ở cuối màn để vào chơi ngay bảng đang xem.
 
 Hết khiên hoặc còn câu làm sai, màn kết quả hiện thêm nút **📖 Xem bảng N** để bé ôn lại đúng bảng vừa gặp khó rồi thử lại — không phải quay về menu tìm lại.
 Câu của lớp 2 (bảng 2, bảng 5) luôn giữ đúng thứ tự của bảng (`2 × 7`, không đảo thành `7 × 2`); lớp 3 mới đảo thừa số để bé quen tính giao hoán. Màn có câu 3 chữ số (Nhân chia số lớn, Siêu Vệ Binh) và màn Tìm thừa số cho thiên thạch rơi chậm hơn để bé kịp tính.
+
+## Nút 💡 Gợi ý 💡
+
+Bé bí thì bấm nút **💡** ở góc trên bên phải (hoặc phím **H** trên máy tính):
+
+1. **Lần đầu** – game mách *cách nghĩ* theo đúng cách dạy ở tiểu học, chưa nói đáp án: `7 × 8` → "Con đếm thêm một lần nữa. Lấy 7 × 7 rồi cộng thêm 7."; `42 : 6` → "Con nghĩ ngược lại, 6 nhân mấy thì bằng 42."; `? × 6 = 42` → "Muốn tìm thừa số chưa biết, con lấy tích chia cho thừa số kia, tức là 42 : 6."; `23 × 4` → "Con đặt tính rồi tính…". Câu này mất phần thưởng trả lời nhanh và chỉ được **nửa điểm**, nhưng vẫn tính là bé tự làm được.
+2. **Lần thứ hai** – hiện thẳng đáp án kèm lời giải thích đầy đủ (như khi sai 2 lần).
+
+Mọi lời mách và lời giải thích đều được **đọc thành tiếng** (nếu máy có giọng tiếng Việt). Màn kết quả ghi rõ số câu bé đã nhìn đáp án và số lần dùng gợi ý.
 
 ## Nhiều bé dùng chung một máy 👧🧒
 
@@ -78,11 +87,15 @@ Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân d�
 
 - Nút **✨ Hiệu ứng: Nhiều / Ít** cạnh các nút âm thanh: giảm hạt, tắt rung và chớp màn hình. Máy đã bật *Giảm chuyển động* (prefers-reduced-motion) được tự động dùng chế độ ít hiệu ứng.
 - Mọi thẻ màn chơi, dòng bảng cửu chương bấm được bằng phím **Tab + Enter**, có viền tiêu điểm rõ ràng; vùng chạm tối thiểu 44 px; nút bật/tắt có `aria-pressed`.
+- Bảng điều khiển mở ra bằng hiệu ứng nhẹ, ngôi sao ở màn kết quả hiện lần lượt, pháo giấy chúc mừng khi lập kỷ lục hoặc đạt từ 2 sao — tất cả đều tắt khi chọn *Hiệu ứng: Ít*.
+- Ba bông hoa trên hành tinh đung đưa theo gió và reo lên mỗi lần bé bắn trúng (đứng yên ở chế độ ít hiệu ứng).
+- Ở màn hình chờ game chỉ vẽ 30 hình/giây, thân thiên thạch và dải màu đuôi lửa được dựng sẵn một lần nên máy đỡ nóng, đỡ tốn pin.
 
 ## Tùy chỉnh nhanh
 
 - **Thêm hoặc sửa màn chơi**: chỉnh `TABLE_LEVELS` và `CHALLENGE_LEVELS` trong `js/tables.js` (tốc độ `speed`, số chữ số tối đa `maxDigits`).
-- **Độ khó**: `BASE_FALL` (giây rơi tới khiên), `meteorCap()`, `spawnGap()` trong `js/game.js`.
+- **Độ khó**: `BASE_FALL` (giây rơi tới khiên), `meteorCap()`, `spawnGap()` trong `js/game.js`; hệ số `fall` của từng màn trong `js/tables.js`.
+- **Lời mách và lời giải thích**: hàm `hintFor()` và `explainFor()` trong `js/tables.js` (không dùng dấu `?` và chỉ dùng dấu `:` làm dấu chia để máy đọc đúng).
 - **Ngưỡng sao**: hàm `starThresholds` và bảng `STAR_FACTOR` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuu-chuong-v2` → `cuu-chuong-v3`) để thiết bị đã cài nhận bản mới.

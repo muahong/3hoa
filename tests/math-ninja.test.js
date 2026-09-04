@@ -524,6 +524,33 @@ test('explain(q): mọi bước đều đúng số học và kết thúc bằng 
   assert.equal(MG.explain(null), '');
 });
 
+test('explain(q): không dạy mẹo "10 − 10 = 0" ở màn lớp 1', () => {
+  // 10 − b không cần mẹo nào cả: bớt hết 10 rồi thêm lại là ngược cách dạy lớp 1
+  assert.equal(MG.explain(MG.make(10, 1, '-', 12)), '');
+  assert.equal(MG.explain(MG.make(10, 3, '-', 12)), '');
+  assert.equal(MG.explain(MG.make(10, 9, '-', 12)), '');
+  // Từ hai chục trở lên thì mẹo "bớt 10 rồi thêm lại" mới có ích
+  assert.equal(MG.explain(MG.make(20, 7, '-', 24)), '20 − 10 = 10, thêm 3 nữa là 13');
+  assert.equal(MG.explain(MG.make(30, 8, '-', 40)), '30 − 10 = 20, thêm 2 nữa là 22');
+  // Không lời giải thích nào của bất kỳ màn nào được đi qua số 0
+  for (const lvl of MG.ANSWER_LEVELS) {
+    for (let i = 0; i < N; i++) {
+      const s = MG.explain(lvl.gen());
+      assert.doesNotMatch(s, /= 0,/, lvl.id + ': lời giải thích đi qua số 0 — "' + s + '"');
+    }
+  }
+  // Quét màn a1 (lớp 1): mọi câu dạng 10 − b đều im lặng
+  const a1 = MG.levelById('a1');
+  let seen = 0;
+  for (let i = 0; i < 20000; i++) {
+    const q = a1.gen();
+    if (q.op !== '-' || q.a !== 10 || q.b <= 0 || q.b >= 10) continue;
+    seen++;
+    assert.equal(MG.explain(q), '', 'a1: "' + q.text + '" không được giải thích vòng vo');
+  }
+  assert.ok(seen > 100, 'mẫu thử phải gặp dạng 10 − b (chỉ gặp ' + seen + ' lần)');
+});
+
 test('misconception(q, v): gọi đúng tên lỗi quen thuộc, im lặng với số ngẫu nhiên', () => {
   const carry = MG.make(8, 7, '+', 24);
   assert.match(MG.misconception(carry, 5), /quên nhớ/);
@@ -593,6 +620,149 @@ test('style.css: dải gợi ý xuống dòng được và mưa giấy màu tắ
   assert.match(css, /\.hud-btn\[disabled\]/, 'nút HUD bị khoá phải thấy rõ');
   assert.match(css, /\.level-card \.new \{/, 'thẻ màn chưa chơi phải có kiểu riêng');
   assert.match(css, /\.level-card\.next \{/, 'thẻ "chơi tiếp" phải nổi bật');
+});
+
+/* ---------------- 11b. Tương phản màu (C4/C9/C10) ----------------
+   Chữ trắng nằm ở GIỮA nút, nên phải kiểm cả điểm giữa dải màu chứ không chỉ mốc đậm.
+   Và vì nhãn nút thu xuống 15–17 px ở khổ điện thoại (không còn là "chữ to" theo WCAG),
+   ngưỡng phải là 4.5:1 chứ không phải ngoại lệ 3:1 — nếu không phép thử chỉ đạt ở khổ màn hình thuận lợi. */
+const srgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+function lum(hex) {
+  const v = srgb(hex).map((x) => {
+    const u = x / 255;
+    return u <= 0.03928 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const mixHex = (a, b) => '#' + srgb(a).map((v, i) => Math.round((v + srgb(b)[i]) / 2).toString(16).padStart(2, '0')).join('');
+
+test('style.css: chữ trắng trên nút đạt 4.5:1 ở MỌI điểm của dải màu (C10)', () => {
+  const css = readGameFile('style.css');
+  const stopsOf = (rx, name) => {
+    const m = css.match(rx);
+    assert.ok(m, 'không tìm thấy nền chuyển sắc của ' + name);
+    const s = (m[1].match(/#[0-9a-f]{6}/gi) || []).map((x) => x.toLowerCase());
+    assert.equal(s.length, 2, name + ' phải có đúng hai mốc màu (đang: ' + m[1] + ')');
+    return s;
+  };
+  const buttons = {
+    '.btn': stopsOf(/\n\.btn \{[\s\S]*?background: (linear-gradient\([^;]*\));/, '.btn'),
+    '.btn.teal': stopsOf(/\n\.btn\.teal \{ background: (linear-gradient\([^)]*\))/, '.btn.teal'),
+    '.btn.green': stopsOf(/\n\.btn\.green \{ background: (linear-gradient\([^)]*\))/, '.btn.green')
+  };
+  for (const name of Object.keys(buttons)) {
+    const s = buttons[name];
+    for (const [where, c] of [['đỉnh', s[0]], ['giữa', mixHex(s[0], s[1])], ['đáy', s[1]]]) {
+      const r = ratio('#ffffff', c);
+      assert.ok(r >= 4.5, name + ': chữ trắng ở ' + where + ' nút chỉ đạt ' + r.toFixed(2) + ':1 trên ' + c
+        + ' (cần 4.5:1 vì nhãn nút xuống 15–17 px trên điện thoại)');
+    }
+  }
+  // Viền 3-D dưới nút phải đậm hơn đáy dải màu, nếu không nút mất cảm giác khối
+  const tok = {};
+  let m, re = /--([\w-]+):\s*(#[0-9a-f]{6})/gi;
+  while ((m = re.exec(css))) tok[m[1]] = m[2].toLowerCase();
+  const edges = { '.btn': 'orange-deep', '.btn.teal': 'teal-deep', '.btn.green': 'green-deep' };
+  for (const name of Object.keys(edges)) {
+    const shadow = tok[edges[name]];
+    assert.ok(shadow, 'thiếu biến --' + edges[name]);
+    assert.ok(lum(shadow) < lum(buttons[name][1]) * 0.85, name + ': viền 3-D (' + shadow + ') phải đậm hơn hẳn đáy nút (' + buttons[name][1] + ')');
+  }
+});
+
+test('style.css: chữ trên bảng kết quả và thẻ màn đạt 4.5:1 (C4/C9)', () => {
+  const css = readGameFile('style.css');
+  const tok = {};
+  let m, re = /--([\w-]+):\s*(#[0-9a-f]{6})/gi;
+  while ((m = re.exec(css))) tok[m[1]] = m[2].toLowerCase();
+  const colorOf = (sel) => {
+    const r = css.match(new RegExp('\\n' + sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{[^}]*color: ([^;]+);'));
+    assert.ok(r, 'không tìm thấy màu chữ của ' + sel);
+    const v = r[1].trim();
+    const t = v.match(/^var\(--([\w-]+)\)$/);
+    const hex = t ? tok[t[1]] : v.toLowerCase();
+    assert.match(hex || '', /^#[0-9a-f]{6}$/, sel + ': không đọc được màu "' + v + '"');
+    return hex;
+  };
+  // Ô thống kê nằm trên nền #f4f6fc, thẻ màn chuyển sắc xuống #f4f6fc ở chân thẻ
+  const BG = '#f4f6fc';
+  for (const sel of ['.stat.ok .v', '.stat.bad .v', '.stat.combo .v', '.stat.acc .v', '.stat.bomb .v',
+    '.level-card .new', '.level-card .best']) {
+    const r = ratio(colorOf(sel), BG);
+    assert.ok(r >= 4.5, sel + ': chỉ đạt ' + r.toFixed(2) + ':1 trên ' + BG + ' (màu ' + colorOf(sel) + ')');
+  }
+});
+
+/* Đọc một khai báo bất kỳ của một quy tắc CSS và quy về mã hex (giải cả var(--x)). */
+function declOf(css, tok, sel, prop) {
+  const q = sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rule = css.match(new RegExp('\\n' + q + ' \\{([^}]*)\\}'));
+  assert.ok(rule, 'không tìm thấy quy tắc ' + sel);
+  // (^|;) để "color" không khớp nhầm vào "background-color"
+  const m = rule[1].match(new RegExp('(?:^|;)\\s*' + prop + ':\\s*([^;]+)'));
+  assert.ok(m, 'không tìm thấy ' + prop + ' của ' + sel);
+  const v = m[1].trim();
+  const t = v.match(/^var\(--([\w-]+)\)$/);
+  const hex = (t ? tok[t[1]] : v).toLowerCase();
+  assert.match(hex || '', /^#[0-9a-f]{6}$/, sel + ': không đọc được ' + prop + ' "' + v + '"');
+  return hex;
+}
+const tokensOf = (css) => {
+  const tok = {};
+  let m, re = /--([\w-]+):\s*(#[0-9a-f]{6})/gi;
+  while ((m = re.exec(css))) tok[m[1]] = m[2].toLowerCase();
+  return tok;
+};
+
+test('style.css: chữ trên bảng vàng, chip thời gian, chân trang và dải gợi ý đạt 4.5:1', () => {
+  const css = readGameFile('style.css');
+  const tok = tokensOf(css);
+  // [chọn tử, thuộc tính, nền/chữ đối diện, mô tả]
+  const cases = [
+    ['.leader h3', 'color', '#fffaf0', 'tiêu đề 🏆 Bảng vàng trên nền kem'],
+    ['.leader li.me', 'color', '#fffaf0', 'dòng của chính bé trên bảng vàng'],
+    ['.chip-group button.on', 'color', '#ffffff', 'chip thời gian đang chọn'],
+    ['.footer-note a', 'color', '#ffffff', 'liên kết 3hoa.com ở chân trang'],
+    ['.hint.bad', 'background', '#ffffff', 'dải giải thích khi chém sai (chữ trắng)']
+  ];
+  for (const [sel, prop, other, why] of cases) {
+    const hex = declOf(css, tok, sel, prop);
+    const r = ratio(hex, other);
+    assert.ok(r >= 4.5, sel + ' (' + why + '): chỉ đạt ' + r.toFixed(2) + ':1 (' + hex + ' / ' + other + ')');
+  }
+  // Dải gợi ý đúng: chữ sẫm trên nền xanh lá
+  const okBg = declOf(css, tok, '.hint.ok', 'background');
+  const okFg = declOf(css, tok, '.hint.ok', 'color');
+  assert.ok(ratio(okFg, okBg) >= 4.5, '.hint.ok chỉ đạt ' + ratio(okFg, okBg).toFixed(2) + ':1');
+  // Dấu "?" trong thẻ phép tính là chữ rất to (34–58 px, đậm) nên ngưỡng WCAG là 3:1,
+  // nhưng var(--orange) cũ chỉ đạt 2.84:1 nên vẫn phải đổi sang màu đậm hơn.
+  const qc = declOf(css, tok, '.question-card .q', 'color');
+  const rq = ratio(qc, '#ffffff');
+  assert.ok(rq >= 3, '.question-card .q chỉ đạt ' + rq.toFixed(2) + ':1 trên thẻ trắng (cần ≥ 3 cho chữ to)');
+});
+
+test('style.css: mọi vùng chạm (nút, chip, thẻ) đều ≥ 44 px ở mọi khổ màn hình', () => {
+  const css = readGameFile('style.css');
+  const touch = /\.btn|button|\.toggle|\.tab\b|\.avatar|\.player-item|\.level-card/;
+  let m, re = /([^{}]+)\{([^{}]*)\}/g, seen = 0;
+  while ((m = re.exec(css))) {
+    const sel = m[1].replace(/[\s\S]*\{/, '').trim();      // bỏ phần "@media (...) {" nếu có
+    const mh = m[2].match(/min-height:\s*(\d+)px/);
+    if (!mh || !touch.test(sel)) continue;
+    seen++;
+    assert.ok(Number(mh[1]) >= 44, sel + ': min-height ' + mh[1] + 'px < 44px (SPEC §4)');
+  }
+  assert.ok(seen >= 10, 'chỉ tìm thấy ' + seen + ' quy tắc vùng chạm — biểu thức lọc có vấn đề');
+});
+
+test('style.css: mưa giấy màu rơi phía sau bảng kết quả', () => {
+  const css = readGameFile('style.css');
+  const fx = css.match(/\n\.result-fx \{[\s\S]*?z-index: (\d+)/);
+  assert.ok(fx, 'thiếu .result-fx');
+  const panel = css.match(/\n#gameover \.panel \{[^}]*z-index: (\d+)/);
+  assert.ok(panel, 'bảng kết quả phải có z-index riêng, nếu không giấy màu đè lên chữ');
+  assert.ok(Number(panel[1]) > Number(fx[1]), 'bảng kết quả (' + panel[1] + ') phải xếp trên lớp giấy màu (' + fx[1] + ')');
 });
 
 test('game.js: câu dùng gợi ý chỉ 50 điểm và không tăng combo (C2)', () => {

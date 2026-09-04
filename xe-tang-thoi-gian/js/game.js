@@ -2376,7 +2376,7 @@
         (n ? '<span>🎯 ' + acc1 + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
         (r.passed ? '<span class="passed">✅ Đã qua</span>' : '') +
         (mastered(l.id) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
-        (weak ? '<span class="n">⚠️ Cần luyện thêm</span>' : '') + '</div>';
+        (weak ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') + '</div>';
     }).join('');
     const pool = Store.reviewPool();
     $('report-review').innerHTML = pool.length

@@ -2236,7 +2236,7 @@
       '<span>🏆 ' + fmt(any.best) + '</span>' +
       (n ? '<span>' + Math.round(c / n * 100) + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
       (l.table && mastered('t' + l.table) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
-      (isWeak(l) ? '<span class="warn">⚠️ Cần luyện thêm</span>' : '') + '</div>';
+      (isWeak(l) ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') + '</div>';
   }
 
   function renderReport() {

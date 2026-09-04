@@ -712,7 +712,7 @@ html, body {
 .report-row .stars { color: #ffbf1f; letter-spacing: 2px; font-size: 18px; }
 .report-row .stars .off { color: #d5d9e6; }
 .report-row .mastered { color: var(--green-dark); font-size: 14px; }
-.report-row .weak { color: var(--red-dark); font-size: 14px; }
+.report-row .weak { color: #8a3b00; font-size: 14px; font-weight: 800; }
 .report-row .clock-svg { width: 56px; height: 56px; filter: none; flex-shrink: 0; }
 .report-row .rv-explain { display: block; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
 .parent-row { margin-top: 14px !important; font-size: 15px !important; }

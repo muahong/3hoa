@@ -359,6 +359,7 @@ html, body {
 .report-row .stars .off { color: #d5d9e6; }
 .report-row .mastered, .level-card .mastered { color: var(--green-dark); font-size: 13px; font-weight: 800; }
 .report-row .n { color: var(--red-dark); }
+.report-row .weak { color: #8a3b00; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
 .report-row .muted { color: #666c8b; font-weight: 600; }
 .parent-row { margin-top: 14px; }
 .linkish {

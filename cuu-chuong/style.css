@@ -373,7 +373,7 @@ html, body {
 .report-row .stars .off { color: #c3c8d8; }
 .report-row .muted { color: #6b7190; font-size: 14px; }
 .report-row.weak { background: #fff4d6; color: #7a4a00; }
-.report-row .warn { color: #a35a00; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
+.report-row .weak { color: #8a3b00; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
 .mastered { color: #04785a; font-size: 0.85em; font-weight: 800; white-space: nowrap; }
 
 /* ---------- Chọn màn ---------- */

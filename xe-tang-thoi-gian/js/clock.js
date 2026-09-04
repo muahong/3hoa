@@ -80,7 +80,8 @@
   /* ================= VẼ ĐỒNG HỒ ================= */
   /**
    * Vẽ đồng hồ kim tại (x, y), bán kính r.
-   * opts: { minuteTicks, numbers: 'all' | 'quarter' | 'auto', face, border, hourColor, minuteColor, alpha, noFace, noHands }
+   * opts: { minuteTicks, emphasizeMinutes, numbers: 'all' | 'quarter' | 'auto', face, border, hourColor, minuteColor, alpha, noFace, noHands }
+   * emphasizeMinutes: vạch phút đậm hơn (bài "chính xác đến từng phút", "kim dài chỉ số n")
    */
   function drawClock(c, x, y, r, h, m, opts) {
     const o = Object.assign({ minuteTicks: r >= 30, numbers: 'auto', face: '#ffffff', border: '#2b2d42', hourColor: '#2b2d42', minuteColor: '#ef476f', alpha: 1, shadow: true }, opts || {});
@@ -101,16 +102,17 @@
         const big = i % 5 === 0;
         if (!big && !o.minuteTicks) continue;
         const a = i / 60 * TAU - Math.PI / 2;
-        const r0 = r * (big ? 0.84 : 0.9), r1 = r * 0.95;
-        c.strokeStyle = big ? o.border : 'rgba(43,45,66,0.55)';
-        c.lineWidth = big ? Math.max(1.5, r * 0.05) : Math.max(1, r * 0.02);
+        const r0 = r * (big ? 0.84 : 0.88), r1 = r * 0.95;
+        c.strokeStyle = big ? o.border : 'rgba(43,45,66,0.8)';
+        c.lineWidth = big ? Math.max(1.5, r * 0.05)
+          : (o.emphasizeMinutes ? Math.max(2, r * 0.035) : Math.max(1.5, r * 0.03));
         c.lineCap = 'round';
         c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke();
       }
       // Số
-      const numbers = o.numbers === 'auto' ? (r >= 34 ? 'all' : 'quarter') : o.numbers;
+      const numbers = o.numbers === 'auto' ? (r >= 30 ? 'all' : 'quarter') : o.numbers;
       if (numbers !== 'none') {
-        const size = numbers === 'all' ? r * 0.26 : r * 0.34;
+        const size = numbers === 'all' ? r * 0.28 : r * 0.34;
         c.font = '800 ' + Math.round(size) + 'px ' + FONT;
         c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillStyle = o.border;
@@ -329,7 +331,7 @@
     return wrap({
       kind: 'five',
       info: { kind: 'five', n5: n },
-      prompt: { text: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', speech: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', clocks: [{ h: 12, m: m }], hideHour: true },
+      prompt: { text: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', speech: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', clocks: [{ h: 12, m: m }], hideHour: true, emphasizeMinutes: true },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
       answer: { label: m + ' phút', speech: 'Kim dài chỉ số ' + n + ' là ' + m + ' phút' },
       explain: 'Mỗi số cách nhau 5 phút. Đếm 5, 10, 15… đến số ' + n + ' được ' + m + ' phút.'
@@ -479,7 +481,7 @@
       return wrap({
         kind: 'exact',
         info: { kind: 'exact', variant: 0, h: h, m: m },
-        prompt: { text: 'Đồng hồ chỉ mấy giờ?', speech: 'Đồng hồ chỉ mấy giờ?', clocks: [{ h: h, m: m }] },
+        prompt: { text: 'Đồng hồ chỉ mấy giờ?', speech: 'Đồng hồ chỉ mấy giờ?', clocks: [{ h: h, m: m }], emphasizeMinutes: true },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: plain, speech: 'Đồng hồ chỉ ' + plain },
         explain: explainRead({ h: h, m: m }, 'plain')
@@ -525,11 +527,14 @@
     // Đọc giờ → đồng hồ kim chính xác đến phút
     const correct = clockOpt({ h: h, m: m }, true);
     const wrongs = [clockOpt({ h: h12(h + 1), m: m }), clockOpt({ h: h, m: (m + 20) % 60 }), clockOpt({ h: h, m: (m + 40) % 60 }), clockOpt({ h: h12(h + 6), m: m })];
+    // Bảng đáp án cần vạch phút đậm: bé phải đếm từng vạch nhỏ mới phân biệt được
+    const exactOpts = buildOptions(correct, shuffle(wrongs), cfg.n || 3);
+    exactOpts.forEach((o) => { o.emphasizeMinutes = true; });
     return wrap({
       kind: 'exact',
       info: { kind: 'exact', variant: 3, h: h, m: m },
       prompt: { text: 'Bắn đồng hồ chỉ ' + plain + '!', speech: 'Bắn đồng hồ chỉ ' + plain, clocks: [] },
-      options: buildOptions(correct, shuffle(wrongs), cfg.n || 3),
+      options: exactOpts,
       answer: { label: plain, speech: plain + ': kim ngắn ' + hourHandText({ h: h, m: m }) + ', kim dài ' + minuteHandText(m) },
       explain: plain + ': kim dài ' + minuteHandText(m) + ', kim ngắn ' + hourHandText({ h: h, m: m }) + '.'
     });

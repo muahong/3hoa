@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,6 +24,7 @@
 <body>
 <div id="app">
   <canvas id="game"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
 
   <!-- ================= HUD (khi đang chơi) ================= -->
   <div id="hud" class="screen hidden">
@@ -41,17 +44,19 @@
           <div class="bar"><div class="fill" id="hud-timer-fill"></div></div>
           <span class="time" id="hud-time">1:30</span>
         </div>
-        <div class="hint" id="hud-hint" hidden></div>
+        <div class="hint gone" id="hud-hint" aria-live="polite"></div>
       </div>
       <div class="hud-right">
         <div class="shields" id="hud-shields"><span>🛡️</span><span>🛡️</span><span>🛡️</span></div>
+        <button class="btn" id="btn-hint" aria-label="Gợi ý">💡</button>
         <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
     </div>
+    <div class="stage-banner" id="hud-stage-banner" role="status" aria-live="polite" hidden></div>
   </div>
 
   <!-- ================= BÀN PHÍM SỐ ================= -->
-  <div id="numpad" class="off" aria-label="Bàn phím số">
+  <div id="numpad" class="off" role="group" aria-label="Bàn phím số">
     <button type="button" class="k k7" data-key="7">7</button>
     <button type="button" class="k k8" data-key="8">8</button>
     <button type="button" class="k k9" data-key="9">9</button>
@@ -130,20 +135,24 @@
         </div>
       </div>
       <p class="subtitle">Luyện bảng nhân, bảng chia cho các bạn lớp 2, lớp 3 🚀🪐</p>
+      <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi">
+        <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
+      </button>
       <div class="btn-row">
         <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
       </div>
-      <div class="btn-row" style="margin-top:12px">
+      <div class="btn-row mt-12">
         <button class="btn teal small" id="btn-tables">📖 Bảng cửu chương</button>
+        <button class="btn purple small" id="btn-report">📊 Kết quả</button>
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
       <div class="menu-options">
         <span class="chip-label">⏱ Thời gian mỗi ván:</span>
         <div class="chip-group" id="duration-group">
-          <button data-sec="60">1 phút</button>
-          <button data-sec="90" class="on">1,5 phút</button>
-          <button data-sec="120">2 phút</button>
+          <button type="button" data-sec="60" aria-pressed="false">1 phút</button>
+          <button type="button" data-sec="90" class="on" aria-pressed="true">1,5 phút</button>
+          <button type="button" data-sec="120" aria-pressed="false">2 phút</button>
         </div>
       </div>
       <p class="footer-note">Gõ đáp án rồi bấm 🚀 BẮN để phá thiên thạch! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
@@ -154,20 +163,20 @@
   <div id="levels" class="screen hidden">
     <div class="panel wide">
       <div class="screen-head">
-        <button class="btn ghost small" id="btn-levels-back">← Quay lại</button>
+        <button class="btn ghost small" id="btn-levels-back">← <span class="txt">Quay lại</span></button>
         <h2>Chọn màn chơi</h2>
-        <button class="btn ghost small" id="btn-levels-howto">❓</button>
+        <button class="btn ghost small" id="btn-levels-howto" aria-label="Cách chơi">❓</button>
       </div>
-      <div class="tabs">
-        <button class="tab on" data-mode="table">📚 Luyện từng bảng</button>
-        <button class="tab" data-mode="challenge">🏆 Thử thách</button>
+      <div class="tabs" role="tablist" aria-label="Kiểu màn chơi">
+        <button type="button" class="tab on" role="tab" aria-selected="true" data-mode="table">📚 Luyện từng bảng</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-mode="challenge">🏆 Thử thách</button>
       </div>
       <div class="menu-options" id="op-row">
         <span class="chip-label">Phép tính:</span>
         <div class="chip-group" id="op-group">
-          <button data-op="mul">Nhân ×</button>
-          <button data-op="div">Chia :</button>
-          <button data-op="mix" class="on">Cả hai</button>
+          <button type="button" data-op="mul" aria-pressed="false">Nhân ×</button>
+          <button type="button" data-op="div" aria-pressed="false">Chia :</button>
+          <button type="button" data-op="mix" class="on" aria-pressed="true">Cả hai</button>
         </div>
       </div>
       <p class="mode-desc" id="mode-desc">Chọn bảng muốn luyện. Mỗi thiên thạch mang một phép tính!</p>
@@ -179,13 +188,14 @@
   <div id="tables" class="screen hidden">
     <div class="panel wide">
       <div class="screen-head">
-        <button class="btn ghost small" id="btn-tables-back">← Quay lại</button>
+        <button class="btn ghost small" id="btn-tables-back">← <span class="txt">Quay lại</span></button>
         <h2>📖 Bảng cửu chương</h2>
-        <button class="btn teal small" id="btn-tables-read">🔊 Đọc cả bảng</button>
+        <button class="btn teal small" id="btn-tables-read" aria-label="Đọc cả bảng">🔊 <span class="txt">Đọc cả bảng</span></button>
+        <button class="btn green small" id="btn-tables-play" aria-label="Luyện bảng này">🚀 <span class="txt">Luyện bảng này</span></button>
       </div>
       <div class="table-tabs" id="table-tabs"></div>
       <div class="table-body" id="table-body"></div>
-      <p class="tip">💡 Chạm vào một dòng để nghe đọc. Học thuộc rồi vào <b>Chơi ngay</b> để thử sức nhé!</p>
+      <p class="tip">💡 Chạm vào một dòng để nghe đọc. Học thuộc rồi bấm <b>🚀 Luyện bảng này</b> để thử sức nhé!</p>
     </div>
   </div>
 
@@ -199,11 +209,71 @@
         <div class="howto-item"><div class="em">🎯</div><div class="tx">Pháo nhắm vào thiên thạch <b>thấp nhất</b> (có vòng sáng). Chạm vào thiên thạch khác để đổi mục tiêu.</div></div>
         <div class="howto-item"><div class="em">🛡️</div><div class="tx">Thiên thạch chạm khiên sẽ làm <b>mất 1 khiên</b>. Hết 3 khiên là thua. Bắn thiên thạch 💗 để hồi khiên.</div></div>
         <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Sai 2 lần, thiên thạch sẽ <b>hiện đáp án</b> để bé gõ theo.</div></div>
+        <div class="howto-item"><div class="em">💡</div><div class="tx">Bí quá thì bấm <b>💡 Gợi ý</b> (hoặc phím <b>H</b>): lần đầu game mách <b>cách nghĩ</b>, bấm lần nữa sẽ <b>hiện đáp án</b>. Câu có gợi ý được ít điểm hơn.</div></div>
       </div>
       <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
       <div class="btn-row">
         <button class="btn" id="btn-howto-close">Đã hiểu!</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= NGƯỜI CHƠI ================= -->
+  <div id="players" class="screen hidden dim">
+    <div class="panel">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-players-back">← <span class="txt">Quay lại</span></button>
+        <h2>👋 Ai đang chơi?</h2>
+        <button class="btn teal small" id="btn-players-report" aria-label="Xem kết quả">📊</button>
+      </div>
+      <div class="player-list" id="player-list"></div>
+      <div class="btn-row">
+        <button class="btn small green" id="btn-player-add">＋ Thêm bạn mới</button>
+        <button class="btn ghost small" id="btn-player-rename">✏️ Đổi tên</button>
+        <button class="btn ghost small" id="btn-player-avatar">🎭 Đổi hình</button>
+        <button class="btn ghost small" id="btn-player-remove">🗑 Xóa</button>
+      </div>
+      <form class="player-form" id="player-form" hidden autocomplete="off">
+        <label for="player-name" class="sr-only">Tên của con</label>
+        <input id="player-name" maxlength="16" placeholder="Tên của con" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+        <div class="avatar-grid" id="player-avatars"></div>
+        <div class="btn-row">
+          <button type="submit" class="btn small green" id="btn-player-save">💾 Lưu</button>
+          <button type="button" class="btn ghost small" id="btn-player-cancel">Hủy</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= KẾT QUẢ CỦA BÉ (phụ huynh) ================= -->
+  <div id="report" class="screen hidden dim">
+    <div class="panel wide">
+      <div class="screen-head">
+        <button class="btn ghost small" id="btn-report-back">← <span class="txt">Quay lại</span></button>
+        <h2 id="report-title">📊 Kết quả của Bé</h2>
+        <span class="head-spacer"></span>
+      </div>
+      <div class="report-grid" id="report-stats"></div>
+      <h3 class="report-h">Từng màn</h3>
+      <div class="report-rows" id="report-levels"></div>
+      <h3 class="report-h">📝 Cần ôn lại</h3>
+      <div class="report-rows" id="report-review"></div>
+      <p class="parent-row"><button type="button" class="linkish" id="btn-report-reset">🗑 Xóa tiến trình của bé này (phụ huynh)</button></p>
+    </div>
+  </div>
+
+  <!-- ================= CỔNG PHỤ HUYNH ================= -->
+  <div id="parent-gate" class="screen hidden dim">
+    <div class="panel">
+      <h2>👨‍👩‍👧 Dành cho phụ huynh</h2>
+      <p id="parent-gate-q">Để tiếp tục, hãy trả lời: 7 × 8 = ?</p>
+      <form id="parent-gate-form" class="gate-form" autocomplete="off">
+        <input id="parent-gate-input" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="Đáp án" autocomplete="off">
+        <div class="btn-row">
+          <button type="submit" class="btn small green">Xác nhận</button>
+          <button type="button" class="btn ghost small" id="btn-parent-gate-cancel">Hủy</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -238,8 +308,8 @@
       <div class="result-stars" id="result-stars"></div>
       <div id="result-record" class="record-badge" hidden>🏆 KỶ LỤC MỚI!</div>
       <div class="stats">
-        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div></div>
-        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div></div>
+        <div class="stat ok"><div class="v" id="st-correct">0</div><div class="k">Đúng ✅</div><small class="sub" id="st-correct-sub" hidden></small></div>
+        <div class="stat bad"><div class="v" id="st-wrong">0</div><div class="k">Sai ❌</div><small class="sub" id="st-wrong-sub" hidden></small></div>
         <div class="stat combo"><div class="v" id="st-combo">0</div><div class="k">Combo cao nhất 🔥</div></div>
         <div class="stat acc"><div class="v" id="st-acc">0%</div><div class="k">Chính xác 🎯</div></div>
       </div>
@@ -247,28 +317,25 @@
         <h3>📝 Cần ôn lại</h3>
         <div class="review-chips" id="review-chips"></div>
       </div>
-      <div id="name-entry" class="name-entry" hidden>
-        <span style="font-weight:800;font-size:18px">Tên của bạn:</span>
-        <input id="name-input" type="text" maxlength="14" placeholder="Bé tên gì?" autocomplete="off" autocorrect="off" autocapitalize="words">
-        <button class="btn teal small" id="btn-save-name">Lưu</button>
-        <div class="name-chips" id="name-chips"></div>
-      </div>
+      <div id="review-perfect" class="review perfect" hidden>🎉 Không sai câu nào!</div>
       <div class="leader" id="leader"></div>
       <div class="btn-row">
         <button class="btn big" id="btn-again">🔄 Chơi lại</button>
       </div>
       <div class="btn-row">
+        <button class="btn teal small" id="btn-result-tables" hidden>📖 Xem bảng</button>
         <button class="btn ghost small" id="btn-other-level">📚 Chọn màn khác</button>
         <button class="btn ghost small" id="btn-home">🏠 Trang chính</button>
       </div>
     </div>
   </div>
 
-  <div id="toast"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <script src="js/audio.js"></script>
 <script src="js/tables.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

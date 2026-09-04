@@ -3,8 +3,19 @@
    Giao diện rạp xiếc ban đêm, thân thiện với trẻ nhỏ, tối ưu cảm ứng (iPad)
    ============================================================ */
 
+/* Phông dự phòng đo theo Baloo 2: khi Google Fonts về muộn (hoặc không tải được), chữ giữ nguyên cỡ,
+   không "nhảy" một nhịp khi phông thật về. Chỉ dùng phông có sẵn trong máy, không tải thêm gì. */
+@font-face {
+  font-family: 'Baloo 2 Fallback';
+  src: local('Arial Rounded MT Bold'), local('Trebuchet MS'), local('Verdana'), local('Arial');
+  size-adjust: 106%;
+  ascent-override: 92%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+}
+
 :root {
-  --font: "Baloo 2", "Arial Rounded MT Bold", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font: "Baloo 2", "Baloo 2 Fallback", "Arial Rounded MT Bold", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --orange: #ff6b35;
   --orange-dark: #d84f1d;
   --teal: #2ec4b6;
@@ -72,6 +83,18 @@ html, body {
   touch-action: none;
 }
 
+/* Lớp ăn mừng: pháo giấy, sao, tim vẽ ĐÈ LÊN màn kết quả / hỏi đáp (nếu vẽ dưới sẽ bị lớp mờ che mất) */
+#fx {
+  position: absolute;
+  top: 0; left: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 6;
+  pointer-events: none;
+}
+
 /* ---------- Màn hình (overlay) ---------- */
 .screen {
   position: absolute;
@@ -93,6 +116,15 @@ html, body {
 }
 .screen > * { pointer-events: auto; }
 .screen.dim { background: rgba(15, 5, 35, 0.6); }
+/* Lớp phủ thật sự (không nằm trong danh sách showScreen): nền tối phải nuốt cú chạm,
+   nếu không bé chạm xuyên qua và mở màn bên dưới trong khi cổng vẫn treo trên cùng. */
+#parent-gate:not(.hidden), #howto:not(.hidden) { pointer-events: auto; }
+/* Màn kết quả / hỏi đáp mờ nhẹ hơn để nhìn rõ pháo giấy trên lớp #fx */
+#gameover.dim, #quiz.dim { background: rgba(15, 5, 35, 0.45); }
+
+/* Bảng hiện ra mềm mại (C7) – tắt khi giảm chuyển động */
+@keyframes panel-in { from { opacity: 0; transform: translateY(14px) scale(0.97); } }
+.screen:not(.hidden) .panel { animation: panel-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
 .panel {
   background: var(--paper);
@@ -370,8 +402,11 @@ html, body {
 .level-card .stars .off { color: #c3c8d8; }
 .level-card .quiz-ok { position: absolute; left: 12px; top: 12px; font-size: 14px; font-weight: 800; color: #04785a; background: #e3fff4; border-radius: 999px; padding: 3px 9px; }
 .level-card.locked { cursor: default; filter: saturate(0.4); }
+/* Nội dung thẻ mờ hẳn đi để không đọc chồng lên dòng chữ của lớp khóa */
+.level-card.locked > :not(.lock) { opacity: 0.15; filter: blur(1px); }
+.level-card.locked .icon { opacity: 0.6; filter: none; }
 .level-card.locked .lock {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%; inset: 0; background: rgba(240, 242, 250, 0.94);
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%; inset: 0; background: rgba(240, 242, 250, 0.98);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   font-weight: 800; color: var(--ink-soft); font-size: 14px; text-align: center; padding: 10px;
 }
@@ -409,9 +444,28 @@ html, body {
 }
 .emoji-art { font-size: 56px; line-height: 1.1; padding: 6px 0; }
 
+/* Phép tính viết to trong bài học (rõ hơn hẳn emoji kiểu "🌇 ➕ 12") */
+.math-art {
+  font-size: 46px; font-weight: 800; color: var(--purple-dark);
+  background: #f3f0ff; border-radius: 20px; padding: 10px 22px; line-height: 1.15;
+  white-space: nowrap;
+}
+
+/* Băng 24 giờ: hàng trên 1…12, hàng dưới 13…24 thẳng cột nhau */
+.h24-strip { display: grid; gap: 5px; font-variant-numeric: tabular-nums; }
+.h24-strip .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.h24-strip .row span {
+  font-size: clamp(12px, 2.6vw, 17px); font-weight: 800; text-align: center;
+  border-radius: 8px; padding: 5px 0; min-width: 22px;
+}
+.h24-strip .am span { background: #fff3d0; color: #8a4a00; border: 2px solid #f0cf8a; }
+.h24-strip .pm span { background: #e7e0ff; color: var(--purple-dark); border: 2px solid #c3b4ee; }
+
 /* ---------- Ghi nhớ ---------- */
 .notes-list { text-align: left; display: grid; gap: 10px; }
+.notes-hint { font-size: 15px; font-weight: 700; color: var(--ink-soft); background: #fff6e0; border-radius: 14px; padding: 8px 12px; }
 .note-group { background: var(--paper-soft); border-radius: 20px; padding: 10px 14px; }
+.note-group.need { background: #fff6e0; box-shadow: inset 0 0 0 3px #f0cf8a; }
 .note-group h3 { margin: 2px 0 6px; font-size: 18px; color: var(--purple-dark); }
 .note-group h3 .g { font-size: 13px; color: #fff; background: var(--blue); border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: middle; }
 .note-line {
@@ -453,6 +507,7 @@ html, body {
 .score-box .label { display: block; font-size: 13px; letter-spacing: 2px; font-weight: 800; color: var(--ink-soft); }
 .score-box .value { display: block; font-size: 34px; font-weight: 800; color: var(--orange-dark); transition: transform 0.1s; }
 .score-box .value.bump { transform: scale(1.18); }
+.stage-chip, .combo-chip, .screen-head .btn { white-space: nowrap; }
 .stage-chip {
   background: var(--purple); color: #fff; font-weight: 800; font-size: 15px;
   padding: 5px 12px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
@@ -477,7 +532,7 @@ html, body {
   transition: transform 0.15s ease, background 0.2s;
 }
 .question-card .q-visual { flex: 0 0 auto; display: flex; align-items: center; }
-.question-card .q-visual .clock { width: 104px; height: 104px; }
+.question-card .q-visual .clock { width: 132px; height: 132px; }
 .question-card .q-visual .digital { font-size: 30px; padding: 3px 14px; border-width: 3px; }
 .question-card .q-visual .emoji-art { font-size: 44px; padding: 0; }
 .question-card .q-text { font-size: clamp(19px, 2.6vw, 27px); font-weight: 800; color: var(--ink); line-height: 1.2; text-align: center; }
@@ -491,6 +546,12 @@ html, body {
   60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
 }
 .question-card.ok { background: #e3fff4; }
+/* Chạm vào thẻ câu hỏi để phóng to đồng hồ (bé nhìn kim rõ hơn); chạm lần nữa hoặc chọn vòng để thu lại */
+#hud-question { pointer-events: auto; cursor: zoom-in; }
+#hud-question.zoomed { cursor: zoom-out; }
+.question-card.zoomed .q-visual .clock { width: 220px; height: 220px; }
+.question-card.zoomed .q-visual .digital { font-size: 42px; }
+.question-card.zoomed .q-text { font-size: 24px; }
 .timer {
   display: flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,0.92);
@@ -500,6 +561,8 @@ html, body {
   transition: opacity 0.2s;
 }
 .timer.idle { opacity: 0.45; }
+/* Về đích: đồng hồ đếm giờ tắt đi nhưng vẫn giữ chỗ (bố cục HUD không nhảy, không phải đo lại) */
+.timer.silent { visibility: hidden; }
 .timer .bar { width: 150px; height: 12px; background: #e6e9f3; border-radius: 999px; overflow: hidden; }
 .timer .fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--teal), var(--green)); border-radius: 999px; transition: width 0.2s linear; }
 .timer .fill.warn { background: linear-gradient(90deg, #ff8a00, #ffcf00); }
@@ -524,7 +587,7 @@ html, body {
 .hearts.hit { animation: hearts-hit 0.45s ease; }
 @keyframes hearts-hit { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
 
-#btn-pause {
+#btn-pause, #btn-hint {
   pointer-events: auto;
   width: 56px; height: 56px; min-height: 56px; padding: 0;
   font-size: 24px; border-radius: 50%;
@@ -532,7 +595,9 @@ html, body {
   box-shadow: 0 5px 0 #cfd4e6, 0 8px 16px rgba(0,0,0,0.2);
   text-shadow: none;
 }
-#btn-pause:active { box-shadow: 0 1px 0 #cfd4e6; }
+#btn-pause:active, #btn-hint:active { box-shadow: 0 1px 0 #cfd4e6; }
+#btn-hint { background: linear-gradient(180deg, #ffe08a, #ffd166); box-shadow: 0 5px 0 #d8a92e, 0 8px 16px rgba(0,0,0,0.2); }
+#btn-hint:disabled { opacity: 0.4; box-shadow: 0 2px 0 #d8a92e; }
 .tap-tip {
   align-self: center; margin-top: auto; margin-bottom: calc(var(--sab) + 14px);
   background: rgba(255,255,255,0.94); color: var(--ink); font-weight: 800; font-size: 18px;
@@ -682,21 +747,27 @@ html, body {
   .btn.big { font-size: 24px; padding: 16px 30px; min-height: 64px; }
   .logo-img { width: 110px; height: 110px; }
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .score-box { min-width: 90px; padding: 5px 12px 3px; }
+  .score-box { min-width: 76px; padding: 5px 10px 3px; }
   .score-box .value { font-size: 26px; }
   .hearts span { font-size: 21px; }
   .timer .bar { width: 90px; }
   .question-card { padding: 6px 12px; min-width: 200px; max-width: 94vw; gap: 10px; }
-  .question-card .q-visual .clock { width: 78px; height: 78px; }
+  .question-card .q-visual .clock { width: 96px; height: 96px; }
+  .question-card.zoomed .q-visual .clock { width: 168px; height: 168px; }
   .question-card .q-visual .digital { font-size: 24px; }
   .question-card .q-text { font-size: 18px; }
   .hud-top {
-    grid-template-columns: 1fr 1fr;
+    /* cột phải = auto: tim + 💡 + ⏸ luôn đủ chỗ; cột trái co được nên chip Combo không đẩy nút ra ngoài màn hình */
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "left right" "center center";
-    gap: 6px 10px;
+    gap: 6px 8px;
   }
-  .hud-left { flex-direction: row; align-items: center; }
+  .hud-left { flex-direction: row; align-items: center; flex-wrap: wrap; min-width: 0; gap: 5px; }
+  .hud-right { flex-shrink: 0; gap: 6px; }
   .hud-center { justify-self: center; }
+  #btn-pause, #btn-hint { width: 48px; height: 48px; min-height: 48px; font-size: 21px; }
+  .hearts { padding: 5px 9px; }
+  .stage-chip, .combo-chip { font-size: 13px; padding: 4px 9px; }
   .hint { font-size: 16px; padding: 5px 14px; }
   .screen-head h2 { font-size: 21px; white-space: nowrap; }
   .screen-head .btn { font-size: 16px; padding: 10px 14px; min-height: 44px; }
@@ -705,6 +776,7 @@ html, body {
   .level-card { min-height: 130px; padding: 12px; }
   .level-card .name { font-size: 18px; }
   .level-card .quiz-ok { top: auto; bottom: 12px; left: 12px; font-size: 12px; padding: 2px 7px; }   /* không đụng nhãn Lớp ở góc trên */
+  .btn-row { gap: 8px; }
   .player-chip { font-size: 15px; max-width: 200px; }
   .slide { padding: 12px 14px; min-height: 200px; gap: 12px; }
   .slide-text { font-size: 19px; }
@@ -735,11 +807,12 @@ html, body {
 /* Chuyển động giảm: theo hệ thống (prefers-reduced-motion) hoặc thiết lập "✨ Hiệu ứng: Ít" (html.lite-fx) */
 @media (prefers-reduced-motion: reduce) {
   .logo-img, .tap-tip, .record-badge, .unlock-art, .timer.danger .time, .question-card.pop, .question-card.shake, .hint, .combo-chip,
-  .quiz-answers button.bad, .hearts.hit, #countdown .count, .result-stars .on { animation: none !important; }
+  .quiz-answers button.bad, .hearts.hit, #countdown .count, .result-stars .on, .screen .panel { animation: none !important; }
   .screen, .btn, .toggle, .level-card, .player-chip, .question-card, .timer .fill { transition: none !important; }
 }
 .lite-fx .logo-img, .lite-fx .tap-tip, .lite-fx .record-badge, .lite-fx .unlock-art, .lite-fx .timer.danger .time, .lite-fx .question-card.pop,
-.lite-fx .question-card.shake, .lite-fx .hint, .lite-fx .combo-chip, .lite-fx .quiz-answers button.bad, .lite-fx .hearts.hit, .lite-fx .result-stars .on { animation: none !important; }
+.lite-fx .question-card.shake, .lite-fx .hint, .lite-fx .combo-chip, .lite-fx .quiz-answers button.bad, .lite-fx .hearts.hit, .lite-fx .result-stars .on,
+.lite-fx .screen .panel { animation: none !important; }
 .lite-fx .screen, .lite-fx .btn, .lite-fx .toggle, .lite-fx .level-card, .lite-fx .player-chip, .lite-fx .question-card, .lite-fx .timer .fill { transition: none !important; }
 @supports not (gap: 1px) {
   .btn-row > *, .toggle-row > *, .journey-stats > *, .review-chips > * { margin: 6px; }
@@ -752,5 +825,20 @@ html, body {
   .slide { min-height: 160px; }
   .slide-visual .clock { width: 150px; height: 150px; }
   .quiz-visual .clock { width: 120px; height: 120px; }
-  .question-card .q-visual .clock { width: 72px; height: 72px; }
+  .question-card .q-visual .clock { width: 84px; height: 84px; }
+  .math-art { font-size: 32px; padding: 6px 16px; }
+}
+/* Điện thoại nằm ngang: HUD phải thật mỏng, nếu không vòng lửa trên cùng không còn chỗ */
+@media (max-height: 480px) {
+  .question-card .q-visual .clock { width: 56px; height: 56px; }
+  .question-card.zoomed .q-visual .clock { width: 132px; height: 132px; }
+  .question-card .q-visual .digital { font-size: 20px; }
+  .question-card .q-text { font-size: 16px; }
+  .question-card { padding: 4px 10px; gap: 8px; }
+  .timer .bar { width: 70px; }
+  .timer { padding: 2px 10px 2px 6px; }
+  .score-box .label { display: none; }
+  .score-box .value { font-size: 22px; }
+  .hint { font-size: 15px; padding: 4px 12px; }
+  .tap-tip { display: none; }
 }

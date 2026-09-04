@@ -456,6 +456,20 @@
     return { canvas: c, size: size, half: size / 2 };
   }
 
+  /* ---------------- Kho nửa quả đã nướng sẵn ---------------- */
+  // Vẽ nửa quả phải clip() từng khung hình — thao tác canvas đắt nhất của game.
+  // Nướng sẵn một lần vào canvas ngoài màn hình rồi dùng lại như sprite thường.
+  // Mọi ô trong kho có cùng kích thước (theo quả có viền rộng nhất) nên dùng lẫn được.
+  const HALF_POOL_MAX = 16;
+
+  function makeHalfSlot(size, dpr) {
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(size * dpr);
+    c.height = c.width;
+    const ctx = c.getContext('2d');
+    return { canvas: c, size: size, half: size / 2, ctx: ctx, dpr: dpr, gen: 0, free: true };
+  }
+
   const Sprites = {
     TYPES: TYPES,
     FRUITS: FRUITS,
@@ -464,6 +478,9 @@
     fruits: {},
     bomb: null,
     heart: null,
+    halfPool: [],
+    halfGen: 0,
+    halfSize: 0,
 
     build(r, dpr) {
       if (this.r === r && this.dpr === dpr && this.bomb) return;
@@ -471,6 +488,9 @@
       const release = function (sp) { if (sp && sp.canvas) sp.canvas.width = 0; };
       for (const t in this.fruits) { release(this.fruits[t].skin); release(this.fruits[t].inner); }
       release(this.bomb); release(this.heart);
+      for (let i = 0; i < this.halfPool.length; i++) release(this.halfPool[i]);
+      this.halfPool = [];
+      this.halfGen++;   // nửa quả đang bay giữ sprite cũ sẽ tự nướng lại
       this.r = r;
       this.dpr = dpr;
       this.fruits = {};
@@ -484,6 +504,9 @@
       }
       this.bomb = makeSprite(drawBomb, r, r * 0.45, dpr);
       this.heart = makeSprite(drawHeart, r, r * 0.3, dpr);
+      let big = 0;
+      for (const t in this.fruits) big = Math.max(big, this.fruits[t].skin.size);
+      this.halfSize = big;
     },
 
     /** Vẽ 1 sprite nguyên quả tại (x, y). */
@@ -519,6 +542,50 @@
       ctx.scale(1, 0.38);
       ctx.drawImage(inn.canvas, -inn.half, -inn.half, inn.size, inn.size);
       ctx.restore();
+    },
+
+    /**
+     * Nướng sẵn một nửa quả (đường cắt cố định) vào canvas ngoài màn hình.
+     * Trả về sprite dùng được với draw(), hoặc null khi kho đã đầy — khi đó
+     * gọi drawHalf() như cũ, chỉ mất phần tăng tốc chứ không sai hình.
+     * Nhớ trả ô về kho bằng freeHalf() khi nửa quả biến mất.
+     */
+    halfSprite(type, cutAngle, side) {
+      const e = this.fruits[type];
+      if (!e || !this.halfSize) return null;
+      const pool = this.halfPool;
+      let sp = null;
+      for (let i = 0; i < pool.length; i++) { if (pool[i].free) { sp = pool[i]; break; } }
+      if (!sp) {
+        if (pool.length >= HALF_POOL_MAX) return null;
+        try { sp = makeHalfSlot(this.halfSize, this.dpr); } catch (err) { return null; }
+        if (!sp.ctx) return null;
+        pool.push(sp);
+      }
+      const ctx = sp.ctx, sk = e.skin, inn = e.inner;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, sp.canvas.width, sp.canvas.height);
+      ctx.scale(sp.dpr, sp.dpr);
+      ctx.translate(sp.half, sp.half);
+      ctx.save();
+      ctx.rotate(cutAngle);
+      ctx.beginPath();
+      ctx.rect(-sk.size, side > 0 ? 0 : -sk.size, sk.size * 2, sk.size);
+      ctx.clip();
+      ctx.rotate(-cutAngle);
+      ctx.drawImage(sk.canvas, -sk.half, -sk.half, sk.size, sk.size);
+      ctx.restore();
+      ctx.rotate(cutAngle);
+      ctx.scale(1, 0.38);
+      ctx.drawImage(inn.canvas, -inn.half, -inn.half, inn.size, inn.size);
+      sp.free = false;
+      sp.gen = this.halfGen;
+      return sp;
+    },
+
+    /** Trả ô nướng sẵn về kho (bỏ qua ô của lần dựng sprite trước). */
+    freeHalf(sp) {
+      if (sp && sp.gen === this.halfGen) sp.free = true;
     }
   };
 

@@ -111,6 +111,20 @@ test('cuoi-ho: L6 never says "số 0" / "0 phút"; clock-option pairs differ by 
   }
 });
 
+test('cuoi-ho: L6 never offers an impossible minute value (> 59 phút)', () => {
+  const gen = L.levelById('l6').gen;
+  for (let i = 0; i < 3000; i++) {
+    const q = gen();
+    for (const o of q.options) {
+      if (!o.text) continue;
+      const found = o.text.match(/(\d+) phút/g) || [];
+      for (const f of found) assert.ok(Number(f.replace(' phút', '')) <= 59, 'l6 số phút không thể có trên đồng hồ: ' + o.text);
+    }
+    const em = q.explain.match(/(\d+) phút/g) || [];
+    for (const f of em) assert.ok(Number(f.replace(' phút', '')) <= 60, 'l6 giải thích: ' + q.explain);
+  }
+});
+
 test('cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 giờ tối, 12 giờ sáng/chiều)', () => {
   const gen = L.levelById('l7').gen;
   for (let i = 0; i < 3000; i++) {
@@ -118,10 +132,52 @@ test('cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 gi�
     for (const o of q.options) {
       assert.doesNotMatch(o.text, /^(1[3-9]|2\d) giờ.* (sáng|trưa|chiều|tối|đêm)$/, o.text);
       assert.doesNotMatch(o.text, /^12 giờ( \d+ phút)? (sáng|chiều)$/, o.text);
+      // 22–23 giờ là buổi đêm (Toán 2), không phải buổi tối — kiểm cả đáp án lẫn đáp án nhiễu
+      assert.doesNotMatch(o.text, /^(10|11) giờ.* tối$/, o.text);
+      assert.doesNotMatch(o.text, /^([1-6]) giờ.* tối$/, o.text);
     }
     assert.doesNotMatch(q.answerText, /(10|11) giờ.* tối$/, q.answerText);
-    assert.doesNotMatch(q.answerText, /^\d+ giờ.* tối$/.test(q.answerText) && /^(1[0-1]) giờ/.test(q.answerText) ? /./ : /$^/, q.answerText);
   }
+});
+
+test('cuoi-ho: không màn nào đưa ra số phút không có trên đồng hồ (> 59 phút)', () => {
+  for (const lv of L.LEVELS) {
+    for (let i = 0; i < 1200; i++) {
+      const q = lv.gen();
+      for (const o of q.options) {
+        if (!o.text) continue;
+        // "1 giờ 90 phút" là đáp án nhiễu CỐ Ý của bài đổi đơn vị màn 8 (90 phút = ? giờ ? phút)
+        if (o.text === '1 giờ 90 phút') continue;
+        const hm = o.text.match(/^\d+ giờ (\d+) phút/);
+        if (hm) assert.ok(Number(hm[1]) <= 59, lv.id + ': giờ không thể đọc như vậy: ' + o.text);
+        // Màn 4/6 hỏi "kim dài chỉ bao nhiêu phút" → chỉ có 0–59 phút
+        if (lv.id === 'l4' || lv.id === 'l6') {
+          const d = o.text.match(/^(\d+) phút$/);
+          if (d) assert.ok(Number(d[1]) <= 59, lv.id + ': vị trí kim dài không thể là ' + o.text);
+        }
+      }
+    }
+  }
+});
+
+test('cuoi-ho: L6 (đọc đồng hồ, lựa chọn chữ) không có đáp án nhiễu lệch 1–4 phút tuỳ tiện', () => {
+  const gen = L.levelById('l6').gen;
+  let checked = 0;
+  for (let i = 0; i < 4000; i++) {
+    const q = gen();
+    if (!q.clock || q.options.some((o) => o.clock) || q.clock.hideHour) continue;
+    const h = q.clock.h, m = q.clock.m;
+    checked++;
+    for (const o of q.options) {
+      const mm = o.text.match(/^(\d+) giờ(?: (\d+) phút)?$/);
+      if (!mm) continue;
+      const oh = Number(mm[1]), om = mm[2] ? Number(mm[2]) : 0;
+      if (oh !== h || om === m) continue;
+      // Đáp án nhiễu hoặc là một vạch số 5 phút (đọc nhầm số kim dài vừa đi qua), hoặc cách đáp án ít nhất 5 phút
+      assert.ok(om % 5 === 0 || Math.abs(om - m) >= 5, 'l6 nhiễu quá sát đáp án: ' + q.answerText + ' vs ' + o.text);
+    }
+  }
+  assert.ok(checked > 300, 'phải kiểm được nhiều câu đọc đồng hồ (' + checked + ')');
 });
 
 test('cuoi-ho: L2/L3 explanation names the shown answer; L8 explains clock positions as numbers', () => {
@@ -186,6 +242,7 @@ test('cuoi-ho: level / lesson / quiz definitions are well-formed', () => {
     assert.ok(l.timer >= 12 && l.timer <= 18, l.id + ' timer');
     assert.ok(l.speed > 0, l.id + ' speed');
     if (l.hearts != null) assert.ok(l.hearts >= 3 && l.hearts <= 5, l.id + ' hearts');
+    if (i < 3) assert.equal(l.hearts, 4, l.id + ' màn đầu được thêm một tim');
     assert.ok([0, 2, 3].includes(l.grade), l.id + ' grade');
     if (l.grade === 0) assert.equal(i, L.LEVELS.length - 1, 'thử thách phải ở cuối'); else { assert.ok(l.grade >= lastGrade, 'lớp không giảm'); lastGrade = l.grade; }
     assert.ok(typeof l.gen === 'function' && l.title && l.icon && l.desc, l.id + ' meta');
@@ -221,6 +278,12 @@ test('cuoi-ho: clockSvg / visualHtml / optionHtml', () => {
   assert.ok(lab.indexOf('viewBox="-22 -22 284 284"') >= 0, 'nhãn phút cần viewBox rộng hơn');
   for (let i = 1; i <= 12; i++) assert.ok(lab.indexOf('>' + (i * 5) + '</text>') >= 0, 'thiếu nhãn ' + i * 5);
   assert.ok(L.clockSvg({ h: 3, m: 0 }, 104).indexOf('viewBox="0 0 240 240"') >= 0);
+  // Đồng hồ nhỏ: chữ số phóng theo tỉ lệ để bé đọc được (C1/C4); đồng hồ to giữ nguyên cỡ gốc
+  const fs = (svg) => Number((svg.match(/font-size="([\d.]+)"/) || [])[1]);
+  assert.ok(fs(L.clockSvg({ h: 3, m: 0 }, 88)) > 25, 'đồng hồ 88px phải có chữ số to hơn 25');
+  assert.ok(fs(L.clockSvg({ h: 3, m: 0 }, 132)) > 23, 'đồng hồ HUD 132px: chữ số > 23');
+  assert.equal(fs(L.clockSvg({ h: 3, m: 0 }, 220)), 21, 'đồng hồ lớn giữ cỡ chữ gốc');
+  assert.ok(fs(L.clockSvg({ h: 3, m: 0 }, 60)) <= 21 * 1.3 + 0.01, 'không phóng quá 1,3 lần (số không đè nhau)');
   assert.ok(L.clockSvg({ h: 3, m: 0 }, 104).indexOf('width="104"') >= 0);
   assert.ok(L.clockSvg({ h: 3, m: 0, noHands: true }).indexOf('stroke-width="9"') < 0, 'noHands không vẽ kim');
   const d = L.visualHtml({ digital: '07:23<b>' });
@@ -229,6 +292,78 @@ test('cuoi-ho: clockSvg / visualHtml / optionHtml', () => {
   assert.ok(L.optionHtml(L.C(3, 0)).indexOf('class="clock mini"') >= 0);
   assert.equal(L.esc('<a href="x">&\''), '&lt;a href=&quot;x&quot;&gt;&amp;&#39;');
   assert.equal(L.strip('<b>7</b>  giờ '), '7 giờ');
+});
+
+/* ---------- 6b. Lớp vẽ của đồng hồ bài học, hình minh họa mới (C12, C13, C14) ---------- */
+test('cuoi-ho: clockSvg draws the numerals last with a halo, and both hands stay visible', () => {
+  const svg = L.clockSvg({ h: 3, m: 30, hl: 'hour', arc: [15, 20] }, 220);
+  const lastHand = Math.max(svg.lastIndexOf('#ef476f'), svg.lastIndexOf('stroke-width="9"'));
+  const firstNum = svg.indexOf('paint-order="stroke"');
+  assert.ok(firstNum > lastHand, 'chữ số phải vẽ SAU kim (không bị kim che)');
+  assert.equal((svg.match(/paint-order="stroke"/g) || []).length, 12, '12 chữ số đều có viền trắng');
+  // Quầng sáng (hl) vẽ trước cả hai kim, nếu không nó phủ lên kim kia
+  const glow = svg.indexOf('rgba(255,209,102,0.9)');
+  assert.ok(glow >= 0 && glow < svg.indexOf('#2b2d42" stroke-width="9"'), 'quầng sáng vẽ trước kim giờ');
+  // Kim giờ và kim phút đều có viền trắng để không lẫn vào nhau
+  assert.ok(svg.indexOf('stroke="#fffdf6" stroke-width="13"') >= 0, 'kim giờ có viền trắng');
+  assert.ok(svg.indexOf('stroke="#fffdf6" stroke-width="10"') >= 0, 'kim phút có viền trắng');
+  // hideHour / hideMinute vẫn phải bỏ đúng kim (kể cả viền)
+  const noH = L.clockSvg({ h: 3, m: 30, hideHour: true, hl: 'hour' });
+  assert.ok(noH.indexOf('stroke-width="9"') < 0 && noH.indexOf('stroke-width="13"') < 0, 'hideHour bỏ cả kim giờ lẫn viền');
+  assert.ok(noH.indexOf('rgba(255,209,102,0.9)') < 0, 'hideHour thì không vẽ quầng kim giờ');
+  const noM = L.clockSvg({ h: 3, m: 30, hideMinute: true });
+  assert.ok(noM.indexOf('#ef476f') < 0 && noM.indexOf('stroke-width="10"') < 0, 'hideMinute bỏ cả kim phút lẫn viền');
+});
+
+test('cuoi-ho: math / 24h-strip visuals render and escape', () => {
+  const m = L.visualHtml({ emoji: '🌇', math: '5 + 12 = 17' });
+  assert.ok(m.indexOf('<div class="math-art">5 + 12 = 17</div>') >= 0, 'phép tính viết to');
+  assert.ok(m.indexOf('emoji-art') < m.indexOf('math-art'), 'biểu tượng trước, phép tính sau');
+  assert.ok(L.visualHtml({ math: '<b>x</b>' }).indexOf('&lt;b&gt;') >= 0, 'math phải escape');
+  const s = L.visualHtml({ strip: true });
+  assert.ok(s.indexOf('class="h24-strip"') >= 0, 'có băng 24 giờ');
+  for (let i = 1; i <= 24; i++) assert.ok(s.indexOf('<span>' + i + '</span>') >= 0, 'băng 24 giờ thiếu số ' + i);
+  assert.ok(s.indexOf('class="row am"') < s.indexOf('class="row pm"'), 'hàng 1–12 nằm trên hàng 13–24');
+});
+
+test('cuoi-ho: lessons explain the "why" of the hour hand and of the 24-hour day', () => {
+  const l2 = L.LEVELS[1].lesson;
+  assert.ok(l2.length >= 6, 'màn 2 cần trang giải thích "vì sao"');
+  const why = l2.filter((s) => /Vì sao/.test(s.text));
+  assert.equal(why.length, 1, 'màn 2 có đúng một trang "Vì sao?"');
+  assert.ok(why[0].clock && why[0].clock.hl === 'hour' && Array.isArray(why[0].clock.arc), 'trang "vì sao" tô sáng kim giờ');
+  const l7 = L.LEVELS[6].lesson;
+  assert.equal(l7.filter((s) => s.strip).length, 1, 'màn 7 có đúng một trang băng 24 giờ');
+  assert.equal(l7.filter((s) => s.math).length, 2, 'màn 7 có 2 trang phép tính ±12');
+  // Không còn emoji kiểu "🌇 ➕ 12" (bé đọc không ra)
+  L.LEVELS.forEach((l) => l.lesson.forEach((s, k) => {
+    if (s.emoji) assert.doesNotMatch(s.emoji, /[➕➖]/, l.id + ' trang ' + k + ': dùng math thay cho emoji phép tính');
+  }));
+});
+
+/* ---------- 6c. Thời gian thêm cho câu có lời văn (C15) ---------- */
+test('cuoi-ho: only L8 word problems get extra seconds, and mkQ carries extraTime', () => {
+  assert.equal(L.mkQ({ prompt: 'p', options: [L.T('a'), L.T('b'), L.T('c')], explain: 'e' }).extraTime, 0, 'mặc định 0');
+  assert.equal(L.mkQ({ prompt: 'p', options: [L.T('a'), L.T('b'), L.T('c')], explain: 'e', extraTime: 4 }).extraTime, 4);
+  let withExtra = 0, total = 0;
+  for (let i = 0; i < 3000; i++) {
+    const q = L.LEVELS[7].gen();
+    total++;
+    assert.ok(q.extraTime === 0 || q.extraTime === 4, 'l8 extraTime chỉ 0 hoặc 4: ' + q.extraTime);
+    // Câu có lời văn / khoảng thời gian mới được cộng giờ; câu đổi đơn vị ngắn thì không
+    const isWord = /(bắt đầu|Từ )/.test(L.strip(q.prompt));
+    assert.equal(q.extraTime > 0, isWord, 'l8: ' + L.strip(q.prompt) + ' → extraTime ' + q.extraTime);
+    if (q.extraTime) withExtra++;
+  }
+  assert.ok(withExtra > total * 0.3 && withExtra < total * 0.8, 'khoảng 60% câu màn 8 có lời văn (được: ' + withExtra + '/' + total + ')');
+  for (const i of [0, 1, 2, 3, 4, 5, 6]) {
+    for (let k = 0; k < 300; k++) assert.equal(L.LEVELS[i].gen().extraTime, 0, L.LEVELS[i].id + ' không cần thêm giờ');
+  }
+  // Màn 9 trộn mọi màn nên vẫn có thể rơi vào câu lời văn của màn 8
+  for (let k = 0; k < 500; k++) {
+    const q = L.LEVELS[8].gen();
+    assert.ok(q.extraTime === 0 || (q.extraTime === 4 && q.topic === 'l8'), 'l9 chỉ kế thừa extraTime của l8');
+  }
 });
 
 /* ---------- 7. API lựa chọn ---------- */

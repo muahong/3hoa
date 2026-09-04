@@ -48,7 +48,8 @@
       </div>
       <div class="hud-right">
         <div class="hearts" id="hud-hearts" role="img" aria-label="Còn 3 tim"><span aria-hidden="true">❤️</span><span aria-hidden="true">❤️</span><span aria-hidden="true">❤️</span></div>
-        <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
+        <button class="btn hud-btn" id="btn-hint" aria-label="Gợi ý đáp án (được 50 điểm thay vì 100)">💡</button>
+        <button class="btn hud-btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
     </div>
   </div>
@@ -155,6 +156,7 @@
         <div class="howto-item"><div class="em">👆</div><div class="tx"><b>Vuốt ngón tay</b> qua quả có <b>đáp án đúng</b> để chém nó. Chém nhanh được thêm điểm!</div></div>
         <div class="howto-item"><div class="em">❌</div><div class="tx">Chém <b>số sai</b> hoặc chém <b>bom 💣</b> sẽ mất 1 tim ❤️. Hết 3 tim là thua.</div></div>
         <div class="howto-item"><div class="em">🍃</div><div class="tx">Quả rơi mất thì không sao — quả sẽ bay lại. Lỡ 2 lần, đáp án đúng có <b>vòng vàng</b> gợi ý.</div></div>
+        <div class="howto-item"><div class="em">💡</div><div class="tx">Bí quá thì bấm nút <b>💡</b> ở góc trên để xem đáp án — câu đó được <b>50 điểm</b> thay vì 100.</div></div>
         <div class="howto-item"><div class="em">📝</div><div class="tx">Phép tính từng sai sẽ quay lại với nhãn <b>Ôn lại</b>. Trả lời đúng 2 lần là thuộc!</div></div>
         <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Chém tim 💗 để hồi lại mạng.</div></div>
         <div class="howto-item"><div class="em">🤝</div><div class="tx">Chế độ <b>Ghép đôi</b>: chém <b>2 quả</b> mà cộng, trừ hoặc nhân với nhau bằng số cho trước.</div></div>
@@ -189,6 +191,7 @@
 
   <!-- ================= KẾT QUẢ ================= -->
   <div id="gameover" class="screen hidden dim">
+    <div id="result-fx" class="result-fx" hidden aria-hidden="true"></div>
     <div class="panel">
       <h2 class="result-title" id="result-title">Hết giờ!</h2>
       <p id="result-level">Màn: Cộng trừ đến 10</p>
@@ -213,6 +216,8 @@
       <div class="leader" id="leader"></div>
       <div class="btn-row">
         <button class="btn big" id="btn-again">🔄 Chơi lại</button>
+        <button class="btn green" id="btn-next" hidden>➡ Màn tiếp theo</button>
+        <button class="btn teal" id="btn-easier" hidden>🐣 Màn dễ hơn</button>
       </div>
       <div class="btn-row">
         <button class="btn ghost small" id="btn-other-level">📚 Chọn màn khác</button>

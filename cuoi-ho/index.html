@@ -24,6 +24,7 @@
 <body>
 <div id="app">
   <canvas id="game"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
 
   <!-- ================= HUD (khi đang chơi) ================= -->
   <div id="hud" class="screen hidden">
@@ -50,6 +51,7 @@
       </div>
       <div class="hud-right">
         <div class="hearts" id="hud-hearts" role="img" aria-label="Còn 3 tim"><span>❤️</span><span>❤️</span><span>❤️</span></div>
+        <button class="btn" id="btn-hint" aria-label="Gợi ý">💡</button>
         <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
     </div>
@@ -143,6 +145,7 @@
         <div class="howto-item"><div class="em">🔥</div><div class="tx">Bé cưỡi hổ chạy tới <b>3 vòng lửa</b>, mỗi vòng mang một đáp án. Nhìn câu hỏi ở trên và <b>chạm vào vòng có đáp án đúng</b>.</div></div>
         <div class="howto-item"><div class="em">🐯</div><div class="tx">Hổ sẽ <b>nhảy qua vòng</b> bé chọn. Đúng thì vòng lửa nổ thành sao, được điểm. Sai thì bị nóng, <b>mất 1 tim</b> và vòng đúng sẽ sáng lên để bé nhớ.</div></div>
         <div class="howto-item"><div class="em">⏱️</div><div class="tx">Mỗi vòng có <b>thời gian chọn</b>. Chọn nhanh được thêm điểm, trả lời đúng liên tiếp được <b>Combo</b>.</div></div>
+        <div class="howto-item"><div class="em">💡</div><div class="tx">Khó quá thì bấm nút <b>💡 Gợi ý</b> ở góc trên: một vòng lửa sai sẽ tắt và bé được nhắc lại mẹo của màn (câu đó chỉ được nửa điểm). Chạm vào <b>thẻ câu hỏi</b> để phóng to đồng hồ cho dễ nhìn.</div></div>
         <div class="howto-item"><div class="em">❓</div><div class="tx">Về đích xong là phần <b>Hỏi đáp</b>: trả lời đúng hết các câu để <b>mở khóa màn tiếp theo</b>. Sai thì đọc giải thích rồi thử lại nhé!</div></div>
       </div>
       <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
@@ -192,11 +195,15 @@
       <div id="review" class="review" hidden>
         <h3>📝 Cần ôn lại</h3>
         <div class="review-chips" id="review-chips"></div>
+        <div class="btn-row tight">
+          <button class="btn small green" id="btn-drill">🔁 Luyện lại các câu này</button>
+        </div>
       </div>
       <p class="result-msg" id="result-msg"></p>
       <div class="btn-row">
         <button class="btn big purple" id="btn-quiz">❓ HỎI ĐÁP – mở khóa màn tiếp</button>
         <button class="btn big" id="btn-again">🔄 Chơi lại</button>
+        <button class="btn big green" id="btn-practice" hidden>🐯 Tập luyện (không mất tim)</button>
       </div>
       <div class="btn-row">
         <button class="btn ghost small" id="btn-next-level" hidden>▶ Màn tiếp theo</button>

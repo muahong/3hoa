@@ -11,7 +11,7 @@
   const L = window.Lessons, Sfx = window.Sfx, Music = window.Music, Voice = window.Voice;
   const pick = L.pick, esc = L.esc;
   const TAU = Math.PI * 2;
-  const FONT = '"Baloo 2", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
+  const FONT = '"Baloo 2", "Baloo 2 Fallback", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
   const $ = function (id) { return document.getElementById(id); };
   const clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
 
@@ -217,6 +217,7 @@
     parts: [], texts: [], bg: null, tileGround: null, tileAud: null, tileW: 480, audW: 720,
     shake: 0, flash: null, glowCache: {}, flameCache: {}, clockCache: {}, layers: {}, builtKey: '', vignette: null, tigerGfx: null,
     score: 0, hearts: MAX_HEARTS, streak: 0, bestStreak: 0, correct: 0, wrong: 0, review: [], firstChoice: true,
+    practice: false, drill: null, hints: 0, fxDirty: false,
     hud: { score: -1, hearts: -1, stage: -1, mult: -1, time: '' },
     cdTimer: 0, resultShown: false, overAt: -1, endReason: '', wakeLock: null, cursor: 1, attractT: 0,
     lastCrackle: 0, lastStep: 0, quizPassedNow: false, cdPending: false, stars: 0, isRecord: false, welcomed: false,
@@ -227,11 +228,14 @@
   const app = $('app');
   const canvas = $('game');
   const ctx = canvas.getContext('2d', { alpha: false });
+  const fxCanvas = $('fx');                                  // lớp ăn mừng nằm TRÊN các bảng (pháo giấy không bị lớp mờ che)
+  const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
   const ui = {
     hud: $('hud'), menu: $('menu'), levels: $('levels'), lesson: $('lesson'), notes: $('notes'), howto: $('howto'),
     countdown: $('countdown'), pause: $('pause'), gameover: $('gameover'), quiz: $('quiz'), toast: $('toast'),
     score: $('hud-score'), stage: $('hud-stage'), combo: $('hud-combo'), question: $('hud-question'), visual: $('hud-visual'), prompt: $('hud-prompt'),
     timer: $('hud-timer'), timerFill: $('hud-timer-fill'), time: $('hud-time'), hearts: $('hud-hearts'), hint: $('hud-hint'), tapTip: $('tap-tip'),
+    btnHint: $('btn-hint'), btnPractice: $('btn-practice'), btnDrill: $('btn-drill'),
     countNum: $('count-num'), levelGrid: $('level-grid'), journeyStats: $('journey-stats'),
     lessonTitle: $('lesson-title'), slideVisual: $('slide-visual'), slideText: $('slide-text'), slideDots: $('slide-dots'),
     slidePrev: $('btn-slide-prev'), slideNext: $('btn-slide-next'), lessonStart: $('btn-lesson-start'), lessonSkip: $('btn-lesson-skip'), lessonBack: $('btn-lesson-back'),
@@ -274,13 +278,20 @@
     canvas.height = Math.round(h * G.dpr);
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
+    if (fxCanvas) {
+      fxCanvas.style.width = w + 'px';
+      fxCanvas.style.height = h + 'px';
+      fxCanvas.width = 0; fxCanvas.height = 0;   // cấp lại đúng lúc cần (xem drawFxLayer)
+      G.fxDirty = false;
+    }
     layout();
   }
 
   /** Tính mặt đất, bán kính vòng lửa, vị trí hổ, độ dài cú nhảy theo kích thước màn hình. */
   function layout() {
     const W = G.W, H = G.H;
-    G.ground = H - clamp(H * 0.13, 56, 120);
+    const squat = H < 520;                                   // điện thoại nằm ngang: dải đất mỏng hơn để dành chỗ cho vòng lửa
+    G.ground = H - clamp(H * (squat ? 0.11 : 0.13), squat ? 44 : 56, 120);
     let hudBottom = clamp(H * 0.24, 130, 210);
     if (inGame()) {
       try { hudBottom = Math.max(110, ui.timer.getBoundingClientRect().bottom + 8); } catch (e) { /* bỏ qua */ }
@@ -290,12 +301,17 @@
     // Màn hình hẹp: vòng nhỏ hơn một chút và cú nhảy dài hơn để đầu hổ không che vòng dưới cùng
     const narrow = W < H || W < 700;
     const rMax = H > W ? 100 : 84;
-    G.r = clamp(Math.min(avail / 6.9, W * (narrow ? 0.125 : 0.14), rMax), 34, rMax);
+    // Màn hình quá thấp (điện thoại nằm ngang): vòng nhỏ hơn 34 px và xếp sát nhau, nếu không vòng trên cùng chui vào HUD
+    const tight = avail / 6.9 < 34;
+    const gaps = tight ? [3.6, 1.8] : [4.6, 2.3];
+    G.r = tight
+      ? clamp(Math.min(avail / 5.9, W * 0.13), 26, 34)
+      : clamp(Math.min(avail / 6.9, W * (narrow ? 0.125 : 0.14), rMax), 34, rMax);
     G.jumpDist = clamp(G.r * (narrow ? 2.25 : 2.4), 90, 260);
     G.tigerX = Math.round(clamp(W * (narrow ? 0.24 : 0.27), G.jumpDist + G.r * 1.35, Math.max(G.jumpDist + G.r * 1.35, W - G.r * 1.3 - G.jumpDist)));
     G.stopX = G.tigerX + G.jumpDist;
     const low = G.ground - G.r - 10;
-    G.laneY = [low - G.r * 4.6, low - G.r * 2.3, low];
+    G.laneY = [low - G.r * gaps[0], low - G.r * gaps[1], low];
     setSpeed();
     // Chỉ dựng lại các lớp đồ họa khi kích thước/bán kính thực sự thay đổi (xoay máy, đổi HUD)
     const key = [W, H, Math.round(G.ground), Math.round(G.r * 10), G.dpr].join(',');
@@ -582,37 +598,64 @@
     });
   }
 
+  /** Ván "luyện câu sai": chỉ gồm đúng những câu bé vừa làm sai, sinh lại với đáp án nhiễu mới. */
+  function buildDrillQuestions(list) {
+    return list.slice(0, 12).map(function (src) {
+      let q = src && src.info ? L.regen(src.info) : null;
+      if (!q) { q = src; reshuffleQ(q); }     // câu không sinh lại được: đảo vị trí đáp án cho khỏi "nhớ chỗ"
+      q.review = true;
+      return q;
+    });
+  }
+
   function buildGates() {
     G.gates = [];
-    const n = G.level.gates || 10;
     const first = G.stopX + G.speed * 1.3;
     const used = Object.create(null);
-    const qs = [];
-    for (let i = 0; i < n; i++) {
-      let q = L.fresh(G.level.gen), tries = 0;
-      while (used[q.key] && ++tries < 12) q = L.fresh(G.level.gen);   // không hỏi lại cùng một câu trong một ván
-      used[q.key] = true;
-      qs.push(q);
+    let qs = [];
+    if (G.drill && G.drill.length) {
+      qs = buildDrillQuestions(G.drill);
+    } else {
+      const n0 = G.level.gates || 10;
+      for (let i = 0; i < n0; i++) {
+        let q = L.fresh(G.level.gen), tries = 0;
+        while (used[q.key] && ++tries < 12) q = L.fresh(G.level.gen);   // không hỏi lại cùng một câu trong một ván
+        used[q.key] = true;
+        qs.push(q);
+      }
     }
+    const n = qs.length;
     // Ôn lại thông minh: khoảng 25% câu (1–3) lấy từ những câu bé từng làm sai, sinh lại với đáp án nhiễu mới
-    const pool = reviewPoolFor(G.level);
+    const pool = G.drill ? [] : reviewPoolFor(G.level);
     if (pool.length) {
       const k = Math.min(pool.length, clamp(Math.round(n * 0.25), 1, 3));
       const step = Math.max(1, Math.floor(n / (k + 1)));
+      const taken = Object.create(null);
       let placed = 0;
       for (let j = 0; j < pool.length && placed < k; j++) {
         const q = L.regen(pool[j].info);
-        if (!q || used[q.key]) continue;
-        q.review = true;
-        qs[Math.min(n - 1, 1 + placed * step)] = q;
-        used[q.key] = true;
+        if (!q) continue;
+        // Câu này tình cờ đã được rút ngẫu nhiên: chỉ gắn nhãn "ôn lại" (bỏ qua sẽ làm số câu ôn lên xuống thất thường)
+        let at = -1;
+        for (let i = 0; i < n && at < 0; i++) if (qs[i].key === q.key) at = i;
+        if (at >= 0) { qs[at].review = true; }
+        else {
+          at = Math.min(n - 1, 1 + placed * step);
+          while (at < n - 1 && taken[at]) at++;
+          while (at > 0 && taken[at]) at--;
+          if (taken[at]) continue;
+          q.review = true;
+          qs[at] = q;
+          used[q.key] = true;
+        }
+        taken[at] = true;
         placed++;
       }
     }
     for (let i = 0; i < n; i++) {
       G.gates.push({
-        i: i, q: qs[i], wx: first + i * G.gap, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0,
-        rings: [0, 1, 2].map(function () { return { burst: -1, flare: 0, reveal: false }; })
+        i: i, q: qs[i], wx: first + i * G.gap, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0, hinted: false,
+        rings: [0, 1, 2].map(function () { return { burst: -1, flare: 0, reveal: false, lbl: null }; })
       });
     }
     G.finishX = G.gates[n - 1].wx + G.gap * 0.9;
@@ -628,6 +671,7 @@
     G.cursor = 1;
     G.kbd = false;
     renderQuestion(gate.q);
+    if (ui.btnHint) ui.btnHint.disabled = false;
     Sfx.play('whoosh');
     // Sau một câu sai: không cắt ngang lời giải thích đang đọc, xếp câu hỏi mới đọc nối tiếp
     Voice.say(gate.q.speech, { queue: gate.i > 0 && !!G.gates[gate.i - 1] && G.gates[gate.i - 1].result !== 'ok' });
@@ -640,9 +684,12 @@
     const gate = curGate();
     if (!gate) return;
     lane = clamp(Math.round(lane), 0, LANES - 1);
+    if (gate.rings[lane].burst >= 0) return;   // vòng đã tắt vì bé dùng gợi ý
+    unzoom();
     gate.chosen = lane;
     gate.answeredAt = G.gateTime;
     beginJump(gate, lane);
+    if (ui.btnHint) ui.btnHint.disabled = true;
     Sfx.play('select');
     if (!Store.data.seenTip) { Store.data.seenTip = true; Store.save(); }
     ui.tapTip.hidden = true;
@@ -659,6 +706,8 @@
   }
 
   function onTimeout(gate) {
+    unzoom();
+    if (ui.btnHint) ui.btnHint.disabled = true;
     gate.result = 'miss';
     gate.chosen = gate.q.answer;
     gate.answeredAt = G.gateTime;
@@ -677,6 +726,12 @@
 
   function multiplier() { return 1 + Math.min(3, Math.floor(G.streak / 3)); }
 
+  /** Số giây được phép chọn ở cụm hiện tại: câu có lời văn (màn 8) được cộng thêm vài giây để đọc đề. */
+  function gateLimit(gate) {
+    const base = G.level ? G.level.timer : 15;
+    return base + ((gate && gate.q && gate.q.extraTime) || 0);
+  }
+
   function noteReview(q) {
     if (!q) return;
     if (G.review.some(function (r) { return r.key === q.key; })) return;
@@ -693,8 +748,10 @@
     G.streak++;
     if (G.streak > G.bestStreak) G.bestStreak = G.streak;
     const mult = multiplier();
-    const speedBonus = gate.answeredAt < 5 ? 50 : gate.answeredAt < 10 ? 25 : 0;
-    const pts = 100 * mult + speedBonus;
+    // Điểm thưởng nhanh tính THEO đồng hồ của màn (màn 9 chỉ có 12 giây, màn 8 có thêm giây để đọc đề)
+    const frac = gate.answeredAt / gateLimit(gate);
+    const speedBonus = gate.hinted ? 0 : frac < 0.35 ? 50 : frac < 0.6 ? 25 : 0;
+    const pts = gate.hinted ? Math.round((100 * mult) / 2) : 100 * mult + speedBonus;
     G.score += pts;
     const praise = G.streak > 0 && G.streak % 3 === 0 && mult > 1 ? 'Combo x' + mult + '!' : pick(PRAISE);
     addText(praise, x, y - G.r * 1.4, { color: praise.indexOf('Combo') === 0 ? '#ff9f1c' : '#7bf1a8', size: G.r * 0.9, life: 1.2 });
@@ -755,7 +812,7 @@
   }
 
   function loseHeart() {
-    G.hearts = Math.max(0, G.hearts - 1);
+    G.hearts = Math.max(G.practice ? 1 : 0, G.hearts - 1);   // tập luyện: luôn còn 1 tim, ván không bao giờ kết thúc sớm
     ui.hearts.classList.remove('hit');
     void ui.hearts.offsetWidth;
     ui.hearts.classList.add('hit');
@@ -763,6 +820,11 @@
   }
 
   function celebrateFinish() {
+    // Về đích: thẻ câu hỏi đổi thành lời chúc mừng + số câu đúng, đồng hồ đếm giờ ẩn đi (không còn gì để bấm)
+    renderQuestion({ prompt: '🏁 Về đích! ⭐ ' + G.correct + '/' + G.gates.length });
+    ui.timer.classList.add('silent');
+    ui.hint.hidden = true;
+    ui.tapTip.hidden = true;
     Sfx.play('finish');
     Sfx.play('applause');
     spawnConfetti(120);
@@ -810,7 +872,7 @@
       case 'choose':
         G.gateTime += dt;
         tg.state = 'idle';
-        if (G.gateTime >= G.level.timer) onTimeout(gate);
+        if (G.gateTime >= gateLimit(gate)) onTimeout(gate);
         break;
       case 'jump': {
         G.jumpT += dt;
@@ -932,32 +994,50 @@
     c.beginPath(); c.arc(0, 0, R, 0, TAU); c.fill();
     c.fillStyle = '#fffdf6';
     c.beginPath(); c.arc(0, 0, R * 0.88, 0, TAU); c.fill();
+    // Mặt nhỏ (trong vòng lửa) chỉ vẽ vạch giờ: 60 vạch li ti chỉ thành một vành xám nhòe
+    const fine = R >= 40;
     for (let i = 0; i < 60; i++) {
       const big = i % 5 === 0;
-      if (!big && R < 28) continue;
+      if (!big && !fine) continue;
       const a = i / 60 * TAU - Math.PI / 2;
       const r0 = R * (big ? 0.74 : 0.8), r1 = R * 0.86;
-      c.strokeStyle = big ? '#2b2d42' : '#a0a4b8';
-      c.lineWidth = big ? Math.max(1.5, R * 0.05) : 1;
+      c.strokeStyle = big ? '#2b2d42' : '#6b7086';
+      c.lineWidth = big ? Math.max(2, R * 0.07) : 1.5;
       c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke();
     }
-    if (R >= 20) {
-      const fs = Math.max(7, R * 0.21);
-      c.font = '800 ' + Math.round(fs) + 'px ' + FONT;
-      c.fillStyle = '#2b2d42';
-      c.textAlign = 'center'; c.textBaseline = 'middle';
-      const nums = R >= 30 ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [12, 3, 6, 9];
-      for (let k = 0; k < nums.length; k++) {
-        const n = nums[k], a = n / 12 * TAU - Math.PI / 2;
-        c.fillText(String(n), Math.cos(a) * R * 0.6, Math.sin(a) * R * 0.6 + fs * 0.06);
-      }
+    // Số: mặt nhỏ chỉ ghi 12/3/6/9 nhưng ghi TO, bé mới đọc được trên điện thoại
+    const fs = Math.max(9, R * 0.3);
+    c.font = '800 ' + Math.round(fs) + 'px ' + FONT;
+    c.fillStyle = '#2b2d42';
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    const nums = fine ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [12, 3, 6, 9];
+    for (let k = 0; k < nums.length; k++) {
+      const n = nums[k], a = n / 12 * TAU - Math.PI / 2;
+      c.fillText(String(n), Math.cos(a) * R * 0.6, Math.sin(a) * R * 0.6 + fs * 0.06);
     }
     const ha = (((h % 12) + m / 60) / 12) * TAU - Math.PI / 2, ma = (m / 60) * TAU - Math.PI / 2;
     c.lineCap = 'round';
-    c.strokeStyle = '#2b2d42'; c.lineWidth = Math.max(2, R * 0.1);
-    c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(ha) * R * 0.46, Math.sin(ha) * R * 0.46); c.stroke();
-    c.strokeStyle = '#ef476f'; c.lineWidth = Math.max(1.5, R * 0.07);
-    c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(ma) * R * 0.72, Math.sin(ma) * R * 0.72); c.stroke();
+    const hw = Math.max(3, R * 0.14), mw = Math.max(2.5, R * 0.09);
+    const hx = Math.cos(ha) * R * 0.46, hy = Math.sin(ha) * R * 0.46;
+    const mx = Math.cos(ma) * R * 0.72, my = Math.sin(ma) * R * 0.72;
+    // Viền sáng quanh kim để kim không lẫn vào các con số
+    c.strokeStyle = '#fffdf6';
+    c.lineWidth = hw + 3;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(hx, hy); c.stroke();
+    c.lineWidth = mw + 3;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(mx, my); c.stroke();
+    c.strokeStyle = '#2b2d42'; c.lineWidth = hw;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(hx, hy); c.stroke();
+    c.strokeStyle = '#ef476f'; c.lineWidth = mw;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(mx, my); c.stroke();
+    // Mũi kim dài hình tam giác: thấy ngay kim dài đang chỉ vào vạch nào
+    const tp = R * 0.12;
+    c.fillStyle = '#ef476f';
+    c.beginPath();
+    c.moveTo(Math.cos(ma) * (R * 0.72 + tp), Math.sin(ma) * (R * 0.72 + tp));
+    c.lineTo(Math.cos(ma + 0.34) * R * 0.66, Math.sin(ma + 0.34) * R * 0.66);
+    c.lineTo(Math.cos(ma - 0.34) * R * 0.66, Math.sin(ma - 0.34) * R * 0.66);
+    c.closePath(); c.fill();
     c.fillStyle = '#2b2d42';
     c.beginPath(); c.arc(0, 0, Math.max(2, R * 0.07), 0, TAU); c.fill();
     c.restore();
@@ -1055,14 +1135,26 @@
     return best || [s];
   }
 
-  function drawLabel(c, text, x, y, r, color, scale) {
+  /** Cắt dòng + chọn cỡ chữ cho nhãn vòng lửa: tính MỘT LẦN cho mỗi vòng (đo chữ mỗi khung hình rất tốn). */
+  function labelInfo(rg, text, r) {
+    const memo = rg.lbl;
+    if (memo && memo.r === r && memo.text === text) return memo;
     const lines = splitLabel(text);
-    let size = r * (lines.length > 1 ? 0.3 : (String(text).length <= 4 ? 0.44 : 0.36)) * (scale || 1);
+    let size = r * (lines.length > 1 ? 0.3 : (String(text).length <= 4 ? 0.44 : 0.36));
     const maxW = r * 1.4;
-    c.font = '800 ' + Math.round(size) + 'px ' + FONT;
+    ctx.font = '800 ' + Math.round(size) + 'px ' + FONT;
     let w = 0;
-    for (let i = 0; i < lines.length; i++) w = Math.max(w, c.measureText(lines[i]).width);
-    if (w > maxW) { size = size * maxW / w; c.font = '800 ' + Math.round(size) + 'px ' + FONT; }
+    for (let i = 0; i < lines.length; i++) w = Math.max(w, ctx.measureText(lines[i]).width);
+    if (w > maxW) size = size * maxW / w;
+    rg.lbl = { r: r, text: text, lines: lines, size: size };
+    return rg.lbl;
+  }
+
+  function drawLabel(c, rg, text, x, y, r, color, scale) {
+    const info = labelInfo(rg, text, r);
+    const lines = info.lines;
+    const size = info.size * (scale || 1);
+    c.font = '800 ' + Math.round(size) + 'px ' + FONT;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
     c.lineJoin = 'round';
@@ -1075,6 +1167,23 @@
       c.strokeText(lines[i], x, ly);
       c.fillText(lines[i], x, ly);
     }
+  }
+
+  /** Huy hiệu tròn ở góc vòng lửa: ✓ cho đáp án đúng, ✕ cho vòng bị chọn sai.
+      Vẽ bằng nét (không dùng ký tự) để máy nào cũng hiện, không phụ thuộc phông chữ có sẵn. */
+  function drawBadge(c, x, y, r, color, ok) {
+    c.save();
+    c.fillStyle = color;
+    c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill();
+    c.lineWidth = Math.max(1.5, r * 0.16); c.strokeStyle = 'rgba(20,8,40,0.55)';
+    c.beginPath(); c.arc(x, y, r, 0, TAU); c.stroke();
+    c.strokeStyle = '#fff'; c.lineWidth = Math.max(2, r * 0.24);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    c.beginPath();
+    if (ok) { c.moveTo(x - r * 0.42, y + r * 0.02); c.lineTo(x - r * 0.12, y + r * 0.36); c.lineTo(x + r * 0.45, y - r * 0.36); }
+    else { c.moveTo(x - r * 0.34, y - r * 0.34); c.lineTo(x + r * 0.34, y + r * 0.34); c.moveTo(x + r * 0.34, y - r * 0.34); c.lineTo(x - r * 0.34, y + r * 0.34); }
+    c.stroke();
+    c.restore();
   }
 
   function drawRing(c, gate, lane, x, y) {
@@ -1111,8 +1220,8 @@
     c.beginPath(); c.arc(x, y, r * 0.8, 0, TAU); c.fill();
     // Nhãn: chữ hoặc đồng hồ nhỏ
     if (opt) {
-      if (opt.clock) drawClockCached(c, x, y, r0 * 0.62, scale, opt.clock.h, opt.clock.m);
-      else drawLabel(c, opt.text, x, y, r, rg.reveal ? '#c8ffe0' : '#fff', rg.reveal ? 1.08 : 1);
+      if (opt.clock) drawClockCached(c, x, y, r0 * 0.7, scale, opt.clock.h, opt.clock.m);
+      else drawLabel(c, rg, opt.text, x, y, r0, rg.reveal ? '#c8ffe0' : '#fff', scale * (rg.reveal ? 1.08 : 1));
     }
     // Vòng chọn (đang nhảy tới)
     if (isCur && G.phase === 'jump' && gate.chosen === lane && !gate.evaluated) {
@@ -1121,23 +1230,36 @@
       c.beginPath(); c.arc(x, y, r * 1.22, 0, TAU); c.stroke();
       c.setLineDash([]);
     }
-    // Dấu tích xanh cho vòng đúng được hé lộ
-    if (rg.reveal) {
-      const pr = r * (1.2 + 0.05 * Math.sin(G.anim * 8));
-      c.strokeStyle = 'rgba(120,255,170,' + (0.6 + 0.3 * Math.sin(G.anim * 8)).toFixed(2) + ')';
-      c.lineWidth = Math.max(4, r * 0.1);
-      c.beginPath(); c.arc(x, y, pr, 0, TAU); c.stroke();
-      c.fillStyle = '#06d6a0';
-      c.beginPath(); c.arc(x + r * 0.8, y - r * 0.8, r * 0.3, 0, TAU); c.fill();
-      c.font = '800 ' + Math.round(r * 0.4) + 'px ' + FONT;
-      c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText('✓', x + r * 0.8, y - r * 0.78);
-    }
     // Con trỏ bàn phím
     if (waiting && G.kbd && G.cursor === lane) {
       const bx = x - r * 1.55 + Math.sin(G.anim * 6) * r * 0.08;
       c.fillStyle = '#ffd166';
       c.beginPath(); c.moveTo(bx, y - r * 0.28); c.lineTo(bx + r * 0.36, y); c.lineTo(bx, y + r * 0.28); c.closePath(); c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  /** Dấu ✓/✕ và viền nét đứt: vẽ SAU cả cụm vòng để ngọn lửa của vòng bên trên không che mất dấu. */
+  function drawRingMark(c, gate, lane, x, y) {
+    const rg = gate.rings[lane];
+    if (rg.burst >= 1) return;
+    let scale = 1, alpha = 1;
+    if (rg.burst >= 0) { scale = 1 + rg.burst * 0.55; alpha = 1 - rg.burst; }
+    const r = G.r * scale;
+    c.globalAlpha = alpha;
+    if (rg.reveal) {
+      const pr = r * (1.2 + 0.05 * Math.sin(G.anim * 8));
+      c.strokeStyle = 'rgba(120,255,170,' + (0.6 + 0.3 * Math.sin(G.anim * 8)).toFixed(2) + ')';
+      c.lineWidth = Math.max(4, r * 0.1);
+      c.beginPath(); c.arc(x, y, pr, 0, TAU); c.stroke();
+      c.setLineDash([r * 0.25, r * 0.15]);
+      c.lineWidth = Math.max(2, r * 0.06); c.strokeStyle = '#fff';
+      c.beginPath(); c.arc(x, y, r * 1.12, 0, TAU); c.stroke();
+      c.setLineDash([]);
+      drawBadge(c, x + r * 0.8, y - r * 0.8, r * 0.3, '#06d6a0', true);
+    } else if (rg.flare > 0 || (gate.evaluated && gate.chosen === lane)) {
+      // Dấu ✕ đỏ ở lại trên vòng bé chọn sai (giống dấu ✓ ở vòng đúng): phân biệt được mà không cần nhìn màu
+      drawBadge(c, x + r * 0.8, y - r * 0.8, r * 0.3, '#ef476f', false);
     }
     c.globalAlpha = 1;
   }
@@ -1161,13 +1283,14 @@
     c.beginPath(); c.moveTo(x - r * 0.45, gr + 2); c.lineTo(x - r * 0.2, gr - r * 0.22); c.lineTo(x + r * 0.2, gr - r * 0.22); c.lineTo(x + r * 0.45, gr + 2); c.closePath(); c.fill();
     c.fillStyle = '#ffd166';
     c.beginPath(); c.arc(x, topY - r * 0.28, r * 0.28, 0, TAU); c.fill();
-    for (let i = LANES - 1; i >= 0; i--) drawRing(c, gate, i, x, G.laneY[i]);
-    // Số thứ tự cụm ở chân cột
+    // Số thứ tự cụm ở chân cột — vẽ TRƯỚC các vòng, để trên máy hẹp nó không đè lên mặt đồng hồ nhỏ
     c.fillStyle = '#ffd166';
     c.beginPath(); c.arc(x, gr - r * 0.5, r * 0.3, 0, TAU); c.fill();
     c.font = '800 ' + Math.round(r * 0.34) + 'px ' + FONT;
     c.fillStyle = '#6a4a00'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(String(gate.i + 1), x, gr - r * 0.48);
+    for (let i = LANES - 1; i >= 0; i--) drawRing(c, gate, i, x, G.laneY[i]);
+    for (let i = LANES - 1; i >= 0; i--) drawRingMark(c, gate, i, x, G.laneY[i]);
   }
 
   function drawFinish(c) {
@@ -1247,13 +1370,20 @@
     c.fill();
     c.fillStyle = '#ffd166';
     c.beginPath(); c.arc(bx - 0.02 * u, by - 0.5 * u, 0.09 * u, 0, TAU); c.fill();
-    // Tay: ôm cổ hổ, hoặc giơ lên khi vui
+    // Tay: ôm cổ hổ, giơ lên khi vui, hoặc CHỈ vào vòng lửa con trỏ đang đứng (khi chơi bằng bàn phím)
+    const sx = bx + 0.3 * u, sy = by - 0.75 * u;
+    let px = 1.0 * u, py = -1.8 * u, point = false;
+    if (tg.cheer > 0) { px = bx + 0.55 * u; py = by - 1.95 * u; }
+    else if (G.kbd && G.state === 'playing' && G.phase === 'choose') {
+      const dx = (G.stopX - G.tigerX) - sx, dy = (G.laneY[G.cursor] - G.ground) - sy;
+      const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+      px = sx + dx / d * 1.5 * u; py = sy + dy / d * 1.5 * u;
+      point = true;
+    }
     c.strokeStyle = '#ffd6b0'; c.lineWidth = 0.19 * u;
-    c.beginPath(); c.moveTo(bx + 0.3 * u, by - 0.75 * u);
-    if (tg.cheer > 0) c.lineTo(bx + 0.55 * u, by - 1.95 * u); else c.lineTo(1.0 * u, -1.8 * u);
-    c.stroke();
+    c.beginPath(); c.moveTo(sx, sy); c.lineTo(px, py); c.stroke();
     c.fillStyle = '#ffd6b0';
-    if (tg.cheer > 0) { c.beginPath(); c.arc(bx + 0.55 * u, by - 1.98 * u, 0.13 * u, 0, TAU); c.fill(); }
+    if (tg.cheer > 0 || point) { c.beginPath(); c.arc(px, py, 0.13 * u, 0, TAU); c.fill(); }
     // Đầu
     const hx = bx - 0.1 * u, hy = by - 1.36 * u;
     c.fillStyle = '#ffd6b0';
@@ -1357,8 +1487,9 @@
     c.translate(x, y - bob);
     if (tg.hurt > 0) c.translate((Math.random() - 0.5) * 0.14 * u, (Math.random() - 0.5) * 0.14 * u);
     if (jumping) { c.translate(0, -1.1 * u); c.rotate(tg.tilt); c.translate(0, 1.1 * u); }
-    // Đuôi
-    const sway = Math.sin(G.anim * 4 + (running ? ph * 0.5 : 0)) * 0.35;
+    // Đuôi: ngoáy mạnh hơn trong lúc chờ bé chọn (hổ vẫn "sống", màn hình không đứng im)
+    const thinking = G.state === 'playing' && G.phase === 'choose' && !Motion.lite;
+    const sway = Math.sin(G.anim * 4 + (running ? ph * 0.5 : 0)) * (thinking ? 0.6 : 0.35);
     c.strokeStyle = '#f28c1b'; c.lineWidth = 0.24 * u; c.lineCap = 'round';
     c.beginPath(); c.moveTo(-1.4 * u, -1.3 * u); c.quadraticCurveTo(-2.1 * u, -1.0 * u + sway * u * 0.4, -2.3 * u, -1.9 * u + sway * u); c.stroke();
     c.strokeStyle = '#2b1a12'; c.lineWidth = 0.2 * u;
@@ -1381,7 +1512,9 @@
     drawLegs(c, u, ph, running, jumping, false);
     // Bé cưỡi hổ
     drawRider(c, u, ph, tg, running);
-    // Đầu hổ
+    // Đầu hổ: nghiêng nhẹ như đang ngắm các vòng lửa trong lúc bé suy nghĩ
+    const tilt = thinking ? Math.sin(G.anim * 1.5) * 0.05 : 0;
+    if (tilt) { c.translate(1.1 * u, -1.4 * u); c.rotate(tilt); c.translate(-1.1 * u, 1.4 * u); }
     drawTigerHead(c, u, tg);
     c.restore();
     if (tg.hurt > 0) {
@@ -1406,9 +1539,13 @@
     c.restore();
   }
 
-  function drawParts(c) {
+  const OVERLAY_KIND = { confetti: 1, star: 1, heart: 1 };   // hạt ăn mừng: vẽ lên lớp #fx khi đang mở bảng kết quả / hỏi đáp
+  /** mode: 0 = vẽ tất cả · 1 = bỏ hạt ăn mừng (đã vẽ ở lớp trên) · 2 = chỉ hạt ăn mừng */
+  function drawParts(c, mode) {
     for (let i = 0; i < G.parts.length; i++) {
       const p = G.parts[i];
+      if (mode === 1 && OVERLAY_KIND[p.kind]) continue;
+      if (mode === 2 && !OVERLAY_KIND[p.kind]) continue;
       const a = Math.min(1, p.life / p.max * 1.6);
       c.globalAlpha = a;
       c.fillStyle = p.color;
@@ -1485,10 +1622,11 @@
     drawTiger(c);
     // Khi đang xem đáp án đúng: vẽ lại cụm vòng lên trên hổ để đầu hổ không che vòng đúng (màn hình hẹp)
     if (inGame() && G.phase === 'learn') { const cg = curGate(); if (cg) drawGate(c, cg); }
-    drawParts(c);
+    const routeFx = !!fxCtx && (G.state === 'over' || G.state === 'quiz');
+    drawParts(c, routeFx ? 1 : 0);
     drawTexts(c);
     if (G.shake > 0) c.translate(-sx, -sy);
-    if (G.state === 'playing' && G.hearts === 1 && G.vignette) {
+    if (G.state === 'playing' && G.hearts === 1 && !G.practice && G.vignette) {
       c.globalAlpha = 0.65 + 0.35 * Math.sin(G.anim * 5);
       c.drawImage(G.vignette, 0, 0, W, H);
       c.globalAlpha = 1;
@@ -1497,6 +1635,26 @@
       c.fillStyle = 'rgba(' + G.flash.c + ',' + Math.max(0, G.flash.a).toFixed(2) + ')';
       c.fillRect(0, 0, W, H);
     }
+    drawFxLayer(routeFx);
+  }
+
+  /** Lớp #fx: chỉ cấp bộ đệm khi có hạt ăn mừng và đang mở bảng kết quả/hỏi đáp, hết pháo giấy là trả lại ngay. */
+  function drawFxLayer(route) {
+    if (!fxCtx) return;
+    let has = false;
+    if (route) for (let i = 0; i < G.parts.length && !has; i++) if (OVERLAY_KIND[G.parts[i].kind]) has = true;
+    if (!has) {
+      // Hết pháo giấy: trả lại bộ đệm cả màn hình thay vì giữ mãi (máy cũ tiết kiệm được ~15 MB)
+      if (G.fxDirty || fxCanvas.width) { fxCanvas.width = 0; fxCanvas.height = 0; G.fxDirty = false; }
+      return;
+    }
+    const fdpr = Math.min(G.dpr, 1.5);           // hạt pháo giấy mềm, không cần độ nét tối đa
+    const fw = Math.round(G.W * fdpr), fh = Math.round(G.H * fdpr);
+    if (fxCanvas.width !== fw || fxCanvas.height !== fh) { fxCanvas.width = fw; fxCanvas.height = fh; }
+    fxCtx.setTransform(fdpr, 0, 0, fdpr, 0, 0);
+    fxCtx.clearRect(0, 0, G.W, G.H);
+    G.fxDirty = true;
+    drawParts(fxCtx, 2);
   }
 
   /* ================= HUD ================= */
@@ -1505,11 +1663,23 @@
     const vis = q ? L.visualHtml(q, 104) : '';
     ui.visual.innerHTML = vis;
     ui.visual.hidden = !vis;
-    ui.question.classList.remove('ok', 'shake', 'pop');
+    ui.question.classList.remove('ok', 'shake', 'pop', 'zoomed');
     void ui.question.offsetWidth;
     ui.question.classList.add('pop');
     ui.timer.classList.remove('idle');
     ui.hint.hidden = true;
+  }
+
+  /** Chạm vào thẻ câu hỏi để phóng to đồng hồ (kim to, dễ đọc); đo lại bố cục vì HUD cao hơn. */
+  function toggleZoom() {
+    if (G.state !== 'playing' || !G.level) return;   // sau bảng kết quả/tạm dừng thẻ bị che → chạm vào không được dựng lại bố cục
+    ui.question.classList.toggle('zoomed');
+    layout();
+  }
+  function unzoom() {
+    if (!ui.question.classList.contains('zoomed')) return;
+    ui.question.classList.remove('zoomed');
+    layout();
   }
 
   /** Chip thông báo dưới thẻ câu hỏi. ms = 0: không tự ẩn (ẩn khi hổ chạy tiếp); html = true: text đã là HTML an toàn (đã esc). */
@@ -1562,7 +1732,7 @@
         ui.combo.style.animation = '';
       }
     }
-    const limit = G.level ? G.level.timer : 15;
+    const limit = gateLimit(curGate());
     const left = G.phase === 'choose' ? Math.max(0, limit - G.gateTime) : limit;
     const tt = String(Math.ceil(left));
     if (h.time !== tt) {
@@ -1580,6 +1750,15 @@
 
   function resetHud() {
     G.hud = { score: -1, hearts: -1, stage: -1, mult: -1, time: '' };
+    // Số tim thay đổi theo màn (màn đầu dễ thở hơn): dựng lại dãy ❤️ cho khớp
+    const nh = heartsFor(G.level);
+    if (ui.hearts.children.length !== nh) {
+      let hh = '';
+      for (let i = 0; i < nh; i++) hh += '<span>❤️</span>';
+      ui.hearts.innerHTML = hh;
+    }
+    if (ui.btnHint) ui.btnHint.disabled = true;
+    ui.question.classList.remove('zoomed');
     ui.combo.hidden = true;
     ui.hint.hidden = true;
     ui.tapTip.hidden = true;
@@ -1588,7 +1767,7 @@
     ui.timer.classList.add('idle');
     ui.timerFill.style.width = '100%';
     ui.timerFill.classList.remove('warn', 'danger');
-    ui.timer.classList.remove('danger');
+    ui.timer.classList.remove('danger', 'silent');
   }
 
   /* ================= VÒNG ĐỜI VÁN CHƠI ================= */
@@ -1600,11 +1779,17 @@
     G.tiger.y = 0; G.tiger.tilt = 0; G.tiger.hurt = 0; G.tiger.cheer = 0;
   }
 
-  function startGame(level) {
+  /** Số tim của một màn: màn 1–3 (bé mới học) được 4 tim, còn lại 3. */
+  function heartsFor(level) { return clamp(Math.round((level && level.hearts) || MAX_HEARTS), 1, 6); }
+
+  function startGame(level, opts) {
     clearTimeout(G.cdTimer);
     G.level = level;
+    // Luyện câu sai: ván rút gọn chỉ gồm các câu vừa sai; cũng là một dạng tập luyện (không mất tim, không tính kỷ lục)
+    G.drill = opts && opts.drill && opts.drill.length ? opts.drill.slice(0, 12) : null;
+    G.practice = !!(opts && opts.practice) || !!G.drill;
     G.state = 'countdown';
-    G.score = 0; G.hearts = MAX_HEARTS; G.streak = 0; G.bestStreak = 0; G.correct = 0; G.wrong = 0;
+    G.score = 0; G.hearts = heartsFor(level); G.hints = 0; G.streak = 0; G.bestStreak = 0; G.correct = 0; G.wrong = 0;
     G.time = 0; G.review = []; G.scroll = 0; G.phase = 'run'; G.gateIdx = 0; G.gateTime = 0; G.jumpT = 0; G.learnT = 0;
     G.overAt = -1; G.resultShown = false; G.resultSaved = false; G.quizPassedNow = false; G.stars = 0; G.isRecord = false; G.cdPending = false;
     clearWorld();
@@ -1703,6 +1888,9 @@
     return wrong === 0 ? 3 : wrong === 1 ? 2 : 1;
   }
 
+  /** Ghi chú số lần bé dùng 💡 Gợi ý (câu có gợi ý chỉ được nửa điểm). */
+  function hintNote() { return G.hints ? ' 💡 Con đã dùng ' + G.hints + ' gợi ý.' : ''; }
+
   function starsHtml(n) {
     let h = '';
     for (let i = 0; i < 3; i++) h += '<span class="' + (i < n ? 'on' : 'off') + '">★</span>';
@@ -1714,14 +1902,16 @@
     if (G.resultSaved || !G.level) return;
     G.resultSaved = true;
     const lvl = G.level, score = G.score, finished = G.endReason === 'finish';
-    G.stars = starsFor(G.correct, G.gates.length, finished);
+    G.stars = G.practice ? 0 : starsFor(G.correct, G.gates.length, finished);
     G.isRecord = false;
     try {
-      const rec = Store.lv(lvl.id);
-      G.isRecord = finished && score > 0 && score > rec.best;
-      rec.plays = rec.plays + 1;
-      if (finished) { rec.done = true; rec.best = Math.max(rec.best, score); rec.stars = Math.max(rec.stars, G.stars); }
-      Store.setLv(lvl.id, rec);
+      if (!G.practice) {
+        const rec = Store.lv(lvl.id);
+        G.isRecord = finished && score > 0 && score > rec.best;
+        rec.plays = rec.plays + 1;
+        if (finished) { rec.done = true; rec.best = Math.max(rec.best, score); rec.stars = Math.max(rec.stars, G.stars); }
+        Store.setLv(lvl.id, rec);
+      }
       // Thống kê theo chủ đề; màn Siêu Hổ trộn nhiều chủ đề nên tính thêm theo từng câu
       const per = {};
       if (lvl.id === 'l9') {
@@ -1744,7 +1934,7 @@
     const rec = Store.lv(lvl.id);
     const next = L.LEVELS[lvl.index + 1];
 
-    ui.resultTitle.textContent = finished ? '🏁 Về đích!' : '😿 Hổ mệt rồi!';
+    ui.resultTitle.textContent = G.drill ? '🔁 Luyện xong các câu sai!' : G.practice ? '🐯 Tập luyện xong!' : finished ? '🏁 Về đích!' : '😿 Hổ mệt rồi!';
     ui.resultTitle.className = 'result-title ' + (finished ? 'finish' : 'nolife');
     ui.resultLevel.textContent = lvl.icon + ' Màn ' + lvl.n + ': ' + lvl.title;
     ui.resultScore.textContent = fmt(score);
@@ -1757,6 +1947,7 @@
     const total = G.correct + G.wrong;
     ui.stAcc.textContent = total ? Math.round(G.correct / total * 100) + '%' : '–';
 
+    if (ui.btnPractice) ui.btnPractice.hidden = finished;   // hết tim → mời tập luyện thay vì bắt chơi lại y hệt
     ui.review.hidden = !G.review.length;
     ui.reviewChips.innerHTML = G.review.map(function (r, i) {
       const vis = r.q.clock ? L.clockSvg(r.q.clock, 36, 'mini') : r.q.digital ? '<i class="dg">' + esc(r.q.digital) + '</i>' : '';
@@ -1770,15 +1961,19 @@
       ui.btnAgain.className = 'btn ' + (rec.quiz ? 'small' : 'big');
       ui.btnNextLevel.hidden = !(rec.quiz && next);
       if (rec.quiz && next) ui.btnNextLevel.textContent = '▶ Màn ' + next.n + ': ' + next.title;
-      ui.resultMsg.textContent = (rec.quiz
+      ui.resultMsg.textContent = (G.drill
+        ? 'Con vừa luyện lại ' + G.gates.length + ' câu từng sai – không mất tim, không tính kỷ lục. '
+        : G.practice
+          ? 'Tập luyện xong – không mất tim, không tính kỷ lục. Khi nào con thấy chắc rồi thì chơi thật để lấy sao nhé! '
+          : '') + (rec.quiz
         ? (next ? 'Con đã mở khóa màn tiếp theo rồi. Chơi lại để phá kỷ lục hoặc sang màn mới nhé!' : 'Con đã hoàn thành cả hành trình! Chơi lại để phá kỷ lục nhé.')
         : (next ? 'Trả lời đúng các câu hỏi đáp để mở khóa màn ' + next.n + ': ' + next.title + '!' : 'Trả lời đúng các câu hỏi đáp cuối cùng để nhận Huy hiệu Hổ Vàng!')) +
-        (stars < 3 ? ' Không sai câu nào để được 3 sao!' : '');
+        (!G.practice && stars < 3 ? ' Không sai câu nào để được 3 sao!' : '') + hintNote();
     } else {
       ui.btnQuiz.hidden = true;
       ui.btnAgain.className = 'btn big';
       ui.btnNextLevel.hidden = true;
-      ui.resultMsg.textContent = 'Hết tim rồi! Xem lại bài học, ôn các câu sai rồi cưỡi hổ thử lại nhé. Cần về đích mới được vào phần hỏi đáp.';
+      ui.resultMsg.textContent = 'Hết tim rồi! Xem lại bài học, ôn các câu sai rồi cưỡi hổ thử lại nhé. Hoặc bấm 🐯 Tập luyện để chơi mà không mất tim. Cần về đích mới được vào phần hỏi đáp.' + hintNote();
     }
   }
 
@@ -1787,6 +1982,7 @@
     persistResults();
     renderResults();
     showScreen('gameover');
+    if (G.drill) toast('Đã luyện xong ' + G.gates.length + ' câu! 🔁', 2600);
     if (G.isRecord) { Sfx.play('record'); spawnConfetti(100); Voice.say('Kỷ lục mới! Giỏi quá!', { queue: true }); }
     else if (G.stars >= 2) { spawnConfetti(60); Voice.say('Chơi tốt lắm!', { queue: true }); }
     setTimeout(function () { if (G.state === 'over') Music.play('menu'); }, 2000);
@@ -1916,17 +2112,28 @@
 
   /* ================= GHI NHỚ ================= */
   function renderNotes() {
-    ui.notesList.innerHTML = L.LEVELS.filter(function (l) { return l.grade > 0; }).map(function (l) {
-      return '<div class="note-group"><h3>' + l.icon + ' Màn ' + l.n + ': ' + esc(l.title) + '<span class="g">' + gradeLabel(l.grade) + '</span></h3>' +
+    // Phần kiến thức bé đang sai nhiều được gắn 📝 và xếp lên đầu — mở Ghi nhớ ra là thấy ngay thứ cần ôn
+    const missed = Store.p().missed;
+    const need = Object.create(null);
+    Object.keys(missed).forEach(function (k) {
+      const info = missed[k] && missed[k].info;
+      if (info && info.lv) need[info.lv] = (need[info.lv] || 0) + 1;
+    });
+    const groups = L.LEVELS.filter(function (l) { return l.grade > 0; });
+    groups.sort(function (a, b) { return (need[b.id] ? 1 : 0) - (need[a.id] ? 1 : 0) || a.index - b.index; });
+    const hint = Object.keys(need).length ? '<div class="notes-hint">📝 = phần con đang cần ôn lại, đã xếp lên đầu cho dễ xem.</div>' : '';
+    ui.notesList.innerHTML = hint + groups.map(function (l) {
+      const mark = need[l.id] ? '📝 ' : '';
+      return '<div class="note-group' + (need[l.id] ? ' need' : '') + '"><h3>' + mark + l.icon + ' Màn ' + l.n + ': ' + esc(l.title) + '<span class="g">' + gradeLabel(l.grade) + '</span></h3>' +
         l.notes.map(function (t, i) { return '<div class="note-line" role="button" tabindex="0" data-l="' + l.id + '" data-i="' + i + '">' + esc(t) + '</div>'; }).join('') + '</div>';
     }).join('');
   }
 
   function readNotes() {
     if (!Voice.available) { toast('Thiết bị chưa có giọng đọc tiếng Việt 🙁'); return; }
-    if (G.reading) { G.reading = false; Voice.stop(); return; }
+    if (G.reading) { G.reading = false; Voice.stop(); return; }   // bấm lần 2: dừng đọc
+    Voice.stop();          // hủy lời đang đọc trước — Voice.onstop sẽ xóa cờ, nên phải bật cờ SAU khi hủy
     G.reading = true;
-    Voice.stop();
     const lines = ui.notesList.querySelectorAll('.note-line');
     lines.forEach(function (el, i) {
       Voice.say(el.textContent, {
@@ -2229,7 +2436,7 @@
     if (!ui.parentGate) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
     const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
     Gate.cb = cb; Gate.answer = a * b;
-    $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
+    $('parent-gate-q').textContent = 'Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
     $('parent-gate-input').value = '';
     ui.parentGate.classList.remove('hidden');
     setTimeout(function () { try { $('parent-gate-input').focus(); } catch (e) { /* bỏ qua */ } }, 50);
@@ -2254,6 +2461,30 @@
     try { if (inGame()) goMenu(); } catch (e) { /* bỏ qua */ }   // kết thúc ván an toàn thay vì đứng hình
   }
 
+  /* ================= GỢI Ý THEO YÊU CẦU =================
+     Tắt một vòng lửa sai và nhắc lại mẹo của màn. Câu dùng gợi ý chỉ được nửa điểm và không có điểm thưởng nhanh. */
+  function useHint() {
+    if (G.state !== 'playing' || G.phase !== 'choose') return;
+    const gate = curGate();
+    if (!gate || gate.hinted) return;
+    gate.hinted = true;
+    G.hints++;
+    if (ui.btnHint) ui.btnHint.disabled = true;
+    const cands = [];
+    for (let i = 0; i < LANES; i++) if (i !== gate.q.answer && gate.rings[i].burst < 0) cands.push(i);
+    if (cands.length) {
+      const lane = pick(cands);
+      gate.rings[lane].burst = 0;                       // vòng sai tắt dần → bé chỉ còn 2 lựa chọn
+      spawnSmoke(gateX(gate), G.laneY[lane], G.r);
+      Sfx.play('burn');
+      // Con trỏ bàn phím đang đứng trên vòng vừa tắt → dời sang vòng còn cháy, không để Enter thành vô nghĩa
+      if (G.cursor === lane) { moveCursor(1); if (G.cursor === lane) moveCursor(-1); }
+    }
+    const tip = (G.level && G.level.notes && G.level.notes[0]) || 'Nhìn kim ngắn để biết giờ, kim dài để biết phút.';
+    showHint('💡 ' + tip, 'info', 4000);
+    Voice.say(tip);
+  }
+
   /* ================= ĐẦU VÀO ================= */
   /** Bé chạm/ấn để chạy tiếp ngay khi đang xem đáp án đúng (sau ít nhất 0,9 giây để kịp nhìn). */
   function skipLearn() {
@@ -2272,12 +2503,26 @@
     const x = e.clientX, y = e.clientY;
     let best = -1, bd = Infinity;
     for (let i = 0; i < LANES; i++) {
+      if (gate.rings[i].burst >= 0) continue;   // vòng đã tắt vì bé dùng gợi ý
       const dy = Math.abs(y - G.laneY[i]);
       const dx = Math.abs(x - G.stopX);
       if (dy < G.r * 1.15 && dx < G.r * 2.6 && dy < bd) { best = i; bd = dy; }
     }
     if (best >= 0) choose(best);
     if (e.cancelable) e.preventDefault();
+  }
+
+  /** Con trỏ bàn phím: đi tiếp một bậc, bỏ qua vòng đã tắt vì gợi ý (không để bé kẹt ở vòng vô hình). */
+  function moveCursor(d) {
+    const gate = curGate();
+    let n = G.cursor;
+    for (let i = 0; i < LANES; i++) {
+      const t = clamp(n + d, 0, LANES - 1);
+      if (t === n) break;
+      n = t;
+      if (!gate || gate.rings[n].burst < 0) break;
+    }
+    G.cursor = n;
   }
 
   function bindInput() {
@@ -2325,9 +2570,10 @@
     }
     if (G.state === 'playing' && G.phase === 'learn') { if (e.key === 'Enter' || e.key === ' ') { skipLearn(); e.preventDefault(); } return; }
     if (G.state !== 'playing' || G.phase !== 'choose') return;
+    if (e.key === 'h' || e.key === 'H') { useHint(); e.preventDefault(); return; }
     if (/^[1-3]$/.test(e.key)) { choose(Number(e.key) - 1); e.preventDefault(); }
-    else if (e.key === 'ArrowUp') { G.kbd = true; G.cursor = clamp(G.cursor - 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
-    else if (e.key === 'ArrowDown') { G.kbd = true; G.cursor = clamp(G.cursor + 1, 0, LANES - 1); Sfx.play('click'); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { G.kbd = true; moveCursor(-1); Sfx.play('click'); e.preventDefault(); }
+    else if (e.key === 'ArrowDown') { G.kbd = true; moveCursor(1); Sfx.play('click'); e.preventDefault(); }
     else if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { G.kbd = true; choose(G.cursor); e.preventDefault(); }
   }
 
@@ -2355,11 +2601,14 @@
     for (let i = 0; i < boxes.length; i++) {
       boxes[i].innerHTML = defs.map(function (d) {
         const noVoice = d.key === 'voice' && !Voice.available;
-        const on = d.key === 'fx' ? Store.data.fx !== 'lite' : (Store.data[d.key] !== false && !noVoice);
+        // Máy đang bật "giảm chuyển động": hiệu ứng luôn ở mức Ít, công tắc phải báo đúng như vậy và bị khóa
+        const forced = d.key === 'fx' && Motion.lite && Store.data.fx !== 'lite';
+        const on = d.key === 'fx' ? !Motion.lite : (Store.data[d.key] !== false && !noVoice);
         let label = on ? d.on : d.off;
         if (noVoice) label = '🗣️ Giọng đọc: chưa có giọng Việt';
+        if (forced) label = '✨ Hiệu ứng: Ít (theo cài đặt máy)';
         return '<button type="button" class="toggle ' + (on ? 'on' : 'off') + (d.key === 'fx' ? ' fx' : '') + '" data-set="' + d.key + '" aria-pressed="' + on + '"' +
-          (noVoice ? ' disabled' : '') + '>' + label + '</button>';
+          (noVoice || forced ? ' disabled' : '') + '>' + label + '</button>';
       }).join('');
     }
   }
@@ -2427,6 +2676,8 @@
     click('btn-lesson-start', function () { if (Lesson.level) startGame(Lesson.level); });
     click('btn-lesson-skip', function () { if (Lesson.level) startGame(Lesson.level); });
     // Chơi
+    click('btn-hint', function () { useHint(); });
+    if (ui.question) ui.question.addEventListener('pointerdown', function (e) { Sfx.unlock(); toggleZoom(); if (e.cancelable) e.preventDefault(); });
     click('btn-pause', function () { pauseGame(); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { const l = G.level; if (l) startGame(l); });
@@ -2434,6 +2685,11 @@
     click('btn-quit', function () { goMenu(); });
     // Kết quả
     click('btn-again', function () { const l = G.level; if (l) startGame(l); });
+    click('btn-practice', function () { const l = G.level; if (l) startGame(l, { practice: true }); });
+    click('btn-drill', function () {
+      const l = G.level, qs = G.review.map(function (r) { return r.q; });
+      if (l && qs.length) startGame(l, { drill: qs });
+    });
     click('btn-quiz', function () { if (G.level) startQuiz(G.level); });
     click('btn-next-level', function () { const n = G.level && L.LEVELS[G.level.index + 1]; if (n) showLesson(n, 'levels'); });
     click('btn-result-lesson', function () { if (G.level) showLesson(G.level, 'results'); });
@@ -2533,9 +2789,11 @@
         renderReport();
       });
     });
-    // Cổng phụ huynh
+    // Cổng phụ huynh: chạm ra ngoài bảng thì đóng (nền tối đã chặn thao tác xuống màn bên dưới, xem style.css)
     $('parent-gate-form').addEventListener('submit', function (e) { e.preventDefault(); Sfx.unlock(); submitGate(); });
     click('btn-parent-gate-cancel', function () { closeGate(); });
+    if (ui.parentGate) ui.parentGate.addEventListener('pointerdown', function (e) { if (e.target === ui.parentGate) closeGate(); });
+    if (ui.howto) ui.howto.addEventListener('pointerdown', function (e) { if (e.target === ui.howto) ui.howto.classList.add('hidden'); });
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) {
@@ -2640,7 +2898,16 @@
     bindUi();
     setupDeviceHints();
     registerSw();
-    try { if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"'); } catch (e) { /* bỏ qua */ }
+    // Phông chữ về muộn (hoặc không về được): dựng lại các mặt đồng hồ đã vẽ sẵn và đo lại bố cục để chữ không bị lệch
+    try {
+      if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"');
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () {
+          dropCache(G.clockCache); G.clockCache = {};
+          if (inGame()) layout();
+        }).catch(function () { /* bỏ qua */ });
+      }
+    } catch (e) { /* bỏ qua */ }
     showHud(false);
     showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
@@ -2651,7 +2918,8 @@
     G: G, Store: Store, Quiz: Quiz, Lesson: Lesson, Gate: Gate, Motion: Motion, Report: Report, PlayersUI: PlayersUI,
     startGame: startGame, choose: choose, endGame: endGame, startQuiz: startQuiz, onQuizAnswer: onQuizAnswer, quizNext: quizNext, quizRetry: quizRetry,
     showLesson: showLesson, goLevels: goLevels, goMenu: goMenu, curGate: curGate, update: update, render: render, layout: layout,
-    renderLevels: renderLevels, renderReport: renderReport, adultGate: adultGate, persistResults: persistResults, onFatal: onFatal, skipLearn: skipLearn
+    renderLevels: renderLevels, renderReport: renderReport, renderNotes: renderNotes, adultGate: adultGate, persistResults: persistResults, onFatal: onFatal,
+    skipLearn: skipLearn, useHint: useHint, toggleZoom: toggleZoom, gateLimit: gateLimit
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

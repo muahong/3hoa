@@ -95,7 +95,8 @@
       answer: opts.findIndex((x) => x.ok),
       explain: o.explain || '',
       topic: o.topic || '',
-      info: o.info || null
+      info: o.info || null,
+      extraTime: o.extraTime > 0 ? o.extraTime : 0   // câu có lời văn cần thêm vài giây để đọc
     };
     q.answerText = optLabel(q.options[q.answer]);
     q.answerSpeech = optSpeech(q.options[q.answer]);
@@ -204,20 +205,20 @@
       return Q({
         prompt: 'Kim dài chỉ số <b>' + k + '</b>. Đó là bao nhiêu phút?', speech: 'Kim dài chỉ số ' + k + '. Đó là bao nhiêu phút?',
         clock: { h: 12, m: m, hideHour: true, hl: 'minute' },
-        options: uniq(T(m + ' phút'), [T(k + ' phút'), T((m + 5) + ' phút'), m > 5 ? T((m - 5) + ' phút') : null, T((k * 10) + ' phút')], 3, () => T(rnd(1, 11) * 5 + ' phút')),
+        options: uniq(T(m + ' phút'), [T(k + ' phút'), T((m < 55 ? m + 5 : m - 5) + ' phút'), m > 5 ? T((m - 5) + ' phút') : null, k * 10 <= 55 ? T((k * 10) + ' phút') : null], 3, () => T(rnd(1, 11) * 5 + ' phút')),
         explain: 'Mỗi số là 5 phút. Kim dài chỉ số ' + k + ' → ' + k + ' × 5 = ' + m + ' phút.'
       });
     }
     if (r < 0.72) {
       return Q({
         prompt: 'Đồng hồ chỉ mấy giờ?', clock: { h: h, m: m },
-        options: uniq(T(plain(h, m)), [T(plain(h, k)), T(plain(nextH(h), m)), T(plain(h, m + (chance(0.5) ? 5 : -5))), swapped(h, m) ? T(plain(swapped(h, m).clock.h, swapped(h, m).clock.m)) : null], 3, fbText),
+        options: uniq(T(plain(h, m)), [T(plain(h, k)), T(plain(nextH(h), m)), T(plain(h, m < 55 ? m + 5 : m - 5)), swapped(h, m) ? T(plain(swapped(h, m).clock.h, swapped(h, m).clock.m)) : null], 3, fbText),
         explain: 'Kim dài chỉ số ' + k + ' → ' + k + ' × 5 = ' + m + ' phút. Kim ngắn ' + (m >= 35 ? 'chưa đến số ' + nextH(h) : 'đã qua số ' + h) + ' → ' + plain(h, m) + '.'
       });
     }
     return Q({
       prompt: 'Đồng hồ nào chỉ <b>' + plain(h, m) + '</b>?', speech: 'Đồng hồ nào chỉ ' + plain(h, m) + '?',
-      options: uniq(C(h, m), [C(h, m + (chance(0.5) ? 5 : -5)), C(nextH(h), m), swapped(h, m)], 3, fbClock),
+      options: uniq(C(h, m), [C(h, m < 55 ? m + 5 : m - 5), C(nextH(h), m), swapped(h, m)], 3, fbClock),
       explain: plain(h, m) + ': kim dài chỉ số ' + k + ' (' + k + ' × 5 = ' + m + '), kim ngắn qua số ' + h + '.'
     });
   }
@@ -263,7 +264,7 @@
         prompt: 'Kim dài qua số <b>' + kLabel + '</b> thêm <b>' + j + '</b> vạch. Đó là bao nhiêu phút?',
         speech: 'Kim dài qua số ' + kLabel + ' thêm ' + j + ' vạch. Đó là bao nhiêu phút?',
         clock: { h: 12, m: m, hideHour: true, hl: 'minute' },
-        options: uniq(T(m + ' phút'), [T((near === 0 ? 12 : near) + ' phút'), T((k + j) + ' phút'), T((m + 5) + ' phút'), m > 1 ? T((m - 1) + ' phút') : null], 3, () => T(rnd(1, 59) + ' phút')),
+        options: uniq(T(m + ' phút'), [T((near === 0 ? 12 : near) + ' phút'), T((k + j) + ' phút'), T((m < 55 ? m + 5 : m - 5) + ' phút'), m > 1 ? T((m - 1) + ' phút') : null], 3, () => T(rnd(1, 59) + ' phút')),
         explain: 'Số ' + kLabel + ' là ' + near + ' phút, thêm ' + j + ' vạch (mỗi vạch 1 phút) → ' + m + ' phút.'
       });
     }
@@ -278,7 +279,7 @@
     if (r < 0.78) {
       return Q({
         prompt: 'Đồng hồ chỉ mấy giờ?', clock: { h: h, m: m },
-        options: uniq(T(plain(h, m)), [T(plain(h, near)), T(plain(h, Math.min(59, m + rnd(1, 3)))), T(plain(h, Math.max(0, m - rnd(1, 3)))), T(plain(nextH(h), m))], 3, fbText),
+        options: uniq(T(plain(h, m)), [T(plain(h, near)), T(plain(h, near + 5 <= 55 ? near + 5 : near - 5)), T(plain(h, m < 50 ? m + 10 : m - 10)), T(plain(nextH(h), m))], 3, fbText),
         explain: 'Kim dài qua số ' + kLabel + ' (' + near + ' phút) thêm ' + j + ' vạch → ' + m + ' phút. Kim ngắn ' + (m >= 30 ? 'chưa đến số ' + nextH(h) : 'qua số ' + h) + ' → ' + plain(h, m) + '.'
       });
     }
@@ -307,18 +308,18 @@
       const Q = withInfo('l7', { lv: 'l7', h: h, m: 0, k: H24, r: r });
       return Q({
         prompt: '<b>' + H24 + ' giờ</b> là mấy giờ ' + b + '?', speech: H24 + ' giờ là mấy giờ ' + b + '?', icon: BUOI_ICON[b],
-        options: uniq(T(h + ' giờ ' + b), [H24 >= 22 ? T((h - 2) + ' giờ ' + b) : T((H24 - 10) + ' giờ ' + b), h < 11 ? T((h + 1) + ' giờ ' + b) : null, h > 1 ? T((h - 1) + ' giờ ' + b) : null, T(H24 + ' giờ')], 3, () => T(rnd(1, 11) + ' giờ ' + b)),
+        options: uniq(T(h + ' giờ ' + b), [T(h24ToText(H24 >= 22 ? H24 - 2 : H24 + 2, 0)), h < 11 ? T(h24ToText(H24 + 1, 0)) : null, h > 1 ? T(h24ToText(H24 - 1, 0)) : null, T(H24 + ' giờ')], 3, () => T(h24ToText(rnd(13, 23), 0))),
         explain: H24 + ' − 12 = ' + h + ' → ' + h + ' giờ ' + b + '.'
       });
     }
     if (r < 0.77) {
       const H24 = fv(fx, 'k', () => (chance(0.7) ? rnd(13, 23) : rnd(6, 11))), m = fv(fx, 'm', () => pick([0, 0, 15, 30, 45]));
       const b = buoi(H24), h = H24 > 12 ? H24 - 12 : H24;
-      const wrongB = H24 > 12 ? 'sáng' : (h <= 6 ? 'chiều' : 'tối');
+      const wrongB = H24 > 12 ? 'sáng' : (h <= 6 ? 'chiều' : h <= 9 ? 'tối' : 'đêm');   // 10–11 giờ đọc nhầm là buổi đêm, không phải buổi tối
       const Q = withInfo('l7', { lv: 'l7', h: h, m: m, k: H24, r: r });
       return Q({
         prompt: 'Đồng hồ điện tử chỉ mấy giờ?', digital: digital(H24, m),
-        options: uniq(T(plain(h, m) + ' ' + b), [T(plain(h, m) + ' ' + wrongB), H24 > 12 ? (H24 >= 22 ? T(plain(h - 2, m) + ' ' + b) : T(plain(H24 - 10, m) + ' ' + b)) : T(plain(h + 12, m)), h < 11 ? T(plain(h + 1, m) + ' ' + b) : null], 3, () => T(plain(rnd(1, 11), m) + ' ' + pick(['sáng', 'chiều', 'tối']))),
+        options: uniq(T(plain(h, m) + ' ' + b), [T(plain(h, m) + ' ' + wrongB), H24 > 12 ? T(h24ToText(H24 >= 22 ? H24 - 2 : H24 + 2, m)) : T(plain(h + 12, m)), h < 11 ? T(h24ToText(H24 + 1, m)) : null], 3, () => T(h24ToText(rnd(6, 23), m))),
         explain: digital(H24, m) + ': ' + (H24 > 12 ? H24 + ' − 12 = ' + h + ' → ' : '') + plain(h, m) + ' ' + b + '.'
       });
     }
@@ -372,7 +373,7 @@
       return Q({
         prompt: who + ' bắt đầu ' + act + ' lúc <b>' + h + ' giờ</b>, làm trong <b>' + d + ' phút</b>. Xong lúc mấy giờ?',
         speech: who + ' bắt đầu ' + act + ' lúc ' + h + ' giờ, làm trong ' + d + ' phút. Xong lúc mấy giờ?',
-        clock: { h: h, m: 0 },
+        clock: { h: h, m: 0 }, extraTime: 4,   // câu có lời văn: bé cần thêm vài giây để đọc đề
         options: uniq(T(plain(h, d)), [T(plain(h + 1, 0)), T(plain(h, d / 5)), T(plain(h + 1, d)), T(plain(h, d === 15 ? 30 : 15))], 3, fbText),
         explain: h + ' giờ thêm ' + d + ' phút → ' + plain(h, d) + '.'
       });
@@ -382,7 +383,7 @@
       const Q = withInfo('l8', { lv: 'l8', h: h, m: 0, k: k, r: r });
       return Q({
         prompt: 'Từ <b>' + h + ' giờ</b> đến <b>' + (h + k) + ' giờ</b> là bao lâu?', speech: 'Từ ' + h + ' giờ đến ' + (h + k) + ' giờ là bao lâu?',
-        clock: { h: h, m: 0 },
+        clock: { h: h, m: 0 }, extraTime: 4,
         options: uniq(T(k + ' giờ'), [T((k + 1) + ' giờ'), T((h + k) + ' giờ'), T((k * 10) + ' phút'), T((k + 2) + ' giờ')], 3, () => T(rnd(1, 6) + ' giờ')),
         explain: (h + k) + ' − ' + h + ' = ' + k + ' → ' + k + ' giờ.'
       });
@@ -392,7 +393,7 @@
     const Q = withInfo('l8', { lv: 'l8', h: h, m: m1, d: d2, r: r });
     return Q({
       prompt: 'Từ <b>' + plain(h, m1) + '</b> đến <b>' + t2 + '</b> là bao nhiêu phút?', speech: 'Từ ' + plain(h, m1) + ' đến ' + t2 + ' là bao nhiêu phút?',
-      clock: { h: h, m: m1 },
+      clock: { h: h, m: m1 }, extraTime: 4,
       options: uniq(T(d2 + ' phút'), [T((d2 + 15) + ' phút'), T(Math.max(5, d2 - 15) + ' phút'), T(m2 + ' phút'), T('1 giờ')], 3, () => T(rnd(1, 11) * 5 + ' phút')),
       explain: 'Kim dài đi từ số ' + (m1 / 5 || 12) + ' đến số ' + (m2 === 60 ? 12 : m2 / 5) + ' → ' + d2 + ' phút.'
     });
@@ -426,7 +427,7 @@
   /* ================= DANH SÁCH MÀN ================= */
   const LEVELS = [
     {
-      id: 'l1', n: 1, title: 'Giờ đúng', icon: '🕒', grade: 2, gates: 8, timer: 18, speed: 0.9,
+      id: 'l1', n: 1, title: 'Giờ đúng', icon: '🕒', grade: 2, gates: 8, timer: 18, speed: 0.9, hearts: 4,
       desc: 'Kim ngắn chỉ giờ, kim dài chỉ số 12',
       lesson: [
         { clock: { h: 3, m: 0, noHands: true }, text: 'Đây là <b>mặt đồng hồ</b>. Trên đó có <b>12 số</b>, từ 1 đến 12, xếp thành vòng tròn.' },
@@ -445,13 +446,14 @@
       ]
     },
     {
-      id: 'l2', n: 2, title: 'Giờ rưỡi', icon: '🕞', grade: 2, gates: 8, timer: 18, speed: 0.9,
+      id: 'l2', n: 2, title: 'Giờ rưỡi', icon: '🕞', grade: 2, gates: 8, timer: 18, speed: 0.9, hearts: 4,
       desc: 'Kim dài chỉ số 6 là 30 phút',
       lesson: [
         { clock: { h: 12, m: 0, arc: 60, hl: 'minute' }, text: 'Kim dài đi <b>hết một vòng</b> là <b>60 phút</b>, tức là <b>1 giờ</b>.' },
         { clock: { h: 3, m: 30, arc: 30, hl: 'minute' }, text: 'Kim dài đi được <b>nửa vòng</b>, chỉ vào <b>số 6</b>, là <b>30 phút</b>.' },
         { clock: { h: 3, m: 30 }, text: '30 phút còn gọi là <b>rưỡi</b>. Đồng hồ này chỉ <b>3 giờ 30 phút</b>, hay <b>3 giờ rưỡi</b>.' },
         { clock: { h: 3, m: 30, hl: 'hour' }, text: 'Chú ý: lúc này kim ngắn nằm <b>giữa số 3 và số 4</b>. Ta đọc theo <b>số nhỏ hơn</b>: 3 giờ rưỡi, chứ không phải 4 giờ rưỡi!' },
+        { clock: { h: 3, m: 30, hl: 'hour', arc: [15, 20] }, text: '<b>Vì sao?</b> Kim ngắn đi rất chậm: từ số 3 nó mới đi được nửa đường sang số 4, <b>chưa tới số 4</b>. Chỉ khi kim ngắn chạm đúng số 4 mới là 4 giờ.' },
         { clock: { h: 7, m: 30 }, text: 'Kim ngắn giữa số 7 và số 8, kim dài chỉ số 6 → <b>7 giờ rưỡi</b> (7 giờ 30 phút).' }
       ],
       notes: ['1 giờ = 60 phút. Kim dài đi nửa vòng, chỉ số 6 → 30 phút = "rưỡi".', 'Kim ngắn nằm giữa hai số → đọc theo số nhỏ hơn.'],
@@ -464,7 +466,7 @@
       ]
     },
     {
-      id: 'l3', n: 3, title: 'Giờ 15 phút', icon: '🕝', grade: 2, gates: 10, timer: 16, speed: 0.95,
+      id: 'l3', n: 3, title: 'Giờ 15 phút', icon: '🕝', grade: 2, gates: 10, timer: 16, speed: 0.95, hearts: 4,
       desc: 'Kim dài chỉ số 3 là 15 phút',
       lesson: [
         { clock: { h: 12, m: 15, arc: 15, hl: 'minute' }, text: 'Từ số 12 đến số 3, kim dài đi được <b>một phần tư vòng</b>: đó là <b>15 phút</b>.' },
@@ -543,9 +545,10 @@
       desc: '3 giờ chiều là 15 giờ',
       lesson: [
         { emoji: '🌅🌞🌇🌙', text: 'Một ngày có <b>24 giờ</b>. Kim ngắn đi <b>2 vòng</b> đồng hồ: một vòng buổi sáng, một vòng buổi chiều, buổi tối và buổi đêm (22 giờ = 10 giờ đêm).' },
+        { strip: true, text: 'Kim ngắn đi <b>hai vòng</b>: vòng đầu 1 2 … 12 (buổi sáng), vòng sau đọc tiếp 13 14 … 24. Nhìn bảng: <b>số hàng dưới = số hàng trên + 12</b>.' },
         { clock: { h: 3, m: 0 }, digital: '15:00', text: 'Sau 12 giờ trưa, ta đếm tiếp: 1 giờ chiều là <b>13 giờ</b>, 2 giờ chiều là 14 giờ, <b>3 giờ chiều là 15 giờ</b>…' },
-        { emoji: '🌇 ➕ 12', text: 'Cách đổi: giờ buổi chiều, tối <b>cộng thêm 12</b>. Ví dụ 5 giờ chiều → 5 + 12 = <b>17 giờ</b>. 8 giờ tối → 8 + 12 = <b>20 giờ</b>.' },
-        { emoji: '20 ➖ 12', text: 'Ngược lại: <b>20 giờ</b> → 20 − 12 = 8 → <b>8 giờ tối</b>. 14 giờ → 14 − 12 = 2 → 2 giờ chiều.' },
+        { emoji: '🌇', math: '5 + 12 = 17', text: 'Cách đổi: giờ buổi chiều, tối <b>cộng thêm 12</b>. Ví dụ 5 giờ chiều → 5 + 12 = <b>17 giờ</b>. 8 giờ tối → 8 + 12 = <b>20 giờ</b>.' },
+        { emoji: '🌙', math: '20 − 12 = 8', text: 'Ngược lại: <b>20 giờ</b> → 20 − 12 = 8 → <b>8 giờ tối</b>. 14 giờ → 14 − 12 = 2 → 2 giờ chiều.' },
         { digital: '19:30', text: 'Đồng hồ điện tử ghi theo 24 giờ. <b>19:30</b> là 7 giờ 30 phút tối. Buổi sáng thì giữ nguyên: 07:30 là 7 giờ 30 phút sáng.' }
       ],
       notes: ['Một ngày có 24 giờ. Buổi chiều, tối: giờ + 12 (3 giờ chiều = 15 giờ).', 'Đổi ngược: 20 giờ − 12 = 8 giờ tối. Buổi sáng giữ nguyên.', 'Buổi: sáng 1–10 · trưa 11–12 · chiều 13–18 · tối 19–21 · đêm 22–24.'],
@@ -565,7 +568,7 @@
         { clock: { h: 8, m: 30, arc: [0, 30], hl: 'minute' }, text: 'Tính giờ kết thúc: bắt đầu lúc <b>8 giờ</b>, học trong <b>30 phút</b> → kết thúc lúc <b>8 giờ 30 phút</b>.' },
         { clock: { h: 9, m: 0 }, text: 'Tính khoảng thời gian: từ <b>7 giờ</b> đến <b>9 giờ</b> là <b>2 giờ</b> (9 − 7 = 2).' },
         { clock: { h: 3, m: 45, arc: [15, 45], hl: 'minute' }, text: 'Từ 3 giờ 15 phút đến 3 giờ 45 phút: kim dài đi từ 15 đến 45 → <b>30 phút</b>.' },
-        { emoji: '🔁', text: 'Đổi đơn vị: 2 giờ = 60 + 60 = <b>120 phút</b>. 1 giờ 30 phút = <b>90 phút</b>. Nửa giờ = <b>30 phút</b>.' }
+        { emoji: '🔁', math: '2 giờ = 120 phút', text: 'Đổi đơn vị: 2 giờ = 60 + 60 = <b>120 phút</b>. 1 giờ 30 phút = <b>90 phút</b>. Nửa giờ = <b>30 phút</b>.' }
       ],
       notes: ['1 giờ = 60 phút · 1 ngày = 24 giờ · 1 tuần = 7 ngày · 1 năm = 12 tháng.', 'Giờ kết thúc = giờ bắt đầu + thời gian làm. Khoảng thời gian = giờ sau − giờ trước.'],
       gen: genL8,
@@ -615,9 +618,12 @@
     const a = (minutes / 60) * Math.PI * 2 - Math.PI / 2;
     return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
   }
+  const nz = (v) => String(Math.round(v * 10) / 10);
   function clockSvg(c, size, cls) {
     c = c || {};
     const S = 240, cx = 120, cy = 120, R = 92;
+    // Vẽ nhỏ thì chữ số và vạch phải "dày" hơn theo tỉ lệ, nếu không bé không đọc nổi mặt đồng hồ 88–130 px
+    const k = Math.min(1.3, Math.max(1, 150 / (size || 160)));
     const h = c.h == null ? 12 : c.h, m = c.m == null ? 0 : c.m;
     const vb = c.minuteLabels ? '-22 -22 284 284' : '0 0 ' + S + ' ' + S;
     let s = '<svg class="clock ' + (cls || '') + '" viewBox="' + vb + '" width="' + (size || 160) + '" height="' + (size || 160) + '" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
@@ -637,12 +643,7 @@
     for (let i = 0; i < 60; i++) {
       const big = i % 5 === 0;
       const p0 = polar(cx, cy, R - (big ? 10 : 6), i), p1 = polar(cx, cy, R, i);
-      s += '<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="' + (big ? '#2b2d42' : (c.zoomTicks ? '#ef476f' : '#8a8fa8')) + '" stroke-width="' + (big ? 3 : (c.zoomTicks ? 2.5 : 1.5)) + '" stroke-linecap="round"/>';
-    }
-    // Số 1..12
-    for (let i = 1; i <= 12; i++) {
-      const p = polar(cx, cy, R - 24, i * 5);
-      s += '<text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="21" font-weight="800" fill="#2b2d42">' + i + '</text>';
+      s += '<line x1="' + p0[0].toFixed(1) + '" y1="' + p0[1].toFixed(1) + '" x2="' + p1[0].toFixed(1) + '" y2="' + p1[1].toFixed(1) + '" stroke="' + (big ? '#2b2d42' : (c.zoomTicks ? '#ef476f' : '#8a8fa8')) + '" stroke-width="' + nz(big ? 3 * k : (c.zoomTicks ? 2.5 : 1.5) * k) + '" stroke-linecap="round"/>';
     }
     // Nhãn phút bên ngoài (5, 10, ... 60)
     if (c.minuteLabels) {
@@ -659,32 +660,53 @@
         s += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="15" fill="none" stroke="#ef476f" stroke-width="3"/>';
       });
     }
+    // Kim: vẽ TẤT CẢ quầng sáng trước, rồi kim giờ (có viền trắng), rồi kim phút —
+    // nếu không, quầng của kim phút sẽ phủ lên kim giờ và bé tưởng kim giờ ngắn hơn thật.
     if (!c.noHands) {
       const hourMin = ((h % 12) + m / 60) * 5;
+      const ph = polar(cx, cy, R * 0.55, hourMin), pm = polar(cx, cy, R * 0.82, m);
+      if (c.hl === 'hour' && !c.hideHour) s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ph[0].toFixed(1) + '" y2="' + ph[1].toFixed(1) + '" stroke="rgba(255,209,102,0.9)" stroke-width="20" stroke-linecap="round"/>';
+      if (c.hl === 'minute' && !c.hideMinute) s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pm[0].toFixed(1) + '" y2="' + pm[1].toFixed(1) + '" stroke="rgba(255,209,102,0.9)" stroke-width="18" stroke-linecap="round"/>';
       if (!c.hideHour) {
-        const p = polar(cx, cy, R * 0.55, hourMin);
-        if (c.hl === 'hour') s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="rgba(255,209,102,0.9)" stroke-width="20" stroke-linecap="round"/>';
-        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="#2b2d42" stroke-width="9" stroke-linecap="round"/>';
+        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ph[0].toFixed(1) + '" y2="' + ph[1].toFixed(1) + '" stroke="#fffdf6" stroke-width="13" stroke-linecap="round"/>';
+        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ph[0].toFixed(1) + '" y2="' + ph[1].toFixed(1) + '" stroke="#2b2d42" stroke-width="9" stroke-linecap="round"/>';
       }
       if (!c.hideMinute) {
-        const p = polar(cx, cy, R * 0.82, m);
-        if (c.hl === 'minute') s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="rgba(255,209,102,0.9)" stroke-width="18" stroke-linecap="round"/>';
-        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '" stroke="#ef476f" stroke-width="6" stroke-linecap="round"/>';
+        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pm[0].toFixed(1) + '" y2="' + pm[1].toFixed(1) + '" stroke="#fffdf6" stroke-width="10" stroke-linecap="round"/>';
+        s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pm[0].toFixed(1) + '" y2="' + pm[1].toFixed(1) + '" stroke="#ef476f" stroke-width="6" stroke-linecap="round"/>';
       }
     }
     s += '<circle cx="' + cx + '" cy="' + cy + '" r="7" fill="#2b2d42"/><circle cx="' + cx + '" cy="' + cy + '" r="3" fill="#ffd166"/>';
+    // Số 1..12 vẽ SAU cùng, có viền trắng (paint-order) để không bị kim che mất
+    for (let i = 1; i <= 12; i++) {
+      const p = polar(cx, cy, R - 24, i * 5);
+      s += '<text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="' + nz(21 * k) + '" font-weight="800" fill="#2b2d42" paint-order="stroke" stroke="#fffdf6" stroke-width="4" stroke-linejoin="round">' + i + '</text>';
+    }
     s += '</svg>';
     return s;
   }
   function digitalHtml(str, cls) {
     return '<div class="digital ' + (cls || '') + '"><span>' + esc(str) + '</span></div>';
   }
+  /** Phép tính viết to (thay cho emoji "🌇 ➕ 12" khó đọc): "5 + 12 = 17". */
+  function mathHtml(str) { return '<div class="math-art">' + esc(str) + '</div>'; }
+  /** Băng 24 giờ: hàng trên 1…12 (buổi sáng), hàng dưới 13…24 — thấy ngay "số dưới = số trên + 12". */
+  function h24StripHtml() {
+    let top = '', bot = '';
+    for (let i = 1; i <= 12; i++) {
+      top += '<span>' + i + '</span>';
+      bot += '<span>' + (i + 12) + '</span>';
+    }
+    return '<div class="h24-strip" aria-hidden="true"><div class="row am">' + top + '</div><div class="row pm">' + bot + '</div></div>';
+  }
   /** HTML minh họa của câu hỏi / slide (đồng hồ kim, đồng hồ điện tử, biểu tượng). */
   function visualHtml(o, size) {
     let s = '';
     if (o.clock) s += clockSvg(o.clock, size);
+    if (o.strip) s += h24StripHtml();
     if (o.digital) s += digitalHtml(o.digital);
     if (o.emoji) s += '<div class="emoji-art">' + esc(o.emoji) + '</div>';
+    if (o.math) s += mathHtml(o.math);
     if (o.icon && !o.clock && !o.digital) s += '<div class="emoji-art">' + esc(o.icon) + '</div>';
     return s;
   }

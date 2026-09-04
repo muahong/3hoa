@@ -52,9 +52,9 @@ rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính có th
 | 8. Tính thời gian | 1 giờ = 60 phút, 1 ngày = 24 giờ, 1 tuần = 7 ngày, 1 năm = 12 tháng; giờ kết thúc, khoảng thời gian | Lớp 3 |
 | 9. Siêu Hổ | Trộn tất cả, vòng lửa đến nhanh hơn, hoàn thành để nhận Huy hiệu Hổ Vàng | Thử thách |
 
-Luật chơi: mỗi màn có 3 tim ❤️. Chọn sai hoặc hết giờ mất 1 tim, vòng đúng sáng xanh và lời giải thích hiện trên màn hình (chạm để chạy tiếp). Hết tim thì hổ mệt, cần chơi lại (có thể xem lại bài học). Chọn nhanh được thưởng điểm, trả lời đúng liên tiếp có Combo x2, x3, x4. Sao ⭐: 3 sao không sai câu nào, 2 sao sai 1 câu, 1 sao về đích.
+Luật chơi: mỗi màn có 3 tim ❤️ (màn 1–3 được 4 tim vì bé mới học). Chọn sai hoặc hết giờ mất 1 tim; vòng bé chọn sai mang dấu **✕** đỏ, vòng đúng sáng xanh với dấu **✓** và viền nét đứt (phân biệt được cả khi bé khó nhìn màu), kèm lời giải thích trên màn hình (chạm để chạy tiếp). Hết tim thì hổ mệt: bé có thể chơi lại, xem lại bài học, hoặc bấm **🐯 Tập luyện** để chơi mà không mất tim (không tính kỷ lục và sao). Ở bảng kết quả, phần **📝 Cần ôn lại** có nút **🔁 Luyện lại các câu này** – một ván rút gọn chỉ gồm đúng những câu vừa sai (sinh lại với đáp án nhiễu mới, không mất tim, không tính kỷ lục). Bí quá thì bấm **💡 Gợi ý** (phím `H`): một vòng lửa sai sẽ tắt và mẹo của màn được nhắc lại, đổi lại câu đó chỉ được nửa điểm. Chạm vào thẻ câu hỏi để phóng to đồng hồ. Điểm thưởng chọn nhanh tính theo đồng hồ của từng màn (câu có lời văn ở màn 8 được cộng thêm vài giây để đọc đề), trả lời đúng liên tiếp có Combo x2, x3, x4. Sao ⭐: 3 sao không sai câu nào, 2 sao sai 1 câu, 1 sao về đích.
 
-Màn **📖 Ghi nhớ** ở menu chính tóm tắt kiến thức của tất cả các màn, chạm vào từng dòng để nghe đọc.
+Màn **📖 Ghi nhớ** ở menu chính tóm tắt kiến thức của tất cả các màn, chạm vào từng dòng để nghe đọc. Phần kiến thức bé đang sai nhiều được gắn **📝** và tự xếp lên đầu.
 
 Thiết lập thiết bị (dùng chung cho mọi bé): 🔊 Âm thanh, 🎵 Nhạc nền, 🗣️ Giọng đọc và **✨ Hiệu ứng: Nhiều/Ít** (Ít = bớt tia lửa, không rung/chớp màn hình, tắt hoạt ảnh; tự bật khi hệ thống chọn "giảm chuyển động"). Trang có Content-Security-Policy (không mã nội tuyến), dữ liệu đọc từ localStorage luôn được kiểm tra kiểu/khoảng, và một lỗi bất ngờ trong ván chơi sẽ đưa bé về menu kèm thông báo thay vì treo màn hình.
 
@@ -62,6 +62,6 @@ Thiết lập thiết bị (dùng chung cho mọi bé): 🔊 Âm thanh, 🎵 Nh�
 
 - **Thêm hoặc sửa màn, bài học, câu hỏi đáp**: chỉnh mảng `LEVELS` trong `js/lessons.js` (số cụm vòng `gates`, giây chọn mỗi vòng `timer`, tốc độ `speed`, các trang `lesson`, câu hỏi `quiz`, dòng `notes`).
 - **Bộ sinh câu hỏi cho vòng lửa**: các hàm `genL1` … `genL9` trong `js/lessons.js`.
-- **Độ khó chung**: `JUMP_T`, `LEARN_T`, `RUN_GAP_T`, số tim `MAX_HEARTS`, ngưỡng sao `starsFor` trong `js/game.js`.
+- **Độ khó chung**: `JUMP_T`, `LEARN_T`, `RUN_GAP_T`, số tim `MAX_HEARTS` (hoặc `hearts` của từng màn trong `js/lessons.js`), ngưỡng sao `starsFor` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuoi-ho-v2`) để thiết bị đã cài nhận bản mới.

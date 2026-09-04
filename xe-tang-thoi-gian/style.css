@@ -89,7 +89,11 @@ html, body {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
 }
+/* Bảng vừa hiện: trượt lên + phóng nhẹ (tắt khi bé chọn "Hiệu ứng: Ít") */
+.screen:not(.hidden) .panel { animation: panel-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+@keyframes panel-in { from { opacity: 0; transform: translateY(14px) scale(0.94); } }
 .screen > * { pointer-events: auto; }
 .screen.dim { background: rgba(5, 25, 15, 0.55); }
 
@@ -127,12 +131,12 @@ html, body {
   padding: 18px 34px;
   min-height: 62px;
   color: #fff;
-  background: linear-gradient(180deg, var(--orange) 0%, #ff8b5a 100%);
+  background: linear-gradient(180deg, #f25a1f 0%, #e8551b 100%);
   box-shadow: 0 7px 0 var(--orange-dark), 0 12px 24px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   touch-action: manipulation;
   transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
   letter-spacing: 0.3px;
   display: inline-flex;
   align-items: center;
@@ -144,13 +148,13 @@ html, body {
   box-shadow: 0 2px 0 var(--orange-dark), 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 .btn.big { font-size: 32px; padding: 22px 46px; min-height: 78px; }
-.btn.teal { background: linear-gradient(180deg, var(--teal), #4fd8cb); box-shadow: 0 7px 0 var(--teal-dark), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.teal { background: linear-gradient(180deg, var(--teal), #4fd8cb); color: #0b3a36; text-shadow: none; box-shadow: 0 7px 0 var(--teal-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.teal:active { box-shadow: 0 2px 0 var(--teal-dark), 0 4px 10px rgba(0,0,0,0.18); }
 .btn.purple { background: linear-gradient(180deg, var(--purple), #9b7fc7); box-shadow: 0 7px 0 var(--purple-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.purple:active { box-shadow: 0 2px 0 var(--purple-dark), 0 4px 10px rgba(0,0,0,0.18); }
-.btn.green { background: linear-gradient(180deg, var(--green), #3ee8b8); box-shadow: 0 7px 0 var(--green-dark), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.green { background: linear-gradient(180deg, #05c894, var(--green)); color: #063b2c; text-shadow: none; box-shadow: 0 7px 0 var(--green-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.green:active { box-shadow: 0 2px 0 var(--green-dark), 0 4px 10px rgba(0,0,0,0.18); }
-.btn.blue { background: linear-gradient(180deg, var(--blue), #2aa8d4); box-shadow: 0 7px 0 var(--blue-dark), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.blue { background: linear-gradient(180deg, #0e7ea3, var(--blue)); box-shadow: 0 7px 0 var(--blue-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.blue:active { box-shadow: 0 2px 0 var(--blue-dark), 0 4px 10px rgba(0,0,0,0.18); }
 .btn.ghost {
   background: #f1f3fa;
@@ -160,7 +164,7 @@ html, body {
 }
 .btn.ghost:active { box-shadow: 0 2px 0 #cfd4e6; }
 .btn.small { font-size: 19px; padding: 12px 22px; min-height: 50px; }
-.btn.danger { background: linear-gradient(180deg, var(--red), #ff7a99); box-shadow: 0 7px 0 var(--red-dark), 0 12px 24px rgba(0,0,0,0.18); }
+.btn.danger { background: linear-gradient(180deg, #d92f5b, var(--red)); box-shadow: 0 7px 0 var(--red-dark), 0 12px 24px rgba(0,0,0,0.18); }
 .btn.danger:active { box-shadow: 0 2px 0 var(--red-dark), 0 4px 10px rgba(0,0,0,0.18); }
 .btn-row {
   display: flex;
@@ -193,10 +197,12 @@ html, body {
   gap: 18px;
   flex-wrap: wrap;
 }
+/* Bóng đổ nằm ở lớp tĩnh, hoạt ảnh nằm ở svg: trình duyệt không phải lọc lại ảnh mỗi khung hình */
+.logo-mark { filter: drop-shadow(0 10px 14px rgba(0,0,0,0.25)); line-height: 0; }
 .logo-row svg {
   width: 160px;
   height: 160px;
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.25));
+  will-change: transform;
   animation: logo-bob 3s ease-in-out infinite;
 }
 @keyframes logo-bob {
@@ -244,8 +250,9 @@ html, body {
 .toggle.off { text-decoration: line-through; opacity: 0.8; }
 .toggle.off.lite { text-decoration: none; opacity: 1; background: #fff4d6; border-color: var(--yellow-dark); color: #6a4a00; }
 .toggle[disabled] { opacity: 0.5; cursor: default; text-decoration: none; }
-.footer-note { margin-top: 14px; font-size: 15px; color: #98a0bd; font-weight: 700; }
-.footer-note a { color: var(--blue); text-decoration: none; display: inline-block; padding: 8px 4px; }
+.footer-note { margin-top: 14px; font-size: 15px; color: var(--ink-soft); font-weight: 700; }
+/* Vùng chạm ≥ 44 px cho ngón tay bé (SPEC §4) */
+.footer-note a { color: #0e7ea3; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; padding: 6px 10px; }
 
 /* ---------- Người chơi (hồ sơ dùng chung giữa các game) ---------- */
 .player-row { display: flex; justify-content: center; margin: -6px 0 6px; }
@@ -351,7 +358,7 @@ html, body {
 .report-row .stars .off { color: #d5d9e6; }
 .report-row .mastered, .level-card .mastered { color: var(--green-dark); font-size: 13px; font-weight: 800; }
 .report-row .n { color: var(--red-dark); }
-.report-row .muted { color: #8a90ad; font-weight: 600; }
+.report-row .muted { color: #666c8b; font-weight: 600; }
 .parent-row { margin-top: 14px; }
 .linkish {
   font-family: var(--font); font-weight: 700; font-size: 15px; color: var(--ink-soft);
@@ -395,23 +402,25 @@ html, body {
 .level-card.locked { opacity: 0.6; filter: grayscale(0.7); cursor: default; }
 .level-card.locked:active { transform: none; box-shadow: 0 6px 0 #dfe3ef; }
 .level-card.next { border-color: var(--yellow); box-shadow: 0 6px 0 var(--yellow-dark), 0 0 0 4px rgba(255, 209, 102, 0.35); }
-.level-card .icon { font-size: 40px; line-height: 1; margin-top: 14px; }
-.level-card .num { position: absolute; top: 12px; left: 14px; font-size: 14px; font-weight: 800; color: #98a0bd; }
+.level-card .level-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 4px 6px; }
+.level-card .icon { font-size: 40px; line-height: 1; margin-top: 6px; }
+.level-card .num { white-space: nowrap; font-size: 14px; font-weight: 800; color: #656b85; padding-top: 3px; }
 .level-card .name { font-size: 22px; font-weight: 800; margin-top: 6px; line-height: 1.15; }
 .level-card .desc { font-size: 15px; color: var(--ink-soft); font-weight: 600; margin-top: 2px; }
 .level-card .grade {
-  position: absolute; top: 12px; right: 12px;
+  flex-shrink: 0; white-space: nowrap;
   font-size: 13px; font-weight: 800; color: #fff;
   background: var(--purple); border-radius: 999px; padding: 4px 10px;
 }
-.level-card .grade.g2 { background: var(--blue); }
+.level-card .grade.g2 { background: #0d7396; }
 .level-card .grade.g3 { background: var(--purple); }
-.level-card .grade.gx { background: var(--red); }
+.level-card .grade.gx { background: #d32c56; }
 .level-card .meta {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: auto; padding-top: 10px; font-size: 16px; font-weight: 800;
 }
-.level-card .best { color: var(--orange-dark); }
+.level-card .best { color: #b83f14; white-space: nowrap; }
+.level-card .quiz-best { color: #5a3f85; font-size: 15px; white-space: nowrap; }
 .level-card .stars { color: #ffbf1f; letter-spacing: 2px; font-size: 20px; }
 .level-card .stars .off { color: #d5d9e6; }
 .level-card .lock { font-size: 15px; color: var(--ink-soft); font-weight: 700; }
@@ -426,6 +435,14 @@ html, body {
 .lesson-clock-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 #lesson-clock { width: 240px; height: 240px; }
 .lesson-clock-label { font-size: 24px; font-weight: 800; color: var(--orange-dark); text-align: center; min-height: 30px; }
+.lesson-extra { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.lesson-extra .ses { font-size: 24px; line-height: 1; }
+/* Đồng hồ điện tử trong bài học: cùng kiểu "màn LED" như ở thẻ câu hỏi và hỏi đáp */
+.lesson-extra .digital {
+  background: #16213e; color: #7bf1a8; font-weight: 800; font-size: 17px; letter-spacing: 1px;
+  border-radius: 8px; padding: 2px 8px; font-variant-numeric: tabular-nums;
+}
+.lesson-extra .h24 { font-size: 17px; font-weight: 800; color: #5a3f85; }
 .lesson-examples { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .lesson-examples button {
   font-family: var(--font); font-weight: 800; font-size: 16px;
@@ -481,7 +498,7 @@ html, body {
   padding: 5px 12px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
 }
 .combo-chip {
-  background: linear-gradient(90deg, #ff7a00, #ffb800); color: #fff; font-weight: 800; font-size: 16px;
+  background: linear-gradient(90deg, #ff7a00, #ffb800); color: #3a1d00; font-weight: 800; font-size: 16px;
   padding: 5px 12px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
   transform-origin: left center;
   animation: chip-pop 0.3s ease;
@@ -507,9 +524,13 @@ html, body {
 .prompt-card.stack { flex-direction: column; gap: 6px; padding-top: 10px; }
 .prompt-card.stack .prompt-visual canvas { width: 76px; height: 76px; }
 .prompt-card.stack .say-btn { position: absolute; right: 8px; top: 8px; }
+.prompt-card.stack .hint-btn { right: auto; left: 8px; }
 .prompt-card.stack .prompt-text { padding: 0 4px; }
 .prompt-visual { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .prompt-visual canvas { width: 108px; height: 108px; display: block; }
+/* Màn rộng (iPad, máy tính): mặt đồng hồ câu hỏi to hơn để bé nhìn rõ từng vạch phút.
+   CSS mới là nơi quyết định kích thước thật (paintClockCanvas đo clientWidth). */
+@media (min-width: 700px) { .prompt-visual canvas { width: 120px; height: 120px; } }
 .prompt-visual .arrow { font-size: 28px; font-weight: 800; color: var(--orange-dark); }
 .prompt-visual .digital {
   background: #16213e; color: #7bf1a8; font-weight: 800; font-size: 40px; letter-spacing: 2px;
@@ -532,6 +553,10 @@ html, body {
   box-shadow: 0 3px 0 #cfd4e6;
 }
 .say-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #cfd4e6; }
+.say-btn:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+.hint-btn { order: -1; background: #fff3cf; box-shadow: 0 3px 0 #e8d38a; }
+.hint-btn:active { box-shadow: 0 1px 0 #e8d38a; }
+.hint-btn:disabled { box-shadow: none; }
 .prompt-card.pop { animation: card-pop 0.35s ease; }
 @keyframes card-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
 .prompt-card.shake { animation: card-shake 0.4s ease; background: #ffe3e8; }
@@ -552,9 +577,9 @@ html, body {
   animation: hint-pop 0.3s ease;
 }
 @keyframes hint-pop { 0% { transform: translateX(-50%) scale(0.5); } 60% { transform: translateX(-50%) scale(1.15); } 100% { transform: translateX(-50%) scale(1); } }
-.hint.bad { background: var(--red); }
+.hint.bad { background: #d92f5b; }                 /* trắng trên nền này đạt 4.66:1 (WCAG AA cho chữ nhỏ) */
 .hint.ok { background: var(--green); color: #063b2c; }
-.hint.info { background: var(--blue); }
+.hint.info { background: #0e7ea3; }                /* trắng trên nền này đạt 4.63:1 */
 .hearts { display: flex; gap: 4px; background: rgba(255,255,255,0.92); border-radius: 999px; padding: 6px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
 .hearts span { font-size: 28px; line-height: 1; transition: transform 0.2s, filter 0.2s; display: inline-block; }
 .hearts span.lost { filter: grayscale(1) opacity(0.35); transform: scale(0.8); }
@@ -613,7 +638,7 @@ html, body {
 .record-badge {
   display: inline-block;
   background: linear-gradient(90deg, #ffb300, #ff6b35);
-  color: #fff; font-weight: 800; font-size: 20px;
+  color: #3a1d00; text-shadow: none; font-weight: 800; font-size: 20px;
   padding: 6px 18px; border-radius: 999px; margin: 6px 0 4px;
   animation: badge-pulse 1s ease-in-out infinite;
   box-shadow: 0 6px 16px rgba(255, 120, 0, 0.35);
@@ -634,13 +659,29 @@ html, body {
 .stat.acc .v { color: var(--blue); }
 .review { background: #fff4d6; border-radius: 18px; padding: 8px 14px 10px; margin: 8px auto 4px; max-width: 620px; }
 .review h3 { margin: 0 0 6px; font-size: 17px; color: #8a5a00; }
-.review-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+/* Danh sách ôn lại có thể dài: giới hạn chiều cao (cuộn được) để các nút "🔄 Chơi lại", "🧠 Hỏi đáp"
+   luôn nằm trong màn hình sau khi bé thua (bảng kết quả không bị đẩy xuống dưới) */
+.review-chips {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  max-height: min(30vh, 260px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  scrollbar-width: thin;
+}
+.review .review-more { margin: 6px 0 0; font-size: 14px; font-weight: 800; color: #8a5a00; }
 .review-chip {
   font-family: var(--font); border: none; min-height: 44px;
-  background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 16px; font-weight: 800; color: var(--ink);
+  background: #fff; border-radius: 20px; padding: 8px 14px; font-size: 16px; font-weight: 800; color: var(--ink);
   box-shadow: 0 2px 0 #e8d5a8; cursor: pointer; touch-action: manipulation; max-width: 100%; white-space: normal; text-align: left;
 }
 .review-chip b { color: var(--orange-dark); }
+.review-chip .rc-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+/* Dòng "vì sao" gói gọn 1 dòng để chip không cao thành cả khối chữ (đầy đủ có ở 📊 Kết quả) */
+.review-chip .rc-why {
+  display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  margin-top: 2px; font-size: 14px; font-weight: 700; color: #6a5326; max-width: 40ch;
+}
+.review-chip .digital, .report-row .digital { font-size: 15px; padding: 2px 8px; }
+.chip-clock { width: 44px; height: 44px; flex: 0 0 auto; vertical-align: middle; }
+.report-row .chip-clock { width: 40px; height: 40px; }
 .name-entry {
   display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;
   margin: 10px 0 6px;
@@ -688,6 +729,9 @@ html, body {
 .quiz-opt.ok::after { content: '✓'; background: var(--green-dark); }
 .quiz-opt.bad::after { content: '✗'; background: var(--red); }
 .quiz-opt:active { transform: translateY(3px); box-shadow: 0 2px 0 #dfe3ef; }
+/* Số phím tắt 1–4 (chỉ hữu ích khi có bàn phím → ẩn trên máy cảm ứng) */
+.quiz-opt .key { position: absolute; left: 10px; top: 6px; font-size: 13px; font-weight: 800; color: #656b85; }
+@media (hover: none) { .quiz-opt .key { display: none; } }
 .quiz-opt canvas { width: 110px; height: 110px; }
 .quiz-opt .digital { background: #16213e; color: #7bf1a8; border-radius: 10px; padding: 2px 10px; font-size: 26px; letter-spacing: 2px; }
 .quiz-opt.ok { background: #e3fff4; border-color: var(--green); color: #05603f; }
@@ -731,11 +775,11 @@ html, body {
 /* ---------- Ít chuyển động (prefers-reduced-motion hoặc thiết lập "Hiệu ứng: Ít") ---------- */
 .lite-fx .logo-row svg, .lite-fx .record-badge, .lite-fx .hearts.hit, .lite-fx .prompt-card.shake, .lite-fx .prompt-card.pop,
 .lite-fx .hint, .lite-fx .combo-chip, .lite-fx .result-stars .on, .lite-fx #countdown .count, .lite-fx .quiz-opt.bad,
-.lite-fx .hearts span.gain, .lite-fx .score-box .value { animation: none !important; transition: none !important; }
+.lite-fx .hearts span.gain, .lite-fx .score-box .value, .lite-fx .screen .panel { animation: none !important; transition: none !important; }
 .lite-fx .screen, .lite-fx .btn, .lite-fx .toggle, .lite-fx .player-chip { transition: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .logo-row svg, .record-badge, .hearts.hit, .prompt-card.shake, .prompt-card.pop, .hint, .combo-chip, .result-stars .on,
-  #countdown .count, .quiz-opt.bad, .hearts span.gain, .score-box .value { animation: none !important; transition: none !important; }
+  #countdown .count, .quiz-opt.bad, .hearts span.gain, .score-box .value, .screen .panel { animation: none !important; transition: none !important; }
   .screen, .btn, .toggle, .player-chip { transition: none !important; }
 }
 
@@ -790,6 +834,18 @@ html, body {
   .level-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .level-card { min-height: 140px; padding: 12px; }
   .level-card .name { font-size: 18px; }
+  /* Thẻ màn hẹp: điểm cao · hỏi đáp · sao tự xuống dòng thay vì bị ép vỡ chữ */
+  .level-card .meta { flex-wrap: wrap; justify-content: flex-start; gap: 2px 8px; font-size: 15px; }
+  .level-card .quiz-best { font-size: 14px; }
+  .level-card .stars { margin-left: auto; font-size: 18px; letter-spacing: 1px; }
+  /* Bảng kết quả trên điện thoại: danh sách ôn lại thấp hơn và hàng nút phụ gọn lại (vẫn ≥ 44 px)
+     để "🔄 Chơi lại", "📖 Xem lại bài học", "🏠 Trang chính" đều nằm trong màn hình */
+  .review { padding: 6px 10px 8px; margin: 6px auto 2px; }
+  .review-chips { max-height: min(22vh, 150px); }
+  .review-chip { font-size: 15px; padding: 6px 12px; }
+  .review-chip .rc-why { font-size: 13px; }
+  #gameover .btn.small { font-size: 15px; padding: 10px 12px; min-height: 44px; }
+  #gameover .btn-row { gap: 8px; margin-top: 10px; }
   .quiz-q { font-size: 20px; }
   .quiz-opt { font-size: 18px; min-height: 56px; padding: 10px; }
   .quiz-visual canvas { width: 120px; height: 120px; }
@@ -820,4 +876,8 @@ html, body {
   .panel { padding: 16px 22px; }
   .howto-item { padding: 8px 12px; }
   .prompt-visual canvas { width: 72px; height: 72px; }
+  /* Màn rất thấp (điện thoại nằm ngang): bảng kết quả vẫn phải cuộn, nhưng gọn hết mức */
+  .review-chips { max-height: min(20vh, 100px); }
+  #gameover .btn.small { font-size: 15px; padding: 8px 12px; min-height: 44px; }
+  #gameover .btn-row { gap: 8px; margin-top: 8px; }
 }

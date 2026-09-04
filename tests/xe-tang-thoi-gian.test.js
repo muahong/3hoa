@@ -4,10 +4,13 @@
    - mọi bộ sinh câu hỏi và mọi màn: đúng một đáp án, phương án không trùng, chữ đọc/giải thích nhất quán
    - ràng buộc từng màn (l1 chỉ giờ đúng, l6 chỉ giờ kém…), tạo lại câu ôn từ info
    - định nghĩa màn / bài học / hỏi đáp
+   - nút 💡 gợi ý (đánh dấu đáp án đúng, robot chậm lại) và tương phản màu chữ theo WCAG
    - Store (nạp cả game.js vào window giả): di trú dữ liệu cũ, làm sạch dữ liệu hỏng, kho ôn lại, thống kê, tách theo người chơi */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadGame, makeStorage } = require('./lib/load.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const { loadGame, makeStorage, ROOT } = require('./lib/load.js');
 
 const GAME = 'xe-tang-thoi-gian';
 const KEY = 'xe-tang-thoi-gian-v1';
@@ -294,6 +297,63 @@ test('định nghĩa màn, bài học, hỏi đáp hợp lệ', () => {
   assert.ok(L.LEVELS[8].quiz.length >= 20, 'l9 gom ngân hàng các màn trước');
 });
 
+test('ngân hàng hỏi đáp màn 9 chỉ gồm câu của các màn 4–8 (không hỏi lại kiến thức màn 1–3)', () => {
+  const mix = L.LEVELS[8].quiz;
+  const inMix = (it) => mix.indexOf(it) >= 0;
+  L.LEVELS.slice(0, 3).forEach((lv) => {
+    lv.quiz.forEach((it, k) => assert.equal(inMix(it), false, 'màn 9 không được lấy câu của ' + lv.id + ' #' + k + ': ' + it.q));
+  });
+  L.LEVELS.slice(3, 8).forEach((lv) => {
+    lv.quiz.forEach((it, k) => assert.equal(inMix(it), true, 'màn 9 phải có câu của ' + lv.id + ' #' + k));
+  });
+  assert.equal(new Set(mix.map((it) => it.q)).size, mix.length, 'ngân hàng màn 9 không có câu trùng');
+});
+
+test('vạch phút được nhấn mạnh đúng ở các dạng bài đếm từng phút', () => {
+  for (let i = 0; i < 200; i++) {
+    const five = C.fiveQ({ n: 4 });
+    assert.equal(five.prompt.emphasizeMinutes, true, 'fiveQ: đồng hồ câu hỏi phải nhấn vạch phút');
+    const ex0 = C.exactQ({ n: 4, variant: 0 });
+    assert.equal(ex0.prompt.emphasizeMinutes, true, 'exactQ dạng 0: đồng hồ câu hỏi phải nhấn vạch phút');
+    const ex3 = C.exactQ({ n: 3, variant: 3 });
+    assert.ok(ex3.options.length >= 3 && ex3.options.every((o) => o.clock && o.emphasizeMinutes === true), 'exactQ dạng 3: mọi bảng đồng hồ nhấn vạch phút');
+    // Các dạng chỉ dùng giờ tròn/5 phút thì không cần nhấn vạch nhỏ
+    const read = C.readQ({ n: 4, minutes: [0, 15, 30], styles: ['plain'] });
+    assert.ok(!read.prompt.emphasizeMinutes, 'readQ: không nhấn vạch phút');
+  }
+});
+
+test('ví dụ bài học: nhãn nút ngắn gọn, nhãn dưới đồng hồ dạy sự tương đương, giờ 24 hợp lệ', () => {
+  L.LEVELS.forEach((lv) => {
+    lv.lesson.examples.forEach((e, i) => {
+      const tag = lv.id + ' ví dụ#' + i;
+      if (e.btn) {
+        assert.ok(typeof e.label === 'string' && e.label.length > e.btn.length, tag + ': có nhãn nút thì nhãn đầy đủ phải dài hơn');
+        assert.ok(e.btn.length <= 24, tag + ': nhãn nút quá dài "' + e.btn + '"');
+      }
+      if (e.h24 != null) {
+        assert.ok(Number.isInteger(e.h24) && e.h24 >= 0 && e.h24 <= 23, tag + ': h24 hợp lệ');
+        assert.equal(C.h12(e.h24), C.h12(e.h), tag + ': h24 phải khớp giờ trên mặt đồng hồ');
+        assert.equal(C.session(e.h24), e.session, tag + ': buổi phải khớp h24');
+        assert.match(C.digital(e.h24, e.m), /^\d{2}:\d{2}$/, tag + ': đồng hồ điện tử');
+      }
+    });
+  });
+  // Màn 2 (giờ rưỡi) và màn 6 (giờ kém): nhãn nêu cả hai cách đọc để bé thấy chúng bằng nhau
+  const l2 = L.byId('l2').lesson.examples.filter((e) => e.m === 30);
+  assert.ok(l2.length >= 3, 'màn 2 có ví dụ giờ rưỡi');
+  l2.forEach((e) => {
+    assert.ok(e.label.indexOf(C.readTime(e.h, e.m, 'plain')) >= 0 && e.label.indexOf(C.readTime(e.h, e.m, 'ruoi')) >= 0 && e.label.indexOf('=') >= 0, 'màn 2: ' + e.label);
+  });
+  L.byId('l6').lesson.examples.forEach((e) => {
+    assert.ok(e.label.indexOf(C.readTime(e.h, e.m, 'plain')) >= 0 && e.label.indexOf(C.readTime(e.h, e.m, 'kem')) >= 0 && e.label.indexOf('=') >= 0, 'màn 6: ' + e.label);
+  });
+  // Màn 4 và màn 7 dạy cách gọi 24 giờ → mọi ví dụ phải có h24 để hiện đồng hồ điện tử
+  ['l4', 'l7'].forEach((id) => {
+    L.byId(id).lesson.examples.forEach((e, i) => assert.ok(Number.isInteger(e.h24), id + ' ví dụ#' + i + ' cần h24'));
+  });
+});
+
 /* ---------------- Store (nạp cả game.js vào window giả) ---------------- */
 const FULL = ['js/audio.js', 'js/clock.js', 'js/levels.js', 'js/profile.js', 'js/game.js'];
 const loadFull = (st) => loadGame(GAME, FULL, { localStorage: st });
@@ -411,4 +471,315 @@ test('Store: kho ôn lại (noteMissed/noteOk/reviewPool), thống kê, xóa ti�
   assert.equal(S.prog('l1').best, 0);
   assert.equal(S.p().stats.plays, 0);
   assert.equal(S.data.players[mai.id].progress.l1.best, 50, 'xóa chỉ người chơi đang hoạt động');
+});
+
+/* ---------------- Gợi ý trong lúc chơi (💡) ---------------- */
+test('nút 💡 Gợi ý: đánh dấu đáp án đúng, robot đi chậm lại, chỉ dùng một lần mỗi câu', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang, G = X.G;
+  const q = g.Clock.readQ({ minutes: [0], styles: ['plain'], n: 4 });
+  G.state = 'playing'; G.phase = 'ask'; G.q = q; G.hint = false; G.slowT = 0;
+  G.robots = q.options.map((o, i) => ({ opt: o, idx: i, dead: false, state: 'live', hint: false }));
+  assert.equal(X.useHint(), true, 'dùng được khi đang hỏi');
+  assert.equal(G.hint, true, 'câu này tính điểm gợi ý (20)');
+  assert.equal(G.slowT, 2.5, 'robot đi chậm lại trong lúc bé nghe giải thích');
+  const marked = G.robots.filter((r) => r.hint);
+  assert.equal(marked.length, 1, 'chỉ đánh dấu một bảng');
+  assert.equal(marked[0].opt.ok, true, 'bảng được đánh dấu là đáp án đúng');
+  assert.equal(X.useHint(), false, 'không dùng lại được trong cùng một câu');
+  // Không dùng được ngoài lúc đang hỏi
+  G.hint = false; G.phase = 'wait';
+  assert.equal(X.useHint(), false);
+  G.phase = 'ask'; G.state = 'over';
+  assert.equal(X.useHint(), false);
+  G.state = 'menu'; G.q = null; G.robots = [];
+});
+
+/* ---------------- Giọng đọc lời giải thích ---------------- */
+test('thời gian rơi theo dạng bài: câu dài được nhiều thời gian hơn, nhịp tăng tốc không quá 25%', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang, G = X.G;
+  G.level = g.Levels.byId('l9');
+  const base = G.level.fall / G.level.speed;
+  G.qIndex = 0;
+  assert.ok(Math.abs(X.fallTime({ kind: 'read' }) - base) < 1e-9, 'câu ngắn: giữ nguyên thời gian gốc');
+  assert.ok(Math.abs(X.fallTime({ kind: 'elapsed' }) - base * 1.4) < 1e-9, 'thời gian trôi qua: +40%');
+  assert.ok(Math.abs(X.fallTime({ kind: 'exact' }) - base * 1.2) < 1e-9, 'đọc từng phút: +20%');
+  assert.ok(Math.abs(X.fallTime({ kind: 'digital' }) - base * 1.2) < 1e-9, 'đồng hồ điện tử: +20%');
+  // Càng về cuối màn robot càng nhanh nhưng không nhanh quá 25%
+  G.qIndex = 11;
+  assert.ok(X.fallTime({ kind: 'elapsed' }) >= 15, 'màn 9 câu 12 dạng "thời gian trôi qua" vẫn ≥ 15 giây');
+  G.qIndex = 100;
+  assert.ok(Math.abs(X.fallTime({ kind: 'read' }) - base * 0.75) < 1e-9, 'nhanh nhất là 75% thời gian gốc');
+  G.qIndex = 0; G.level = null;
+});
+
+test('sao tính theo số CÂU sai (không theo số lần bắn trượt) và thưởng tim sau 5 câu đúng liền', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang, G = X.G;
+  G.hearts = 3; G.wrong = 0; G.review = [];
+  assert.equal(X.starsFor(), 3, 'không sai câu nào + đủ tim → 3 sao');
+  G.wrong = 5;                                  // bắn trượt 5 lần nhưng vẫn là… 0 câu sai thì không xảy ra
+  G.review = [{ key: 'a' }];
+  assert.equal(X.starsFor(), 2, 'sai 1 câu, còn 3 tim → 2 sao');
+  G.review = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
+  assert.equal(X.starsFor(), 1, 'sai 3 câu → 1 sao');
+  G.review = [{ key: 'a' }]; G.hearts = 1;
+  assert.equal(X.starsFor(), 1, 'còn 1 tim → 1 sao');
+  // Thưởng tim: không vượt quá 3
+  G.hearts = 2; G.tank.size = 60; G.tank.x = 100; G.tank.y = 400;
+  X.gainHeart();
+  assert.equal(G.hearts, 3);
+  X.gainHeart();
+  assert.equal(G.hearts, 3, 'không vượt quá số tim tối đa');
+  G.hearts = 3; G.wrong = 0; G.review = []; G.texts.length = 0;
+});
+
+test('bảng đồng hồ trên màn hẹp: xếp 2 cột thay vì thu nhỏ dưới 100 px', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang, G = X.G;
+  const q4 = g.Clock.matchQ({ minutes: [0, 15, 30, 45], n: 4 });
+  assert.ok(q4.options.every((o) => o.clock), 'câu thử phải toàn bảng đồng hồ');
+  const measure = (W, H) => {
+    G.W = W; G.H = H; G.field = { x: 0, y: 0, w: W, h: H };
+    G.tank.size = Math.min(Math.max(Math.min(W, H) * 0.11, 44), 78);
+    return X.boardSize(q4);
+  };
+  const phone = measure(390, 844);
+  assert.equal(phone.cols, 2, 'điện thoại dọc: 4 đồng hồ xếp 2 cột');
+  assert.ok(phone.w >= 100, 'mặt đồng hồ ≥ 100 px trên điện thoại (' + phone.w.toFixed(1) + ')');
+  const pad = measure(1180, 820);
+  assert.equal(pad.cols, 4, 'iPad ngang: 4 đồng hồ trên một hàng');
+  assert.ok(pad.w >= 100 && pad.w <= 150, 'iPad: 100–150 px (' + pad.w.toFixed(1) + ')');
+  const portrait = measure(820, 1180);
+  assert.equal(portrait.cols, 4);
+  assert.ok(portrait.w >= 100);
+  G.W = 0; G.H = 0;
+});
+
+test('chip "cần ôn lại": bỏ phần "Bắn đồng hồ chỉ …" ở đầu câu hỏi', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang;
+  assert.equal(X.shortPrompt('Bắn đồng hồ chỉ 7 giờ 50 phút!'), '7 giờ 50 phút');
+  assert.equal(X.shortPrompt('Bắn đồng hồ điện tử chỉ 3 giờ chiều!'), '3 giờ chiều');
+  assert.equal(X.shortPrompt('Đồng hồ chỉ mấy giờ?'), 'Đồng hồ chỉ mấy giờ', 'câu hỏi thật thì giữ nguyên');
+  assert.equal(X.shortPrompt('Đồng hồ điện tử chỉ mấy giờ?'), 'Đồng hồ điện tử chỉ mấy giờ');
+  assert.equal(X.shortPrompt('Kim dài chỉ số 7 là bao nhiêu phút?'), 'Kim dài chỉ số 7 là bao nhiêu phút');
+});
+
+test('hỏi đáp màn 9: 2 câu luyện tập + 2 câu khái niệm', () => {
+  const g = loadFull(makeStorage());
+  const X = g.__XeTang, G = X.G;
+  const l9 = g.Levels.byId('l9');
+  for (let i = 0; i < 40; i++) {
+    G.level = null; G.review = [];
+    const items = X.buildQuiz(l9);
+    assert.equal(items.length, 4);
+    assert.equal(items.filter((it) => it.kind === 'concept').length, 2, 'màn 9: 2 câu khái niệm');
+    assert.equal(items.filter((it) => it.kind === 'practice').length, 2, 'màn 9: 2 câu luyện tập');
+  }
+  // Các màn khác giữ nhịp cũ: 3 khái niệm + 1 luyện tập khi bé không sai câu nào
+  const l1 = g.Levels.byId('l1');
+  for (let i = 0; i < 20; i++) {
+    G.level = null; G.review = [];
+    const items = X.buildQuiz(l1);
+    assert.equal(items.filter((it) => it.kind === 'concept').length, 3, 'màn 1: 3 câu khái niệm');
+  }
+  G.level = null; G.review = [];
+});
+
+test('speakable: đọc "14:21" thành "14 giờ 21 phút", không câu nào còn chuỗi đồng hồ điện tử thô', () => {
+  const X = loadFull(makeStorage()).__XeTang;
+  const sp = X.speakable;
+  assert.equal(sp('Đồng hồ điện tử ghi giờ trước, phút sau: 14:21.'), 'Đồng hồ điện tử ghi giờ trước, phút sau: 14 giờ 21 phút.');
+  assert.equal(sp('07:05'), '7 giờ 5 phút');
+  assert.equal(sp('18:00'), '18 giờ đúng');
+  assert.equal(sp('Buổi chiều: 6 + 12 = 18. Ghi 18:09.'), 'Buổi chiều: 6 + 12 = 18. Ghi 18 giờ 9 phút.');
+  assert.equal(sp(''), '');
+  // Mọi câu của mọi màn: chuỗi đọc thành lời không còn dạng "hh:mm"
+  L.LEVELS.forEach((lv) => {
+    for (let i = 0; i < 300; i++) {
+      const q = lv.gen();
+      const said = [sp('Đáp án là ' + q.answer.speech + '. ' + q.explain), sp(q.explain), sp('Đúng rồi. ' + q.answer.speech + '. ' + q.explain)];
+      said.forEach((s) => assert.doesNotMatch(s, /\d{1,2}:\d{2}/, lv.id + ': giọng đọc còn chuỗi đồng hồ điện tử thô — ' + s));
+    }
+  });
+});
+
+test('lời giải thích: mọi Voice.say có q.explain đều đi qua speakable, chip vẫn giữ nguyên "hh:mm"', () => {
+  const js = fs.readFileSync(path.join(ROOT, GAME, 'js/game.js'), 'utf8');
+  const lines = js.split('\n').filter((l) => l.indexOf('Voice.say(') >= 0 && l.indexOf('q.explain') >= 0);
+  assert.ok(lines.length >= 3, 'phải có ≥ 3 chỗ đọc lời giải thích (sai 2 lần, vỡ tuyến, 💡)');
+  lines.forEach((l) => assert.match(l, /speakable\(q\.explain\)/, 'còn đọc thô lời giải thích: ' + l.trim()));
+  // showHint/addText giữ nguyên chữ (chip hiển thị "14:21" cho bé nhìn thấy đồng hồ điện tử)
+  assert.doesNotMatch(js, /showHint\(speakable\(/, 'chip không được đổi chữ hiển thị');
+  const X = loadFull(makeStorage()).__XeTang;
+  const q = { answer: { label: '18:09' }, explain: 'Đồng hồ điện tử ghi giờ trước, phút sau: 18:09.' };
+  assert.equal(X.answerHint(q), '18:09 · Đồng hồ điện tử ghi giờ trước, phút sau: 18:09.');
+  assert.equal(X.answerHint({ answer: { label: '3 giờ' }, explain: '3 giờ: kim ngắn chỉ số 3.' }), '3 giờ: kim ngắn chỉ số 3.');
+});
+
+test('chữ nổi trên canvas luôn ngắn (đọc được trên điện thoại) và có sàn cỡ chữ 14px', () => {
+  const js = fs.readFileSync(path.join(ROOT, GAME, 'js/game.js'), 'utf8');
+  const onHit = js.slice(js.indexOf('function onHit('), js.indexOf('function onWrong('));
+  assert.doesNotMatch(onHit, /addText\(q\.explain/, 'không được thả cả lời giải thích (61–140 ký tự) lên canvas');
+  assert.match(onHit, /addText\('Nhớ nhé: ' \+ q\.answer\.label/, 'chữ nổi khi đã gợi ý phải là đáp án ngắn gọn');
+  const draw = js.slice(js.indexOf('function drawTexts('), js.indexOf('function render('));
+  assert.match(draw, /Math\.max\(fs \* \(G\.W - 24\) \/ w, 14\)/, 'drawTexts phải chặn dưới cỡ chữ 14px');
+  // Nhãn đáp án dài nhất của mọi màn vẫn ngắn hơn 40 ký tự khi thêm tiền tố "Nhớ nhé: "
+  let max = 0, worst = '';
+  L.LEVELS.forEach((lv) => {
+    for (let i = 0; i < 200; i++) {
+      const t = 'Nhớ nhé: ' + lv.gen().answer.label;
+      if (t.length > max) { max = t.length; worst = t; }
+    }
+  });
+  assert.ok(max <= 40, 'chữ nổi dài ' + max + ' ký tự: ' + worst);
+});
+
+/* ---------------- Tương phản màu (WCAG) ---------------- */
+const CSS = fs.readFileSync(path.join(ROOT, GAME, 'style.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+/** Gom khai báo của từng bộ chọn (kể cả trong @media, khai báo sau ghi đè khai báo trước) */
+function cssDecls() {
+  const map = {};
+  const re = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = re.exec(CSS))) {
+    const body = m[2];
+    m[1].split(',').forEach((sel) => {
+      sel = sel.trim().replace(/\s+/g, ' ');
+      if (sel) map[sel] = (map[sel] || '') + ';' + body;
+    });
+  }
+  return map;
+}
+const DECLS = cssDecls();
+function lastProp(sel, name) {
+  const body = DECLS[sel];
+  if (!body) return null;
+  const re = new RegExp('(?:^|;)\\s*' + name + '\\s*:\\s*([^;]+)', 'g');
+  let m, out = null;
+  while ((m = re.exec(body))) out = m[1].trim();
+  return out;
+}
+const ROOT_VARS = {};
+(DECLS[':root'] || '').replace(/(--[a-z0-9-]+)\s*:\s*([^;]+)/gi, (a, k, v) => { ROOT_VARS[k] = v.trim(); return a; });
+const resolveVars = (v) => String(v || '').replace(/var\(\s*(--[a-z0-9-]+)\s*\)/gi, (a, k) => ROOT_VARS[k] || a);
+function hexes(v) {
+  const out = [];
+  String(resolveVars(v)).replace(/#([0-9a-f]{6}|[0-9a-f]{3})\b/gi, (a) => { out.push(a); return a; });
+  return out;
+}
+function toRgb(hex) {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function lum(hex) {
+  const f = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const [r, g, b] = toRgb(hex);
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function ratio(a, b) {
+  const l1 = lum(a), l2 = lum(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+// [bộ chọn chữ, bộ chọn nền (mặc định cùng bộ chọn), bộ chọn kế thừa màu chữ, ngưỡng]
+const CONTRAST = [
+  ['.btn', null, null, 3],                         // chữ lớn đậm → ngưỡng AA 3:1
+  ['.btn.green', null, '.btn', 3],
+  ['.btn.teal', null, '.btn', 3],
+  ['.btn.purple', null, '.btn', 3],
+  ['.btn.blue', null, '.btn', 3],
+  ['.btn.danger', null, '.btn', 3],
+  ['.btn.ghost', null, null, 4.5],
+  ['.combo-chip', null, null, 4.5],                // chữ nhỏ → 4.5:1
+  ['.record-badge', null, null, 4.5],
+  ['.stage-chip', null, null, 4.5],
+  ['.level-card .num', '.level-card', null, 4.5],
+  ['.level-card .grade', null, null, 4.5],
+  ['.level-card .grade.g2', '.level-card .grade.g2', '.level-card .grade', 4.5],
+  ['.level-card .grade.gx', '.level-card .grade.gx', '.level-card .grade', 4.5],
+  ['.hint.ok', '.hint.ok', '.hint', 4.5],
+  ['.hint.info', '.hint.info', '.hint', 4.5],      // chip mang lời giải thích: 17px ở khổ điện thoại → 4.5:1
+  ['.hint.bad', '.hint.bad', '.hint', 4.5],
+  ['.report-row .muted', '.report-row', null, 4.5],
+  ['.level-card .best', '.level-card', null, 4.5],
+  ['.footer-note', '.panel', null, 4.5],
+  ['.footer-note a', '.panel', null, 4.5]
+];
+test('tương phản chữ/nền (WCAG AA): nút chính ≥ 3:1, chip và chữ nhỏ ≥ 4.5:1', () => {
+  CONTRAST.forEach(([sel, bgSel, inherit, min]) => {
+    const fg = lastProp(sel, 'color') || (inherit ? lastProp(inherit, 'color') : null);
+    assert.ok(fg, sel + ': không đọc được màu chữ');
+    const fgHex = hexes(fg)[0] || (/#fff\b|white/i.test(fg) ? '#ffffff' : null);
+    assert.ok(fgHex, sel + ': màu chữ không phải mã hex (' + fg + ')');
+    const bs = bgSel || sel;
+    const bg = lastProp(bs, 'background') || lastProp(bs, 'background-image') || lastProp(bs, 'background-color');
+    assert.ok(bg, bs + ': không đọc được nền');
+    const stops = hexes(bg);
+    assert.ok(stops.length, bs + ': nền không có mã hex (' + bg + ')');
+    stops.forEach((stop) => {
+      const r = ratio(fgHex, stop);
+      assert.ok(r >= min, sel + ': ' + fgHex + ' trên ' + stop + ' chỉ đạt ' + r.toFixed(2) + ':1 (cần ≥ ' + min + ':1)');
+    });
+  });
+});
+
+/* ---------------- Bố cục bảng kết quả, vùng chạm, aria-live, thưởng nhanh ---------------- */
+const GAME_JS = fs.readFileSync(path.join(ROOT, GAME, 'js/game.js'), 'utf8');
+
+test('bảng kết quả: danh sách "cần ôn lại" bị giới hạn để các nút không bị đẩy ra ngoài màn hình', () => {
+  const m = /const REVIEW_CHIPS = (\d+);/.exec(GAME_JS);
+  assert.ok(m, 'thiếu hằng số REVIEW_CHIPS giới hạn số chip');
+  const n = Number(m[1]);
+  assert.ok(n >= 3 && n <= 4, 'chỉ nên hiện 3–4 chip trên bảng kết quả (đang ' + n + ')');
+  assert.match(GAME_JS, /G\.review\.slice\(0, REVIEW_CHIPS\)/, 'showResults phải cắt bớt danh sách chip');
+  assert.match(GAME_JS, /reviewMore\.textContent/, 'phải báo còn bao nhiêu câu nữa');
+  // Khối chip cuộn được và bị chặn chiều cao (không đẩy nút "🔄 Chơi lại" xuống dưới màn hình)
+  assert.equal(lastProp('.review-chips', 'overflow-y'), 'auto', '.review-chips phải cuộn được');
+  assert.match(String(lastProp('.review-chips', 'max-height')), /min\(/, '.review-chips phải bị chặn chiều cao');
+  assert.equal(lastProp('.review-chip .rc-why', '-webkit-line-clamp'), '1', 'dòng "vì sao" gói gọn 1 dòng');
+});
+
+test('mặt đồng hồ của thẻ câu hỏi to hơn trên màn rộng (CSS mới là nơi quyết định kích thước)', () => {
+  assert.match(CSS, /\.prompt-visual canvas \{ width: 108px; height: 108px;/, 'kích thước mặc định 108 px');
+  assert.match(CSS, /@media \(min-width: 700px\) \{ \.prompt-visual canvas \{ width: 120px; height: 120px; \} \}/,
+    'thiếu quy tắc 120 px cho màn ≥ 700 px (thuộc tính width của canvas bị paintClockCanvas ghi đè nên chỉ CSS mới ăn)');
+  assert.match(CSS, /\.prompt-visual canvas \{ width: 84px/, 'màn ≤ 700 px vẫn 84 px');
+  assert.match(CSS, /\.prompt-visual canvas \{ width: 72px/, 'màn thấp ≤ 520 px vẫn 72 px');
+});
+
+test('vùng chạm ≥ 44 px (SPEC §4): liên kết chân trang, nút bật/tắt, chip ôn lại', () => {
+  assert.equal(lastProp('.footer-note a', 'min-height'), '44px', 'liên kết 3hoa.com phải cao ≥ 44 px');
+  assert.equal(lastProp('.toggle', 'min-height'), '44px');
+  assert.equal(lastProp('.review-chip', 'min-height'), '44px');
+  assert.equal(lastProp('.lesson-examples button', 'min-height'), '44px');
+});
+
+test('đồng hồ điện tử trong bài học có kiểu "màn LED" như ở thẻ câu hỏi và hỏi đáp', () => {
+  assert.equal(hexes(lastProp('.lesson-extra .digital', 'background'))[0], '#16213e', 'nền tối của màn LED');
+  assert.equal(hexes(lastProp('.lesson-extra .digital', 'color'))[0], '#7bf1a8', 'chữ xanh của màn LED');
+  assert.ok(lastProp('.lesson-extra .digital', 'border-radius'), 'bo góc như các huy hiệu điện tử khác');
+});
+
+test('đo chiều cao chip gợi ý không được lộ đáp án ở vùng aria-live', () => {
+  const fn = GAME_JS.slice(GAME_JS.indexOf('function measureHintReserve('), GAME_JS.indexOf('function promptSpawnY('));
+  assert.ok(fn.length > 100, 'không tìm thấy measureHintReserve');
+  assert.match(fn, /cloneNode\(false\)/, 'phải đo trên một bản sao rời');
+  assert.match(fn, /removeAttribute\('role'\)/, 'bản sao phải bỏ role');
+  assert.match(fn, /removeAttribute\('aria-live'\)/, 'bản sao phải bỏ aria-live');
+  assert.doesNotMatch(fn, /el\.hidden = false/, 'không được mở vùng aria-live thật ra để đo');
+  assert.doesNotMatch(fn, /el\.textContent =/, 'không được ghi đáp án vào vùng aria-live thật');
+});
+
+test('thưởng nhanh đo theo thời gian rơi của CHÍNH câu vừa trả lời (trước khi tăng qIndex)', () => {
+  const onHit = GAME_JS.slice(GAME_JS.indexOf('function onHit('), GAME_JS.indexOf('function onWrong('));
+  const iFt = onHit.indexOf('fallTime(q)');
+  const iInc = onHit.indexOf('G.qIndex++');
+  assert.ok(iFt >= 0, 'onHit phải dùng fallTime(q)');
+  assert.ok(iInc >= 0, 'onHit phải tăng G.qIndex');
+  assert.ok(iFt < iInc, 'fallTime(q) phải được đo trước G.qIndex++ (nếu không, ngưỡng thưởng nhanh là của câu SAU)');
+  assert.equal(onHit.split('fallTime(q)').length - 1, 1, 'chỉ đo thời gian rơi một lần trong onHit');
+  assert.match(onHit, /age < ft \* 0\.25 \? 50 : age < ft \* 0\.45 \? 25 : 0/, 'hai mức thưởng nhanh theo thời gian rơi');
 });

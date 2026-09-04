@@ -151,6 +151,23 @@
     return mk(1000, rnd(100, 900), '-', 1200);
   }
 
+  /* ---------- Lớp 3: phạm vi 1000 nhưng chỉ số tròn ----------
+     Dùng cho màn trộn "Siêu Ninja": quả bay nhanh nên chỉ hỏi số tròn trăm / tròn chục
+     để bé vẫn nhẩm kịp, không phải đặt tính 456 + 287 trong 3 giây. */
+  function genRound1000() {
+    const t = Math.random();
+    if (t < 0.35) {                         // tròn trăm
+      if (chance(0.5)) { const a = 100 * rnd(1, 8), b = 100 * rnd(1, 9 - a / 100); return mk(a, b, '+', 1200); }
+      const a = 100 * rnd(2, 10), b = 100 * rnd(1, a / 100 - 1); return mk(a, b, '-', 1200);
+    }
+    if (t < 0.75) {                         // tròn chục
+      if (chance(0.5)) { const a = 10 * rnd(10, 89), b = 10 * rnd(1, 99 - a / 10); return mk(a, b, '+', 1200); }
+      const a = 10 * rnd(20, 100), b = 10 * rnd(1, a / 10 - 1); return mk(a, b, '-', 1200);
+    }
+    if (chance(0.5)) { const a = 10 * rnd(10, 90); return mk(a, 1000 - a, '+', 1200); }   // cho tròn 1000
+    return mk(1000, 10 * rnd(10, 90), '-', 1200);
+  }
+
   /* ---------- Trộn tất cả ---------- */
   function genMix() {
     const t = Math.random();
@@ -158,7 +175,7 @@
     if (t < 0.35) return genCarry20();
     if (t < 0.6) return gen100();
     if (t < 0.8) return genMul9();
-    return gen1000();
+    return genRound1000();
   }
 
   /* ---------- Đáp án nhiễu (giống lỗi sai thường gặp) ---------- */
@@ -211,6 +228,58 @@
     return out;
   }
 
+  /* ---------- Giải thích cách làm ("vì sao") ----------
+     Trả về một câu ngắn dạy mẹo tính nhẩm, hoặc '' khi phép tính quá dễ (không cần giải thích).
+     Mọi bước trong câu đều đúng về số học (được kiểm thử tự động). */
+  function explain(q) {
+    if (!q || typeof q.answer !== 'number') return '';
+    const a = q.a, b = q.b, ans = q.answer;
+    if (!Number.isInteger(a) || !Number.isInteger(b)) return '';
+    if (q.op === '+') {
+      if (b >= 10) {                                   // tách số hạng sau thành chục + đơn vị
+        const t = b - b % 10;
+        if (b % 10 === 0) return '';
+        return a + ' + ' + t + ' = ' + (a + t) + ', thêm ' + (b % 10) + ' nữa là ' + ans;
+      }
+      const u = a % 10, fill = 10 - u;                 // "làm cho tròn chục" rồi cộng nốt
+      if (u > 0 && b > fill) return a + ' + ' + fill + ' = ' + (a + fill) + ', thêm ' + (b - fill) + ' nữa là ' + ans;
+      return '';
+    }
+    if (q.op === '-') {
+      if (b >= 10) {
+        const t = b - b % 10;
+        if (b % 10 === 0) return '';
+        return a + ' ' + MINUS + ' ' + t + ' = ' + (a - t) + ', bớt ' + (b % 10) + ' nữa còn ' + ans;
+      }
+      const u = a % 10;
+      if (u > 0 && b > u) return a + ' ' + MINUS + ' ' + u + ' = ' + (a - u) + ', bớt ' + (b - u) + ' nữa còn ' + ans;
+      // Mẹo "bớt tròn chục rồi thêm lại" chỉ hợp khi số bị trừ có từ hai chục trở lên.
+      // Với 10 − b thì nó thành "10 − 10 = 0, thêm … nữa" — dài dòng và ngược cách dạy lớp 1.
+      if (u === 0 && a >= 20 && b > 0) return a + ' ' + MINUS + ' 10 = ' + (a - 10) + ', thêm ' + (10 - b) + ' nữa là ' + ans;
+      return '';
+    }
+    if (q.op === '*' && a >= 2 && a <= 10 && b > 5 && b <= 10) {  // tách bảng nhân qua mốc 5
+      return a + ' ' + TIMES + ' ' + b + ' = ' + a + ' ' + TIMES + ' 5 + ' + a + ' ' + TIMES + ' ' + (b - 5) +
+        ' = ' + (a * 5) + ' + ' + (a * (b - 5)) + ' = ' + ans;
+    }
+    return '';
+  }
+
+  /** Nhận ra lỗi sai quen thuộc của trẻ từ số bé vừa chém (trả '' nếu không nhận ra). */
+  function misconception(q, v) {
+    if (!q || !Number.isInteger(v) || typeof q.answer !== 'number') return '';
+    const a = q.a, b = q.b, ans = q.answer;
+    if (q.op === '+' && (a % 10) + (b % 10) >= 10 && v === ans - 10) return 'Con quên nhớ 1 rồi!';
+    if (q.op === '-' && (a % 10) < (b % 10) && v === ans + 10) return 'Con quên mượn 1 rồi!';
+    if (q.op === '*' && a > 0 && (v === a * (b + 1) || v === a * (b - 1) || v === (a + 1) * b || v === (a - 1) * b)) {
+      return 'Nhầm sang ô bên cạnh trong bảng nhân rồi!';
+    }
+    if (q.op === '*' && v === a + b) return 'Đây là phép nhân chứ không phải phép cộng nhé!';
+    if (q.op === '+' && v === Math.abs(a - b)) return 'Đây là phép cộng nhé!';
+    if (q.op === '-' && v === a + b) return 'Đây là phép trừ nhé!';
+    return '';
+  }
+
   /* ---------- Các màn chơi: Chém đáp án ---------- */
   const ANSWER_LEVELS = [
     { id: 'a1', title: 'Cộng trừ đến 10', desc: 'Ví dụ: 3 + 4, 9 − 5', icon: '🍎', grade: 1, speed: 0.82, fruits: 3, bomb: 0.0, big: false, gen: gen10 },
@@ -218,10 +287,10 @@
     { id: 'a3', title: 'Cộng trừ có nhớ', desc: 'Ví dụ: 8 + 7, 15 − 9', icon: '🍋', grade: 2, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genCarry20 },
     { id: 'a4', title: 'Phạm vi 100', desc: 'Ví dụ: 36 + 27, 62 − 38', icon: '🍉', grade: 2, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: gen100 },
     { id: 'm1', title: 'Nhân 2 và 5', desc: 'Ví dụ: 2 × 7, 5 × 4 (đôi khi × 10)', icon: '🍑', grade: 2, speed: 0.9, fruits: 3, bomb: 0.06, big: false, gen: genMul25 },
-    { id: 'a5', title: 'Phạm vi 1000', desc: 'Ví dụ: 456 + 287, 703 − 458', icon: '🥝', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: true, gen: gen1000 },
+    { id: 'a5', title: 'Phạm vi 1000', desc: 'Ví dụ: 456 + 287, 703 − 458', icon: '🥝', grade: 3, speed: 0.85, fruits: 4, bomb: 0.1, big: true, gen: gen1000 },
     { id: 'm2', title: 'Nhân 3 và 4', desc: 'Ví dụ: 3 × 6, 4 × 8', icon: '🍇', grade: 3, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genMul34 },
     { id: 'm3', title: 'Bảng cửu chương', desc: 'Ví dụ: 6 × 7, 9 × 8', icon: '🍓', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: genMul9 },
-    { id: 'm4', title: 'Nhân số lớn', desc: 'Ví dụ: 23 × 4, 120 × 3', icon: '🥭', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: true, gen: genMulBig },
+    { id: 'm4', title: 'Nhân số lớn', desc: 'Ví dụ: 23 × 4, 120 × 3', icon: '🥭', grade: 3, speed: 0.85, fruits: 4, bomb: 0.1, big: true, gen: genMulBig },
     { id: 'a6', title: 'Siêu Ninja', desc: 'Trộn cộng, trừ, nhân, bay nhanh hơn!', icon: '🥷', grade: 0, speed: 1.12, fruits: 5, bomb: 0.16, big: true, gen: genMix }
   ];
 
@@ -304,7 +373,7 @@
   window.MathGen = {
     rnd, chance, pick, shuffle, MINUS, TIMES, opSymbol,
     ANSWER_LEVELS, PAIR_LEVELS,
-    distractors, isPair, pairWave, pairText, pairResultText,
+    distractors, isPair, pairWave, pairText, pairResultText, explain, misconception,
     make: mk,
     levelById(id) {
       return ANSWER_LEVELS.find((l) => l.id === id) || PAIR_LEVELS.find((l) => l.id === id) || null;

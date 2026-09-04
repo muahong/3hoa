@@ -9,7 +9,7 @@ Chạy trực tiếp trên trình duyệt (Safari trên iPad, Chrome, Edge...), 
 Mỗi màn dạy **một kiến thức mới** và gồm ba bước:
 
 1. **📖 Bài học** – giải thích ngắn gọn kèm đồng hồ minh họa, chạm vào các ví dụ để xem kim quay và nghe đọc.
-2. **🎯 Bắn robot** – robot mang bảng đáp án (chữ hoặc đồng hồ) tiến về phía xe tăng. Bé nhìn câu hỏi ở trên, **chạm vào robot có đáp án đúng** để bắn. Bắn sai 2 lần thì đáp án đúng được đánh dấu vòng vàng. Robot chạm tới xe tăng làm mất 1 tim (có 3 tim).
+2. **🎯 Bắn robot** – robot mang bảng đáp án (chữ hoặc đồng hồ) tiến về phía xe tăng. Bé nhìn câu hỏi ở trên, **chạm vào robot có đáp án đúng** để bắn. Bắn sai 2 lần thì đáp án đúng được đánh dấu vòng vàng. Robot chạm tới xe tăng làm mất 1 tim (có 3 tim); đúng ngay **5 câu liền** thì được **thưởng lại 1 tim**. Các câu dài (thời gian trôi qua, đọc từng phút) được thêm thời gian để bé kịp tính.
 3. **🧠 Hỏi đáp** – 4 câu: ôn lại lỗi vừa mắc trong màn, câu hỏi ghi nhớ kiến thức và câu luyện tập mới, mỗi câu đều có **giải thích**. Trả lời đúng **3/4** câu trở lên mới **mở khóa màn tiếp theo**; nếu chưa đạt, bé xem lại bài học rồi làm lại hỏi đáp.
 
 ## Chơi thử trên máy tính
@@ -57,7 +57,11 @@ Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, đi
 
 Các màn mở khóa lần lượt. Nút **👨‍👩‍👧** ở màn chọn màn (có câu hỏi nhân để trẻ không tự bấm) cho phép phụ huynh, thầy cô **mở khóa tất cả màn** để bé học đúng phần của lớp mình, hoặc xóa tiến trình của bé đang chơi.
 
-**Ôn lại thông minh**: câu bé làm sai được ghi vào kho "cần ôn lại"; ở các ván sau, khoảng 1/4 số câu (1–3 câu, chỉ những câu thuộc màn đã học) được lấy từ kho này với đáp án nhiễu mới và gắn nhãn **📝 Ôn lại** trên HUD. Trả lời đúng hai lần thì câu đó ra khỏi kho.
+**Học từ chỗ sai**: bắn sai 2 lần (hoặc bị robot chạm tới xe tăng) thì đáp án đúng được đánh dấu **vòng vàng** kèm một câu **giải thích vì sao** (chữ + giọng đọc), robot cũng đi chậm lại một nhịp để bé kịp nghe. Bé cũng có thể tự bấm nút **💡 Gợi ý** cạnh câu hỏi bất cứ lúc nào. Câu đã được gợi ý (kể cả câu hỏi lại sau khi mất tim) chỉ được **20 điểm** thay vì 100 × hệ số combo. Hết máu, bảng kết quả có thêm nút **📖 Xem lại bài học**.
+
+**Ôn lại thông minh**: câu bé làm sai được ghi vào kho "cần ôn lại"; ở các ván sau, khoảng 1/4 số câu (1–3 câu, chỉ những câu thuộc màn đã học) được lấy từ kho này với đáp án nhiễu mới và gắn nhãn **📝 Ôn lại** trên HUD. Trả lời đúng hai lần thì câu đó ra khỏi kho. Bảng kết quả cuối ván có mục **📝 Cần ôn lại**: mỗi chip nêu câu hỏi rút gọn, đáp án (vẽ lại đúng mặt đồng hồ hoặc đồng hồ điện tử) và **một dòng vì sao**; chạm vào chip để nghe đọc lại. Bảng chỉ hiện **4 chip** (kèm dòng “… và N câu nữa”) để các nút **🔄 Chơi lại**, **📖 Xem lại bài học**, **🏠 Trang chính** luôn nằm trong màn hình; xem đủ danh sách ở **📊 Kết quả**.
+
+**Bài học nhìn thấy được**: dưới mặt đồng hồ, nhãn dạy luôn **sự tương đương** ("7 giờ 50 phút = 8 giờ kém 10 phút", "3 giờ 30 phút = 3 giờ rưỡi"); bài **Ngày và giờ** và **Từng phút & điện tử** hiện thêm biểu tượng buổi, **đồng hồ điện tử** và cách gọi 24 giờ (🌤️ 15:00 = 15 giờ · buổi chiều); bài **Thời gian trôi qua** cho kim quay chậm từ giờ bắt đầu tới giờ kết thúc. Ở các bài đếm từng phút, **vạch phút được vẽ đậm hơn** để bé đếm được.
 
 **📊 Kết quả** (màn chọn màn hoặc màn người chơi): số ván, tỉ lệ đúng, phút luyện tập, sao/điểm/hỏi đáp từng màn, dấu **Đã thuộc** (đúng ≥ 90 % trên ≥ 20 câu), chủ đề cần luyện thêm và kho cần ôn lại của bé. Nút xóa tiến trình ở đây (và xóa người chơi) đều qua **cổng phụ huynh** (câu nhân) trong trang.
 
@@ -67,6 +71,9 @@ Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung 
 
 - **Thêm hoặc sửa màn chơi, bài học, câu hỏi đáp**: chỉnh mảng `LEVELS` trong `js/levels.js` (`questions` số câu mỗi màn, `fall` số giây robot tiến tới xe tăng, `speed` hệ số tốc độ, `lesson`, `quiz`).
 - **Số câu hỏi đáp và ngưỡng đạt**: `QUIZ_N`, `QUIZ_PASS` trong `js/game.js`.
-- **Ngưỡng sao**: hàm `starsFor` trong `js/game.js`.
+- **Ngưỡng sao**: hàm `starsFor` trong `js/game.js` – tính theo **số câu** bị sai (mỗi câu chỉ tính một lần dù bắn trượt mấy lần) và số tim còn lại: 3 sao khi không sai câu nào và còn đủ tim, 2 sao khi sai ≤ 2 câu và còn ≥ 2 tim.
+- **Thời gian robot tiến tới**: hàm `fallTime` trong `js/game.js` (câu "thời gian trôi qua" ×1,4; "từng phút / điện tử" ×1,2; càng về cuối màn nhanh dần nhưng không quá 25 %).
+- **Thưởng tim**: hàm `gainHeart` và điều kiện `G.perfect % 5` trong `js/game.js`.
+- **Điểm khi đã xem gợi ý**: hằng số `HINT_POINTS` trong `js/game.js` (mặc định 20).
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `xe-tang-thoi-gian-v2`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `xe-tang-thoi-gian-v3`) để thiết bị đã cài nhận bản mới.

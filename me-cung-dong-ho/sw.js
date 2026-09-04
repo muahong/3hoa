@@ -1,6 +1,6 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'me-cung-dong-ho-v2';
+const CACHE = 'me-cung-dong-ho-v4';
 const CORE = [
   './',
   './index.html',

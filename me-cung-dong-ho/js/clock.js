@@ -188,7 +188,7 @@
       const ang = n * Math.PI / 6;
       s += '<text x="' + (100 + Math.sin(ang) * 63).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 63 + 2).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#2b2d42">' + n + '</text>';
       if (o.minutes) {
-        s += '<text x="' + (100 + Math.sin(ang) * 111).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 111 + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="14" fill="#ef476f">' + (n * 5 === 60 ? '0/60' : n * 5) + '</text>';
+        s += '<text x="' + (100 + Math.sin(ang) * 111).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 111 + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="18" fill="#c42b52">' + (n * 5 === 60 ? '0/60' : n * 5) + '</text>';
       }
     }
     s += '<g class="hand-h" style="transform-origin:100px 100px;transform:rotate(' + a.h + 'deg)"><line x1="100" y1="112" x2="100" y2="52" stroke="' + HOUR_COLOR + '" stroke-width="11" stroke-linecap="round"/></g>';
@@ -197,14 +197,20 @@
     s += '</svg>';
     return s;
   }
-  /** SVG đồng hồ điện tử. */
+  /** SVG đồng hồ điện tử. o.caption: ghi chú "giờ" / "phút" dưới hai nhóm số. */
   function svgDigital(label, o) {
     o = o || {};
     const w = o.width || 150;
-    return '<svg class="digital-svg ' + (o.cls || '') + '" viewBox="0 0 200 112" width="' + w + '" height="' + Math.round(w * 0.56) + '" role="img" aria-label="' + escAttr(label) + '">' +
+    const H = o.caption ? 146 : 112;
+    let s = '<svg class="digital-svg ' + (o.cls || '') + '" viewBox="0 0 200 ' + H + '" width="' + w + '" height="' + Math.round(w * H / 200) + '" role="img" aria-label="' + escAttr(label) + '">' +
       '<rect x="4" y="4" width="192" height="104" rx="26" fill="#3b4a8a"/>' +
       '<rect x="16" y="18" width="168" height="76" rx="14" fill="#d9ffe9"/>' +
-      '<text x="100" y="60" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="50" fill="#1b2a4a">' + label + '</text></svg>';
+      '<text x="100" y="60" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="50" fill="#1b2a4a">' + escAttr(label) + '</text>';
+    if (o.caption) {
+      s += '<text x="62" y="132" text-anchor="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#2b3a80">giờ</text>' +
+        '<text x="146" y="132" text-anchor="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#c42b52">phút</text>';
+    }
+    return s + '</svg>';
   }
   /** Cập nhật góc kim của một SVG đã vẽ (dùng cho hoạt hình bài học). */
   function setSvgTime(svg, t) {
@@ -360,12 +366,21 @@
    * Sinh một lượt chơi: mục tiêu cần tìm và các đồng hồ đặt trong mê cung.
    *  forced : mục "ôn lại" ({ h, m } hoặc { start: { h, m }, delta }) thay cho mục tiêu ngẫu nhiên -> review = true
    *  exclude: các khóa key(t) đã dùng trong màn này (không lặp lại mục tiêu; thử tối đa 20 lần)
+   *  opts   : { round } – số thứ tự lượt (0 là lượt đầu) để tăng độ khó dần ở màn "Thời gian trôi"
    * Trả về { target, items:[time...] (đã trộn, có mục tiêu), style, html, speech, hudClock, extra, review }
    */
   const DELTAS = [5, 10, 15, 20, 30, 45, 60];
-  function makeRound(level, forced, exclude) {
+  const CARRY_MINS = [15, 30, 45];
+  /** Màn 8: 3 lượt đầu chỉ cộng trong một giờ (hoặc đúng 1 giờ); sau đó mới cho "nhớ" với số tròn 15 phút. */
+  function elapsedOk(start, delta, round) {
+    if (start.m + delta <= 60 || delta === 60) return true;
+    if (round < 3) return false;
+    return CARRY_MINS.indexOf(delta) >= 0 && CARRY_MINS.indexOf(start.m) >= 0;
+  }
+  function makeRound(level, forced, exclude, opts) {
     const n = level.clocks;
     exclude = exclude || [];
+    const round = opts && opts.round != null ? opts.round : (level.round != null ? level.round : 99);
     const used = function (t) { return exclude.indexOf(key(t)) >= 0; };
     const draw = function (gen) { let t = gen(), g = 0; while (used(t) && g++ < 20) t = gen(); return t; };
     const validForced = function (h12only) {
@@ -406,8 +421,16 @@
       } else {
         let g = 0;
         do {
-          start = T(rnd(1, 12), pick([0, 0, 15, 30, 45, 10, 20, 5, 40, 50]));
-          delta = pick([5, 10, 15, 15, 20, 30, 30, 45, 60]);
+          if (round >= 3 && chance(0.4)) {
+            // Lượt sau: chủ động ra bài "cộng qua giờ mới" (đúng dạng bài học dạy: số tròn 15 phút)
+            start = T(rnd(1, 12), pick([30, 45]));
+            delta = start.m === 30 ? 45 : pick([30, 45]);
+          } else {
+            start = T(rnd(1, 12), pick([0, 0, 15, 30, 45, 10, 20, 5, 40, 50]));
+            delta = pick([5, 10, 15, 15, 20, 30, 30, 45, 60]);
+          }
+          // Quá sức lượt này thì hạ xuống: cộng vừa đủ tới giờ tròn, hoặc cộng đúng 1 giờ
+          if (!elapsedOk(start, delta, round)) { const fit = 60 - start.m; delta = DELTAS.indexOf(fit) >= 0 ? fit : 60; }
         } while (used(addMin(start, delta)) && g++ < 20);
       }
       target = addMin(start, delta);
@@ -416,6 +439,7 @@
       const dText = delta === 60 ? '1 giờ' : delta + ' phút';
       html = 'Bây giờ là <b>' + fmtText(start) + '</b>. <b>' + dText + '</b> nữa là mấy giờ?';
       speech = 'Bây giờ là ' + fmtText(start) + '. ' + dText + ' nữa là mấy giờ? Hãy tìm đồng hồ đó.';
+      hudClock = start;                       // hiện đồng hồ kim của mốc bắt đầu để bé vừa nhìn vừa tính
       extra = { start: start, delta: delta };
     }
     // Bổ sung nếu chưa đủ đồng hồ nhiễu
@@ -519,11 +543,12 @@
       lines: [
         'Muốn biết <b>một lúc nữa</b> là mấy giờ, ta <b>cộng thêm</b> số phút: 7 giờ + 30 phút = <b>7 giờ 30 phút</b>.',
         'Đủ <b>60 phút</b> thì được thêm <b>1 giờ</b>: 7 giờ 45 phút + 15 phút = 7 giờ 60 phút = <b>8 giờ</b>.',
-        'Cộng thêm 1 giờ thì kim ngắn tiến thêm một số, kim dài đứng yên: 2 giờ 30 phút + 1 giờ = <b>3 giờ 30 phút</b>.'
+        'Cộng thêm 1 giờ thì kim ngắn tiến thêm một số, kim dài đứng yên: 2 giờ 30 phút + 1 giờ = <b>3 giờ 30 phút</b>.',
+        'Qua giờ mới thì tính tiếp: <b>7 giờ 45 phút + 30 phút</b>: 15 phút nữa là 8 giờ, còn 15 phút nữa → <b>8 giờ 15 phút</b>.'
       ],
-      demos: [T(7, 0), T(7, 30), T(7, 45), T(8, 0)],
+      demos: [T(7, 0), T(7, 30), T(7, 45), T(8, 0), T(8, 15)],
       minutes: true,
-      speech: 'Muốn biết một lúc nữa là mấy giờ, ta cộng thêm số phút. 7 giờ cộng 30 phút là 7 giờ 30 phút. Đủ 60 phút thì được thêm 1 giờ.'
+      speech: 'Muốn biết một lúc nữa là mấy giờ, ta cộng thêm số phút. 7 giờ cộng 30 phút là 7 giờ 30 phút. Đủ 60 phút thì được thêm 1 giờ. Nếu còn thừa thì tính tiếp sang giờ mới.'
     }
   };
 
@@ -697,9 +722,29 @@
     ]
   };
 
+  /** Câu hỏi có hình đồng hồ (đề bài hoặc đáp án): xem đồng hồ thì phải được nhìn đồng hồ. */
+  function hasPicture(q) {
+    return !!(q && (q.clock || (q.options || []).some(function (op) { return !!op.clock; })));
+  }
+  /** Các vị trí trong ngân hàng luôn sinh ra câu có hình (thử 3 lần cho chắc), nhớ lại để khỏi tính lại. */
+  const PIC_IDX = {};
+  function pictureIndices(level) {
+    if (PIC_IDX[level.id]) return PIC_IDX[level.id];
+    const bank = QUIZ[level.id] || [];
+    const out = [];
+    bank.forEach(function (fn, i) {
+      let ok = true;
+      for (let k = 0; k < 3 && ok; k++) ok = hasPicture(fn(level));
+      if (ok) out.push(i);
+    });
+    PIC_IDX[level.id] = out;
+    return out;
+  }
+
   /**
    * Chọn bộ câu hỏi cho màn: các câu rút kinh nghiệm từ lỗi trong mê cung trước (thêm 1 câu), rồi một câu "ôn lại"
    * từ pool (danh sách Store.reviewPool, thay cho một câu ngân hàng) và các câu trong ngân hàng.
+   * Bộ nào cũng có ít nhất một câu kèm hình đồng hồ để bé thực sự phải "xem" đồng hồ.
    */
   function buildQuiz(level, mistakes, count, pool) {
     count = count || 3;
@@ -716,11 +761,19 @@
       const rq = reviewQuestion(level, pool[0].info);
       if (rq) qs.push(rq);
     }
-    const bank = shuffle(QUIZ[level.id].slice());
+    const bank = QUIZ[level.id] || [];
+    const order = shuffle(bank.map(function (_, i) { return i; }));
+    // Đưa một câu có hình lên đầu danh sách rút để bộ câu hỏi luôn có ít nhất một hình đồng hồ
+    const pics = pictureIndices(level);
+    if (pics.length && !qs.some(hasPicture)) {
+      const p = pick(pics), at = order.indexOf(p);
+      if (at > 0) { order.splice(at, 1); order.unshift(p); }
+    }
     let i = 0;
-    while (qs.length < total && i < bank.length) {
-      const q = bank[i++](level);
-      if (q) qs.push(q);
+    while (qs.length < total && i < order.length) {
+      const gen = bank[order[i++]];
+      const q = gen(level);
+      if (q) { q.gen = gen; qs.push(q); }
     }
     return qs;
   }
@@ -757,7 +810,7 @@
     fmtText: fmtText, fmtDigital: fmtDigital, itemLabel: itemLabel, describeItem: describeItem, explainRead: explainRead,
     drawClock: drawClock, drawDigital: drawDigital, svgClock: svgClock, svgDigital: svgDigital, setSvgTime: setSvgTime, angles: angles,
     LEVELS: LEVELS, levelById: levelById, LESSONS: LESSONS, QUIZ: QUIZ, ALL_MINS: ALL_MINS, HOURS12: HOURS12,
-    makeRound: makeRound, buildQuiz: buildQuiz, mistakeQuestion: mistakeQuestion, reviewQuestion: reviewQuestion, DELTAS: DELTAS,
+    makeRound: makeRound, buildQuiz: buildQuiz, mistakeQuestion: mistakeQuestion, reviewQuestion: reviewQuestion, hasPicture: hasPicture, DELTAS: DELTAS,
     HOUR_COLOR: HOUR_COLOR, MIN_COLOR: MIN_COLOR
   };
 })();

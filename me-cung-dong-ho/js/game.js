@@ -19,7 +19,7 @@
   const PLAYER_SPEED = 4.0;          // ô / giây
   const FRIGHT_TIME = 7;             // giây ma buồn ngủ sau khi ăn sao
   const MIN_CELL = 30;               // px – dưới mức này đổi sang mê cung nhỏ hơn
-  const POINTS = { dot: 10, power: 50, clock: 100, fast: 50, ghost: 200, quiz: 100, life: 100, allDots: 300 };
+  const POINTS = { dot: 10, power: 50, clock: 100, fast: 50, ghost: 200, quiz: 100, life: 100, allDots: 300, streak: 25 };
   const GHOST_KINDS = [
     { kind: 'red', color: '#ef476f', name: 'Ma Đỏ', chase: 0.85 },
     { kind: 'pink', color: '#ff8fab', name: 'Ma Hồng', chase: 0.7 },
@@ -157,7 +157,7 @@
     level: null, levelIdx: -1,
     mazeId: 'A', maze: null, cell: 40, ox: 0, oy: 0, field: { x: 0, y: 0, w: 0, h: 0 },
     player: null, ghosts: [], dots: null, dotsLeft: 0, powers: [], items: [],
-    round: 0, roundInfo: null, roundStart: 0, nextRoundAt: -1,
+    round: 0, roundInfo: null, roundStart: 0, nextRoundAt: -1, roundWrong: 0, streak: 0,
     score: 0, lives: MAX_LIVES, found: 0, wrong: 0, ghostsEaten: 0, mistakes: [],
     fright: 0, frightCombo: 0, invuln: 0, stateT: 0,
     parts: [], texts: [], stars: [],
@@ -165,7 +165,7 @@
     hud: { score: -1, lives: -1, level: '', power: -1 },
     cdTimer: 0, wakeLock: null,
     lesson: { level: null, idx: 0, timer: 0 },
-    learn: { t: C.T(7, 0), minutes: false },
+    learn: { t: C.T(7, 0), minutes: false, h24: false },
     quiz: null, result: null,
     reviewRounds: {}, usedTargets: [], welcomed: false, magnified: null, prevState: '', reportFrom: '',
     perf: { n: 0, update: 0, render: 0, frame: 0, avgUpdate: 0, avgRender: 0, avgFrame: 0 }
@@ -175,6 +175,9 @@
   const app = $('app');
   const canvas = $('game');
   const ctx = canvas.getContext('2d', { alpha: false });
+  // Lớp riêng cho pháo giấy: nằm TRÊN lớp phủ mờ của màn kết quả nên bé nhìn thấy rõ
+  const fxCanvas = $('fx');
+  const fxCtx = fxCanvas ? fxCanvas.getContext('2d') : null;
   const ui = {
     hud: $('hud'), hudTop: document.querySelector('#hud .hud-top'), dpad: $('dpad'),
     menu: $('menu'), levels: $('levels'), lesson: $('lesson'), learn: $('learn'), howto: $('howto'), countdown: $('countdown'),
@@ -184,9 +187,10 @@
     countNum: $('count-num'), levelGrid: $('level-grid'),
     lessonTitle: $('lesson-title'), lessonClock: $('lesson-clock'), lessonText: $('lesson-text'), lessonDemos: $('lesson-demos'),
     learnClock: $('learn-clock'), learnRead: $('learn-read'), learnAlt: $('learn-alt'), learnDigital: $('learn-digital'), learnSteps: $('learn-steps'), learnMinutes: $('btn-learn-minutes'),
+    learnPeriod: $('learn-period'), learn24h: $('btn-learn-24h'),
     quizProgress: $('quiz-progress'), quizQ: $('quiz-q'), quizClock: $('quiz-clock'), quizOptions: $('quiz-options'), quizFeedback: $('quiz-feedback'), fbTitle: $('fb-title'), fbText: $('fb-text'),
     resultTitle: $('result-title'), resultLevel: $('result-level'), resultScore: $('result-score'), resultStars: $('result-stars'), resultRecord: $('result-record'),
-    stFound: $('st-found'), stWrong: $('st-wrong'), stGhost: $('st-ghost'), stQuiz: $('st-quiz'), takeaway: $('result-takeaway'), unlockNote: $('result-unlock'),
+    stFound: $('st-found'), stWrong: $('st-wrong'), stGhost: $('st-ghost'), stQuiz: $('st-quiz'), takeaway: $('result-takeaway'), resultReview: $('result-review'), unlockNote: $('result-unlock'),
     btnNext: $('btn-next-level'), ipadTip: $('ipad-tip'), pauseInfo: $('pause-info'),
     players: $('players'), report: $('report'), gate: $('parent-gate')
   };
@@ -247,6 +251,10 @@
     canvas.height = Math.round(h * G.dpr);
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
+    if (fxCanvas) {
+      fxCanvas.width = canvas.width; fxCanvas.height = canvas.height;
+      fxCanvas.style.width = w + 'px'; fxCanvas.style.height = h + 'px';
+    }
     buildBackground();
     layout();
   }
@@ -579,7 +587,7 @@
     }
     // Sinh mục tiêu và vẽ thẻ HUD trước để đo đúng vùng trống còn lại cho mê cung.
     // Bố cục được "đóng băng" cho cả màn: gợi ý và thẻ sao nằm đè lên (absolute) nên không đổi chiều cao HUD.
-    G.roundInfo = C.makeRound(level, null, G.usedTargets);
+    G.roundInfo = C.makeRound(level, null, G.usedTargets, { round: 0 });
     ui.hint.hidden = true; ui.power.hidden = true;
     G.fright = 0;
     renderTarget(false);
@@ -592,7 +600,7 @@
     G.powers = G.maze.powers.map(function (p) { return { r: p.r, c: p.c, taken: false }; });
     G.items = [];
     G.score = 0; G.lives = MAX_LIVES; G.found = 0; G.wrong = 0; G.ghostsEaten = 0; G.mistakes = [];
-    G.round = 0; G.fright = 0; G.frightCombo = 0; G.invuln = 0; G.time = 0; G.nextRoundAt = -1;
+    G.round = 0; G.fright = 0; G.frightCombo = 0; G.invuln = 0; G.time = 0; G.nextRoundAt = -1; G.streak = 0;
     G.parts = []; G.texts = []; G.shake = 0; G.flash = null;
     G.hud = { score: -1, lives: -1, level: '', power: -1 };
     G.quiz = null; G.result = null;
@@ -606,7 +614,7 @@
   function spawnEntities() {
     const m = G.maze;
     const p = makeEntity(m.player, PLAYER_SPEED);
-    p.anim = 0; p.dying = 0; p.onArrive = onPlayerArrive;
+    p.anim = 0; p.dying = 0; p.mood = ''; p.moodT = 0; p.onArrive = onPlayerArrive;
     G.player = p;
     G.ghosts = [];
     const n = clamp(G.level.ghosts, 1, 4);
@@ -682,9 +690,10 @@
     if (!level) return;
     if (!info) {
       const rv = G.reviewRounds[G.round];
-      info = C.makeRound(level, rv ? rv.info : null, G.usedTargets);
+      info = C.makeRound(level, rv ? rv.info : null, G.usedTargets, { round: G.round });
     }
     G.roundInfo = info;
+    G.roundWrong = 0;
     G.usedTargets.push(C.key(info.target));
     G.roundStart = G.time;
     G.nextRoundAt = -1;
@@ -731,7 +740,7 @@
     ui.targetText.innerHTML = (ri.review ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + ri.html;
     if (ri.hudClock) {
       ui.targetClock.hidden = false;
-      ui.targetClock.innerHTML = C.svgClock(ri.hudClock, { size: 84 });
+      ui.targetClock.innerHTML = C.svgClock(ri.hudClock, { size: 112 });
     } else {
       ui.targetClock.hidden = true;
       ui.targetClock.innerHTML = '';
@@ -753,8 +762,30 @@
     el.textContent = text;
     el.className = 'hint ' + (kind || 'info');
     el.hidden = false;
+    placeHint(el);
     clearTimeout(showHint._t);
     showHint._t = setTimeout(function () { el.hidden = true; }, ms || 2600);
+  }
+  /** Đo kích thước thật của thanh gợi ý: hiệu ứng "hint-pop" mới chạy nên nó đang bị thu nhỏ. */
+  function steadyRect(el) {
+    const prev = el.style.animation;
+    el.style.animation = 'none';
+    void el.offsetWidth;                 // buộc trình duyệt tính lại, bỏ transform của hiệu ứng
+    const r = el.getBoundingClientRect();
+    el.style.animation = prev;
+    return r;
+  }
+
+  /** Lời giải thích dài có thể che chính chiếc đồng hồ vừa được đánh dấu -> hạ thanh gợi ý xuống dưới mê cung. */
+  function placeHint(el) {
+    if (!inGame() || !G.items.length) return;
+    const it = G.items.find(function (o) { return o.hint && !o.taken && !o.wrongAt; });
+    if (!it) return;
+    const cx = px(it.c + 0.5), cy = py(it.r + 0.5), s = G.cell * 1.05;   // cả vòng sáng vàng (bán kính 0,92 ô)
+    const hides = function (r) { return r.height > 0 && r.top < cy + s && r.bottom > cy - s && r.left < cx + s && r.right > cx - s; };
+    if (!hides(steadyRect(el))) return;
+    el.classList.add('low');
+    if (hides(steadyRect(el))) el.classList.remove('low');   // ở dưới cũng che thì giữ chỗ cũ
   }
 
   /* ================= SỰ KIỆN TRONG MÊ CUNG ================= */
@@ -808,11 +839,38 @@
   function poolFor(level) {
     return Store.reviewPool(function (info) {
       if (!info || info.kind !== level.kind) return false;
-      if (level.kind === 'elapsed') return !!(info.start && info.delta);
+      if (level.kind === 'elapsed') return !!(info.start && C.DELTAS.indexOf(info.delta) >= 0 && C.ALL_MINS.indexOf(info.start.m) >= 0);
       if (info.m == null || level.mins.indexOf(info.m) < 0) return false;
       if (level.kind === 'period') return info.h >= 6 && info.h <= 22 && info.h !== 12;
       return true;
     });
+  }
+
+  /** Lời gợi ý của lượt hiện tại: cách đọc (hoặc cách tính) ra đồng hồ cần tìm. */
+  function hintText() {
+    const ri = G.roundInfo, level = G.level;
+    if (!ri || !level) return '';
+    if (level.kind === 'elapsed' && ri.extra) {
+      const d = ri.extra.delta;
+      return C.fmtText(ri.extra.start) + ' + ' + (d === 60 ? '1 giờ' : d + ' phút') + ' = ' + C.fmtText(ri.target) + '. ' + C.explainRead(ri.target, { kem: !!level.kem });
+    }
+    return C.explainRead(ri.target, { kem: !!level.kem, style: ri.style });
+  }
+  /** Đánh dấu đồng hồ đúng bằng vòng sáng vàng (sau 2 lần nhầm, hoặc khi bé bấm 💡). */
+  function markHint() {
+    const it = G.items.find(function (o) { return o.correct && !o.taken && !o.wrongAt; });
+    if (it) it.hint = true;
+    return !!it;
+  }
+  /** Bé xin gợi ý: đánh dấu đồng hồ đúng, đọc cách xem giờ và bỏ thưởng "Nhanh!". */
+  function askHint() {
+    if (!G.roundInfo || !G.level || !inGame()) return;
+    G.roundInfo.hinted = true;
+    markHint();
+    const t = hintText();
+    showHint('💡 ' + t, 'info', 4200);
+    Voice.say(t);
+    Sfx.play('hint');
   }
 
   function onItem(it) {
@@ -822,45 +880,73 @@
     if (it.correct) {
       it.taken = true;
       const fast = !ri.hinted && (G.time - G.roundStart) < 12;
-      const pts = POINTS.clock + (fast ? POINTS.fast : 0);
+      G.streak = ri.wrongCount ? 0 : G.streak + 1;
+      const bonus = G.streak >= 2 ? POINTS.streak * G.streak : 0;
+      const pts = POINTS.clock + (fast ? POINTS.fast : 0) + bonus;
       addScore(pts);
       G.found++;
       Sfx.play('clock');
       cardFx('ok');
       spawnBurst(x, y, G.cell * 0.6, ['#06d6a0', '#ffd166', '#fff', '#2ec4b6'], 36);
       addText('+' + pts + (fast ? ' Nhanh!' : ''), x, y - G.cell * 0.8, { color: '#06d6a0' });
+      if (bonus) addText('🔥 ' + G.streak + ' liên tiếp!', x, y - G.cell * 1.7, { color: '#ffd166' });
       const praise = pick(PRAISE);
+      setMood('happy', 1.6);
       showHint('✅ ' + praise + ' Đó là ' + C.describeItem(it.time, it.style, level), 'ok', 2200);
       Voice.say(praise);
       if (!ri.wrongCount) Store.noteOk(reviewKey(level, ri));
       G.round++;
       // Các đồng hồ còn lại mờ dần và không còn "ăn" được nữa
       G.items.forEach(function (o) { if (!o.taken) { o.taken = true; o.fade = G.time; } });
-      if (G.round >= level.rounds) levelClear();
-      else G.nextRoundAt = G.time + 1.4;
+      if (G.round >= level.rounds) {
+        if (G.wrong === 0) addText('⭐ Không nhầm lần nào!', px(p.x), py(p.y) - G.cell * (bonus ? 2.6 : 1.7), { color: '#ffd166' });
+        levelClear();
+      } else {
+        G.nextRoundAt = G.time + 1.4;
+      }
     } else {
       if (it.wrongAt) return;                       // chiếc này đã chọn nhầm rồi
       it.wrongAt = G.time;
       ri.wrongCount = (ri.wrongCount || 0) + 1;
+      G.roundWrong = (G.roundWrong || 0) + 1;
+      G.streak = 0;
       G.wrong++;
-      G.mistakes.push({ shown: it.time, target: ri.target, style: it.style });
-      Store.noteMissed(reviewKey(level, ri), reviewInfo(level, ri));
+      const mkey = reviewKey(level, ri);
+      G.mistakes.push({ shown: it.time, target: ri.target, style: it.style, key: mkey, info: reviewInfo(level, ri) });
+      Store.noteMissed(mkey, reviewInfo(level, ri));
       const what = C.describeItem(it.time, it.style, level);
+      setMood('sad', 2.4);
       Sfx.play('wrong');
       cardFx('shake');
       if (!Motion.lite) G.shake = 0.35;
       spawnBurst(x, y, G.cell * 0.5, ['#ef476f', '#ff8fab'], 16);
       addText('✗ ' + what, x, y - G.cell * 0.8, { color: '#ef476f' });
-      showHint('❌ Đồng hồ đó chỉ ' + what, 'bad', 3200);
       // Màn đồng hồ điện tử: chỉ lúc này mới đọc giờ của đồng hồ kim (không đọc sẵn để khỏi lộ đáp án)
       const more = level.kind === 'digital' && ri.hudClock ? ' Đồng hồ kim đang chỉ ' + C.fmtText(ri.hudClock) + '.' : '';
-      Voice.say('Ối! Đồng hồ đó chỉ ' + what + '.' + more + ' ' + ri.speech);
+      if (G.roundWrong >= 2) {
+        // Nhầm 2 lần: chỉ luôn đồng hồ đúng (vòng sáng vàng) và giải thích cách xem
+        markHint();
+        const tip = hintText();
+        showHint('💡 ' + tip, 'info', 4200);
+        Voice.say('Ối! Đồng hồ đó chỉ ' + what + '. ' + tip);
+      } else {
+        showHint('❌ Đồng hồ đó chỉ ' + what, 'bad', 3200);
+        Voice.say('Ối! Đồng hồ đó chỉ ' + what + '.' + more + ' ' + ri.speech);
+      }
       loseLife(false);
+      // Nghỉ một nhịp để bé kịp đọc lời giải thích (ma và Cú Tí đứng yên); không đè lên nhịp "mất tim cuối"
+      if (G.state === 'playing') { G.state = 'ready'; G.stateT = 1.8; G.invuln = 2.5; }
     }
   }
 
   function addScore(n) {
     G.score += n;
+  }
+
+  /** Nét mặt của Cú Tí trong t giây (vui / tiu nghỉu / hoảng). */
+  function setMood(kind, t) {
+    const p = G.player;
+    if (p) { p.mood = kind; p.moodT = t; }
   }
 
   function loseLife(byGhost) {
@@ -896,9 +982,11 @@
       return;
     }
     if (G.invuln > 0) return;
+    setMood('scared', 1.6);
     Sfx.play('hurt');
     if (!Motion.lite) { G.shake = 0.5; G.flash = { color: 'rgba(239,71,111,0.35)', t: 0.4 }; }
     showHint('👻 ' + g.name + ' bắt được Cú Tí!', 'bad', 2200);
+    Voice.say('Ối, bị ' + g.name + ' bắt rồi!');
     loseLife(true);
   }
 
@@ -906,8 +994,10 @@
     if (G.lives <= 0) { endLevel(false); return; }
     resetPositions(false);
     G.state = 'ready';
-    G.stateT = 0.9;
-    showHint('Cẩn thận nhé! ' + (G.roundInfo ? G.roundInfo.html.replace(/<[^>]+>/g, '') : ''), 'info', 2600);
+    G.stateT = 1.4;
+    const what = G.roundInfo ? G.roundInfo.html.replace(/<[^>]+>/g, '') : '';
+    showHint('Cẩn thận nhé! ' + what, 'info', 2600);
+    if (G.roundInfo) Voice.say('Cẩn thận nhé! ' + G.roundInfo.speech);
   }
 
   function levelClear() {
@@ -915,7 +1005,7 @@
     G.stateT = 2.2;
     Sfx.play('levelclear');
     spawnConfetti(80);
-    addText('🎉 Qua màn!', px(G.player.x), py(G.player.y) - G.cell, { color: '#ffd166', size: G.cell * 0.9 });
+    addText('🎉 Qua màn!', px(G.player.x), py(G.player.y) - G.cell * 1.8, { color: '#ffd166', size: G.cell * 0.9 });
     Voice.say('Tuyệt vời! Cú Tí đã tìm đủ đồng hồ. Bây giờ trả lời vài câu hỏi nhé!');
     releaseWake();
   }
@@ -929,6 +1019,8 @@
     Music.setTempo(1);
     const list = C.buildQuiz(G.level, G.mistakes, 3, poolFor(G.level));
     G.quiz = { list: list, queue: list.slice(), total: list.length, firstTry: 0, correctDone: 0, tried: [], current: null, answered: false };
+    // Màn hình hẹp ẩn lời dẫn cho gọn bảng -> nhắc một lần bằng toast
+    if (!startQuiz._said && window.innerWidth <= 480) { startQuiz._said = true; toast('Trả lời đúng hết để mở màn tiếp theo nhé!', 2600); }
     showScreen('quiz');
     renderQuestion();
   }
@@ -945,7 +1037,9 @@
     ui.quizQ.innerHTML = (q.review ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + q.text;
     if (q.clock) {
       ui.quizClock.hidden = false;
-      ui.quizClock.innerHTML = q.clockStyle === 'analog' ? C.svgClock(q.clock, { size: 180, minutes: !!G.level.kem || G.level.id === 'l5' }) : C.svgDigital(C.fmtDigital(q.clock, q.clockStyle === 'digital24'), { width: 200 });
+      // Vòng số phút chỉ có ích khi đồng hồ đủ to (màn hình hẹp thì chữ sẽ quá nhỏ)
+      const showMins = (!!G.level.kem || G.level.id === 'l5') && G.W >= 700;
+      ui.quizClock.innerHTML = q.clockStyle === 'analog' ? C.svgClock(q.clock, { size: 180, minutes: showMins }) : C.svgDigital(C.fmtDigital(q.clock, q.clockStyle === 'digital24'), { width: 200 });
     } else { ui.quizClock.hidden = true; ui.quizClock.innerHTML = ''; }
     ui.quizOptions.innerHTML = q.options.map(function (op, i) {
       let inner = '';
@@ -1065,16 +1159,39 @@
       take += '<br><b>Lần này con nhầm:</b> đồng hồ ' + esc(C.describeItem(mis.shown, mis.style, level)) + ' với ' + esc(C.describeItem(mis.target, mis.style, level)) + '. ' + esc(C.explainRead(mis.shown, { kem: !!level.kem, style: mis.style }));
     }
     ui.takeaway.innerHTML = take;
+    // "Cần ôn lại": các đồng hồ nhầm trong ván này, rồi vài mục cũ cùng màn (hiện cả khi thắng lẫn khi thua)
+    const rows = [], seenRev = {};
+    G.mistakes.forEach(function (mis) {
+      const k = mis.key || C.key(mis.target);
+      if (seenRev[k] || rows.length >= 3) return;
+      seenRev[k] = true;
+      // Màn "Thời gian trôi": nhắc lại cả phép cộng (giờ + phút = …), không chỉ mỗi kết quả
+      const want = mis.info && mis.info.kind === 'elapsed' && mis.info.start ? describeReview({ info: mis.info }) : C.describeItem(mis.target, mis.style, level);
+      rows.push('📝 ' + want + ' (con chọn ' + C.describeItem(mis.shown, mis.style, level) + ')');
+    });
+    try {
+      poolFor(level).forEach(function (it) {
+        if (seenRev[it.key] || rows.length >= 5) return;
+        seenRev[it.key] = true;
+        rows.push('📝 ' + describeReview(it));
+      });
+    } catch (e) { /* bỏ qua */ }
+    ui.resultReview.innerHTML = rows.length
+      ? '<b>Cần ôn lại:</b><ul>' + rows.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>'
+      : '';
+    ui.resultReview.hidden = !rows.length;
+    $('btn-result-lesson').hidden = win;                 // thua thì mời bé xem lại bài học rồi chơi tiếp
     ui.unlockNote.hidden = !(win && unlocked && hasNext);
     ui.unlockNote.textContent = hasNext ? '🔓 Đã mở khóa màn ' + (level.n + 1) + ': ' + C.LEVELS[G.levelIdx + 1].title + '!' : '🏆 Con đã hoàn thành tất cả các màn!';
     if (win && !hasNext) ui.unlockNote.hidden = false;
     ui.btnNext.hidden = !(win && hasNext);
+    ui.toast.classList.remove('show');          // không để lời nhắc cũ che các nút của bảng kết quả
     showScreen('result');
     Music.play('menu');
     if (win) {
       Sfx.play(record ? 'record' : 'applause');
       if (unlocked) setTimeout(function () { Sfx.play('unlock'); }, 700);
-      spawnConfetti(60);
+      spawnConfetti(90);
       Voice.say(stars === 3 ? 'Hoàn hảo! ' + name + ' được ba sao!' : 'Giỏi lắm, ' + name + '! Qua màn rồi! ' + (unlocked && hasNext ? 'Đã mở khóa màn tiếp theo.' : ''));
     } else {
       Sfx.play('lose');
@@ -1103,7 +1220,19 @@
     o = o || {};
     const size = o.size || G.cell * 0.55;
     const half = Math.min(G.W / 2, text.length * size * 0.28 + 8);
-    G.texts.push({ text: text, x: clamp(x, half, G.W - half), y: clamp(y, size, G.H - size), vy: -50, life: 1.2, max: 1.2, size: size, color: o.color || '#fff' });
+    const tx = clamp(x, half, G.W - half);
+    // Xếp tầng: dòng chữ mới không đè lên dòng chữ đang hiện ở cùng chỗ (ví dụ "+250 Nhanh!" và "🔥 3 liên tiếp!")
+    // Giữ chữ trong khung mê cung (không đè lên HUD ở phía trên)
+    const gap = Math.max(26, size * 1.35), lo = Math.max(size, G.oy > 0 ? G.oy + size * 0.8 : size), hi = G.H - size;
+    const busy = function (v) { return G.texts.some(function (t) { return Math.abs(t.x - tx) < 200 && Math.abs(t.y - v) < Math.max(gap, t.size * 1.35); }); };
+    const y0 = clamp(y, lo, hi);
+    let ty = y0;
+    for (let k = 1; k <= 6 && busy(ty); k++) {
+      const up = clamp(y0 - k * gap, lo, hi), down = clamp(y0 + k * gap, lo, hi);
+      if (!busy(up)) { ty = up; break; }
+      if (!busy(down)) { ty = down; break; }
+    }
+    G.texts.push({ text: text, x: tx, y: ty, vy: -50, life: 1.2, max: 1.2, size: size, color: o.color || '#fff' });
   }
 
   /* ================= CẬP NHẬT ================= */
@@ -1121,6 +1250,7 @@
       t.life -= dt; t.y += t.vy * dt;
       if (t.life <= 0) G.texts.splice(i, 1);
     }
+    if (G.player && G.player.moodT > 0) { G.player.moodT -= dt; if (G.player.moodT <= 0) G.player.mood = ''; }
     if (G.shake > 0) G.shake = Math.max(0, G.shake - dt);
     if (G.flash) { G.flash.t -= dt; if (G.flash.t <= 0) G.flash = null; }
     if (!inGame() || st === 'paused' || st === 'countdown') { updateHud(); return; }
@@ -1187,7 +1317,7 @@
       for (let i = 0; i < spans.length; i++) spans[i].classList.toggle('lost', i >= G.lives);
       ui.lives.setAttribute('aria-label', 'Còn ' + G.lives + ' tim');
     }
-    const lvl = G.level ? 'Màn ' + G.level.n + ' · 🕐 ' + Math.min(G.round, G.level.rounds) + '/' + G.level.rounds : '';
+    const lvl = G.level ? 'Màn ' + G.level.n + ' · 🕐 ' + Math.min(G.round, G.level.rounds) + '/' + G.level.rounds + (G.W >= 700 ? ' đồng hồ' : '') : '';
     if (h.level !== lvl) { h.level = lvl; ui.levelChip.textContent = lvl; }
     const pw = G.fright > 0 ? Math.ceil(G.fright) : 0;
     if (h.power !== pw) {
@@ -1199,6 +1329,7 @@
 
   /* ================= VẼ ================= */
   function render() {
+    drawFxLayer();
     ctx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
     ctx.globalAlpha = 1;
     if (G.bg) ctx.drawImage(G.bg, 0, 0, G.W, G.H);
@@ -1212,7 +1343,7 @@
     ctx.globalAlpha = 1;
     if (!inGame() && G.state !== 'quiz' && G.state !== 'result') {
       drawMenuScene();
-      drawParts();
+      drawParts(ctx);
       return;
     }
     if (!G.maze) return;
@@ -1229,7 +1360,7 @@
     drawPlayer();
     drawMagnifier();
     ctx.restore();
-    drawParts();
+    if (!partsOnFx()) drawParts(ctx);
     drawTexts();
     if (G.flash) {
       ctx.fillStyle = G.flash.color;
@@ -1244,7 +1375,7 @@
     const t = G.anim;
     const x = G.W * 0.5 + Math.sin(t * 0.5) * G.W * 0.35;
     const y = G.H * 0.88 + Math.sin(t * 2) * 8;
-    drawOwl(x, y, clamp(G.W * 0.03, 18, 30), { dx: Math.cos(t * 0.5) >= 0 ? 1 : -1, dy: 0 }, t, 0);
+    drawOwl(x, y, clamp(G.W * 0.03, 18, 30), { dx: Math.cos(t * 0.5) >= 0 ? 1 : -1, dy: 0 }, t, 0, 'happy');
   }
 
   function drawDots() {
@@ -1367,6 +1498,15 @@
         ctx.fillStyle = '#ef476f'; ctx.fillText('✗', 0, 0);
       }
       ctx.restore();
+      // Gợi ý: vòng sáng vàng nhấp nháy quanh đồng hồ đúng
+      if (it.hint && !it.taken && !it.wrongAt) {
+        ctx.save();
+        ctx.globalAlpha = Motion.lite ? 0.9 : 0.5 + 0.5 * Math.sin(G.anim * 6);
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = Math.max(3, s * 0.12);
+        ctx.beginPath(); ctx.arc(x, y + bob, s * 0.92, 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
@@ -1395,7 +1535,8 @@
     ctx.restore();
   }
 
-  function drawOwl(x, y, R, dir, anim, dying) {
+  /** mood: '' | 'happy' (ăn đúng) | 'sad' (chọn nhầm) | 'scared' (gặp ma) */
+  function drawOwl(x, y, R, dir, anim, dying, mood) {
     ctx.save();
     ctx.translate(x, y);
     if (dying > 0) { ctx.rotate(dying * TAU * 1.5); const k = Math.max(0.02, 1 - dying); ctx.scale(k, k); }
@@ -1416,18 +1557,44 @@
     // Bụng
     ctx.fillStyle = '#f5d7a8';
     ctx.beginPath(); ctx.ellipse(0, R * 0.4, R * 0.58, R * 0.45, 0, 0, TAU); ctx.fill();
-    // Mắt
-    const ex = R * 0.38, ey = -R * 0.15, er = R * 0.34;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(-ex, ey, er, 0, TAU); ctx.arc(ex, ey, er, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#2b2d42';
-    const pr = R * 0.16, pox = dx * R * 0.1, poy = dy * R * 0.1;
-    ctx.beginPath(); ctx.arc(-ex + pox, ey + poy, pr, 0, TAU); ctx.arc(ex + pox, ey + poy, pr, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(-ex + pox + pr * 0.35, ey + poy - pr * 0.35, pr * 0.35, 0, TAU); ctx.arc(ex + pox + pr * 0.35, ey + poy - pr * 0.35, pr * 0.35, 0, TAU); ctx.fill();
-    // Mỏ
+    // Mắt (thỉnh thoảng chớp; mở to hơn khi hoảng)
+    const wide = mood === 'scared' ? 1.16 : 1;
+    const ex = R * 0.38, ey = -R * 0.15, er = R * 0.34 * wide;
+    const blink = !Motion.lite && dying <= 0 && (G.anim % 3.6) > 3.46;
+    if (blink) {
+      ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = Math.max(1.5, R * 0.11); ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(-ex, ey - er * 0.2, er * 0.8, 0.18 * Math.PI, 0.82 * Math.PI);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(ex, ey - er * 0.2, er * 0.8, 0.18 * Math.PI, 0.82 * Math.PI);
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(-ex, ey, er, 0, TAU); ctx.arc(ex, ey, er, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2b2d42';
+      const pr = R * 0.16 * (mood === 'scared' ? 0.8 : 1), pox = dx * R * 0.1, poy = dy * R * 0.1;
+      ctx.beginPath(); ctx.arc(-ex + pox, ey + poy, pr, 0, TAU); ctx.arc(ex + pox, ey + poy, pr, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(-ex + pox + pr * 0.35, ey + poy - pr * 0.35, pr * 0.35, 0, TAU); ctx.arc(ex + pox + pr * 0.35, ey + poy - pr * 0.35, pr * 0.35, 0, TAU); ctx.fill();
+    }
+    // Lông mày theo tâm trạng: vui thì cong lên, tiu nghỉu thì xuôi xuống
+    if (mood === 'happy' || mood === 'sad') {
+      ctx.strokeStyle = '#7a4a1e'; ctx.lineWidth = Math.max(1.5, R * 0.09); ctx.lineCap = 'round';
+      const by = ey - er - R * 0.12, tilt = mood === 'happy' ? -R * 0.12 : R * 0.14;
+      ctx.beginPath();
+      ctx.moveTo(-ex - er * 0.7, by - tilt); ctx.lineTo(-ex + er * 0.7, by + tilt);
+      ctx.moveTo(ex - er * 0.7, by + tilt); ctx.lineTo(ex + er * 0.7, by - tilt);
+      ctx.stroke();
+    }
+    // Mỏ (vui thì hé mở như đang cười)
     ctx.fillStyle = '#ff9f1c';
-    ctx.beginPath(); ctx.moveTo(-R * 0.16, R * 0.12); ctx.lineTo(R * 0.16, R * 0.12); ctx.lineTo(0, R * 0.4); ctx.closePath(); ctx.fill();
+    const beak = mood === 'happy' ? R * 0.5 : R * 0.4;
+    ctx.beginPath(); ctx.moveTo(-R * 0.16, R * 0.12); ctx.lineTo(R * 0.16, R * 0.12); ctx.lineTo(0, beak); ctx.closePath(); ctx.fill();
+    if (mood === 'scared') {                       // giọt mồ hôi nhỏ bên má
+      ctx.fillStyle = '#8ecbff';
+      ctx.beginPath(); ctx.arc(R * 0.72, -R * 0.5, R * 0.13, 0, TAU); ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -1436,7 +1603,9 @@
     if (!p) return;
     const R = G.cell * 0.42;
     if (G.invuln > 0 && G.state === 'playing' && Math.floor(G.anim * 10) % 2 === 0) ctx.globalAlpha = 0.5;
-    drawOwl(px(p.x), py(p.y), R, p.dir, p.moving ? p.anim : 0, p.dying);
+    // Đứng yên thì nhún nhẹ cho có sức sống
+    const bob = p.moving || Motion.lite ? 0 : Math.sin(G.anim * 2.2) * R * 0.09;
+    drawOwl(px(p.x), py(p.y) + bob, R, p.dir, p.moving ? p.anim : 0, p.dying, p.moodT > 0 ? p.mood : '');
     ctx.globalAlpha = 1;
   }
 
@@ -1485,20 +1654,32 @@
     ctx.restore();
   }
 
-  function drawParts() {
+  function drawParts(c) {
+    c = c || ctx;
     for (let i = 0; i < G.parts.length; i++) {
       const p = G.parts[i];
-      ctx.globalAlpha = clamp(p.life / (p.kind === 'confetti' ? 0.8 : p.max * 0.6), 0, 1);
-      ctx.fillStyle = p.color;
+      c.globalAlpha = clamp(p.life / (p.kind === 'confetti' ? 0.8 : p.max * 0.6), 0, 1);
+      c.fillStyle = p.color;
       if (p.kind === 'confetti') {
-        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.spin);
-        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
-        ctx.restore();
+        c.save(); c.translate(p.x, p.y); c.rotate(p.spin);
+        c.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        c.restore();
       } else {
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill();
+        c.beginPath(); c.arc(p.x, p.y, p.size, 0, TAU); c.fill();
       }
     }
-    ctx.globalAlpha = 1;
+    c.globalAlpha = 1;
+  }
+  /** Khi qua màn / xem kết quả, hạt được vẽ ở lớp #fx (nằm trên lớp phủ mờ) cho bé nhìn rõ. */
+  function partsOnFx() { return !!fxCtx && (G.state === 'result' || G.state === 'clear'); }
+  function drawFxLayer() {
+    if (!fxCtx) return;
+    const want = partsOnFx() && G.parts.length > 0;
+    if (!want && !drawFxLayer.dirty) return;                 // không xoá cả lớp mỗi khung khi không có hạt
+    fxCtx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
+    fxCtx.clearRect(0, 0, G.W, G.H);
+    drawFxLayer.dirty = want;
+    if (want) drawParts(fxCtx);
   }
 
   function drawTexts() {
@@ -1556,15 +1737,14 @@
       const rec = Store.rec(l);
       const current = idx === b.unlocked - 1;
       const label = 'Màn ' + l.n + ': ' + l.title + (unlocked ? '' : ' (chưa mở khóa)');
-      return '<div class="level-card' + (unlocked ? '' : ' locked') + (current ? ' current' : '') + '" data-id="' + esc(l.id) + '" role="button" tabindex="' + (unlocked ? '0' : '-1') + '"' + (unlocked ? '' : ' aria-disabled="true"') + ' aria-label="' + esc(label) + '">' +
-        (unlocked ? '' : '<span class="lock" aria-hidden="true">🔒</span>') +
+      return '<div class="level-card' + (unlocked ? '' : ' locked') + (current ? ' current' : '') + (rec.passed ? ' passed' : '') + '" data-id="' + esc(l.id) + '" role="button" tabindex="' + (unlocked ? '0' : '-1') + '"' + (unlocked ? '' : ' aria-disabled="true"') + ' aria-label="' + esc(label) + '">' +
         '<span class="grade g' + esc(l.grade) + '">Lớp ' + esc(l.grade) + '</span>' +
-        '<div class="icon" aria-hidden="true">' + esc(l.icon) + '</div>' +
-        '<div class="num">MÀN ' + esc(l.n) + '</div>' +
+        '<div class="icon" aria-hidden="true">' + (unlocked ? esc(l.icon) : '🔒') + '</div>' +
+        '<div class="num">MÀN ' + esc(l.n) + (rec.passed ? ' <span class="done" aria-hidden="true">✅</span>' : '') + '</div>' +
         '<div class="name">' + esc(l.title) + '</div>' +
         '<div class="desc">' + esc(l.desc) + '</div>' +
         (mastered(b, l.id) ? '<span class="mastery">✅ Đã thuộc</span>' : '') +
-        '<div class="meta"><span class="best">' + (unlocked ? '🏆 ' + fmt(rec.best || 0) : 'Cần qua màn ' + (l.n - 1)) + '</span><span class="stars" aria-label="' + (rec.stars || 0) + ' sao">' + starsHtml(rec.stars || 0) + '</span></div>' +
+        '<div class="meta"><span class="best">' + (unlocked ? '🏆 ' + fmt(rec.best || 0) : '🔒 Qua màn ' + (l.n - 1)) + '</span><span class="stars" aria-label="' + (rec.stars || 0) + ' sao">' + starsHtml(rec.stars || 0) + '</span></div>' +
         '</div>';
     }).join('');
   }
@@ -1611,10 +1791,12 @@
     let html = '';
     let read = '';
     if (L.digital) {
-      html = C.svgDigital(C.fmtDigital(t, true), { width: 210 });
-      read = C.fmtText(t, { period: true }) + '<small>' + C.periodIcon(t.h) + ' buổi ' + C.periodOf(t.h) + ' · ' + C.fmtText(t, { h24: true }) + '</small>';
+      // Kim + số cạnh nhau: bé thấy kim ngắn vẫn chỉ số 3 khi đồng hồ điện tử ghi 15 giờ
+      html = C.svgClock(t, { size: 170 }) + C.svgDigital(C.fmtDigital(t, true), { width: 190 });
+      read = C.fmtText(t, { period: true }) + '<small>' + C.periodIcon(t.h) + ' buổi ' + C.periodOf(t.h) + ' · ' + C.fmtText(t, { h24: true }) +
+        (t.h >= 13 ? ' (' + C.h12(t.h) + ' + 12 = ' + t.h + ')' : '') + '</small>';
     } else if (L.both) {
-      html = C.svgClock(t, { size: size }) + C.svgDigital(C.fmtDigital(t), { width: 150 });
+      html = C.svgClock(t, { size: size }) + C.svgDigital(C.fmtDigital(t), { width: 150, caption: true });
       read = C.fmtText(t);
     } else {
       html = C.svgClock(t, { size: size, minutes: !!L.minutes });
@@ -1670,14 +1852,26 @@
     else if (t.m >= 35) alt = 'Hay: ' + C.fmtText(t, { kem: true }) + ' (kim dài đã qua số 6).';
     else alt = 'Kim dài chỉ số ' + (t.m / 5) + ': ' + (t.m / 5) + ' × 5 = ' + t.m + ' phút.';
     ui.learnAlt.textContent = alt;
-    ui.learnDigital.innerHTML = C.svgDigital(C.fmtDigital(t), { width: 150 });
+    ui.learnDigital.innerHTML = C.svgDigital(C.fmtDigital(t, G.learn.h24), { width: 150 });
     ui.learnMinutes.textContent = G.learn.minutes ? '🔢 Ẩn số phút' : '🔢 Hiện số phút';
+    // Buổi trong ngày (lớp 3): 15 giờ 30 phút là 3 giờ 30 phút chiều
+    if (ui.learnPeriod) {
+      ui.learnPeriod.hidden = !G.learn.h24;
+      ui.learnPeriod.textContent = G.learn.h24
+        ? C.periodIcon(t.h) + ' ' + C.fmtText(t, { period: true }) + ' · ' + C.fmtText(t, { h24: true })
+        : '';
+    }
+    if (ui.learn24h) {
+      ui.learn24h.textContent = G.learn.h24 ? '🌗 Ẩn buổi & 24 giờ' : '🌗 Buổi & 24 giờ';
+      ui.learn24h.setAttribute('aria-pressed', String(G.learn.h24));
+    }
   }
   function learnSpeak() {
     const t = G.learn.t;
     let s = C.fmtText(t) + '.';
     if (t.m === 30) s += ' Hay ' + C.fmtText(t, { ruoi: true }) + '.';
     else if (t.m >= 35) s += ' Hay ' + C.fmtText(t, { kem: true }) + '.';
+    if (G.learn.h24) s += ' Buổi ' + C.periodOf(t.h) + ', tức là ' + C.fmtText(t, { h24: true }) + '.';
     Voice.say(s);
   }
 
@@ -1928,7 +2122,8 @@
     const stat = function (v, k) { return '<div class="report-stat"><div class="v">' + v + '</div><div class="k">' + k + '</div></div>'; };
     $('report-title').textContent = '📊 Kết quả của ' + p.name;
     const total = s.correct + s.wrong, acc = total ? Math.round(s.correct / total * 100) : 0;
-    $('report-stats').innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') + stat(Math.round(s.seconds / 60), 'phút luyện tập') + stat(sumStars(b), 'sao đạt được');
+    const mins = s.seconds > 0 ? Math.max(1, Math.round(s.seconds / 60)) : 0;
+    $('report-stats').innerHTML = stat(s.plays, 'ván đã chơi') + stat(acc + '%', 'trả lời đúng') + stat(mins, 'phút luyện tập') + stat(sumStars(b), 'sao đạt được');
     $('report-levels').innerHTML = C.LEVELS.map(function (l) {
       const r = Store.rec(l), t = s.byTopic[l.id] || { c: 0, w: 0 }, n = t.c + t.w;
       return '<div class="report-row"><span class="t">' + esc(l.icon + ' Màn ' + l.n + ': ' + l.title) + '</span>' +
@@ -1978,6 +2173,7 @@
       if (G.lesson.level) startLevel(G.lesson.level);
     });
     click('btn-hud-speak', function () { if (G.roundInfo) Voice.say(G.roundInfo.speech); });
+    click('btn-hud-hint', function () { askHint(); });
     click('btn-pause', function () { pauseGame(); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { Music.setDuck('pause', null); if (G.level) startLevel(G.level); });
@@ -1988,9 +2184,16 @@
     click('btn-quiz-quit', function () { goLevels(); });
     click('btn-next-level', function () { const n = C.LEVELS[G.levelIdx + 1]; if (n && Store.isUnlocked(G.levelIdx + 1)) showLesson(n); else goLevels(); });
     click('btn-retry', function () { if (G.level && G.state === 'result') startLevel(G.level); });   // chạm hai lần: chỉ lần đầu có tác dụng
+    click('btn-result-lesson', function () { if (G.level) showLesson(G.level); });
     click('btn-other-level', function () { goLevels(); });
     click('btn-home', function () { goMenu(); });
-    click('btn-learn-random', function () { G.learn.t = C.T(rnd(1, 12), pick(C.ALL_MINS)); renderLearn(false); learnSpeak(); });
+    click('btn-learn-random', function () { G.learn.t = C.T(G.learn.h24 ? rnd(0, 23) : rnd(1, 12), pick(C.ALL_MINS)); renderLearn(false); learnSpeak(); });
+    click('btn-learn-24h', function () {
+      G.learn.h24 = !G.learn.h24;
+      if (!G.learn.h24) G.learn.t = C.T(C.h12(G.learn.t.h), G.learn.t.m);   // về lại miền 1–12 giờ
+      renderLearn(false);
+      learnSpeak();
+    });
     click('btn-learn-minutes', function () { G.learn.minutes = !G.learn.minutes; G.learn.rebuild = true; renderLearn(false); });
     click('btn-learn-speak', function () { learnSpeak(); });
     // Hai nút dành cho phụ huynh: qua cổng phép nhân trong trang (không dùng window.confirm), tác động lên bé đang chơi
@@ -2109,7 +2312,7 @@
       const b = e.target.closest('button[data-step]');
       if (!b) return;
       Sfx.unlock(); Sfx.play('click');
-      G.learn.t = C.addMin(G.learn.t, Number(b.getAttribute('data-step')));
+      G.learn.t = C.addMin(G.learn.t, Number(b.getAttribute('data-step')), G.learn.h24);
       renderLearn(false);
       learnSpeak();
     });
@@ -2201,6 +2404,17 @@
       const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
       if (mq && mq.addEventListener) mq.addEventListener('change', function () { Motion.refresh(); });
     } catch (e) { /* bỏ qua */ }
+    // Chờ phông chữ (tối đa 0,6 giây) để menu không "nhảy" chữ khi Baloo 2 tải xong
+    const doc = document.documentElement;
+    doc.classList.add('fonts-pending');
+    const fontsDone = function () { doc.classList.remove('fonts-pending'); };
+    setTimeout(fontsDone, 600);
+    try {
+      if (document.fonts && document.fonts.load) {
+        document.fonts.load('800 32px "Baloo 2"');
+        if (document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(fontsDone, fontsDone);
+      } else fontsDone();
+    } catch (e) { fontsDone(); }
     Voice.init();
     applyAudioSettings();
     renderAudioToggles();
@@ -2217,7 +2431,6 @@
     bindInput();
     bindUi();
     registerSw();
-    try { if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"'); } catch (e) { /* bỏ qua */ }
     showHud(false);
     showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
@@ -2226,7 +2439,7 @@
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
   window.__MeCung = {
     G: G, Store: Store, startLevel: startLevel, showLesson: showLesson, startRound: startRound, startQuiz: startQuiz, quizAnswer: quizAnswer, quizNext: quizNext,
-    endLevel: endLevel, setWant: setWant, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem,
+    endLevel: endLevel, setWant: setWant, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem, askHint: askHint,
     teleport: function (r, c) { const p = G.player; p.from = { r: r, c: c }; p.to = { r: r, c: c }; p.t = 1; p.moving = false; syncPos(p); onPlayerArrive(p); }
   };
 

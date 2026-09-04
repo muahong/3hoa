@@ -133,6 +133,44 @@ test('me-cung: makeRound(level, forced) trả về đúng mục tiêu ôn lại 
   }
 });
 
+test('me-cung: màn 8 – 3 lượt đầu không cộng "nhớ", lượt sau chỉ nhớ với số tròn 15 phút (C4)', () => {
+  const L = C.levelById('l8');
+  const CARRY = [15, 30, 45];
+  for (let round = 0; round < 5; round++) {
+    for (let i = 0; i < 600; i++) {
+      const r = C.makeRound(L, null, [], { round: round });
+      const st = r.extra.start, d = r.extra.delta;
+      assert.ok(C.DELTAS.indexOf(d) >= 0, 'delta ngoài danh sách: ' + d);
+      assert.ok(C.same(r.target, C.addMin(st, d)), 'target = start + delta');
+      if (st.m + d > 60 && d !== 60) {
+        assert.ok(round >= 3, 'lượt ' + round + ' không được cộng nhớ: ' + st.m + ' + ' + d);
+        assert.ok(CARRY.indexOf(d) >= 0 && CARRY.indexOf(st.m) >= 0, 'nhớ chỉ với số tròn 15 phút: ' + st.m + ' + ' + d);
+      }
+    }
+  }
+  // các lượt sau phải THƯỜNG XUYÊN ra bài cộng qua giờ mới (bài học vừa dạy dạng này)
+  for (const round of [3, 4]) {
+    let carry = 0;
+    const n = 2000;
+    for (let i = 0; i < n; i++) {
+      const r = C.makeRound(L, null, [], { round: round });
+      if (r.extra.start.m + r.extra.delta > 60 && r.extra.delta !== 60) carry++;
+    }
+    assert.ok(carry / n >= 0.25, 'lượt ' + round + ': bài cộng qua giờ mới quá hiếm (' + Math.round(carry / n * 100) + '%)');
+    assert.ok(carry / n <= 0.7, 'lượt ' + round + ': cộng qua giờ mới không được lấn hết (' + Math.round(carry / n * 100) + '%)');
+  }
+  // 3 lượt đầu vẫn tuyệt đối không có nhớ
+  for (let i = 0; i < 2000; i++) {
+    const r = C.makeRound(L, null, [], { round: i % 3 });
+    assert.ok(r.extra.start.m + r.extra.delta <= 60 || r.extra.delta === 60, 'lượt đầu không được cộng nhớ');
+  }
+  // bài học có ví dụ "qua giờ mới" khớp với đề bài sinh ra
+  const les = C.LESSONS.l8;
+  assert.ok(les.lines.length >= 4, 'bài 8 có thêm dòng cộng qua giờ');
+  assert.ok(les.lines.some((x) => /8 giờ 15 phút/.test(x)), 'bài 8 dạy ví dụ 7 giờ 45 + 30 phút');
+  assert.ok(les.demos.some((t) => t.h === 8 && t.m === 15), 'bài 8 có ví dụ minh họa 8 giờ 15 phút');
+});
+
 /* ---------------- Giải thích ---------------- */
 test('me-cung: explainRead / describeItem không rỗng, nhắc "kém" đúng chỗ', () => {
   for (let h = 1; h <= 12; h++) {
@@ -257,6 +295,29 @@ test('me-cung: qRead / qPickClock / reviewQuestion mang khóa ôn lại; buildQu
   }
 });
 
+/* ---------------- C5: bộ câu hỏi nào cũng có hình đồng hồ ---------------- */
+test('me-cung: buildQuiz × 2000 mỗi màn – luôn có ít nhất một câu kèm hình đồng hồ (C5)', () => {
+  const hasPic = (q) => !!(q.clock || q.options.some((op) => !!op.clock));
+  for (const L of C.LEVELS) {
+    let miss = 0;
+    for (let i = 0; i < 2000; i++) {
+      const qs = C.buildQuiz(L, [], 3);
+      if (!qs.some(hasPic)) miss++;
+      // hàm dùng chung của clock.js phải cho cùng kết quả
+      qs.forEach((q) => assert.equal(C.hasPicture(q), hasPic(q), L.id + ' hasPicture'));
+      // mọi câu lấy từ ngân hàng đều mang theo hàm sinh (để hỏi lại / sinh lại nếu cần)
+      qs.forEach((q) => assert.ok(!q.gen || typeof q.gen === 'function', L.id + ' q.gen'));
+    }
+    assert.equal(miss, 0, L.id + ': ' + miss + '/2000 bộ câu hỏi không có hình đồng hồ');
+    // có lỗi trong mê cung hoặc có pool ôn lại thì vẫn phải có hình
+    for (let i = 0; i < 200; i++) {
+      const r = C.makeRound(L);
+      const shown = r.items.find((t) => !C.same(t, r.target));
+      assert.ok(C.buildQuiz(L, [{ shown: shown, target: r.target, style: r.style }], 3).some(hasPic), L.id + ' (có lỗi) thiếu hình');
+    }
+  }
+});
+
 test('me-cung: mistakeQuestion cho từng kiểu đồng hồ – có cả đồng hồ đã chọn lẫn mục tiêu, đáp án là đồng hồ đã chọn', () => {
   const cases = [
     { L: C.levelById('l1'), style: 'analog' }, { L: C.levelById('l6'), style: 'analog' },
@@ -278,6 +339,41 @@ test('me-cung: mistakeQuestion cho từng kiểu đồng hồ – có cả đồ
   });
 });
 
+/* ---------------- C17 / C22: hình minh họa trên HUD và SVG ---------------- */
+test('me-cung: màn 8 luôn hiện đồng hồ kim của mốc bắt đầu trên HUD (C17)', () => {
+  const l8 = C.levelById('l8');
+  for (let i = 0; i < N; i++) {
+    const r = C.makeRound(l8, null, [], { round: i % 5 });
+    assert.ok(r.hudClock, 'l8 phải có hudClock');
+    assert.equal(C.key(r.hudClock), C.key(r.extra.start), 'hudClock là mốc bắt đầu');
+    assert.equal(C.key(C.addMin(r.extra.start, r.extra.delta)), C.key(r.target));
+  }
+  // các màn khác: chỉ màn đồng hồ điện tử mới hiện đồng hồ kim mẫu
+  C.LEVELS.forEach((l) => {
+    const r = C.makeRound(l);
+    if (l.kind === 'analog' || l.kind === 'period') assert.equal(r.hudClock, null, l.id + ' không cần hudClock');
+    else assert.ok(r.hudClock, l.id + ' cần hudClock');
+  });
+});
+
+test('me-cung: svgClock / svgDigital – vòng số phút và ghi chú giờ/phút (C22)', () => {
+  const t = T(7, 45);
+  const plain2 = C.svgClock(t, { size: 120 });
+  assert.ok(plain2.indexOf('aria-label="7 giờ 45 phút"') >= 0);
+  assert.ok(plain2.indexOf('font-size="18"') < 0, 'không có vòng phút khi tắt');
+  const mins = C.svgClock(t, { size: 180, minutes: true });
+  assert.ok(mins.indexOf('font-size="18"') > 0, 'vòng số phút dùng cỡ 18');
+  assert.ok(mins.indexOf('0/60') > 0);
+  const d = C.svgDigital('7:45', { width: 150 });
+  assert.ok(d.indexOf('viewBox="0 0 200 112"') > 0);
+  assert.ok(d.indexOf('>giờ<') < 0);
+  const dc = C.svgDigital('7:45', { width: 150, caption: true });
+  assert.ok(dc.indexOf('viewBox="0 0 200 146"') > 0, 'có ghi chú thì khung cao hơn');
+  assert.ok(dc.indexOf('>giờ<') > 0 && dc.indexOf('>phút<') > 0, 'có chữ giờ / phút');
+  // nhãn được thoát ký tự khi chèn vào SVG
+  assert.ok(C.svgDigital('<b>x', {}).indexOf('&lt;b&gt;x') > 0);
+});
+
 /* ---------------- Màn, bài học ---------------- */
 test('me-cung: LEVELS / LESSONS hợp lệ', () => {
   assert.equal(C.LEVELS.length, 8);
@@ -296,6 +392,14 @@ test('me-cung: LEVELS / LESSONS hợp lệ', () => {
     assert.equal(C.levelById(l.id), l);
   });
   assert.equal(C.levelById('nope'), null);
+  // C20: bài 4 (buổi trong ngày) phải có ví dụ từ 13 giờ trở đi để dạy phép "+ 12"
+  const l4 = C.LESSONS.l4;
+  assert.ok(l4.digital === true, 'bài 4 hiện đồng hồ điện tử');
+  assert.ok(l4.demos.some((t) => t.h >= 13), 'bài 4 cần ví dụ buổi chiều / tối');
+  assert.ok(l4.demos.some((t) => t.h < 12), 'bài 4 cần ví dụ buổi sáng');
+  // C4: bài 8 dạy cả trường hợp cộng qua giờ mới
+  assert.ok(C.LESSONS.l8.lines.length >= 4 && C.LESSONS.l8.lines.some((s) => s.indexOf('8 giờ 15 phút') >= 0), 'bài 8 có ví dụ cộng nhớ');
+  assert.ok(C.LESSONS.l8.demos.some((t) => t.h === 8 && t.m === 15));
 });
 
 /* ---------------- Mê cung ---------------- */

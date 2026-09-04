@@ -181,10 +181,14 @@
     const size = o.size || 180;
     const ring = o.ring || null;
     const hasBadge = !!(t.period && o.badge !== false);
-    let ext = ring === 'kem' ? 150 : ring ? 130 : 110;
+    // Hộp nhìn phải đủ rộng cho chữ dài nhất của vòng "kém": "kém 25" neo cuối tại x = −108
+    let ext = ring === 'kem' ? 180 : ring ? 130 : 110;
     if (hasBadge || o.digital) ext = Math.max(ext, 136);
+    // Hộp nhìn rộng ra thì vẽ TO ra theo, nếu không mặt đồng hồ và chữ vòng "kém" sẽ bị thu nhỏ lại
+    // (kích thước cuối cùng vẫn có thể do CSS quyết định – xem .clock-svg.has-ring trong style.css).
+    const px = Math.round(size * ext / 110);
     const hA = ((t.h % 12) + t.m / 60) * 30, mA = t.m * 6;
-    let s = '<svg class="clock-svg' + (o.cls ? ' ' + o.cls : '') + '" viewBox="' + (-ext) + ' ' + (-ext) + ' ' + (ext * 2) + ' ' + (ext * 2) + '" width="' + size + '" height="' + size + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(read(t)) + '">';
+    let s = '<svg class="clock-svg' + (ring ? ' has-ring' : '') + (o.cls ? ' ' + o.cls : '') + '" viewBox="' + (-ext) + ' ' + (-ext) + ' ' + (ext * 2) + ' ' + (ext * 2) + '" width="' + px + '" height="' + px + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(read(t)) + '">';
     s += '<circle r="104" fill="#e9edf8"/><circle r="100" fill="#ffffff" stroke="#2b2d42" stroke-width="6"/>';
     for (let i = 0; i < 60; i++) {
       const a = i * 6 * Math.PI / 180, big = i % 5 === 0;
@@ -203,7 +207,7 @@
         let color = '#d84f1d';
         let anchor = 'middle', rad = 117, fs = 14;
         if (ring === 'kem') {
-          fs = 13;
+          fs = 18;                                     // đủ lớn để đọc được cả khi đồng hồ vẽ nhỏ trên điện thoại
           if (n >= 7 && n <= 11) { label = 'kém ' + (60 - n * 5); color = '#5a3f85'; anchor = 'end'; rad = 108; }
           else if (n >= 1 && n <= 5) { anchor = 'start'; rad = 108; }
           else { rad = 121; if (n === 12) label = '60'; }
@@ -334,7 +338,11 @@
     if (lv === 6 || lv === 8) { addP(t.h, t.m + 1); addP(t.h, t.m - 1); addP(t.h, t.m + 2); addP(t.h, t.m - 2); addP(t.h, t.m + 10); }
     addP(t.h + 2, t.m); addP(t.h - 2, t.m);
     addP(t.h + 6, t.m);
-    return shuffle(out);
+    // Đáp án chỉ chênh 1–2 phút gần như không phân biệt được trên mặt đồng hồ nhỏ:
+    // xếp xuống cuối để những đáp án "thô" (±5, ±15, lệch giờ) luôn được lấy trước.
+    const fine = out.filter((c) => c.h === t.h && Math.abs(c.m - t.m) <= 2);
+    if (!fine.length) return shuffle(out);
+    return shuffle(out.filter((c) => fine.indexOf(c) < 0)).concat(shuffle(fine));
   }
 
   /* ================= BÀI HỌC & CÂU HỎI ================= */
@@ -430,37 +438,37 @@
   const LESSONS = {
     1: {
       title: 'Kim ngắn, kim dài và giờ đúng',
-      html: '<p>Đồng hồ có hai kim: <b>kim ngắn</b> chỉ <b>giờ</b>, <b>kim dài</b> chỉ <b>phút</b>.</p>' +
-        '<p>Khi kim dài chỉ đúng <b>số 12</b>, ta có <b>giờ đúng</b>. Kim ngắn chỉ số mấy thì đọc là <b>mấy giờ</b>.</p>' +
-        '<p>Ví dụ: kim ngắn chỉ số 3, kim dài chỉ số 12 → <b>3 giờ</b>.</p>',
+      html: '<p>Đồng hồ có hai kim: <b class="kh">kim ngắn</b> chỉ <b>giờ</b>, <b class="km">kim dài</b> chỉ <b>phút</b>.</p>' +
+        '<p>Khi <b class="km">kim dài</b> chỉ đúng <b>số 12</b>, ta có <b>giờ đúng</b>. <b class="kh">Kim ngắn</b> chỉ số mấy thì đọc là <b>mấy giờ</b>.</p>' +
+        '<p>Ví dụ: <b class="kh">kim ngắn</b> chỉ số 3, <b class="km">kim dài</b> chỉ số 12 → <b>3 giờ</b>.</p>',
       speech: 'Đồng hồ có hai kim. Kim ngắn chỉ giờ, kim dài chỉ phút. Khi kim dài chỉ đúng số 12, ta có giờ đúng. Kim ngắn chỉ số mấy thì đọc là mấy giờ. Ví dụ: kim ngắn chỉ số 3, kim dài chỉ số 12, đồng hồ chỉ 3 giờ.',
       demo: [mk(3, 0), mk(7, 0), mk(11, 0)]
     },
     2: {
       title: 'Giờ rưỡi: kim dài chỉ số 6',
-      html: '<p>Kim dài chỉ <b>số 6</b> nghĩa là đã được <b>30 phút</b>, tức là <b>nửa giờ</b>.</p>' +
+      html: '<p><b class="km">Kim dài</b> chỉ <b>số 6</b> nghĩa là đã được <b>30 phút</b>, tức là <b>nửa giờ</b>.</p>' +
         '<p>Ta đọc <b>3 giờ 30 phút</b>, hay <b>3 giờ rưỡi</b>.</p>' +
-        '<p>Lúc này kim ngắn đã đi qua số 3 và nằm <b>giữa số 3 và số 4</b>. Kim ngắn chưa tới số 4 thì vẫn là <b>3 giờ</b>!</p>',
+        '<p>Lúc này <b class="kh">kim ngắn</b> đã đi qua số 3 và nằm <b>giữa số 3 và số 4</b>. <b class="kh">Kim ngắn</b> chưa tới số 4 thì vẫn là <b>3 giờ</b>!</p>',
       speech: 'Kim dài chỉ số 6 nghĩa là đã được 30 phút, tức là nửa giờ. Ta đọc 3 giờ 30 phút, hay 3 giờ rưỡi. Lúc này kim ngắn nằm giữa số 3 và số 4. Kim ngắn chưa tới số 4 thì vẫn là 3 giờ.',
       demo: [mk(3, 30, 'plain', null, 2), mk(8, 30, 'plain', null, 2), mk(12, 30, 'plain', null, 2)]
     },
     3: {
       title: 'Giờ 15 phút: kim dài chỉ số 3',
-      html: '<p>Từ số này sang số kế tiếp, kim dài đi mất <b>5 phút</b>: số 1 là 5 phút, số 2 là 10 phút, <b>số 3 là 15 phút</b>.</p>' +
-        '<p>Kim dài chỉ số 3, kim ngắn vừa qua số 9 → <b>9 giờ 15 phút</b>.</p>',
+      html: '<p>Từ số này sang số kế tiếp, <b class="km">kim dài</b> đi mất <b>5 phút</b>: số 1 là 5 phút, số 2 là 10 phút, <b>số 3 là 15 phút</b>.</p>' +
+        '<p><b class="km">Kim dài</b> chỉ số 3, <b class="kh">kim ngắn</b> vừa qua số 9 → <b>9 giờ 15 phút</b>.</p>',
       speech: 'Từ số này sang số kế tiếp, kim dài đi mất 5 phút. Số 1 là 5 phút, số 2 là 10 phút, số 3 là 15 phút. Kim dài chỉ số 3, kim ngắn vừa qua số 9, đồng hồ chỉ 9 giờ 15 phút.',
       demo: [mk(9, 15, 'plain', null, 3), mk(2, 15, 'plain', null, 3), mk(6, 15, 'plain', null, 3)], ring: 'min'
     },
     4: {
       title: 'Đếm 5 phút một',
-      html: '<p>Kim dài chỉ số mấy, ta lấy số đó <b>nhân 5</b> để biết số phút: số 4 → 20 phút, số 8 → 40 phút, số 11 → 55 phút.</p>' +
-        '<p>Kim ngắn đã qua số 6, kim dài chỉ số 8 → <b>6 giờ 40 phút</b>.</p>',
+      html: '<p><b class="km">Kim dài</b> chỉ số mấy, ta lấy số đó <b>nhân 5</b> để biết số phút: số 4 → 20 phút, số 8 → 40 phút, số 11 → 55 phút.</p>' +
+        '<p><b class="kh">Kim ngắn</b> đã qua số 6, <b class="km">kim dài</b> chỉ số 8 → <b>6 giờ 40 phút</b>.</p>',
       speech: 'Kim dài chỉ số mấy, ta lấy số đó nhân 5 để biết số phút. Số 4 là 20 phút, số 8 là 40 phút, số 11 là 55 phút. Kim ngắn đã qua số 6, kim dài chỉ số 8, đồng hồ chỉ 6 giờ 40 phút.',
       demo: [mk(6, 40, 'plain', null, 4), mk(10, 20, 'plain', null, 4), mk(1, 55, 'plain', null, 4)], ring: 'min'
     },
     5: {
       title: 'Giờ kém',
-      html: '<p>Khi kim dài đã <b>qua số 6</b> (từ 35 phút trở đi), ta có thể đọc theo cách <b>giờ kém</b>.</p>' +
+      html: '<p>Khi <b class="km">kim dài</b> đã <b>qua số 6</b> (từ 35 phút trở đi), ta có thể đọc theo cách <b>giờ kém</b>.</p>' +
         '<p><b>7 giờ 45 phút</b> nghĩa là còn <b>15 phút</b> nữa mới đến 8 giờ, nên đọc là <b>8 giờ kém 15 phút</b>.</p>' +
         '<p>Đếm ngược từ số 12: số 11 → kém 5, số 10 → kém 10, số 9 → kém 15, số 8 → kém 20, số 7 → kém 25.</p>',
       speech: 'Khi kim dài đã qua số 6, từ 35 phút trở đi, ta có thể đọc theo cách giờ kém. 7 giờ 45 phút nghĩa là còn 15 phút nữa mới đến 8 giờ, nên đọc là 8 giờ kém 15 phút. Đếm ngược từ số 12: số 11 là kém 5, số 10 là kém 10, số 9 là kém 15, số 8 là kém 20, số 7 là kém 25.',
@@ -469,13 +477,13 @@
     6: {
       title: 'Xem giờ từng phút',
       html: '<p>Giữa hai số liền nhau có <b>4 vạch nhỏ</b>. Mỗi vạch nhỏ là <b>1 phút</b>.</p>' +
-        '<p>Kim dài qua số 4 (20 phút) thêm <b>3 vạch</b> → <b>23 phút</b>. Kim ngắn đã qua số 6 → <b>6 giờ 23 phút</b>.</p>',
+        '<p><b class="km">Kim dài</b> qua số 4 (20 phút) thêm <b>3 vạch</b> → <b>23 phút</b>. <b class="kh">Kim ngắn</b> đã qua số 6 → <b>6 giờ 23 phút</b>.</p>',
       speech: 'Giữa hai số liền nhau có 4 vạch nhỏ. Mỗi vạch nhỏ là 1 phút. Kim dài qua số 4 là 20 phút, thêm 3 vạch là 23 phút. Kim ngắn đã qua số 6, đồng hồ chỉ 6 giờ 23 phút.',
       demo: [mk(6, 23, 'plain', null, 6), mk(2, 7, 'plain', null, 6), mk(10, 52, 'plain', null, 6)], ring: 'min'
     },
     7: {
       title: 'Một ngày có 24 giờ',
-      html: '<p>Một ngày có <b>24 giờ</b>, bắt đầu từ 12 giờ đêm. Kim ngắn quay <b>2 vòng</b> mỗi ngày.</p>' +
+      html: '<p>Một ngày có <b>24 giờ</b>, bắt đầu từ 12 giờ đêm. <b class="kh">Kim ngắn</b> quay <b>2 vòng</b> mỗi ngày.</p>' +
         '<p>Buổi <b>chiều</b>, <b>tối</b>, ta <b>cộng thêm 12</b>: 1 giờ chiều = <b>13 giờ</b>, 3 giờ chiều = <b>15 giờ</b>, 8 giờ tối = <b>20 giờ</b>.</p>' +
         '<p>Buổi <b>đêm</b> cũng cộng 12: 10 giờ đêm = <b>22 giờ</b>. 12 giờ trưa vẫn là <b>12 giờ</b>. Trong trò chơi, cột ghi giờ theo cách 24 giờ.</p>' +
         '<p>Đồng hồ điện tử ghi <b>15:00</b> nghĩa là 3 giờ chiều. Nhìn biểu tượng buổi (🌅 sáng, ☀️ trưa, 🌤️ chiều, 🌙 tối, 🌃 đêm) trên đồng hồ nhé!</p>',
@@ -485,7 +493,7 @@
     8: {
       title: 'Siêu Tháp Đồng Hồ',
       html: '<p>Ôn lại tất cả: giờ đúng, giờ rưỡi, 15 phút, đếm 5 phút, giờ kém, từng phút và 24 giờ.</p>' +
-        '<p>Đồng hồ rơi <b>nhanh hơn</b>. Hãy nhìn kỹ kim ngắn, kim dài và biểu tượng buổi trước khi thả nhé!</p>',
+        '<p>Đồng hồ rơi <b>nhanh hơn</b>. Hãy nhìn kỹ <b class="kh">kim ngắn</b>, <b class="km">kim dài</b> và biểu tượng buổi trước khi thả nhé!</p>',
       speech: 'Ôn lại tất cả những gì đã học. Đồng hồ rơi nhanh hơn. Hãy nhìn kỹ kim ngắn, kim dài và biểu tượng buổi trước khi thả nhé!',
       demo: [mk(3, 0), mk(3, 30, 'plain', null, 2), mk(7, 45, 'kem', null, 5), mk24(15, 0, 7), mk(6, 23, 'plain', null, 6)]
     }
@@ -508,19 +516,24 @@
     l.keyMode = l.style === '24' ? '24' : 'x';
   });
 
+  /** Các màn được lấy câu kiến thức cho bài tổng kết (Siêu Tháp): phần khó, đúng chương trình lớp 3. */
+  const CAPSTONE = [4, 5, 6, 7];
+
   /**
    * Bộ câu hỏi sau màn n: 1 câu đọc đồng hồ (ưu tiên từ lỗi của bé) + 2 câu kiến thức.
-   * Màn 8 lấy câu kiến thức từ tất cả các màn và 2 câu đọc đồng hồ.
+   * Màn 8 lấy 2 câu đọc đồng hồ + 1 câu kiến thức của phần KHÓ (màn 4–7),
+   * hoặc của màn bé còn yếu nhất khi được truyền vào `weakest` (1..7).
    */
-  function quizFor(n, mistakes) {
+  function quizFor(n, mistakes, weakest) {
     const out = [];
     const miss = (mistakes || []).slice();
     shuffle(miss);
     if (n === 8) {
       out.push(clockQuestion(8, miss[0] || null));
       out.push(clockQuestion(8, miss[1] || null));
+      const pool = CONCEPT[weakest] ? [weakest] : CAPSTONE;
       let all = [];
-      for (const k in CONCEPT) all = all.concat(CONCEPT[k]);
+      pool.forEach(function (k) { all = all.concat(CONCEPT[k]); });
       shuffle(all);
       out.push(all[0]());
       return out;
@@ -539,7 +552,7 @@
     mk, mk24, same, key, lines, read, readPlain, speech, digital, explain, explainShort, speakable, minuteNumber,
     svg, setSvgTime,
     genFor, minutesFor, near,
-    LEVELS, LESSONS, CONCEPT, clockQuestion, quizFor,
+    LEVELS, LESSONS, CONCEPT, CAPSTONE, clockQuestion, quizFor,
     levelById(id) { return LEVELS.find((l) => l.id === id) || null; },
     levelByN(n) { return LEVELS[n - 1] || null; }
   };

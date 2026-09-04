@@ -850,3 +850,19 @@ html, body {
 @media (max-height: 360px) {
   .tap-tip { display: none; }   /* thật sự không còn chỗ */
 }
+
+/* Bảng "Cách chơi" dài hơn màn hình (iPad ngang, điện thoại): luôn nhìn thấy nút "Đã hiểu!",
+   vì trên máy bảng không có phím Escape và chạm ra ngoài bảng không đóng. */
+@media (min-width: 900px) {
+  #howto .panel { max-width: 940px; width: min(100%, 940px); }
+  #howto .howto-list { grid-template-columns: 1fr 1fr; gap: 8px; }
+}
+@media (max-height: 900px) {
+  #howto .howto-item { padding: 8px 12px; }
+  #howto .tip { font-size: 14px; padding: 8px 12px; }
+}
+#howto .btn-row {
+  position: sticky; bottom: 0; z-index: 1;
+  margin-top: 8px; padding: 10px 0 2px;
+  background: linear-gradient(transparent, var(--paper) 45%);
+}

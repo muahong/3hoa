@@ -85,3 +85,53 @@ test('hub: CSP, no inline handlers, profile.js + hub.js loaded', () => {
   assert.match(html, /js\/hub\.js/);
   assert.ok(fs.existsSync(path.join(ROOT, 'js/hub.js')));
 });
+
+/* ============================================================
+   Tính nhất quán theo scratchpad/CANON.md: cùng một cách nói, cùng một quy tắc ở cả sáu game
+   ============================================================ */
+
+for (const g of GAMES) {
+  test(g + ' [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome', () => {
+    const js = read(g + '/js/game.js');
+    const html = read(g + '/index.html');
+
+    // 1. Ô thống kê: phút luyện tập (không phải giây), sao dạng n/max, nhãn đúng
+    assert.match(js, /phút luyện tập/, 'thiếu ô "phút luyện tập"');
+    assert.doesNotMatch(js, /giây luyện tập/, 'còn hiển thị "giây luyện tập"');
+    assert.match(js, /ván đã chơi/, 'thiếu ô "ván đã chơi"');
+    assert.match(js, /trả lời đúng/, 'thiếu ô "trả lời đúng"');
+
+    // 1b. Dòng "Cần luyện thêm" và mục "Cần ôn lại"
+    assert.match(html, /id="report-weak"/, 'thiếu #report-weak trong index.html');
+    assert.match(js, /Cần luyện thêm/, 'thiếu chữ "Cần luyện thêm"');
+    assert.match(js, /📝 Cần ôn lại/, 'tiêu đề mục ôn lại phải là "📝 Cần ôn lại"');
+
+    // 2. Huy hiệu thuộc bài: chỉ dùng ✅, không dùng 🏅 hay 🎓
+    assert.match(js, /✅ Đã thuộc/, 'thiếu huy hiệu "✅ Đã thuộc"');
+    assert.doesNotMatch(js, /🏅 Đã thuộc|🎓 Đã thuộc/, 'huy hiệu "Đã thuộc" dùng biểu tượng khác ✅');
+
+    // 3. Hàng nút bật/tắt
+    assert.match(js, /🔊 Âm thanh: Bật/, 'nút đầu tiên phải là "🔊 Âm thanh"');
+    assert.doesNotMatch(js, /🔊 Hiệu ứng/, '"Hiệu ứng" chỉ dành cho nút ✨');
+    assert.match(js, /🎵 Nhạc nền: Bật/, 'thiếu nút "🎵 Nhạc nền"');
+    assert.match(js, /✨ Hiệu ứng: Nhiều/, 'thiếu nút "✨ Hiệu ứng"');
+    assert.match(js, /chưa có giọng Việt/, 'nút giọng đọc thiếu trạng thái "chưa có giọng Việt"');
+    assert.match(js, /theo cài đặt máy/, 'nút hiệu ứng thiếu trạng thái "Ít (theo cài đặt máy)"');
+
+    // 4. Cổng phụ huynh
+    assert.match(js, /Dành cho phụ huynh, thầy cô\./, 'câu hỏi cổng phụ huynh thiếu phần mở đầu');
+
+    // 5. Lối vào màn kết quả
+    assert.match(html, /id="btn-report-levels"/, 'thiếu nút 📊 Kết quả ở màn chọn màn');
+    assert.match(html, /id="btn-report"/, 'thiếu nút 📊 ở màn người chơi');
+    assert.match(html, /📊 Kết quả/, 'nút ở màn chọn màn phải có chữ "📊 Kết quả"');
+
+    // 6. Lời chào hiện bằng chữ (không chỉ giọng đọc)
+    assert.match(js, /toast\('Chào ' \+|toast\("Chào " \+/, 'lời chào phải hiện bằng toast, không chỉ Voice.say');
+
+    // 8. README nêu cách chạy kiểm thử
+    const rm = read(g + '/README.md');
+    assert.match(rm, new RegExp('tests/' + g + '\\.test\\.js'), 'README thiếu lệnh chạy kiểm thử đơn vị');
+    assert.match(rm, new RegExp('tests/e2e/' + g + '\\.e2e\\.js'), 'README thiếu lệnh chạy kiểm thử đầu-cuối');
+  });
+}

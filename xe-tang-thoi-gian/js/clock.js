@@ -80,64 +80,70 @@
   /* ================= VẼ ĐỒNG HỒ ================= */
   /**
    * Vẽ đồng hồ kim tại (x, y), bán kính r.
-   * opts: { minuteTicks, numbers: 'all' | 'quarter' | 'auto', face, border, hourColor, minuteColor, alpha }
+   * opts: { minuteTicks, emphasizeMinutes, numbers: 'all' | 'quarter' | 'auto', face, border, hourColor, minuteColor, alpha, noFace, noHands }
+   * emphasizeMinutes: vạch phút đậm hơn (bài "chính xác đến từng phút", "kim dài chỉ số n")
    */
   function drawClock(c, x, y, r, h, m, opts) {
     const o = Object.assign({ minuteTicks: r >= 30, numbers: 'auto', face: '#ffffff', border: '#2b2d42', hourColor: '#2b2d42', minuteColor: '#ef476f', alpha: 1, shadow: true }, opts || {});
     c.save();
     c.globalAlpha = o.alpha;
     c.translate(x, y);
-    // Mặt đồng hồ
-    if (o.shadow) { c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = r * 0.25; c.shadowOffsetY = r * 0.08; }
-    c.fillStyle = o.face;
-    c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
-    c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
-    c.lineWidth = Math.max(2, r * 0.09);
-    c.strokeStyle = o.border;
-    c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke();
-    // Vạch chia
-    for (let i = 0; i < 60; i++) {
-      const big = i % 5 === 0;
-      if (!big && !o.minuteTicks) continue;
-      const a = i / 60 * TAU - Math.PI / 2;
-      const r0 = r * (big ? 0.84 : 0.9), r1 = r * 0.95;
-      c.strokeStyle = big ? o.border : 'rgba(43,45,66,0.55)';
-      c.lineWidth = big ? Math.max(1.5, r * 0.05) : Math.max(1, r * 0.02);
-      c.lineCap = 'round';
-      c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke();
-    }
-    // Số
-    const numbers = o.numbers === 'auto' ? (r >= 34 ? 'all' : 'quarter') : o.numbers;
-    if (numbers !== 'none') {
-      const size = numbers === 'all' ? r * 0.26 : r * 0.34;
-      c.font = '800 ' + Math.round(size) + 'px ' + FONT;
-      c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillStyle = o.border;
-      for (let n = 1; n <= 12; n++) {
-        if (numbers === 'quarter' && n % 3 !== 0) continue;
-        const a = n / 12 * TAU - Math.PI / 2;
-        const rr = r * 0.68;
-        c.fillText(String(n), Math.cos(a) * rr, Math.sin(a) * rr + size * 0.06);
+    if (!o.noFace) {
+      // Mặt đồng hồ
+      if (o.shadow) { c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = r * 0.25; c.shadowOffsetY = r * 0.08; }
+      c.fillStyle = o.face;
+      c.beginPath(); c.arc(0, 0, r, 0, TAU); c.fill();
+      c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+      c.lineWidth = Math.max(2, r * 0.09);
+      c.strokeStyle = o.border;
+      c.beginPath(); c.arc(0, 0, r, 0, TAU); c.stroke();
+      // Vạch chia
+      for (let i = 0; i < 60; i++) {
+        const big = i % 5 === 0;
+        if (!big && !o.minuteTicks) continue;
+        const a = i / 60 * TAU - Math.PI / 2;
+        const r0 = r * (big ? 0.84 : 0.88), r1 = r * 0.95;
+        c.strokeStyle = big ? o.border : 'rgba(43,45,66,0.8)';
+        c.lineWidth = big ? Math.max(1.5, r * 0.05)
+          : (o.emphasizeMinutes ? Math.max(2, r * 0.035) : Math.max(1.5, r * 0.03));
+        c.lineCap = 'round';
+        c.beginPath(); c.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); c.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); c.stroke();
+      }
+      // Số
+      const numbers = o.numbers === 'auto' ? (r >= 30 ? 'all' : 'quarter') : o.numbers;
+      if (numbers !== 'none') {
+        const size = numbers === 'all' ? r * 0.28 : r * 0.34;
+        c.font = '800 ' + Math.round(size) + 'px ' + FONT;
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillStyle = o.border;
+        for (let n = 1; n <= 12; n++) {
+          if (numbers === 'quarter' && n % 3 !== 0) continue;
+          const a = n / 12 * TAU - Math.PI / 2;
+          const rr = r * 0.68;
+          c.fillText(String(n), Math.cos(a) * rr, Math.sin(a) * rr + size * 0.06);
+        }
       }
     }
-    // Kim giờ (ngắn, đậm)
-    const ha = ((h % 12) + m / 60) / 12 * TAU - Math.PI / 2;
-    const ma = m / 60 * TAU - Math.PI / 2;
-    c.lineCap = 'round';
-    if (!o.hideHour) {
-      c.strokeStyle = o.hourColor;
-      c.lineWidth = Math.max(3, r * 0.11);
-      c.beginPath(); c.moveTo(Math.cos(ha) * -r * 0.1, Math.sin(ha) * -r * 0.1); c.lineTo(Math.cos(ha) * r * 0.5, Math.sin(ha) * r * 0.5); c.stroke();
+    if (!o.noHands) {
+      // Kim giờ (ngắn, đậm)
+      const ha = ((h % 12) + m / 60) / 12 * TAU - Math.PI / 2;
+      const ma = m / 60 * TAU - Math.PI / 2;
+      c.lineCap = 'round';
+      if (!o.hideHour) {
+        c.strokeStyle = o.hourColor;
+        c.lineWidth = Math.max(3, r * 0.11);
+        c.beginPath(); c.moveTo(Math.cos(ha) * -r * 0.1, Math.sin(ha) * -r * 0.1); c.lineTo(Math.cos(ha) * r * 0.5, Math.sin(ha) * r * 0.5); c.stroke();
+      }
+      // Kim phút (dài, mảnh)
+      c.strokeStyle = o.minuteColor;
+      c.lineWidth = Math.max(2.5, r * 0.075);
+      c.beginPath(); c.moveTo(Math.cos(ma) * -r * 0.12, Math.sin(ma) * -r * 0.12); c.lineTo(Math.cos(ma) * r * 0.8, Math.sin(ma) * r * 0.8); c.stroke();
+      // Trục
+      c.fillStyle = o.border;
+      c.beginPath(); c.arc(0, 0, Math.max(2.5, r * 0.07), 0, TAU); c.fill();
+      c.fillStyle = o.minuteColor;
+      c.beginPath(); c.arc(0, 0, Math.max(1.2, r * 0.035), 0, TAU); c.fill();
     }
-    // Kim phút (dài, mảnh)
-    c.strokeStyle = o.minuteColor;
-    c.lineWidth = Math.max(2.5, r * 0.075);
-    c.beginPath(); c.moveTo(Math.cos(ma) * -r * 0.12, Math.sin(ma) * -r * 0.12); c.lineTo(Math.cos(ma) * r * 0.8, Math.sin(ma) * r * 0.8); c.stroke();
-    // Trục
-    c.fillStyle = o.border;
-    c.beginPath(); c.arc(0, 0, Math.max(2.5, r * 0.07), 0, TAU); c.fill();
-    c.fillStyle = o.minuteColor;
-    c.beginPath(); c.arc(0, 0, Math.max(1.2, r * 0.035), 0, TAU); c.fill();
     c.restore();
   }
 
@@ -180,10 +186,12 @@
    *  options : [{ label, clock: {h,m}|null, digital: 'hh:mm'|null, ok, speech }]
    *  answer  : { label, speech }   – câu trả lời đúng (để đọc, hiện gợi ý, ôn lại)
    *  explain : lời giải thích ngắn
+   *  info    : dữ liệu tối thiểu để tạo lại đúng câu này (ôn lại thông minh) – xem fromInfo()
+   *  Mỗi bộ sinh nhận thêm cfg ghi đè phần ngẫu nhiên (t, style, n5, variant, h24, h, m, start, dur, act) khi ôn lại.
    */
   function textOpt(label, ok, speech) { return { label: label, clock: null, digital: null, ok: !!ok, speech: speech || label }; }
   function clockOpt(t, ok, style) { return { label: readTime(t.h, t.m, style || 'plain'), clock: { h: h12(t.h), m: t.m }, digital: null, ok: !!ok, speech: 'Đồng hồ này chỉ ' + readTime(t.h, t.m, style || 'plain') }; }
-  function digitalOpt(h, m, ok) { const d = digital(h, m); return { label: d, clock: null, digital: d, ok: !!ok, speech: d.replace(':', ' giờ ') + ' phút' }; }
+  function digitalOpt(h, m, ok) { const d = digital(h, m); return { label: d, clock: null, digital: d, ok: !!ok, speech: h + ' giờ ' + m + ' phút' }; }
 
   /** Trộn 1 đáp án đúng với các đáp án sai (đã lọc trùng), lấy tối đa n phương án. */
   function buildOptions(correct, wrongs, n) {
@@ -227,13 +235,30 @@
 
   function wrap(o) {
     o.key = o.kind + '|' + (o.prompt.text || '') + '|' + o.answer.label;
+    o.review = false;
     return o;
   }
 
+  /** Chọn biến thể câu hỏi: cfg.variant (khi ôn lại) hoặc ngẫu nhiên theo các ngưỡng tích lũy. */
+  function pickVariant(cfg, cuts) {
+    if (cfg && Number.isInteger(cfg.variant) && cfg.variant >= 0 && cfg.variant <= cuts.length) return cfg.variant;
+    const t = Math.random();
+    for (let i = 0; i < cuts.length; i++) if (t < cuts[i]) return i;
+    return cuts.length;
+  }
+  /** Tập số phút (không trùng, đã sắp xếp) để lưu vào info. */
+  function uniqMinutes(arr) {
+    const out = [];
+    (arr || []).forEach((m) => { if (Number.isInteger(m) && m >= 0 && m <= 59 && out.indexOf(m) < 0) out.push(m); });
+    return out.sort((a, b) => a - b);
+  }
+  const okH = (h) => Number.isInteger(h) && h >= 1 && h <= 12;
+  const okM = (m) => Number.isInteger(m) && m >= 0 && m <= 59;
+
   /* ---------- Dạng 1: Nhìn đồng hồ kim → chọn cách đọc ---------- */
   function readQ(cfg) {
-    const t = mkTime(HOURS, cfg.minutes);
-    const style = pick(cfg.styles || ['plain']);
+    const t = cfg.t && okH(cfg.t.h) && okM(cfg.t.m) ? { h: cfg.t.h, m: cfg.t.m } : mkTime(HOURS, cfg.minutes);
+    const style = cfg.style || pick(cfg.styles || ['plain']);
     const correct = textOpt(readTime(t.h, t.m, style), true);
     const near = nearbyTimes(t.h, t.m, cfg.minutes);
     const wrongs = near.map((w) => textOpt(readTime(w.h, w.m, style)));
@@ -246,6 +271,7 @@
     }
     return wrap({
       kind: 'read',
+      info: { kind: 'read', h: t.h, m: t.m, style: style, ms: uniqMinutes(cfg.minutes) },
       prompt: { text: 'Đồng hồ chỉ mấy giờ?', speech: 'Đồng hồ chỉ mấy giờ?', clocks: [t] },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
       answer: { label: correct.label, speech: 'Đồng hồ chỉ ' + correct.label },
@@ -264,21 +290,22 @@
       return base;
     }
     const big = Math.floor(m / 5), small = m % 5;
-    return 'Kim dài qua số ' + big + ' (' + big * 5 + ' phút) thêm ' + small + ' vạch nhỏ là ' + m + ' phút. Kim ngắn đã qua số ' + h + ' nên là ' + h + ' giờ ' + m + ' phút.';
+    return 'Kim dài vừa qua số ' + (big || 12) + ' (' + big * 5 + ' phút) thêm ' + small + ' vạch nhỏ là ' + m + ' phút. Kim ngắn đã qua số ' + h + ' nên là ' + h + ' giờ ' + m + ' phút.';
   }
 
   /* ---------- Dạng 2: Nghe/đọc giờ → bắn đồng hồ kim đúng ---------- */
   function matchQ(cfg) {
-    const t = mkTime(HOURS, cfg.minutes);
-    const style = pick(cfg.styles || ['plain']);
+    const t = cfg.t && okH(cfg.t.h) && okM(cfg.t.m) ? { h: cfg.t.h, m: cfg.t.m } : mkTime(HOURS, cfg.minutes);
+    const style = cfg.style || pick(cfg.styles || ['plain']);
     const label = readTime(t.h, t.m, style);
     const correct = clockOpt(t, true, style);
     const wrongs = nearbyTimes(t.h, t.m, cfg.minutes).filter((w) => cfg.minutes.indexOf(w.m) >= 0).map((w) => clockOpt(w, false, style));
     return wrap({
       kind: 'match',
+      info: { kind: 'match', h: t.h, m: t.m, style: style, ms: uniqMinutes(cfg.minutes) },
       prompt: { text: 'Bắn đồng hồ chỉ ' + label + '!', speech: 'Bắn đồng hồ chỉ ' + label, clocks: [] },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 3),
-      answer: { label: label, speech: label + ': kim ngắn chỉ ' + hourHandText(t) + ', kim dài chỉ số ' + minuteHandText(t.m) },
+      answer: { label: label, speech: label + ': kim ngắn ' + hourHandText(t) + ', kim dài chỉ ' + minuteHandText(t.m) },
       explain: label + ': kim ngắn ' + hourHandText(t) + ', kim dài chỉ ' + minuteHandText(t.m) + '.'
     });
   }
@@ -292,18 +319,19 @@
   function minuteHandText(m) {
     if (m === 0) return 'số 12';
     if (m % 5 === 0) return 'số ' + (m / 5);
-    return 'qua số ' + Math.floor(m / 5) + ' thêm ' + (m % 5) + ' vạch';
+    return 'qua số ' + (Math.floor(m / 5) || 12) + ' thêm ' + (m % 5) + ' vạch';
   }
 
   /* ---------- Dạng 3: Kim dài chỉ số n → bao nhiêu phút (lớp 3, 5 phút) ---------- */
   function fiveQ(cfg) {
-    const n = rnd(1, 11);
+    const n = Number.isInteger(cfg.n5) && cfg.n5 >= 1 && cfg.n5 <= 11 ? cfg.n5 : rnd(1, 11);
     const m = n * 5;
     const correct = textOpt(m + ' phút', true);
     const wrongs = [textOpt(n + ' phút'), textOpt((m + 5) + ' phút'), textOpt((m - 5 > 0 ? m - 5 : 55) + ' phút'), textOpt((n * 10 < 60 ? n * 10 : 30) + ' phút'), textOpt((60 - m) + ' phút')];
     return wrap({
       kind: 'five',
-      prompt: { text: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', speech: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', clocks: [{ h: 12, m: m }], hideHour: true },
+      info: { kind: 'five', n5: n },
+      prompt: { text: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', speech: 'Kim dài chỉ số ' + n + ' là bao nhiêu phút?', clocks: [{ h: 12, m: m }], hideHour: true, emphasizeMinutes: true },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
       answer: { label: m + ' phút', speech: 'Kim dài chỉ số ' + n + ' là ' + m + ' phút' },
       explain: 'Mỗi số cách nhau 5 phút. Đếm 5, 10, 15… đến số ' + n + ' được ' + m + ' phút.'
@@ -312,44 +340,49 @@
 
   /* ---------- Dạng 4: 24 giờ và các buổi (lớp 2) ---------- */
   function h24Q(cfg) {
-    const t = Math.random();
-    if (t < 0.3) {
+    const variant = pickVariant(cfg, [0.3, 0.55, 0.8]);
+    const pm = Number.isInteger(cfg.h24) && cfg.h24 >= 13 && cfg.h24 <= 23 ? cfg.h24 : rnd(13, 23);   // giờ buổi chiều/tối/đêm
+    if (variant === 0) {
       // "3 giờ chiều còn gọi là mấy giờ?" → 15 giờ
-      const h24 = rnd(13, 23);
+      const h24 = pm;
       const hh = h12(h24), s = session(h24);
       const correct = textOpt(h24 + ' giờ', true);
       const wrongs = [textOpt(hh + ' giờ'), textOpt((hh + 10) + ' giờ'), textOpt((h24 + 2 > 24 ? h24 - 2 : h24 + 2) + ' giờ'), textOpt((h24 - 1) + ' giờ'), textOpt((h24 + 1 > 24 ? 13 : h24 + 1) + ' giờ')];
       return wrap({
         kind: 'h24',
+        info: { kind: 'h24', variant: 0, h24: h24 },
         prompt: { text: hh + ' giờ ' + s + ' còn gọi là mấy giờ?', speech: hh + ' giờ ' + s + ' còn gọi là mấy giờ?', clocks: [], session: s },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: h24 + ' giờ', speech: hh + ' giờ ' + s + ' còn gọi là ' + h24 + ' giờ' },
         explain: 'Buổi ' + s + ' ta lấy ' + hh + ' + 12 = ' + h24 + '. Vậy ' + hh + ' giờ ' + s + ' là ' + h24 + ' giờ.'
       });
     }
-    if (t < 0.55) {
+    if (variant === 1) {
       // "20 giờ còn gọi là mấy giờ?" → 8 giờ tối
-      const h24 = rnd(13, 23);
+      const h24 = pm;
       const hh = h12(h24), s = session(h24);
       const correct = textOpt(hh + ' giờ ' + s, true);
       const alt = s === 'chiều' ? 'tối' : 'chiều';
-      const wrongs = [textOpt(hh + ' giờ sáng'), textOpt(h12(hh + 1) + ' giờ ' + s), textOpt(h12(hh - 1) + ' giờ ' + s), textOpt(h12(h24 - 10) + ' giờ ' + (h24 - 10 >= 7 && h24 - 10 <= 9 ? 'tối' : h24 - 10 <= 6 ? 'chiều' : 'sáng')), textOpt(hh + ' giờ ' + alt)];
+      // Đáp án nhiễu luôn là cách gọi hợp lệ (readSession) – không tạo "12 giờ sáng/chiều"
+      const wrongs = [textOpt(hh + ' giờ sáng'), textOpt(readSession(h24 + 1 > 23 ? 13 : h24 + 1, 0)), textOpt(readSession(h24 - 1, 0)), textOpt(readSession(h24 - 10, 0)), textOpt(readSession(h24 - 12, 0)), textOpt(hh + ' giờ ' + alt)];
       return wrap({
         kind: 'h24',
+        info: { kind: 'h24', variant: 1, h24: h24 },
         prompt: { text: h24 + ' giờ còn gọi là mấy giờ?', speech: h24 + ' giờ còn gọi là mấy giờ?', clocks: [] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: hh + ' giờ ' + s, speech: h24 + ' giờ còn gọi là ' + hh + ' giờ ' + s },
         explain: h24 + ' − 12 = ' + hh + '. Từ 13 đến 18 giờ là buổi chiều, 19 đến 21 giờ là buổi tối, 22 đến 24 giờ là buổi đêm. Vậy ' + h24 + ' giờ là ' + hh + ' giờ ' + s + '.'
       });
     }
-    if (t < 0.8) {
+    if (variant === 2) {
       // Đồng hồ kim + buổi → giờ 24
-      const h24 = rnd(13, 23);
+      const h24 = pm;
       const hh = h12(h24), s = session(h24);
       const correct = textOpt(h24 + ' giờ', true);
       const wrongs = [textOpt(hh + ' giờ'), textOpt((h24 + 2 > 24 ? h24 - 2 : h24 + 2) + ' giờ'), textOpt((hh + 10) + ' giờ'), textOpt((h24 - 1) + ' giờ')];
       return wrap({
         kind: 'h24',
+        info: { kind: 'h24', variant: 2, h24: h24 },
         prompt: { text: 'Buổi ' + s + ', đồng hồ chỉ như hình. Theo cách gọi 24 giờ, bây giờ là mấy giờ?', speech: 'Buổi ' + s + ', đồng hồ chỉ như hình. Theo cách gọi 24 giờ, bây giờ là mấy giờ?', clocks: [{ h: hh, m: 0 }], session: s },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: h24 + ' giờ', speech: 'Buổi ' + s + ', đồng hồ chỉ ' + hh + ' giờ, tức là ' + h24 + ' giờ' },
@@ -357,12 +390,13 @@
       });
     }
     // "17 giờ là buổi nào?"
-    const h24 = pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]);
+    const h24 = Number.isInteger(cfg.h24) && cfg.h24 >= 6 && cfg.h24 <= 23 ? cfg.h24 : pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]);
     const s = session(h24);
     const correct = textOpt('Buổi ' + s, true);
     const wrongs = SESSIONS.filter((x) => x !== s).map((x) => textOpt('Buổi ' + x));
     return wrap({
       kind: 'h24',
+      info: { kind: 'h24', variant: 3, h24: h24 },
       prompt: { text: h24 + ' giờ là buổi nào trong ngày?', speech: h24 + ' giờ là buổi nào trong ngày?', clocks: [] },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
       answer: { label: 'Buổi ' + s, speech: h24 + ' giờ là buổi ' + s },
@@ -371,42 +405,47 @@
   }
 
   /* ---------- Dạng 5: Giờ kém (lớp 3) ---------- */
+  const KEM_MINUTES = [40, 45, 50, 55];
   function kemQ(cfg) {
-    const t = Math.random();
-    const h = pick(HOURS), m = pick([40, 45, 50, 55]);
+    const variant = pickVariant(cfg, [0.35, 0.6, 0.8]);
+    const h = okH(cfg.h) ? cfg.h : pick(HOURS), m = KEM_MINUTES.indexOf(cfg.m) >= 0 ? cfg.m : pick(KEM_MINUTES);
     const hn = h12(h + 1), left = 60 - m;
     const kem = hn + ' giờ kém ' + left + ' phút';
     const plain = h + ' giờ ' + m + ' phút';
-    if (t < 0.35) {
+    const info = { kind: 'kem', variant: variant, h: h, m: m };
+    if (variant === 0) {
       // "7 giờ 50 phút còn gọi là?" → 8 giờ kém 10 phút
       const correct = textOpt(kem, true);
       const wrongs = [textOpt(h + ' giờ kém ' + left + ' phút'), textOpt(hn + ' giờ kém ' + m + ' phút'), textOpt(h12(h + 2) + ' giờ kém ' + left + ' phút'), textOpt(hn + ' giờ kém ' + (left + 5) + ' phút'), textOpt(h + ' giờ kém ' + m + ' phút')];
       return wrap({
         kind: 'kem',
+        info: info,
         prompt: { text: plain + ' còn gọi là?', speech: plain + ' còn gọi là?', clocks: [] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: kem, speech: plain + ' còn gọi là ' + kem },
         explain: 'Còn ' + left + ' phút nữa là ' + hn + ' giờ (60 − ' + m + ' = ' + left + '), nên ' + plain + ' còn gọi là ' + kem + '.'
       });
     }
-    if (t < 0.6) {
+    if (variant === 1) {
       // "8 giờ kém 10 phút là mấy giờ mấy phút?" → 7 giờ 50 phút
       const correct = textOpt(plain, true);
       const wrongs = [textOpt(hn + ' giờ ' + left + ' phút'), textOpt(hn + ' giờ ' + m + ' phút'), textOpt(h + ' giờ ' + left + ' phút'), textOpt(h12(h - 1) + ' giờ ' + m + ' phút')];
       return wrap({
         kind: 'kem',
+        info: info,
         prompt: { text: kem + ' là mấy giờ mấy phút?', speech: kem + ' là mấy giờ mấy phút?', clocks: [] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: plain, speech: kem + ' là ' + plain },
         explain: kem + ' nghĩa là chưa tới ' + hn + ' giờ, còn thiếu ' + left + ' phút. 60 − ' + left + ' = ' + m + ', vậy là ' + plain + '.'
       });
     }
-    if (t < 0.8) {
+    if (variant === 2) {
       // Đồng hồ kim → đọc theo cách "giờ kém"
       const correct = textOpt(kem, true);
       const wrongs = [textOpt(h + ' giờ kém ' + left + ' phút'), textOpt(hn + ' giờ kém ' + m + ' phút'), textOpt(h12(h + 2) + ' giờ kém ' + left + ' phút'), textOpt(hn + ' giờ kém ' + (left === 5 ? 10 : left - 5) + ' phút')];
       return wrap({
         kind: 'kem',
+        info: info,
         prompt: { text: 'Đọc đồng hồ theo cách "giờ kém":', speech: 'Đọc đồng hồ theo cách giờ kém', clocks: [{ h: h, m: m }] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: kem, speech: 'Đồng hồ chỉ ' + plain + ', tức là ' + kem },
@@ -418,6 +457,7 @@
     const wrongs = [clockOpt({ h: hn, m: left }, false, 'kem'), clockOpt({ h: hn, m: m }, false, 'kem'), clockOpt({ h: h, m: left }, false, 'kem'), clockOpt({ h: h12(h - 1), m: m }, false, 'kem')];
     return wrap({
       kind: 'kem',
+      info: info,
       prompt: { text: 'Bắn đồng hồ chỉ ' + kem + '!', speech: 'Bắn đồng hồ chỉ ' + kem, clocks: [] },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 3),
       answer: { label: kem, speech: kem + ' là ' + plain + ': kim ngắn gần tới số ' + hn + ', kim dài chỉ số ' + (m / 5) },
@@ -427,62 +467,74 @@
 
   /* ---------- Dạng 6: Chính xác đến phút & đồng hồ điện tử (lớp 3) ---------- */
   function exactQ(cfg) {
-    const t = Math.random();
-    const h = pick(HOURS);
-    let m = rnd(1, 59);
+    const variant = pickVariant(cfg, [0.4, 0.7, 0.85]);
+    const h = okH(cfg.h) ? cfg.h : pick(HOURS);
+    let m = okM(cfg.m) && cfg.m % 5 !== 0 ? cfg.m : rnd(1, 59);
     if (m % 5 === 0) m = (m + rnd(1, 4)) % 60 || 7;
     const plain = h + ' giờ ' + m + ' phút';
-    if (t < 0.4) {
+    if (variant === 0) {
       // Đồng hồ kim chính xác đến phút → cách đọc
       const correct = textOpt(plain, true);
       const big = Math.floor(m / 5), small = m % 5;
-      const wrongs = [textOpt(h12(h + 1) + ' giờ ' + m + ' phút'), textOpt(h + ' giờ ' + (big * 5) + ' phút'), textOpt(h + ' giờ ' + (big + small) + ' phút'), textOpt(h + ' giờ ' + ((m + 5) % 60) + ' phút'), textOpt(h + ' giờ ' + (big * 5 + 5) + ' phút')];
+      // Đáp án nhiễu là giờ hợp lệ: không có "11 giờ 0 phút" hay "60 phút"
+      const wrongs = [textOpt(h12(h + 1) + ' giờ ' + m + ' phút'), textOpt(readTime(h, big * 5)), textOpt(h + ' giờ ' + (big + small) + ' phút'), textOpt(readTime(h, (m + 5) % 60)), textOpt(big * 5 + 5 >= 60 ? readTime(h12(h + 1), 0) : readTime(h, big * 5 + 5))];
       return wrap({
         kind: 'exact',
-        prompt: { text: 'Đồng hồ chỉ mấy giờ?', speech: 'Đồng hồ chỉ mấy giờ?', clocks: [{ h: h, m: m }] },
+        info: { kind: 'exact', variant: 0, h: h, m: m },
+        prompt: { text: 'Đồng hồ chỉ mấy giờ?', speech: 'Đồng hồ chỉ mấy giờ?', clocks: [{ h: h, m: m }], emphasizeMinutes: true },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: plain, speech: 'Đồng hồ chỉ ' + plain },
         explain: explainRead({ h: h, m: m }, 'plain')
       });
     }
-    if (t < 0.7) {
+    if (variant === 1) {
       // Đồng hồ điện tử 24 giờ → cách đọc kèm buổi
-      const h24 = pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]);
+      const h24 = Number.isInteger(cfg.h24) && cfg.h24 >= 6 && cfg.h24 <= 22 ? cfg.h24 : pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]);
       const hh = h12(h24), s = session(h24);
       const label = readSession(h24, m);
       const correct = textOpt(label, true);
-      const wrongs = [textOpt(hh + ' giờ ' + m + ' phút ' + pick(SESSIONS.filter((x) => x !== s))), textOpt(h12(hh + 1) + ' giờ ' + m + ' phút ' + s), textOpt(h12(m) + ' giờ ' + hh + ' phút ' + s), textOpt(hh + ' giờ ' + ((m + 10) % 60) + ' phút ' + s)];
+      // Với 12 giờ chỉ có "trưa"/"đêm" là cách gọi hợp lệ
+      const otherS = SESSIONS.filter((x) => x !== s && (hh !== 12 || x === 'trưa' || x === 'đêm'));
+      const swapH = h12(m);            // đảo giờ/phút – bỏ nếu tạo ra "12 giờ … sáng/chiều/tối" (không phải cách gọi hợp lệ)
+      const wrongs = [textOpt(hh + ' giờ ' + m + ' phút ' + pick(otherS)), textOpt(h12(hh + 1) + ' giờ ' + m + ' phút ' + s), textOpt(hh + ' giờ ' + ((m + 10) % 60) + ' phút ' + s)];
+      if (swapH !== 12 || s === 'trưa' || s === 'đêm') wrongs.push(textOpt(swapH + ' giờ ' + hh + ' phút ' + s));
       if (h24 > 12) wrongs.unshift(textOpt(h24 + ' giờ ' + m + ' phút sáng'));
       return wrap({
         kind: 'digital',
+        info: { kind: 'digital', variant: 1, m: m, h24: h24 },
         prompt: { text: 'Đồng hồ điện tử chỉ mấy giờ?', speech: 'Đồng hồ điện tử chỉ mấy giờ?', clocks: [], digital: digital(h24, m) },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: label, speech: 'Đồng hồ điện tử chỉ ' + label },
         explain: 'Số trước dấu hai chấm là giờ (' + h24 + '), số sau là phút (' + m + ').' + (h24 > 12 ? ' ' + h24 + ' − 12 = ' + hh + ', buổi ' + s + '.' : ' Buổi ' + s + '.')
       });
     }
-    if (t < 0.85) {
+    if (variant === 2) {
       // Đọc giờ → chọn đồng hồ điện tử
-      const h24 = pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]);
+      const h24 = Number.isInteger(cfg.h24) && cfg.h24 >= 6 && cfg.h24 <= 21 ? cfg.h24 : pick([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]);
       const hh = h12(h24), s = session(h24);
       const label = readSession(h24, m);
       const correct = digitalOpt(h24, m, true);
       const wrongs = [digitalOpt(h24 > 12 ? hh : (hh + 12) % 24, m), digitalOpt(h24, (m * 10) % 60 || 5), digitalOpt(m % 24, h24 > 12 ? hh : h24), digitalOpt((h24 + 1) % 24, m)];
       return wrap({
         kind: 'digital',
+        info: { kind: 'digital', variant: 2, m: m, h24: h24 },
         prompt: { text: 'Bắn đồng hồ điện tử chỉ ' + label + '!', speech: 'Bắn đồng hồ điện tử chỉ ' + label, clocks: [] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
-        answer: { label: digital(h24, m), speech: label + ' là ' + digital(h24, m).replace(':', ' giờ ') + ' phút' },
+        answer: { label: digital(h24, m), speech: label + ' là ' + h24 + ' giờ ' + m + ' phút' },
         explain: (h24 > 12 ? 'Buổi ' + s + ': ' + hh + ' + 12 = ' + h24 + '. ' : '') + 'Đồng hồ điện tử ghi giờ trước, phút sau: ' + digital(h24, m) + '.'
       });
     }
     // Đọc giờ → đồng hồ kim chính xác đến phút
     const correct = clockOpt({ h: h, m: m }, true);
     const wrongs = [clockOpt({ h: h12(h + 1), m: m }), clockOpt({ h: h, m: (m + 20) % 60 }), clockOpt({ h: h, m: (m + 40) % 60 }), clockOpt({ h: h12(h + 6), m: m })];
+    // Bảng đáp án cần vạch phút đậm: bé phải đếm từng vạch nhỏ mới phân biệt được
+    const exactOpts = buildOptions(correct, shuffle(wrongs), cfg.n || 3);
+    exactOpts.forEach((o) => { o.emphasizeMinutes = true; });
     return wrap({
       kind: 'exact',
+      info: { kind: 'exact', variant: 3, h: h, m: m },
       prompt: { text: 'Bắn đồng hồ chỉ ' + plain + '!', speech: 'Bắn đồng hồ chỉ ' + plain, clocks: [] },
-      options: buildOptions(correct, shuffle(wrongs), cfg.n || 3),
+      options: exactOpts,
       answer: { label: plain, speech: plain + ': kim ngắn ' + hourHandText({ h: h, m: m }) + ', kim dài ' + minuteHandText(m) },
       explain: plain + ': kim dài ' + minuteHandText(m) + ', kim ngắn ' + hourHandText({ h: h, m: m }) + '.'
     });
@@ -495,32 +547,37 @@
   ];
   const DURS = [15, 30, 45, 60, 75, 90];
   function elapsedQ(cfg) {
-    const t = Math.random();
-    const start = { h: pick(HOURS), m: pick([0, 15, 30, 45]) };
-    const dur = pick(cfg.durs || DURS);
+    const variant = pickVariant(cfg, [0.45, 0.75]);
+    const start = cfg.start && okH(cfg.start.h) && [0, 15, 30, 45].indexOf(cfg.start.m) >= 0 ? { h: cfg.start.h, m: cfg.start.m } : { h: pick(HOURS), m: pick([0, 15, 30, 45]) };
+    const durs = cfg.durs || DURS;
+    const dur = durs.indexOf(cfg.dur) >= 0 ? cfg.dur : pick(durs);
+    const act = Number.isInteger(cfg.act) && ACTIVITIES[cfg.act] ? cfg.act : rnd(0, ACTIVITIES.length - 1);
     const end = addMinutes(start.h, start.m, dur);
     const sLabel = readTime(start.h, start.m, 'plain'), eLabel = readTime(end.h, end.m, 'plain');
-    if (t < 0.45) {
+    const info = { kind: 'elapsed', variant: variant, sh: start.h, sm: start.m, dur: dur, act: act };
+    if (variant === 0) {
       // Hai đồng hồ → bao lâu
       const correct = textOpt(readDuration(dur), true);
       const wrongs = DURS.filter((d) => d !== dur).map((d) => textOpt(readDuration(d)));
       if (end.m > 0) wrongs.push(textOpt(end.m + ' phút'));
       return wrap({
         kind: 'elapsed',
+        info: info,
         prompt: { text: 'Từ ' + sLabel + ' đến ' + eLabel + ' là bao lâu?', speech: 'Từ ' + sLabel + ' đến ' + eLabel + ' là bao lâu?', clocks: [start, end], arrow: true },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
         answer: { label: readDuration(dur), speech: 'Từ ' + sLabel + ' đến ' + eLabel + ' là ' + readDuration(dur) },
         explain: explainElapsed(start, end, dur)
       });
     }
-    if (t < 0.75) {
+    if (variant === 1) {
       // Bắt đầu + kéo dài → kết thúc lúc mấy giờ (chọn đồng hồ kim)
-      const a = pick(ACTIVITIES);
+      const a = ACTIVITIES[act];
       const correct = clockOpt(end, true);
       const wrongs = [clockOpt(addMinutes(end.h, end.m, 60)), clockOpt(addMinutes(end.h, end.m, -30)), clockOpt(addMinutes(end.h, end.m, 30)), clockOpt(start), clockOpt(addMinutes(end.h, end.m, -60))];
       const text = 'Bé ' + a.v + ' từ ' + sLabel + ', trong ' + readDuration(dur) + '. Bé xong lúc mấy giờ?';
       return wrap({
         kind: 'elapsed',
+        info: info,
         prompt: { text: a.e + ' ' + text, speech: text, clocks: [] },
         options: buildOptions(correct, shuffle(wrongs), cfg.n || 3),
         answer: { label: eLabel, speech: 'Bé xong lúc ' + eLabel },
@@ -528,12 +585,13 @@
       });
     }
     // Bắt đầu + kéo dài → kết thúc (chữ)
-    const a = pick(ACTIVITIES);
+    const a = ACTIVITIES[act];
     const correct = textOpt(eLabel, true);
     const wrongs = [textOpt(readTime(end.h, (end.m + 30) % 60)), textOpt(readTime(h12(end.h + 1), end.m)), textOpt(readTime(start.h, (start.m + (dur % 60 || 30)) % 60)), textOpt(readTime(h12(end.h - 1), end.m)), textOpt(readTime(start.h, start.m))];
     const text = 'Bé ' + a.v + ' lúc ' + sLabel + ' và ' + a.v + ' trong ' + readDuration(dur) + '. Bé xong lúc mấy giờ?';
     return wrap({
       kind: 'elapsed',
+      info: info,
       prompt: { text: a.e + ' ' + text, speech: text, clocks: [start] },
       options: buildOptions(correct, shuffle(wrongs), cfg.n || 4),
       answer: { label: eLabel, speech: 'Bé xong lúc ' + eLabel },
@@ -545,6 +603,51 @@
     if (dur < 60) return 'Kim dài đi từ số ' + (start.m / 5 || 12) + ' đến số ' + (end.m / 5 || 12) + ' là ' + dur + ' phút.';
     if (dur === 60) return 'Kim dài đi trọn một vòng, từ ' + sL + ' đến ' + eL + ' là 1 giờ.';
     return 'Từ ' + sL + ' đến ' + readTime(h12(start.h + 1), start.m) + ' là 1 giờ, thêm ' + (dur - 60) + ' phút nữa là ' + eL + '. Tổng cộng ' + readDuration(dur) + '.';
+  }
+
+  /* ---------- Tạo lại câu hỏi từ info (ôn lại thông minh) ---------- */
+  /** Tập phút dùng cho đáp án nhiễu khi info cũ không có ms. */
+  function minutesAround(m) {
+    if (m % 5 === 0) return [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+    return uniqMinutes([m, 0, 15, 30, 45]);
+  }
+  /**
+   * Tạo lại đúng câu hỏi đã lưu trong q.info (cùng dạng, cùng đáp án) với đáp án nhiễu mới.
+   * cfg.n: số phương án (mặc định theo dạng bài). Trả về null nếu info không hợp lệ.
+   */
+  function fromInfo(info, cfg) {
+    if (!info || typeof info !== 'object') return null;
+    const n = cfg && cfg.n;
+    try {
+      switch (info.kind) {
+        case 'read':
+        case 'match': {
+          if (!okH(info.h) || !okM(info.m)) return null;
+          const ms = uniqMinutes(Array.isArray(info.ms) && info.ms.length ? info.ms : minutesAround(info.m));
+          if (ms.indexOf(info.m) < 0) ms.push(info.m);
+          const c = { n: n || (info.kind === 'read' ? 4 : 3), t: { h: info.h, m: info.m }, style: ['plain', 'ruoi', 'kem'].indexOf(info.style) >= 0 ? info.style : 'plain', minutes: ms };
+          return info.kind === 'read' ? readQ(c) : matchQ(c);
+        }
+        case 'five':
+          if (!(Number.isInteger(info.n5) && info.n5 >= 1 && info.n5 <= 11)) return null;
+          return fiveQ({ n: n || 4, n5: info.n5 });
+        case 'h24':
+          if (!Number.isInteger(info.h24)) return null;
+          return h24Q({ n: n || 4, variant: info.variant, h24: info.h24 });
+        case 'kem':
+          if (!okH(info.h) || KEM_MINUTES.indexOf(info.m) < 0) return null;
+          return kemQ({ n: n || (info.variant === 3 ? 3 : 4), variant: info.variant, h: info.h, m: info.m });
+        case 'exact':
+        case 'digital':
+          if (!okM(info.m)) return null;
+          return exactQ({ n: n || (info.variant === 3 ? 3 : 4), variant: info.variant, h: info.h, m: info.m, h24: info.h24 });
+        case 'elapsed':
+          if (!okH(info.sh) || !okM(info.sm) || DURS.indexOf(info.dur) < 0) return null;
+          return elapsedQ({ n: n || (info.variant === 1 ? 3 : 4), variant: info.variant, start: { h: info.sh, m: info.sm }, dur: info.dur, act: info.act });
+        default:
+          return null;
+      }
+    } catch (e) { return null; }
   }
 
   /* ---------- Tránh lặp câu vừa hỏi ---------- */
@@ -561,7 +664,7 @@
     rnd, chance, pick, shuffle, TAU, FONT,
     h12, pad2, readTime, read24, readSession, readDuration, session, digital, addMinutes, sameTime, SESSION_ICON, SESSIONS,
     drawClock, drawDigital, roundRect,
-    textOpt, clockOpt, digitalOpt, buildOptions, nearbyTimes,
-    readQ, matchQ, fiveQ, h24Q, kemQ, exactQ, elapsedQ, fresh
+    textOpt, clockOpt, digitalOpt, buildOptions, nearbyTimes, hourHandText, minuteHandText, explainRead,
+    readQ, matchQ, fiveQ, h24Q, kemQ, exactQ, elapsedQ, fromInfo, fresh
   };
 })();

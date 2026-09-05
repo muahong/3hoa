@@ -19,6 +19,8 @@
     return arr;
   };
   const ALL_MINS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+  /** Thoát ký tự đặc biệt khi chèn chữ vào thuộc tính HTML (aria-label). */
+  const escAttr = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* ================= MÔ HÌNH THỜI GIAN ================= */
   function T(h, m) { return { h: ((h % 24) + 24) % 24, m: m }; }
@@ -113,12 +115,12 @@
       ctx.strokeStyle = big ? '#3b4a8a' : '#a9b3d6';
       ctx.stroke();
     }
-    // Số
+    // Số (đủ 12 số từ bán kính 20 px – đồng hồ nhỏ trên điện thoại vẫn đọc được)
     if (r >= 14) {
-      const showAll = r >= 26;
+      const showAll = r >= 20;
       ctx.fillStyle = '#2b2d42';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = '800 ' + Math.round(r * (showAll ? 0.28 : 0.34)) + 'px ' + FONT;
+      ctx.font = '800 ' + Math.round(Math.max(9, r * (showAll ? 0.3 : 0.34))) + 'px ' + FONT;
       for (let n = 1; n <= 12; n++) {
         if (!showAll && n % 3) continue;
         const ang = n * Math.PI / 6;
@@ -126,7 +128,7 @@
         ctx.fillText(String(n), Math.sin(ang) * rr, -Math.cos(ang) * rr + r * 0.02);
       }
     }
-    // Kim giờ (ngắn, xanh) và kim phút (dài, đỏ)
+    // Kim giờ (ngắn và MẬP, xanh) và kim phút (dài và mảnh, đỏ): khác nhau cả hình dạng, không chỉ màu
     const hand = function (deg, len, w, color) {
       ctx.save();
       ctx.rotate(deg * Math.PI / 180);
@@ -135,8 +137,8 @@
       ctx.lineCap = 'round'; ctx.lineWidth = w; ctx.strokeStyle = color; ctx.stroke();
       ctx.restore();
     };
-    hand(a.h, r * 0.5, Math.max(2.5, r * 0.11), HOUR_COLOR);
-    hand(a.m, r * 0.76, Math.max(2, r * 0.075), MIN_COLOR);
+    hand(a.h, r * 0.48, Math.max(3, r * 0.15), HOUR_COLOR);
+    hand(a.m, r * 0.82, Math.max(2, r * 0.07), MIN_COLOR);
     ctx.beginPath(); ctx.arc(0, 0, Math.max(2, r * 0.08), 0, Math.PI * 2); ctx.fillStyle = HOUR_COLOR; ctx.fill();
     ctx.restore();
   }
@@ -174,7 +176,7 @@
     const size = o.size || 120;
     const a = angles(t);
     const vb = o.minutes ? '-24 -24 248 248' : '0 0 200 200';
-    let s = '<svg class="clock-svg ' + (o.cls || '') + '" viewBox="' + vb + '" width="' + size + '" height="' + size + '" role="img" aria-label="' + fmtText(t) + '">';
+    let s = '<svg class="clock-svg ' + (o.cls || '') + '" viewBox="' + vb + '" width="' + size + '" height="' + size + '" role="img" aria-label="' + escAttr(fmtText(t)) + '">';
     s += '<circle cx="100" cy="100" r="95" fill="#fff" stroke="#3b4a8a" stroke-width="7"/>';
     for (let i = 0; i < 60; i++) {
       const big = i % 5 === 0;
@@ -186,7 +188,7 @@
       const ang = n * Math.PI / 6;
       s += '<text x="' + (100 + Math.sin(ang) * 63).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 63 + 2).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#2b2d42">' + n + '</text>';
       if (o.minutes) {
-        s += '<text x="' + (100 + Math.sin(ang) * 111).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 111 + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="14" fill="#ef476f">' + (n * 5 === 60 ? '0/60' : n * 5) + '</text>';
+        s += '<text x="' + (100 + Math.sin(ang) * 111).toFixed(1) + '" y="' + (100 - Math.cos(ang) * 111 + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="18" fill="#c42b52">' + (n * 5 === 60 ? '0/60' : n * 5) + '</text>';
       }
     }
     s += '<g class="hand-h" style="transform-origin:100px 100px;transform:rotate(' + a.h + 'deg)"><line x1="100" y1="112" x2="100" y2="52" stroke="' + HOUR_COLOR + '" stroke-width="11" stroke-linecap="round"/></g>';
@@ -195,14 +197,20 @@
     s += '</svg>';
     return s;
   }
-  /** SVG đồng hồ điện tử. */
+  /** SVG đồng hồ điện tử. o.caption: ghi chú "giờ" / "phút" dưới hai nhóm số. */
   function svgDigital(label, o) {
     o = o || {};
     const w = o.width || 150;
-    return '<svg class="digital-svg ' + (o.cls || '') + '" viewBox="0 0 200 112" width="' + w + '" height="' + Math.round(w * 0.56) + '" role="img" aria-label="' + label + '">' +
+    const H = o.caption ? 146 : 112;
+    let s = '<svg class="digital-svg ' + (o.cls || '') + '" viewBox="0 0 200 ' + H + '" width="' + w + '" height="' + Math.round(w * H / 200) + '" role="img" aria-label="' + escAttr(label) + '">' +
       '<rect x="4" y="4" width="192" height="104" rx="26" fill="#3b4a8a"/>' +
       '<rect x="16" y="18" width="168" height="76" rx="14" fill="#d9ffe9"/>' +
-      '<text x="100" y="60" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="50" fill="#1b2a4a">' + label + '</text></svg>';
+      '<text x="100" y="60" text-anchor="middle" dominant-baseline="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="50" fill="#1b2a4a">' + escAttr(label) + '</text>';
+    if (o.caption) {
+      s += '<text x="62" y="132" text-anchor="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#2b3a80">giờ</text>' +
+        '<text x="146" y="132" text-anchor="middle" font-family="Baloo 2, Arial Rounded MT Bold, Arial, sans-serif" font-weight="800" font-size="24" fill="#c42b52">phút</text>';
+    }
+    return s + '</svg>';
   }
   /** Cập nhật góc kim của một SVG đã vẽ (dùng cho hoạt hình bài học). */
   function setSvgTime(svg, t) {
@@ -211,7 +219,7 @@
     const hh = svg.querySelector('.hand-h'), mm = svg.querySelector('.hand-m');
     if (hh) hh.style.transform = 'rotate(' + a.h + 'deg)';
     if (mm) mm.style.transform = 'rotate(' + a.m + 'deg)';
-    svg.setAttribute('aria-label', fmtText(t));
+    svg.setAttribute('aria-label', fmtText(t));   // setAttribute: không cần thoát ký tự
   }
 
   /* ================= GIẢI THÍCH CÁCH ĐỌC ================= */
@@ -356,13 +364,33 @@
 
   /**
    * Sinh một lượt chơi: mục tiêu cần tìm và các đồng hồ đặt trong mê cung.
-   * Trả về { target, items:[time...] (đã trộn, có mục tiêu), style, html, speech, hudClock }
+   *  forced : mục "ôn lại" ({ h, m } hoặc { start: { h, m }, delta }) thay cho mục tiêu ngẫu nhiên -> review = true
+   *  exclude: các khóa key(t) đã dùng trong màn này (không lặp lại mục tiêu; thử tối đa 20 lần)
+   *  opts   : { round } – số thứ tự lượt (0 là lượt đầu) để tăng độ khó dần ở màn "Thời gian trôi"
+   * Trả về { target, items:[time...] (đã trộn, có mục tiêu), style, html, speech, hudClock, extra, review }
    */
-  function makeRound(level) {
+  const DELTAS = [5, 10, 15, 20, 30, 45, 60];
+  const CARRY_MINS = [15, 30, 45];
+  /** Màn 8: 3 lượt đầu chỉ cộng trong một giờ (hoặc đúng 1 giờ); sau đó mới cho "nhớ" với số tròn 15 phút. */
+  function elapsedOk(start, delta, round) {
+    if (start.m + delta <= 60 || delta === 60) return true;
+    if (round < 3) return false;
+    return CARRY_MINS.indexOf(delta) >= 0 && CARRY_MINS.indexOf(start.m) >= 0;
+  }
+  function makeRound(level, forced, exclude, opts) {
     const n = level.clocks;
-    let target, distractors, style, html, speech, hudClock = null, extra = null;
+    exclude = exclude || [];
+    const round = opts && opts.round != null ? opts.round : (level.round != null ? level.round : 99);
+    const used = function (t) { return exclude.indexOf(key(t)) >= 0; };
+    const draw = function (gen) { let t = gen(), g = 0; while (used(t) && g++ < 20) t = gen(); return t; };
+    const validForced = function (h12only) {
+      if (!forced || forced.h == null || forced.m == null || level.mins.indexOf(forced.m) < 0) return false;
+      return h12only || (forced.h >= 1 && forced.h <= 23);
+    };
+    let target, distractors, style, html, speech, hudClock = null, extra = null, review = false;
     if (level.kind === 'analog') {
-      target = T(rnd(1, 12), pickMinute(level));
+      if (validForced(true)) { target = T(h12(forced.h), forced.m); review = true; }
+      else target = draw(function () { return T(rnd(1, 12), pickMinute(level)); });
       distractors = analogDistractors(target, level, n - 1);
       style = 'analog';
       const o = textOptsOf(level);
@@ -370,29 +398,48 @@
       html = 'Tìm đồng hồ chỉ <b>' + text + '</b>';
       speech = 'Tìm đồng hồ chỉ ' + text;
     } else if (level.kind === 'period') {
-      const h = chance(0.7) ? rnd(13, 22) : rnd(6, 11);
-      target = T(h, pickMinute(level));
+      if (validForced(false)) { target = T(forced.h, forced.m); review = true; }
+      else target = draw(function () { return T(chance(0.7) ? rnd(13, 22) : rnd(6, 11), pickMinute(level)); });
       distractors = periodDistractors(target, level, n - 1);
       style = 'digital24';
       const text = fmtText(target, { period: true, ruoi: chance(0.5) });
-      html = 'Tìm đồng hồ điện tử chỉ <b>' + periodIcon(h) + ' ' + text + '</b>';
+      html = 'Tìm đồng hồ điện tử chỉ <b>' + periodIcon(target.h) + ' ' + text + '</b>';
       speech = 'Tìm đồng hồ điện tử chỉ ' + text;
     } else if (level.kind === 'digital') {
-      target = T(rnd(1, 12), pickMinute(level));
+      if (validForced(true)) { target = T(h12(forced.h), forced.m); review = true; }
+      else target = draw(function () { return T(rnd(1, 12), pickMinute(level)); });
       distractors = digitalDistractors(target, level, n - 1);
       style = 'digital12';
       html = 'Tìm đồng hồ điện tử <b>cùng giờ</b> với đồng hồ này';
-      speech = 'Tìm đồng hồ điện tử cùng giờ với đồng hồ kim. Đồng hồ kim đang chỉ ' + fmtText(target);
+      // Không đọc to giờ của đồng hồ kim (đó chính là đáp án); chỉ đọc khi bé chọn nhầm hoặc xin gợi ý
+      speech = 'Tìm đồng hồ điện tử cùng giờ với đồng hồ kim ở phía trên.';
       hudClock = target;
     } else {
-      const start = T(rnd(1, 12), pick([0, 0, 15, 30, 45, 10, 20, 5, 40, 50]));
-      const delta = pick([5, 10, 15, 15, 20, 30, 30, 45, 60]);
+      let start, delta;
+      if (forced && forced.start && forced.start.h != null && ALL_MINS.indexOf(forced.start.m) >= 0 && DELTAS.indexOf(forced.delta) >= 0) {
+        start = T(h12(forced.start.h), forced.start.m); delta = forced.delta; review = true;
+      } else {
+        let g = 0;
+        do {
+          if (round >= 3 && chance(0.4)) {
+            // Lượt sau: chủ động ra bài "cộng qua giờ mới" (đúng dạng bài học dạy: số tròn 15 phút)
+            start = T(rnd(1, 12), pick([30, 45]));
+            delta = start.m === 30 ? 45 : pick([30, 45]);
+          } else {
+            start = T(rnd(1, 12), pick([0, 0, 15, 30, 45, 10, 20, 5, 40, 50]));
+            delta = pick([5, 10, 15, 15, 20, 30, 30, 45, 60]);
+          }
+          // Quá sức lượt này thì hạ xuống: cộng vừa đủ tới giờ tròn, hoặc cộng đúng 1 giờ
+          if (!elapsedOk(start, delta, round)) { const fit = 60 - start.m; delta = DELTAS.indexOf(fit) >= 0 ? fit : 60; }
+        } while (used(addMin(start, delta)) && g++ < 20);
+      }
       target = addMin(start, delta);
       distractors = elapsedDistractors(start, delta, target, n - 1);
       style = 'analog';
       const dText = delta === 60 ? '1 giờ' : delta + ' phút';
       html = 'Bây giờ là <b>' + fmtText(start) + '</b>. <b>' + dText + '</b> nữa là mấy giờ?';
       speech = 'Bây giờ là ' + fmtText(start) + '. ' + dText + ' nữa là mấy giờ? Hãy tìm đồng hồ đó.';
+      hudClock = start;                       // hiện đồng hồ kim của mốc bắt đầu để bé vừa nhìn vừa tính
       extra = { start: start, delta: delta };
     }
     // Bổ sung nếu chưa đủ đồng hồ nhiễu
@@ -403,7 +450,7 @@
       if (!same(cand, target) && !distractors.some(function (d) { return same(d, cand); })) distractors.push(cand);
     }
     const items = shuffle(distractors.concat([target]));
-    return { target: target, items: items, style: style, html: html, speech: speech, hudClock: hudClock, extra: extra };
+    return { target: target, items: items, style: style, html: html, speech: speech, hudClock: hudClock, extra: extra, review: review };
   }
 
   /** Cách đọc thời gian của một vật phẩm trong mê cung (dùng khi bé chọn nhầm). */
@@ -496,11 +543,12 @@
       lines: [
         'Muốn biết <b>một lúc nữa</b> là mấy giờ, ta <b>cộng thêm</b> số phút: 7 giờ + 30 phút = <b>7 giờ 30 phút</b>.',
         'Đủ <b>60 phút</b> thì được thêm <b>1 giờ</b>: 7 giờ 45 phút + 15 phút = 7 giờ 60 phút = <b>8 giờ</b>.',
-        'Cộng thêm 1 giờ thì kim ngắn tiến thêm một số, kim dài đứng yên: 2 giờ 30 phút + 1 giờ = <b>3 giờ 30 phút</b>.'
+        'Cộng thêm 1 giờ thì kim ngắn tiến thêm một số, kim dài đứng yên: 2 giờ 30 phút + 1 giờ = <b>3 giờ 30 phút</b>.',
+        'Qua giờ mới thì tính tiếp: <b>7 giờ 45 phút + 30 phút</b>: 15 phút nữa là 8 giờ, còn 15 phút nữa → <b>8 giờ 15 phút</b>.'
       ],
-      demos: [T(7, 0), T(7, 30), T(7, 45), T(8, 0)],
+      demos: [T(7, 0), T(7, 30), T(7, 45), T(8, 0), T(8, 15)],
       minutes: true,
-      speech: 'Muốn biết một lúc nữa là mấy giờ, ta cộng thêm số phút. 7 giờ cộng 30 phút là 7 giờ 30 phút. Đủ 60 phút thì được thêm 1 giờ.'
+      speech: 'Muốn biết một lúc nữa là mấy giờ, ta cộng thêm số phút. 7 giờ cộng 30 phút là 7 giờ 30 phút. Đủ 60 phút thì được thêm 1 giờ. Nếu còn thừa thì tính tiếp sang giờ mới.'
     }
   };
 
@@ -541,13 +589,19 @@
   }
   const HOURS12 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
+  /** Gắn khóa "ôn lại" cho câu hỏi về thời điểm t (cùng dạng khóa với lượt chơi trong mê cung: kind|h:m). */
+  function withReview(q, kind, t) {
+    q.reviewKey = kind + '|' + key(t);
+    q.reviewInfo = { kind: kind, h: t.h, m: t.m, style: kind === 'period' ? 'digital24' : kind === 'digital' ? 'digital12' : 'analog' };
+    return q;
+  }
   /** "Đồng hồ chỉ mấy giờ?" với đồng hồ kim. */
   function qRead(level, t, o) {
     o = o || {};
     t = t || T(rnd(1, 12), pickMinute(level));
     const ds = analogDistractors(t, level, 3);
     const opts = labelsOf([t].concat(ds), { kem: !!o.kem, ruoi: !!o.ruoi });
-    return mkQ(o.text || 'Đồng hồ chỉ mấy giờ?', opts, 0, explainRead(t, { kem: !!level.kem }), { clock: t, speech: 'Đồng hồ chỉ mấy giờ?' });
+    return withReview(mkQ(o.text || 'Đồng hồ chỉ mấy giờ?', opts, 0, explainRead(t, { kem: !!level.kem }), { clock: t, speech: 'Đồng hồ chỉ mấy giờ?' }), 'analog', t);
   }
   /** "Đồng hồ nào chỉ X?" với 4 đồng hồ kim để chọn. */
   function qPickClock(level, t, o) {
@@ -556,7 +610,41 @@
     const ds = analogDistractors(t, level, 3);
     const label = fmtText(t, { kem: !!o.kem, ruoi: !!o.ruoi });
     const opts = [t].concat(ds).map(function (x) { return { label: fmtText(x), clock: x, clockStyle: 'analog', hideLabel: true }; });
-    return mkQ('Đồng hồ nào chỉ <b>' + label + '</b>?', opts, 0, explainRead(t, { kem: !!level.kem }), { speech: 'Đồng hồ nào chỉ ' + label + '?' });
+    return withReview(mkQ('Đồng hồ nào chỉ <b>' + label + '</b>?', opts, 0, explainRead(t, { kem: !!level.kem }), { speech: 'Đồng hồ nào chỉ ' + label + '?' }), 'analog', t);
+  }
+  /** Câu hỏi "ôn lại thông minh" sinh từ một mục bé từng làm sai: info = { kind, h, m } hoặc { kind:'elapsed', start:{h,m}, delta }. */
+  function reviewQuestion(level, info) {
+    if (!info || !level) return null;
+    let q = null;
+    if (level.kind === 'elapsed') {
+      if (!info.start || info.start.h == null || ALL_MINS.indexOf(info.start.m) < 0 || DELTAS.indexOf(info.delta) < 0) return null;
+      const s = T(h12(info.start.h), info.start.m), d = info.delta, r = addMin(s, d);
+      const dText = d === 60 ? '1 giờ' : d + ' phút';
+      const opts = labelsOf([r].concat(elapsedDistractors(s, d, r, 3)));
+      q = mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. <b>' + dText + '</b> nữa là mấy giờ?', opts, 0,
+        fmtText(s) + ' + ' + dText + ' = ' + fmtText(r) + '.' + (s.m + d >= 60 && d < 60 ? ' Đủ 60 phút thì thêm 1 giờ.' : ''),
+        { clock: s, fill: hourFill(r.m), speech: 'Bây giờ là ' + fmtText(s) + '. ' + dText + ' nữa là mấy giờ?' });
+      q.reviewKey = 'elapsed|' + key(s) + '+' + d;
+      q.reviewInfo = { kind: 'elapsed', start: { h: s.h, m: s.m }, delta: d, style: 'analog' };
+    } else {
+      if (info.h == null || info.m == null || level.mins.indexOf(info.m) < 0) return null;
+      if (level.kind === 'analog') {
+        q = qRead(level, T(h12(info.h), info.m), { kem: !!level.kem });
+      } else if (level.kind === 'period') {
+        if (info.h < 1 || info.h > 23) return null;
+        const t = T(info.h, info.m);
+        const opts = labelsOf([t].concat(periodDistractors(t, level, 3)), { period: true });
+        q = withReview(mkQ('Đồng hồ điện tử hiện <b>' + fmtDigital(t, true) + '</b>. Đó là mấy giờ?', opts, 0, explainRead(t, { style: 'digital24' }),
+          { clock: t, clockStyle: 'digital24', speech: 'Đồng hồ điện tử hiện ' + fmtText(t, { h24: true }) + '. Đó là mấy giờ?' }), 'period', t);
+      } else {
+        const t = T(h12(info.h), info.m);
+        const opts = [t].concat(digitalDistractors(t, level, 3)).map(function (x) { return { label: fmtDigital(x), clock: x, clockStyle: 'digital12', hideLabel: true }; });
+        q = withReview(mkQ('Đồng hồ điện tử nào <b>cùng giờ</b> với đồng hồ kim?', opts, 0, explainRead(t) + ' Đồng hồ điện tử ghi ' + fmtDigital(t) + '.',
+          { clock: t, speech: 'Đồng hồ điện tử nào cùng giờ với đồng hồ kim?' }), 'digital', t);
+      }
+    }
+    if (q) q.review = true;
+    return q;
   }
 
   const QUIZ = {
@@ -576,7 +664,7 @@
       function () { return mkQ('<b>1 giờ</b> có bao nhiêu phút?', ['60 phút', '30 phút', '12 phút', '100 phút'], 0, '1 giờ có 60 phút. Kim dài đi hết một vòng là 60 phút, tức 1 giờ.'); },
       function () { const h = rnd(1, 11); return mkQ('Kim dài chỉ số 6, kim ngắn ở <b>giữa số ' + h + ' và số ' + (h + 1) + '</b>. Đó là mấy giờ?', [h + ' giờ rưỡi', (h + 1) + ' giờ rưỡi', h + ' giờ', '6 giờ ' + h + ' phút'], 0, 'Kim dài chỉ số 6 là 30 phút (giờ rưỡi). Kim ngắn ở giữa hai số thì đọc theo số nhỏ hơn: ' + h + ' giờ rưỡi.'); },
       function (L) { return qPickClock(L, T(rnd(1, 12), 30), { ruoi: true }); },
-      function () { const h = rnd(1, 12); return mkQ('<b>' + h + ' giờ rưỡi</b> còn được viết là:', [h + ' giờ 30 phút', h + ' giờ 6 phút', h + ' giờ 15 phút', (h + 1) + ' giờ 30 phút'], 0, h + ' giờ rưỡi tức là ' + h + ' giờ 30 phút, vì nửa giờ bằng 30 phút.'); }
+      function () { const h = rnd(1, 12); return mkQ('<b>' + h + ' giờ rưỡi</b> còn được viết là:', [h + ' giờ 30 phút', h + ' giờ 6 phút', h + ' giờ 15 phút', h12(h + 1) + ' giờ 30 phút'], 0, h + ' giờ rưỡi tức là ' + h + ' giờ 30 phút, vì nửa giờ bằng 30 phút.'); }
     ],
     l3: [
       function (L) { return qRead(L, T(rnd(1, 12), 15)); },
@@ -591,9 +679,10 @@
       function () { const h = rnd(1, 6); return mkQ('<b>' + h + ' giờ chiều</b> còn gọi là mấy giờ?', [(h + 12) + ' giờ', h + ' giờ', (h + 10) + ' giờ', (h + 2) + ' giờ'], 0, 'Buổi chiều ta lấy giờ cộng 12: ' + h + ' + 12 = ' + (h + 12) + '. Vậy ' + h + ' giờ chiều là ' + (h + 12) + ' giờ.'); },
       function () { return mkQ('Một ngày có bao nhiêu giờ?', ['24 giờ', '12 giờ', '60 giờ', '30 giờ'], 0, 'Một ngày có 24 giờ. Kim ngắn đi hai vòng đồng hồ: một vòng buổi sáng, một vòng buổi chiều tối.'); },
       function () { const h = rnd(19, 21); return mkQ('<b>' + h + ' giờ</b> là mấy giờ tối?', [(h - 12) + ' giờ tối', h + ' giờ tối', (h - 10) + ' giờ tối', (h - 2) + ' giờ tối'], 0, 'Số ' + h + ' lớn hơn 12 nên ta lấy ' + h + ' − 12 = ' + (h - 12) + '. Vậy là ' + (h - 12) + ' giờ tối.'); },
-      function () { const h = pick([8, 9, 10]); return mkQ('Em đi ngủ lúc <b>' + h + ' giờ tối</b>. Đồng hồ điện tử hiện số mấy?', [{ label: (h + 12) + ':00', clock: T(h + 12, 0), clockStyle: 'digital24' }, { label: h + ':00', clock: T(h, 0), clockStyle: 'digital24' }, { label: (h + 10) + ':00', clock: T(h + 10, 0), clockStyle: 'digital24' }, { label: (h + 2) + ':00', clock: T(h + 2, 0), clockStyle: 'digital24' }], 0, 'Buổi tối, đồng hồ điện tử ghi giờ cộng 12: ' + h + ' + 12 = ' + (h + 12) + '. Vậy hiện ' + (h + 12) + ':00.'); },
-      function () { const h = rnd(6, 10); return mkQ('Buổi sáng em đến trường lúc <b>' + h + ' giờ</b>. Đồng hồ điện tử hiện số mấy?', [{ label: h + ':00', clock: T(h, 0), clockStyle: 'digital24' }, { label: (h + 12) + ':00', clock: T(h + 12, 0), clockStyle: 'digital24' }, { label: (h + 1) + ':00', clock: T(h + 1, 0), clockStyle: 'digital24' }, { label: (h - 1) + ':00', clock: T(h - 1, 0), clockStyle: 'digital24' }], 0, 'Buổi sáng thì số giờ giữ nguyên, không cộng 12. Đồng hồ điện tử hiện ' + h + ':00.'); },
-      function () { const h = rnd(13, 18); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':00</b>. Đó là mấy giờ chiều?', [(h - 12) + ' giờ chiều', h + ' giờ chiều', (h - 10) + ' giờ chiều', (h - 12 + 1) + ' giờ chiều'], 0, h + ' − 12 = ' + (h - 12) + '. Vậy ' + h + ':00 là ' + (h - 12) + ' giờ chiều.', { clock: T(h, 0), clockStyle: 'digital24' }); },
+      // 20, 21 giờ là buổi tối (22 giờ trở đi game gọi là "đêm" nên không dùng 10 giờ tối)
+      function () { const h = pick([8, 9]); return mkQ('Con đi ngủ lúc <b>' + h + ' giờ tối</b>. Đồng hồ điện tử hiện số mấy?', [{ label: (h + 12) + ':00', clock: T(h + 12, 0), clockStyle: 'digital24' }, { label: h + ':00', clock: T(h, 0), clockStyle: 'digital24' }, { label: (h + 10) + ':00', clock: T(h + 10, 0), clockStyle: 'digital24' }, { label: (h + 2) + ':00', clock: T(h + 2, 0), clockStyle: 'digital24' }], 0, 'Buổi tối, đồng hồ điện tử ghi giờ cộng 12: ' + h + ' + 12 = ' + (h + 12) + '. Vậy hiện ' + (h + 12) + ':00.', { speech: 'Con đi ngủ lúc ' + h + ' giờ tối. Đồng hồ điện tử hiện số mấy?' }); },
+      function () { const h = rnd(6, 10); return mkQ('Buổi sáng con đến trường lúc <b>' + h + ' giờ</b>. Đồng hồ điện tử hiện số mấy?', [{ label: h + ':00', clock: T(h, 0), clockStyle: 'digital24' }, { label: (h + 12) + ':00', clock: T(h + 12, 0), clockStyle: 'digital24' }, { label: (h + 1) + ':00', clock: T(h + 1, 0), clockStyle: 'digital24' }, { label: (h - 1) + ':00', clock: T(h - 1, 0), clockStyle: 'digital24' }], 0, 'Buổi sáng thì số giờ giữ nguyên, không cộng 12. Đồng hồ điện tử hiện ' + h + ':00.', { speech: 'Buổi sáng con đến trường lúc ' + h + ' giờ. Đồng hồ điện tử hiện số mấy?' }); },
+      function () { const h = rnd(13, 18); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':00</b>. Đó là mấy giờ chiều?', [(h - 12) + ' giờ chiều', h + ' giờ chiều', (h - 10) + ' giờ chiều', (h - 12 + 1) + ' giờ chiều'], 0, h + ' − 12 = ' + (h - 12) + '. Vậy ' + h + ':00 là ' + (h - 12) + ' giờ chiều.', { clock: T(h, 0), clockStyle: 'digital24', speech: 'Đồng hồ điện tử hiện ' + h + ' giờ. Đó là mấy giờ chiều?' }); },
       function () { return mkQ('<b>12 giờ đêm</b> còn gọi là mấy giờ?', ['24 giờ', '12 giờ', '20 giờ', '14 giờ'], 0, 'Một ngày có 24 giờ, kết thúc lúc 12 giờ đêm, nên 12 giờ đêm còn gọi là 24 giờ.'); }
     ],
     l5: [
@@ -607,7 +696,7 @@
     ],
     l6: [
       function () { const h = rnd(1, 11), m = pick([5, 10, 15, 20, 25]); return mkQ('<b>' + (h + 1) + ' giờ kém ' + m + ' phút</b> là mấy giờ?', [h + ' giờ ' + (60 - m) + ' phút', (h + 1) + ' giờ ' + m + ' phút', (h + 1) + ' giờ ' + (60 - m) + ' phút', h + ' giờ ' + m + ' phút'], 0, 'Kém nghĩa là còn thiếu. ' + (h + 1) + ' giờ kém ' + m + ' phút là còn ' + m + ' phút nữa mới đến ' + (h + 1) + ' giờ, tức ' + h + ' giờ ' + (60 - m) + ' phút (60 − ' + m + ' = ' + (60 - m) + ').'); },
-      function (L) { const t = T(rnd(1, 12), pick([35, 40, 45, 50, 55])); const n = h12(t.h + 1), k = 60 - t.m; return mkQ('Đồng hồ chỉ mấy giờ? (đọc theo cách <b>giờ kém</b>)', [n + ' giờ kém ' + k + ' phút', h12(t.h) + ' giờ kém ' + k + ' phút', n + ' giờ kém ' + t.m + ' phút', n + ' giờ ' + k + ' phút'], 0, explainRead(t, { kem: true }), { clock: t, speech: 'Đồng hồ chỉ mấy giờ? Đọc theo cách giờ kém.' }); },
+      function () { const t = T(rnd(1, 12), pick([35, 40, 45, 50, 55])); const n = h12(t.h + 1), k = 60 - t.m; return mkQ('Đồng hồ chỉ mấy giờ? (đọc theo cách <b>giờ kém</b>)', [n + ' giờ kém ' + k + ' phút', h12(t.h) + ' giờ kém ' + k + ' phút', n + ' giờ kém ' + t.m + ' phút', n + ' giờ ' + k + ' phút'], 0, explainRead(t, { kem: true }), { clock: t, speech: 'Đồng hồ chỉ mấy giờ? Đọc theo cách giờ kém.' }); },
       function () { const h = rnd(1, 11), m = pick([35, 40, 50, 55]); return mkQ('<b>' + h + ' giờ ' + m + ' phút</b> còn được đọc là:', [(h + 1) + ' giờ kém ' + (60 - m) + ' phút', h + ' giờ kém ' + (60 - m) + ' phút', (h + 1) + ' giờ kém ' + m + ' phút', (h + 1) + ' giờ ' + (60 - m) + ' phút'], 0, '60 − ' + m + ' = ' + (60 - m) + '. Còn ' + (60 - m) + ' phút nữa là ' + (h + 1) + ' giờ, nên đọc là ' + (h + 1) + ' giờ kém ' + (60 - m) + ' phút.'); },
       function () { return mkQ('Khi nào ta đọc theo cách <b>giờ kém</b>?', ['Khi kim dài đã đi qua số 6', 'Khi kim dài chưa tới số 6', 'Khi kim dài chỉ số 12', 'Khi kim ngắn chỉ số 6'], 0, 'Kim dài qua số 6 nghĩa là đã hơn 30 phút, sắp sang giờ mới, nên ta đọc "giờ kém".'); },
       function (L) { const t = T(rnd(1, 12), pick([35, 40, 45, 50, 55])); return qPickClock(L, t, { kem: true }); },
@@ -615,25 +704,49 @@
     ],
     l7: [
       function () { const t = T(rnd(1, 12), pick(ALL_MINS)); const ds = digitalDistractors(t, LEVEL_BY_ID.l7, 3); const opts = [t].concat(ds).map(function (x) { return { label: fmtDigital(x), clock: x, clockStyle: 'digital12', hideLabel: true }; }); return mkQ('Đồng hồ điện tử nào <b>cùng giờ</b> với đồng hồ kim?', opts, 0, explainRead(t) + ' Đồng hồ điện tử ghi ' + fmtDigital(t) + '.', { clock: t, speech: 'Đồng hồ điện tử nào cùng giờ với đồng hồ kim?' }); },
-      function () { const t = T(rnd(1, 12), pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])); const opts = ['Số ' + (t.m / 5), 'Số ' + t.m, 'Số ' + h12(t.h), 'Số ' + (t.m / 5 + 1)]; return mkQ('Đồng hồ điện tử hiện <b>' + fmtDigital(t) + '</b>. Kim dài chỉ số mấy?', opts, 0, t.m + ' phút = ' + (t.m / 5) + ' × 5, nên kim dài chỉ số ' + (t.m / 5) + '.', { clock: t, clockStyle: 'digital12', fill: shuffle(HOURS12.slice()).map(function (n) { return 'Số ' + n; }) }); },
-      function () { const h = rnd(1, 11); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':30</b>. Kim ngắn nằm ở đâu?', ['Giữa số ' + h + ' và số ' + (h + 1), 'Đúng số ' + h, 'Đúng số 6', 'Giữa số ' + (h + 1) + ' và số ' + (h + 2)], 0, '30 phút là nửa giờ, nên kim ngắn đã đi được nửa đường từ số ' + h + ' sang số ' + (h + 1) + '.', { clock: T(h, 30), clockStyle: 'digital12' }); },
-      function () { const t = T(rnd(1, 12), pick([5, 15, 25, 45, 50])); return mkQ('<b>' + fmtDigital(t) + '</b> đọc là:', [fmtText(t), h12(t.h) + ' giờ ' + (t.m / 5) + ' phút', fmtText(T(t.h, 60 - t.m)), fmtText(T(t.h + 1, t.m))], 0, explainRead(t, { style: 'digital12' }), { clock: t, clockStyle: 'digital12', fill: hourFill(t.m) }); },
+      function () { const t = T(rnd(1, 12), pick([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])); const opts = ['Số ' + (t.m / 5), 'Số ' + t.m, 'Số ' + h12(t.h), 'Số ' + (t.m / 5 + 1)]; return mkQ('Đồng hồ điện tử hiện <b>' + fmtDigital(t) + '</b>. Kim dài chỉ số mấy?', opts, 0, t.m + ' phút = ' + (t.m / 5) + ' × 5, nên kim dài chỉ số ' + (t.m / 5) + '.', { clock: t, clockStyle: 'digital12', fill: shuffle(HOURS12.slice()).map(function (n) { return 'Số ' + n; }), speech: 'Đồng hồ điện tử hiện ' + fmtText(t) + '. Kim dài chỉ số mấy?' }); },
+      // Kim ngắn ở giữa hai số: với 11:30 là giữa số 11 và số 12 (không có "số 13"); 4 đáp án luôn khác nhau
+      function () { const h = rnd(1, 11); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':30</b>. Kim ngắn nằm ở đâu?', ['Giữa số ' + h + ' và số ' + h12(h + 1), 'Đúng số ' + h, 'Đúng số ' + (h === 6 ? 12 : 6), 'Giữa số ' + h12(h + 1) + ' và số ' + h12(h + 2)], 0, '30 phút là nửa giờ, nên kim ngắn đã đi được nửa đường từ số ' + h + ' sang số ' + h12(h + 1) + '.', { clock: T(h, 30), clockStyle: 'digital12', fill: ['Đúng số 12', 'Đúng số 3'], speech: 'Đồng hồ điện tử hiện ' + fmtText(T(h, 30)) + '. Kim ngắn nằm ở đâu?' }); },
+      function () { const t = T(rnd(1, 12), pick([5, 15, 25, 45, 50])); return mkQ('<b>' + fmtDigital(t) + '</b> đọc là:', [fmtText(t), h12(t.h) + ' giờ ' + (t.m / 5) + ' phút', fmtText(T(t.h, 60 - t.m)), fmtText(T(t.h + 1, t.m))], 0, explainRead(t, { style: 'digital12' }), { clock: t, clockStyle: 'digital12', fill: hourFill(t.m), speech: 'Đồng hồ điện tử ở trên đọc là mấy giờ?' }); },
       function () { const t = T(rnd(1, 12), pick(ALL_MINS)); const ds = digitalDistractors(t, LEVEL_BY_ID.l7, 3); const opts = [t].concat(ds).map(function (x) { return { label: fmtText(x), clock: x, clockStyle: 'analog', hideLabel: true }; }); return mkQ('Đồng hồ kim nào chỉ <b>' + fmtDigital(t) + '</b>?', opts, 0, explainRead(t), { speech: 'Đồng hồ kim nào chỉ ' + fmtText(t) + '?' }); },
       function () { return mkQ('Trên đồng hồ điện tử, số đứng <b>sau</b> dấu hai chấm chỉ gì?', ['Phút', 'Giờ', 'Giây', 'Ngày'], 0, 'Giờ : phút. Số trước dấu hai chấm là giờ, số sau dấu hai chấm là phút.'); },
-      function () { const h = rnd(1, 12); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':05</b>. Đó là mấy giờ?', [h + ' giờ 5 phút', h + ' giờ 50 phút', fmtText(T(h + 1, 5)), h + ' giờ 30 phút'], 0, 'Số 05 là 5 phút (không phải 50). Vậy là ' + h + ' giờ 5 phút, kim dài chỉ số 1.', { clock: T(h, 5), clockStyle: 'digital12' }); }
+      function () { const h = rnd(1, 12); return mkQ('Đồng hồ điện tử hiện <b>' + h + ':05</b>. Đó là mấy giờ?', [h + ' giờ 5 phút', h + ' giờ 50 phút', fmtText(T(h + 1, 5)), h + ' giờ 30 phút'], 0, 'Số 05 là 5 phút (không phải 50). Vậy là ' + h + ' giờ 5 phút, kim dài chỉ số 1.', { clock: T(h, 5), clockStyle: 'digital12', speech: 'Đồng hồ điện tử hiện số ' + h + ', hai chấm, không, năm. Đó là mấy giờ?' }); }
     ],
     l8: [
       function () { const h = rnd(1, 11), d = pick([15, 30, 10, 20]); const s = T(h, 0), r = addMin(s, d); return mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. <b>' + d + ' phút</b> nữa là mấy giờ?', [fmtText(r), fmtText(addMin(s, d * 2)), fmtText(T(h + d / 5, 0)), fmtText(addMin(s, 60))], 0, fmtText(s) + ' + ' + d + ' phút = ' + fmtText(r) + '. Kim dài đi từ số 12 tới số ' + (d / 5) + '.', { clock: s, fill: hourFill(d) }); },
       function () { const h = rnd(1, 11); const s = T(h, 45), r = addMin(s, 15); return mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. <b>15 phút</b> nữa là mấy giờ?', [fmtText(r), h + ' giờ 60 phút', fmtText(T(h, 30)), fmtText(T(h + 1, 15))], 0, '45 + 15 = 60 phút = 1 giờ. Vậy ' + fmtText(s) + ' + 15 phút = ' + fmtText(r) + '.', { clock: s }); },
       function () { const h = rnd(1, 10); return mkQ('Em bắt đầu học lúc <b>' + h + ' giờ</b>, học trong <b>1 giờ</b>. Em học xong lúc mấy giờ?', [(h + 1) + ' giờ', h + ' giờ 1 phút', (h + 2) + ' giờ', h + ' giờ 60 phút'], 0, 'Cộng thêm 1 giờ thì kim ngắn tiến thêm một số: ' + h + ' giờ + 1 giờ = ' + (h + 1) + ' giờ.'); },
       function () { const h = rnd(1, 11), m = pick([15, 30]); const s = T(h, m), r = addMin(s, 30); return mkQ('Phim bắt đầu lúc <b>' + fmtText(s) + '</b> và dài <b>30 phút</b>. Phim kết thúc lúc mấy giờ?', [fmtText(r), fmtText(addMin(s, 60)), fmtText(T(h, 30)), fmtText(addMin(s, -30))], 0, m + ' + 30 = ' + (m + 30) + (m + 30 >= 60 ? ' phút = 1 giờ' : ' phút') + '. Vậy phim kết thúc lúc ' + fmtText(r) + '.', { clock: s }); },
-      function (L) { const s = T(rnd(1, 11), pick([0, 15, 30])), d = pick([5, 10, 15, 30, 45]); const r = addMin(s, d); const ds = elapsedDistractors(s, d, r, 3); const opts = [r].concat(ds).map(function (x) { return { label: fmtText(x), clock: x, clockStyle: 'analog', hideLabel: true }; }); return mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. Đồng hồ nào chỉ giờ của <b>' + d + ' phút</b> sau?', opts, 0, fmtText(s) + ' + ' + d + ' phút = ' + fmtText(r) + '.', { speech: 'Bây giờ là ' + fmtText(s) + '. Đồng hồ nào chỉ giờ của ' + d + ' phút sau?' }); },
+      function () { const s = T(rnd(1, 11), pick([0, 15, 30])), d = pick([5, 10, 15, 30, 45]); const r = addMin(s, d); const ds = elapsedDistractors(s, d, r, 3); const opts = [r].concat(ds).map(function (x) { return { label: fmtText(x), clock: x, clockStyle: 'analog', hideLabel: true }; }); return mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. Đồng hồ nào chỉ giờ của <b>' + d + ' phút</b> sau?', opts, 0, fmtText(s) + ' + ' + d + ' phút = ' + fmtText(r) + '.', { speech: 'Bây giờ là ' + fmtText(s) + '. Đồng hồ nào chỉ giờ của ' + d + ' phút sau?' }); },
       function () { const h = rnd(1, 10); const s = T(h, 30); return mkQ('Bây giờ là <b>' + fmtText(s) + '</b>. <b>1 giờ</b> nữa là mấy giờ?', [fmtText(T(h + 1, 30)), fmtText(T(h + 1, 0)), fmtText(T(h, 31)), fmtText(T(h + 2, 30))], 0, 'Cộng 1 giờ: kim ngắn tiến thêm một số, phút giữ nguyên. ' + fmtText(s) + ' + 1 giờ = ' + fmtText(T(h + 1, 30)) + '.', { clock: s }); }
     ]
   };
 
-  /** Chọn bộ câu hỏi cho màn: các câu rút kinh nghiệm từ lỗi trong mê cung trước, rồi câu trong ngân hàng. */
-  function buildQuiz(level, mistakes, count) {
+  /** Câu hỏi có hình đồng hồ (đề bài hoặc đáp án): xem đồng hồ thì phải được nhìn đồng hồ. */
+  function hasPicture(q) {
+    return !!(q && (q.clock || (q.options || []).some(function (op) { return !!op.clock; })));
+  }
+  /** Các vị trí trong ngân hàng luôn sinh ra câu có hình (thử 3 lần cho chắc), nhớ lại để khỏi tính lại. */
+  const PIC_IDX = {};
+  function pictureIndices(level) {
+    if (PIC_IDX[level.id]) return PIC_IDX[level.id];
+    const bank = QUIZ[level.id] || [];
+    const out = [];
+    bank.forEach(function (fn, i) {
+      let ok = true;
+      for (let k = 0; k < 3 && ok; k++) ok = hasPicture(fn(level));
+      if (ok) out.push(i);
+    });
+    PIC_IDX[level.id] = out;
+    return out;
+  }
+
+  /**
+   * Chọn bộ câu hỏi cho màn: các câu rút kinh nghiệm từ lỗi trong mê cung trước (thêm 1 câu), rồi một câu "ôn lại"
+   * từ pool (danh sách Store.reviewPool, thay cho một câu ngân hàng) và các câu trong ngân hàng.
+   * Bộ nào cũng có ít nhất một câu kèm hình đồng hồ để bé thực sự phải "xem" đồng hồ.
+   */
+  function buildQuiz(level, mistakes, count, pool) {
     count = count || 3;
     const qs = [];
     const seen = {};
@@ -644,11 +757,23 @@
       qs.push(mistakeQuestion(level, mis));
     });
     const total = qs.length ? count + 1 : count;
-    const bank = shuffle(QUIZ[level.id].slice());
+    if (pool && pool.length && qs.length < total) {
+      const rq = reviewQuestion(level, pool[0].info);
+      if (rq) qs.push(rq);
+    }
+    const bank = QUIZ[level.id] || [];
+    const order = shuffle(bank.map(function (_, i) { return i; }));
+    // Đưa một câu có hình lên đầu danh sách rút để bộ câu hỏi luôn có ít nhất một hình đồng hồ
+    const pics = pictureIndices(level);
+    if (pics.length && !qs.some(hasPicture)) {
+      const p = pick(pics), at = order.indexOf(p);
+      if (at > 0) { order.splice(at, 1); order.unshift(p); }
+    }
     let i = 0;
-    while (qs.length < total && i < bank.length) {
-      const q = bank[i++](level);
-      if (q) qs.push(q);
+    while (qs.length < total && i < order.length) {
+      const gen = bank[order[i++]];
+      const q = gen(level);
+      if (q) { q.gen = gen; qs.push(q); }
     }
     return qs;
   }
@@ -659,24 +784,24 @@
     if (style === 'digital24') {
       const opts = uniqTimes([shown, target].concat(periodDistractors(shown, level, 4)), []).slice(0, 4);
       const labels = opts.map(function (x) { return fmtText(x, { period: true }); });
-      return mkQ('Trong mê cung, em đã chọn nhầm đồng hồ điện tử <b>' + fmtDigital(shown, true) + '</b>. Đồng hồ này chỉ mấy giờ?', labels, 0,
+      return withReview(mkQ('Trong mê cung, con đã chọn nhầm đồng hồ điện tử <b>' + fmtDigital(shown, true) + '</b>. Đồng hồ này chỉ mấy giờ?', labels, 0,
         explainRead(shown, { style: 'digital24' }) + ' Còn đồng hồ cần tìm là ' + fmtText(target, { period: true }) + ' (' + fmtDigital(target, true) + ').',
-        { clock: shown, clockStyle: 'digital24', speech: 'Em đã chọn nhầm đồng hồ điện tử ' + fmtText(shown, { h24: true }) + '. Đồng hồ này chỉ mấy giờ?' });
+        { clock: shown, clockStyle: 'digital24', speech: 'Con đã chọn nhầm đồng hồ điện tử ' + fmtText(shown, { h24: true }) + '. Đồng hồ này chỉ mấy giờ?' }), 'period', shown);
     }
     if (style === 'digital12') {
       const opts = uniqTimes([shown, target].concat(digitalDistractors(shown, level, 4)), []).slice(0, 4);
       const labels = opts.map(function (x) { return fmtText(x); });
-      return mkQ('Trong mê cung, em đã chọn nhầm đồng hồ điện tử <b>' + fmtDigital(shown) + '</b>. Nó đọc là mấy giờ?', labels, 0,
+      return withReview(mkQ('Trong mê cung, con đã chọn nhầm đồng hồ điện tử <b>' + fmtDigital(shown) + '</b>. Nó đọc là mấy giờ?', labels, 0,
         explainRead(shown, { style: 'digital12' }) + ' Còn đồng hồ cần tìm là ' + fmtDigital(target) + ' (' + fmtText(target) + ').',
-        { clock: shown, clockStyle: 'digital12', speech: 'Em đã chọn nhầm đồng hồ điện tử ' + fmtText(shown) + '. Nó đọc là mấy giờ?' });
+        { clock: shown, clockStyle: 'digital12', speech: 'Con đã chọn nhầm đồng hồ điện tử ' + fmtText(shown) + '. Nó đọc là mấy giờ?' }), 'digital', shown);
     }
     const ds = analogDistractors(shown, level, 4).filter(function (x) { return !same(x, target); });
     const opts = uniqTimes([shown, target].concat(ds), []).slice(0, 4);
     const o = { kem: !!level.kem, ruoi: false };
     const labels = opts.map(function (x) { return fmtText(x, o); });
-    return mkQ('Trong mê cung, em đã chọn nhầm đồng hồ này. Nó chỉ mấy giờ?', labels, 0,
+    return withReview(mkQ('Trong mê cung, con đã chọn nhầm đồng hồ này. Nó chỉ mấy giờ?', labels, 0,
       explainRead(shown, { kem: !!level.kem }) + ' Còn đồng hồ cần tìm là ' + fmtText(target, o) + '.',
-      { clock: shown, clockStyle: 'analog', speech: 'Em đã chọn nhầm đồng hồ này. Nó chỉ mấy giờ?' });
+      { clock: shown, clockStyle: 'analog', speech: 'Con đã chọn nhầm đồng hồ này. Nó chỉ mấy giờ?' }), 'analog', shown);
   }
 
   window.Clock = {
@@ -685,7 +810,7 @@
     fmtText: fmtText, fmtDigital: fmtDigital, itemLabel: itemLabel, describeItem: describeItem, explainRead: explainRead,
     drawClock: drawClock, drawDigital: drawDigital, svgClock: svgClock, svgDigital: svgDigital, setSvgTime: setSvgTime, angles: angles,
     LEVELS: LEVELS, levelById: levelById, LESSONS: LESSONS, QUIZ: QUIZ, ALL_MINS: ALL_MINS, HOURS12: HOURS12,
-    makeRound: makeRound, buildQuiz: buildQuiz, mistakeQuestion: mistakeQuestion,
+    makeRound: makeRound, buildQuiz: buildQuiz, mistakeQuestion: mistakeQuestion, reviewQuestion: reviewQuestion, hasPicture: hasPicture, DELTAS: DELTAS,
     HOUR_COLOR: HOUR_COLOR, MIN_COLOR: MIN_COLOR
   };
 })();

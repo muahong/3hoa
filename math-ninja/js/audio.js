@@ -157,6 +157,16 @@
       Voice.unlock();
     },
 
+    /** Chỉ tiếp tục AudioContext đã có (không tạo mới, không cần thao tác người dùng) – dùng khi tab hiện lại. */
+    resume() {
+      try {
+        if (!this.ctx || this.ctx.state === 'running') { if (this.ctx) Music._kick(); return; }
+        const p = this.ctx.resume();
+        const done = function () { Music._kick(); };
+        if (p && p.then) p.then(done, done);
+      } catch (e) { /* bỏ qua */ }
+    },
+
     /**
      * Mẹo cho iOS: chuyển phiên âm thanh sang "playback" để Web Audio không bị
      * Chế độ im lặng tắt tiếng. iOS 17.4+ có navigator.audioSession; các bản cũ
@@ -369,6 +379,7 @@
 
     stop() {
       this.wanted = null;
+      this.tempoMul = 1;
       this._halt();
     },
 
@@ -546,12 +557,13 @@
     },
 
     /** Đọc một câu. opts: { queue: true } để không cắt câu đang đọc; rate, pitch. */
+    _current: null,
+    _duckT: 0,
     say(text, opts) {
       opts = opts || {};
       if (!this.enabled || !this.available || !text) return;
       try {
         const ss = window.speechSynthesis;
-        if (!opts.queue) ss.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.voice = this.voice;
         u.lang = this.voice.lang || 'vi-VN';
@@ -559,15 +571,39 @@
         u.pitch = opts.pitch || 1.05;
         u.volume = 1;
         const self = this;
-        u.onstart = function () { self._speaking = true; Music.duck(true, 0.3); };
-        u.onend = u.onerror = function () { self._speaking = false; if (!ss.pending && !ss.speaking) Music.duck(false); };
-        ss.speak(u);
+        u.onstart = function () { self._speaking = true; self._current = u; Music.duck(true, 0.3); self._armDuckWatchdog(); };
+        u.onend = u.onerror = function () {
+          self._speaking = false;
+          if (self._current === u) self._current = null;
+          if (!ss.pending && !ss.speaking) { clearTimeout(self._duckT); Music.duck(false); }
+        };
+        if (!opts.queue && (ss.speaking || ss.pending)) {
+          // Chrome có thể nuốt câu mới nếu speak() ngay sau cancel() trong cùng một lượt
+          ss.cancel();
+          setTimeout(function () { try { ss.speak(u); } catch (e) { /* bỏ qua */ } }, 0);
+        } else {
+          ss.speak(u);
+        }
+        this._armDuckWatchdog();
       } catch (e) { /* bỏ qua */ }
+    },
+
+    /** Phòng khi trình duyệt không gọi onend: sau 8 giây luôn trả lại âm lượng nhạc. */
+    _armDuckWatchdog() {
+      clearTimeout(this._duckT);
+      this._duckT = setTimeout(function () { Music.duck(false); }, 8000);
+    },
+
+    /** Đang đọc (hoặc còn câu chờ đọc)? */
+    speaking() {
+      try { return this._speaking || (this.supported && (window.speechSynthesis.speaking || window.speechSynthesis.pending)); } catch (e) { return false; }
     },
 
     stop() {
       try { if (this.supported) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ }
       this._speaking = false;
+      this._current = null;
+      clearTimeout(this._duckT);
       Music.duck(false);
     },
 

@@ -116,9 +116,11 @@
           this.sfx.gain.value = this.enabled ? 1 : 0;
           this.sfx.connect(this.master);
           Music._init(this.ctx, this.master);
+          // iOS: sau cuộc gọi / Siri, trạng thái là 'interrupted' rồi tự về 'running' -> nối lại nhạc
+          try { this.ctx.onstatechange = function () { if (Sfx.ctx && Sfx.ctx.state === 'running') Music._kick(); }; } catch (e) { /* bỏ qua */ }
         }
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        if (this.ctx.state !== 'running') this.ctx.resume().then(done, done);   // 'suspended' hoặc 'interrupted' (iOS)
         else done();
         if (!this._unlocked) {
           const buf = this.ctx.createBuffer(1, 1, 22050);
@@ -358,6 +360,7 @@
     _tick() {
       const ctx = this.ctx, tr = this.track;
       if (!ctx || !tr) return;
+      if (typeof document !== 'undefined' && document.hidden) return;   // tab ẩn: không tổng hợp nốt vô ích
       const stepDur = 60 / (tr.bpm * this.tempoMul) / 4;
       if (this.nextTime < ctx.currentTime - 0.5) this.nextTime = ctx.currentTime + 0.05;  // sau khi tab bị ẩn
       while (this.nextTime < ctx.currentTime + 0.14) {
@@ -483,7 +486,8 @@
       if (!this.enabled || !this.available || !text) return;
       try {
         const ss = window.speechSynthesis;
-        if (!opts.queue) ss.cancel();
+        let cancelled = false;
+        if (!opts.queue && (ss.speaking || ss.pending)) { ss.cancel(); cancelled = true; }
         const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, ''));
         u.voice = this.voice;
         u.lang = this.voice.lang || 'vi-VN';
@@ -497,7 +501,9 @@
           if (!ss.pending && !ss.speaking) Music.duck(false);
           if (opts.onend) opts.onend();
         };
-        ss.speak(u);
+        // Chrome đôi khi bỏ qua speak() gọi ngay sau cancel(): lùi sang tick kế tiếp
+        if (cancelled) setTimeout(function () { try { ss.speak(u); } catch (e) { /* bỏ qua */ } }, 0);
+        else ss.speak(u);
       } catch (e) { /* bỏ qua */ }
     },
 

@@ -55,7 +55,8 @@
           'Lúc đó kim ngắn nằm <b>ở giữa hai số</b>. Ta đọc theo <b>số nhỏ hơn</b> (số kim ngắn vừa đi qua).',
           'Ví dụ: kim ngắn ở giữa số 3 và số 4, kim dài chỉ số 6 → <b>3 giờ 30 phút</b>, còn gọi là <b>3 giờ rưỡi</b>.'
         ],
-        examples: [{ h: 3, m: 30 }, { h: 8, m: 30 }, { h: 12, m: 30 }, { h: 6, m: 0 }],
+        examples: [{ h: 3, m: 30, btn: '3 giờ rưỡi', label: '3 giờ 30 phút = 3 giờ rưỡi' }, { h: 8, m: 30, btn: '8 giờ rưỡi', label: '8 giờ 30 phút = 8 giờ rưỡi' },
+          { h: 12, m: 30, btn: '12 giờ rưỡi', label: '12 giờ 30 phút = 12 giờ rưỡi' }, { h: 6, m: 0, btn: '6 giờ đúng', label: 'Kim dài chỉ 12 → 6 giờ đúng' }],
         speech: 'Một giờ có 60 phút. Kim dài chỉ số 6 là 30 phút. Kim ngắn nằm giữa hai số, ta đọc theo số nhỏ hơn. Ví dụ 3 giờ 30 phút, còn gọi là 3 giờ rưỡi.'
       },
       gen() {
@@ -112,7 +113,8 @@
           'Buổi chiều, tối: giờ trên đồng hồ <b>cộng thêm 12</b>. Ví dụ: 3 giờ chiều = <b>15 giờ</b>, 8 giờ tối = <b>20 giờ</b>.',
           'Ngược lại: 17 giờ → 17 − 12 = 5 → <b>5 giờ chiều</b>.'
         ],
-        examples: [{ h: 3, m: 0, label: '15 giờ · 3 giờ chiều', session: 'chiều' }, { h: 8, m: 0, label: '20 giờ · 8 giờ tối', session: 'tối' }, { h: 7, m: 0, label: '7 giờ sáng', session: 'sáng' }, { h: 12, m: 0, label: '12 giờ trưa', session: 'trưa' }],
+        examples: [{ h: 3, m: 0, label: '15 giờ · 3 giờ chiều', session: 'chiều', h24: 15 }, { h: 8, m: 0, label: '20 giờ · 8 giờ tối', session: 'tối', h24: 20 },
+          { h: 7, m: 0, label: '7 giờ sáng', session: 'sáng', h24: 7 }, { h: 12, m: 0, label: '12 giờ trưa', session: 'trưa', h24: 12 }],
         speech: 'Một ngày có 24 giờ. Buổi chiều và tối, ta lấy giờ trên đồng hồ cộng thêm 12. Ví dụ 3 giờ chiều là 15 giờ, 8 giờ tối là 20 giờ.'
       },
       gen() { return C.fresh(() => C.h24Q({ n: 4 })); },
@@ -173,7 +175,8 @@
           '<b>7 giờ 50 phút</b>: còn 10 phút nữa là 8 giờ → đọc là <b>8 giờ kém 10 phút</b>.',
           'Cách tính: giờ <b>+ 1</b>, phút = <b>60 − số phút</b>. Ví dụ 4 giờ 45 phút → 5 giờ kém 15 phút.'
         ],
-        examples: [{ h: 7, m: 50, label: '8 giờ kém 10 phút' }, { h: 4, m: 45, label: '5 giờ kém 15 phút' }, { h: 11, m: 55, label: '12 giờ kém 5 phút' }, { h: 9, m: 40, label: '10 giờ kém 20 phút' }],
+        examples: [{ h: 7, m: 50, btn: '8 giờ kém 10 phút', label: '7 giờ 50 phút = 8 giờ kém 10 phút' }, { h: 4, m: 45, btn: '5 giờ kém 15 phút', label: '4 giờ 45 phút = 5 giờ kém 15 phút' },
+          { h: 11, m: 55, btn: '12 giờ kém 5 phút', label: '11 giờ 55 phút = 12 giờ kém 5 phút' }, { h: 9, m: 40, btn: '10 giờ kém 20 phút', label: '9 giờ 40 phút = 10 giờ kém 20 phút' }],
         speech: 'Khi kim dài đã qua số 6, ta đọc theo cách giờ kém. 7 giờ 50 phút, còn 10 phút nữa là 8 giờ, nên đọc là 8 giờ kém 10 phút.'
       },
       gen() { return C.fresh(() => C.kemQ({ n: 4 })); },
@@ -199,7 +202,8 @@
           'Đồng hồ <b>điện tử</b> ghi <b>giờ : phút</b>. <b>07:13</b> là 7 giờ 13 phút.',
           'Số giờ lớn hơn 12 là buổi chiều, tối: <b>19:13</b> là 7 giờ 13 phút <b>tối</b> (19 − 12 = 7).'
         ],
-        examples: [{ h: 7, m: 13, label: '7 giờ 13 phút · 07:13' }, { h: 3, m: 52, label: '3 giờ 52 phút · 15:52 (chiều)' }, { h: 9, m: 27, label: '9 giờ 27 phút · 21:27 (tối)' }, { h: 12, m: 1, label: '12 giờ 1 phút · 12:01' }],
+        examples: [{ h: 7, m: 13, btn: '7 giờ 13 phút', label: '7 giờ 13 phút · 07:13', session: 'sáng', h24: 7 }, { h: 3, m: 52, btn: '3 giờ 52 phút chiều', label: '3 giờ 52 phút · 15:52 (chiều)', session: 'chiều', h24: 15 },
+          { h: 9, m: 27, btn: '9 giờ 27 phút tối', label: '9 giờ 27 phút · 21:27 (tối)', session: 'tối', h24: 21 }, { h: 12, m: 1, btn: '12 giờ 1 phút', label: '12 giờ 1 phút · 12:01', session: 'trưa', h24: 12 }],
         speech: 'Mỗi vạch nhỏ trên đồng hồ là 1 phút. Đếm thêm 5 đến số ngay trước kim dài, rồi đếm thêm từng vạch. Đồng hồ điện tử ghi giờ trước, phút sau.'
       },
       gen() { return C.fresh(() => C.exactQ({ n: 4 })); },
@@ -225,7 +229,9 @@
           'Kim dài đi trọn <b>một vòng</b> là <b>1 giờ</b>. Từ 8 giờ đến 9 giờ 15 phút là <b>1 giờ 15 phút</b>.',
           'Biết giờ bắt đầu và thời gian làm, ta <b>đếm thêm</b> để tìm giờ kết thúc: 6 giờ + 20 phút = <b>6 giờ 20 phút</b>.'
         ],
-        examples: [{ h: 7, m: 30, label: '7 giờ → 7 giờ 30: 30 phút' }, { h: 9, m: 15, label: '8 giờ → 9 giờ 15: 1 giờ 15 phút' }, { h: 6, m: 20, label: '6 giờ + 20 phút = 6 giờ 20' }, { h: 8, m: 45, label: '8 giờ 15 → 8 giờ 45: 30 phút' }],
+        // from: giờ bắt đầu – mặt đồng hồ quay chậm từ đó tới giờ kết thúc để bé thấy thời gian "trôi qua"
+        examples: [{ h: 7, m: 30, from: { h: 7, m: 0 }, label: '7 giờ → 7 giờ 30: 30 phút' }, { h: 9, m: 15, from: { h: 8, m: 0 }, label: '8 giờ → 9 giờ 15: 1 giờ 15 phút' },
+          { h: 6, m: 20, from: { h: 6, m: 0 }, label: '6 giờ + 20 phút = 6 giờ 20' }, { h: 8, m: 45, from: { h: 8, m: 15 }, label: '8 giờ 15 → 8 giờ 45: 30 phút' }],
         speech: 'Muốn biết thời gian trôi qua, ta xem kim dài đi từ đâu đến đâu. Từ 7 giờ đến 7 giờ 30 phút là 30 phút. Kim dài đi trọn một vòng là 1 giờ.'
       },
       gen() { return C.fresh(() => C.elapsedQ({ n: 4 })); },
@@ -251,7 +257,7 @@
           'Qua số 6 có thể đọc <b>giờ kém</b>. Buổi chiều, tối <b>cộng 12</b> để ra cách gọi 24 giờ.',
           'Robot tiến nhanh hơn, hãy bắn thật chính xác nhé!'
         ],
-        examples: [{ h: 3, m: 15 }, { h: 7, m: 50, label: '8 giờ kém 10 phút' }, { h: 9, m: 27 }, { h: 5, m: 30 }],
+        examples: [{ h: 3, m: 15 }, { h: 7, m: 50, btn: '8 giờ kém 10 phút', label: '7 giờ 50 phút = 8 giờ kém 10 phút' }, { h: 9, m: 27 }, { h: 5, m: 30 }],
         speech: 'Ôn lại tất cả những gì đã học. Robot tiến nhanh hơn, hãy bắn thật chính xác nhé!'
       },
       gen() {
@@ -270,7 +276,8 @@
     }
   ];
 
-  LEVELS[8].quiz = [].concat.apply([], LEVELS.slice(0, 8).map((l) => l.quiz));
+  // Màn 9 (tổng ôn) hỏi đáp lấy từ các màn 4–8 – đúng phần kiến thức mà màn 9 luyện lại
+  LEVELS[8].quiz = [].concat.apply([], LEVELS.slice(3, 8).map((l) => l.quiz));
 
   function byId(id) { return LEVELS.find((l) => l.id === id) || null; }
   function next(level) { return LEVELS[LEVELS.indexOf(level) + 1] || null; }

@@ -25,12 +25,13 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 
 | Tệp | Nội dung |
 | --- | --- |
-| `index.html` | Khung giao diện: menu, chọn màn, bài học, học xem giờ, HUD, nút di chuyển, hỏi đáp, kết quả |
+| `index.html` | Khung giao diện: menu, chọn màn, bài học, học xem giờ, HUD (mục tiêu, 💡 gợi ý), nút di chuyển, hỏi đáp, kết quả, người chơi, báo cáo |
 | `style.css` | Giao diện đêm trăng thân thiện với trẻ em, tối ưu cảm ứng, đổi bố cục theo màn hình ngang/dọc |
 | `js/clock.js` | Kiến thức xem giờ: mô hình thời gian, đọc giờ tiếng Việt, vẽ đồng hồ (Canvas + SVG), màn chơi, bài học, ngân hàng câu hỏi, đáp án nhiễu "giống lỗi thường gặp" |
 | `js/mazes.js` | Ba mê cung ASCII (có đường hầm), tự xoay khi màn hình dọc, BFS |
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
-| `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ |
+| `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) – sao chép nguyên văn, nạp trước `game.js` |
+| `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ theo từng bé, ôn lại thông minh, báo cáo |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi (mở khóa lần lượt)
@@ -48,13 +49,21 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 
 Mỗi màn gồm 4–5 lượt tìm đồng hồ. Trong mê cung có 4–6 đồng hồ, chỉ một chiếc đúng; các chiếc còn lại là những nhầm lẫn hay gặp (đổi vai hai kim, sai giờ khi kim ngắn ở giữa hai số, cộng thay vì trừ ở giờ kém, quên cộng 12 buổi chiều…).
 
-Luật chơi: có 3 tim ❤️. Bị ma bắt hoặc ăn nhầm đồng hồ mất 1 tim (game cho biết đồng hồ đó chỉ mấy giờ). Ăn ⭐ để ma buồn ngủ và bắt được ma. Ăn hết hạt sáng được thưởng. Tìm đủ đồng hồ là qua màn → **hỏi đáp** 3 câu (thêm 1 câu "rút kinh nghiệm" nếu bé chọn nhầm đồng hồ trong màn). Trả lời sai sẽ hiện lời giải thích và hỏi lại câu đó; trả lời đúng hết mới mở màn tiếp theo. Sao: qua màn 1 sao, hỏi đáp đúng ngay lần đầu +1 sao, không chọn nhầm đồng hồ +1 sao.
+Luật chơi: có 3 tim ❤️. Bị ma bắt hoặc ăn nhầm đồng hồ mất 1 tim (game dừng lại một nhịp, cho biết đồng hồ đó chỉ mấy giờ và đọc lời giải thích). Ăn ⭐ để ma buồn ngủ và bắt được ma. Ăn hết hạt sáng được thưởng; tìm đúng nhiều đồng hồ liền nhau được thưởng thêm (🔥 *n liên tiếp*). Tìm đủ đồng hồ là qua màn → **hỏi đáp** 3 câu (thêm 1 câu "rút kinh nghiệm" nếu bé chọn nhầm đồng hồ trong màn). Bộ câu hỏi nào cũng có ít nhất **một câu kèm hình đồng hồ** (nhìn hình mới thật sự là xem đồng hồ). Trả lời sai sẽ hiện lời giải thích (chữ và giọng đọc) rồi hỏi lại câu đó (đáp án đúng có dấu ✓, đáp án sai có dấu ✗); trả lời đúng hết mới mở màn tiếp theo. Sao: qua màn 1 sao, hỏi đáp đúng ngay lần đầu +1 sao, không chọn nhầm đồng hồ +1 sao.
 
-Màn **📖 Học xem giờ** ở menu chính cho bé quay kim (+5 phút, +15 phút, +30 phút, +1 giờ), xem cách đọc, đồng hồ điện tử tương ứng và nghe đọc.
+**Gợi ý**: trong lúc chơi, thẻ mục tiêu có nút **💡** – bấm là game chỉ luôn đồng hồ đúng (vòng sáng vàng) và đọc cách xem giờ đó (đổi lại, lượt đó không còn thưởng "Nhanh!"). Nếu bé chọn nhầm **2 lần** trong cùng một lượt, game tự đánh dấu đồng hồ đúng và giải thích. Màn kết quả có mục **Cần ôn lại** (những giờ bé còn nhầm) và nút **📘 Xem lại bài học** khi hết tim.
+
+Màn **📖 Học xem giờ** ở menu chính cho bé quay kim (−5 phút, +5 phút, +15 phút, +30 phút, +1 giờ), xem cách đọc, đồng hồ điện tử tương ứng và nghe đọc. Nút **🌗 Buổi & 24 giờ** chuyển sang miền 24 giờ và hiện thêm dòng *buổi trong ngày* (ví dụ *🌇 4 giờ 30 phút chiều · 16 giờ 30 phút*) cho bé lớp 3.
+
+Ở **màn 7** (đồng hồ điện tử) và **màn 8** (thời gian trôi), thẻ mục tiêu hiện luôn **đồng hồ kim** để bé vừa nhìn vừa tính. Trên điện thoại, đồng hồ trong mê cung ở gần Cú Tí được **phóng to** ngay phía trên để đọc được kim.
+
+## Nhiều bé chơi chung một máy
+
+Game **chào bé theo tên** (chữ và giọng đọc) ở lần chạm đầu tiên. Nút **người chơi** (hình + tên) ở góc menu chính mở màn *Ai đang chơi?*: thêm bạn mới (tối đa 8), đổi tên, đổi hình. Mỗi bé có tiến độ, kỷ lục, sao và danh sách *cần ôn lại* riêng; tên và hình dùng chung cho mọi game trên 3hoa.com. Khoảng 25% số lượt trong một màn (1–3 lượt, không bao giờ lượt đầu) được lấy từ những giờ bé từng đọc nhầm (gắn nhãn *📝 Ôn lại*); một câu hỏi đáp cũng ôn lại mục đó. Đọc đúng 2 lần thì mục được bỏ khỏi danh sách. Khi bé đạt **≥ 90% đúng trong ít nhất 20 câu** của một màn, thẻ màn đó (và bảng kết quả) hiện huy hiệu **✅ Đã thuộc**.
 
 ## Dành cho phụ huynh
 
-Ở màn **Chọn màn chơi** có nút *mở khóa tất cả các màn* (khi bé lớp 3 muốn học ngay giờ kém) và *học lại từ đầu* (xóa tiến độ trên thiết bị).
+Ở màn **Chọn màn chơi** có nút **📊 Kết quả** (số ván, tỉ lệ đúng, phút luyện tập, sao và tỉ lệ đúng từng màn, màn cần luyện thêm, danh sách cần ôn lại của bé đang chơi), nút *mở khóa tất cả các màn* (khi bé lớp 3 muốn học ngay giờ kém) và *học lại từ đầu* (xóa tiến độ của bé đang chơi). Các thao tác này hỏi một phép nhân (ví dụ *7 × 8 = ?*) để bé không tự bấm. Trên menu chính có nút **✨ Hiệu ứng: Nhiều/Ít** cho máy yếu hoặc bé nhạy với chuyển động (game cũng tự giảm hiệu ứng khi hệ thống bật *Reduce Motion*).
 
 ## Tùy chỉnh nhanh
 
@@ -64,3 +73,12 @@ Màn **📖 Học xem giờ** ở menu chính cho bé quay kim (+5 phút, +15 ph
 - **Tốc độ Cú Tí, thời gian ma buồn ngủ, điểm**: `PLAYER_SPEED`, `FRIGHT_TIME`, `POINTS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `me-cung-dong-ho-v2`) để thiết bị đã cài nhận bản mới.
+
+## Kiểm thử
+
+Chạy từ thư mục gốc của kho:
+
+```bash
+node --test tests/me-cung-dong-ho.test.js
+NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/me-cung-dong-ho.e2e.js
+```

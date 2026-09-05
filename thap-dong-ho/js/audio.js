@@ -115,9 +115,11 @@
           this.sfx.gain.value = this.enabled ? 1 : 0;
           this.sfx.connect(this.master);
           Music._init(this.ctx, this.master);
+          // iOS: sau cuộc gọi/Siri, trạng thái là 'interrupted' – phát lại nhạc khi chạy trở lại
+          try { this.ctx.onstatechange = function () { if (Sfx.ctx && Sfx.ctx.state === 'running') Music._kick(); }; } catch (e) { /* bỏ qua */ }
         }
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        if (this.ctx.state !== 'running' && this.ctx.resume) this.ctx.resume().then(done, done);
         else done();
         if (!this._unlocked) {
           const buf = this.ctx.createBuffer(1, 1, 22050);
@@ -451,8 +453,10 @@
     supported: false,
     available: false,
     voice: null,
+    onChange: null,     // được gọi khi tìm thấy (hoặc mất) giọng tiếng Việt – giao diện cập nhật nút bật/tắt
     _unlocked: false,
     _speaking: false,
+    _timer: 0,
 
     init() {
       if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
@@ -464,7 +468,9 @@
           const vi = vs.filter(function (v) { return /^vi([-_]|$)/i.test(v.lang || ''); });
           // Ưu tiên giọng cục bộ (iPad: "Linh"), sau đó giọng Google
           self.voice = vi.find(function (v) { return v.localService; }) || vi[0] || null;
+          const was = self.available;
           self.available = !!self.voice;
+          if (was !== self.available && typeof self.onChange === 'function') { try { self.onChange(); } catch (e2) { /* bỏ qua */ } }
         } catch (e) { /* bỏ qua */ }
       };
       pick();
@@ -484,31 +490,52 @@
       } catch (e) { /* bỏ qua */ }
     },
 
+    /** Tách bài đọc dài thành từng câu (Chrome hay cắt ngang câu nói dài hơn ~15 giây).
+        Không dùng lookbehind trong regex: Safari cũ (iPadOS < 16.4) sẽ lỗi cú pháp cả tệp. */
+    sentences(text) {
+      return String(text == null ? '' : text).replace(/([.!?])\s+/g, '$1\n').split('\n')
+        .map(function (x) { return x.trim(); }).filter(function (x) { return x; });
+    },
+
     /** Đọc một câu. opts: { queue: true } để không cắt câu đang đọc; rate, pitch; onstart, onend. */
     say(text, opts) {
       opts = opts || {};
       if (!this.enabled || !this.available || !text) return;
       try {
         const ss = window.speechSynthesis;
-        if (!opts.queue) ss.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.voice = this.voice;
-        u.lang = this.voice.lang || 'vi-VN';
-        u.rate = opts.rate || 1.0;
-        u.pitch = opts.pitch || 1.05;
-        u.volume = 1;
         const self = this;
-        u.onstart = function () { self._speaking = true; Music.duck(true, 0.3); if (opts.onstart) opts.onstart(); };
-        u.onend = u.onerror = function () {
+        if (!opts.queue) { clearTimeout(this._timer); ss.cancel(); }
+        const parts = this.sentences(text);
+        if (!parts.length) return;
+        let ended = false;
+        const finish = function () {
+          if (ended) return;
+          ended = true;
           self._speaking = false;
           if (!ss.pending && !ss.speaking) Music.duck(false);
           if (opts.onend) opts.onend();
         };
-        ss.speak(u);
+        const speakAll = function () {
+          for (let i = 0; i < parts.length; i++) {
+            const u = new SpeechSynthesisUtterance(parts[i]);
+            u.voice = self.voice;
+            u.lang = self.voice.lang || 'vi-VN';
+            u.rate = opts.rate || 1.0;
+            u.pitch = opts.pitch || 1.05;
+            u.volume = 1;
+            if (i === 0) u.onstart = function () { self._speaking = true; Music.duck(true, 0.3); if (opts.onstart) opts.onstart(); };
+            if (i === parts.length - 1) u.onend = finish;
+            u.onerror = finish;
+            ss.speak(u);
+          }
+        };
+        // Sau cancel() cần chờ một nhịp rồi mới speak(), nếu không WebKit/Chrome bỏ qua câu mới
+        if (!opts.queue) this._timer = setTimeout(speakAll, 40); else speakAll();
       } catch (e) { /* bỏ qua */ }
     },
 
     stop() {
+      clearTimeout(this._timer);
       try { if (this.supported) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ }
       this._speaking = false;
       Music.duck(false);

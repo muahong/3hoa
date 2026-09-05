@@ -115,9 +115,13 @@
           this.sfx.gain.value = this.enabled ? 1 : 0;
           this.sfx.connect(this.master);
           Music._init(this.ctx, this.master);
+          // iOS có thể chuyển sang 'interrupted' (có cuộc gọi, chuông...) – nối lại khi quay về
+          this.ctx.onstatechange = () => {
+            if (this.ctx.state === 'running') Music._kick(); else Music._halt();
+          };
         }
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        if (this.ctx.state !== 'running') this.ctx.resume().then(done, done);
         else done();
         if (!this._unlocked) {
           const buf = this.ctx.createBuffer(1, 1, 22050);
@@ -338,7 +342,7 @@
       this.step = 0;
       this.nextTime = this.ctx.currentTime + 0.08;
       const self = this;
-      this.timer = setInterval(function () { self._tick(); }, 25);
+      this.timer = setInterval(function () { self._tick(); }, 80);
     },
 
     setEnabled(on) {
@@ -368,7 +372,7 @@
       if (!ctx || !tr) return;
       const stepDur = 60 / (tr.bpm * this.tempoMul) / 4;
       if (this.nextTime < ctx.currentTime - 0.5) this.nextTime = ctx.currentTime + 0.05;  // sau khi tab bị ẩn
-      while (this.nextTime < ctx.currentTime + 0.14) {
+      while (this.nextTime < ctx.currentTime + 0.3) {
         this._schedule(this.step, this.nextTime, stepDur);
         this.step = (this.step + 1) % tr.steps;
         this.nextTime += stepDur;

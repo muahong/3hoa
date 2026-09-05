@@ -1,17 +1,19 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'cuu-chuong-v1';
+const CACHE = 'cuu-chuong-v3';
 const CORE = [
   './',
   './index.html',
   './style.css',
   './js/audio.js',
   './js/tables.js',
+  './js/profile.js',
   './js/game.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-180.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-512-maskable.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -31,6 +33,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (!('caches' in self)) return;
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
@@ -42,9 +45,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(req)
       .then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) {
+        // Chỉ lưu đệm phản hồi hợp lệ (bỏ qua opaque/404 để không cache trang lỗi)
+        if (res && res.ok) {
           const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+          event.waitUntil(caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {}));
         }
         return res;
       })

@@ -119,9 +119,11 @@
           this.sfx.gain.value = this.enabled ? 1 : 0;
           this.sfx.connect(this.master);
           Music._init(this.ctx, this.master);
+          // iOS: sau cuộc gọi/Siri context ở trạng thái 'interrupted'; khi chạy lại thì nối tiếp nhạc nền
+          try { const self = this; this.ctx.onstatechange = function () { if (self.ctx && self.ctx.state === 'running') Music._kick(); }; } catch (e) { /* bỏ qua */ }
         }
         const done = () => { Music._kick(); };
-        if (this.ctx.state === 'suspended') this.ctx.resume().then(done, done);
+        if (this.ctx.state !== 'running') this.ctx.resume().then(done, done);
         else done();
         if (!this._unlocked) {
           const buf = this.ctx.createBuffer(1, 1, 22050);
@@ -360,7 +362,7 @@
       this.step = 0;
       this.nextTime = this.ctx.currentTime + 0.08;
       const self = this;
-      this.timer = setInterval(function () { self._tick(); }, 25);
+      this.timer = setInterval(function () { self._tick(); }, 60);
     },
 
     setEnabled(on) {
@@ -390,7 +392,7 @@
       if (!ctx || !tr) return;
       const stepDur = 60 / (tr.bpm * this.tempoMul) / 4;
       if (this.nextTime < ctx.currentTime - 0.5) this.nextTime = ctx.currentTime + 0.05;  // sau khi tab bị ẩn
-      while (this.nextTime < ctx.currentTime + 0.14) {
+      while (this.nextTime < ctx.currentTime + 0.25) {
         this._schedule(this.step, this.nextTime, stepDur);
         this.step = (this.step + 1) % tr.steps;
         this.nextTime += stepDur;
@@ -497,6 +499,11 @@
       setTimeout(pick, 3000);
     },
 
+    /** Đang đọc dở một câu? (game dùng để không cắt ngang lời giải thích) */
+    speaking() { return !!this._speaking; },
+    /** Được gọi mỗi khi stop() – game dùng để dọn trạng thái "đang đọc" (Ghi nhớ). */
+    onstop: null,
+
     /** Mở khóa trong thao tác người dùng (iOS cần một lần speak trong sự kiện chạm). */
     unlock() {
       if (!this.supported || this._unlocked) return;
@@ -536,6 +543,7 @@
       try { if (this.supported) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ }
       this._speaking = false;
       Music.duck(false);
+      if (typeof this.onstop === 'function') { try { this.onstop(); } catch (e) { /* bỏ qua */ } }
     },
 
     setEnabled(on) {

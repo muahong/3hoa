@@ -1,18 +1,20 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'cuoi-ho-v1';
+const CACHE = 'cuoi-ho-v6';
 const CORE = [
   './',
   './index.html',
   './style.css',
   './js/audio.js',
   './js/lessons.js',
+  './js/profile.js',
   './js/game.js',
   './manifest.json',
   './icons/logo.svg',
   './icons/icon-192.png',
   './icons/icon-180.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-512-maskable.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -38,12 +40,13 @@ self.addEventListener('fetch', (event) => {
   const sameOrigin = url.origin === self.location.origin;
   const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
   if (!sameOrigin && !isFont) return;
+  if (!('caches' in self)) return;
 
   // Mạng trước, dự phòng bộ nhớ đệm (luôn nhận bản mới khi có mạng)
   event.respondWith(
     fetch(req)
       .then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) {
+        if (res && res.ok) {   // chỉ lưu phản hồi thành công (không lưu lỗi 404/500 hay phản hồi mờ)
           const copy = res.clone();
           caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
         }

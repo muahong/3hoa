@@ -739,7 +739,16 @@ async function answerGate(page, hook, expr) {
       ci = await hook('X.G.gates.findIndex(function (g) { return g.q.options.some(function (o) { return o.clock; }); })');
     }
     ok(ci >= 0, 'tìm được cụm vòng dùng đồng hồ nhỏ ở màn 6');
-    while ((await hook('X.G.gateIdx')) < ci) { await waitChoose(page); await hook('X.choose(X.curGate().q.answer)'); await page.waitForTimeout(450); }
+    // Đi tới cụm ci. X.choose() bỏ qua lệnh nếu pha vừa đổi (máy chậm), nên phải kiểm tra có tiến
+    // thật không: cứ lặp mù thì gặp lúc kẹt sẽ để cụm hết giờ, mất tim, rồi hết ván và treo ở waitChoose.
+    for (let guard = 0; (await hook('X.G.gateIdx')) < ci && guard < 40; guard++) {
+      await waitChoose(page);
+      const before = await hook('X.G.gateIdx');
+      await hook('X.choose(X.curGate().q.answer)');
+      await page.waitForTimeout(450);
+      if ((await hook('X.G.gateIdx')) === before) await page.waitForTimeout(600);   // cú nhảy chưa xong: chờ thêm rồi thử lại
+    }
+    ok((await hook('X.G.gateIdx')) === ci, 'đã tới cụm ' + ci + ' (gateIdx = ' + (await hook('X.G.gateIdx')) + ')');
     await waitChoose(page);
     await page.waitForTimeout(300);
     // C1: mặt đồng hồ trong vòng lửa to hơn (r × 0,7) và chữ số ≥ 10 px ngay trên điện thoại

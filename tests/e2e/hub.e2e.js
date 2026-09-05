@@ -154,7 +154,7 @@ async function run(label, viewport, reduced) {
     await page.waitForTimeout(150);
     eq(await text(page, '#btn-player .pl-name'), 'Tí', 'chip sau khi đổi');
     eq(await text(page, '#hero-name'), 'Tí', 'lời chào sau khi đổi');
-    eq(await progress(page, 'cuu-chuong'), '⭐ 3/45 sao · 2/15 bảng', 'cuu-chuong của Tí');
+    eq(await progress(page, 'cuu-chuong'), '⭐ 3/45 sao · 2/15 màn', 'cuu-chuong của Tí');
     eq(await progress(page, 'cuoi-ho'), 'Chưa chơi', 'cuoi-ho của Tí');
     ok((await page.getAttribute('#hero-play', 'href')).endsWith('cuu-chuong/'), 'hero-play của Tí');
     eq(await page.getAttribute('.player-item.active', 'data-id'), 'pab', 'danh sách cập nhật');
@@ -184,7 +184,7 @@ async function run(label, viewport, reduced) {
     await page.waitForTimeout(100);
     eq(await text(page, '#btn-player .pl-name'), 'Tí', 'visibilitychange: chip');
     eq(await text(page, '#hero-name'), 'Tí', 'visibilitychange: lời chào');
-    eq(await progress(page, 'cuu-chuong'), '⭐ 3/45 sao · 2/15 bảng', 'visibilitychange: thẻ của Tí');
+    eq(await progress(page, 'cuu-chuong'), '⭐ 3/45 sao · 2/15 màn', 'visibilitychange: thẻ của Tí');
     eq(await page.getAttribute('.player-item.active', 'data-id'), 'pab', 'visibilitychange: danh sách bé');
     // pageshow thường (nạp mới) chỉ vẽ lại thẻ, không phá trạng thái đang có
     await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: false })));

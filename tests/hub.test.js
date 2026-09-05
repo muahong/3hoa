@@ -37,7 +37,7 @@ test('hub: summarize reads legacy and migrated shapes per player', () => {
   const nj = H.summarize('math-ninja', 'p1');
   assert.deepEqual([nj.stars, nj.max, nj.done, nj.best], [4, 48, 2, 1200]);
   const cc = H.summarize('cuu-chuong', 'p1');
-  assert.deepEqual([cc.stars, cc.max, cc.done, cc.unit], [4, 45, 2, 'bảng']);
+  assert.deepEqual([cc.stars, cc.max, cc.done, cc.unit], [4, 45, 2, 'màn']);
   const mc = H.summarize('me-cung-dong-ho', 'p1');
   assert.deepEqual([mc.stars, mc.done, mc.best, mc.played], [3, 1, 0, true]);
   assert.equal(({}).pwn, undefined, 'no prototype pollution');

@@ -25,7 +25,7 @@
       parse: function (k) { const p = String(k).split(':'); return (p[0] === 'answer' || p[0] === 'pair') && p[1] ? p[0] + ':' + p[1] : null; },
       units: ['answer:a1', 'answer:a2', 'answer:a3', 'answer:a4', 'answer:m1', 'answer:m2', 'answer:a5', 'answer:m3', 'answer:m4', 'answer:a6',
         'pair:p1', 'pair:p2', 'pair:p3', 'pair:p4', 'pair:p5', 'pair:p6'] },
-    { id: 'cuu-chuong', key: 'cuu-chuong-v1', name: 'Vệ Binh Cửu Chương', kind: 'records', unit: 'bảng',
+    { id: 'cuu-chuong', key: 'cuu-chuong-v1', name: 'Vệ Binh Cửu Chương', kind: 'records', unit: 'màn',
       // records['t2:mul:90'] / ['c1:x:90'] → gộp theo bảng / thử thách
       parse: function (k) { return String(k).split(':')[0] || null; },
       units: ['t2', 't3', 't4', 't5', 't6', 't7', 't8', 't9', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'] },
@@ -49,15 +49,24 @@
   function gameById(id) { for (let i = 0; i < GAMES.length; i++) if (GAMES[i].id === id || GAMES[i].key === id) return GAMES[i]; return null; }
 
   /** Đọc thô khóa của một game. Dữ liệu hỏng / không phải object → null ("chưa chơi"). */
+  /* Bộ nhớ tạm trong MỘT lượt vẽ: renderPlayers() gọi summarizeAll() cho từng bé,
+     nếu không có nó thì 8 bé × 6 game = 48 lần JSON.parse mỗi lần mở hộp thoại. */
+  let readCache = null;
+  function beginRead() { readCache = {}; }
+  function endRead() { readCache = null; }
+
   function readGame(g) {
     if (typeof g === 'string') g = gameById(g);
     if (!g) return null;
+    if (readCache && Object.prototype.hasOwnProperty.call(readCache, g.key)) return readCache[g.key];
     let d = null;
     try {
       const raw = window.localStorage.getItem(g.key);
       if (raw && raw.length < 500000) d = JSON.parse(raw, reviver);
     } catch (e) { d = null; }
-    return isObj(d) ? d : null;
+    const out = isObj(d) ? d : null;
+    if (readCache) readCache[g.key] = out;
+    return out;
   }
 
   /** Bucket tiến trình của người chơi pid: dạng mới players[pid]; dữ liệu cũ (chưa di trú) chỉ thuộc về bé mặc định p1. */
@@ -187,11 +196,12 @@
   }
 
   function renderAll() {
+    beginRead();
     try {
       const list = summarizeAll(activePlayer().id);
       list.forEach(renderCard);
       renderHero(list);
-    } catch (e) { onFatal(e && e.message); }
+    } catch (e) { onFatal(e && e.message); } finally { endRead(); }
   }
 
   /** Đọc lại hồ sơ từ localStorage (Players.load không tự phát onChange) rồi vẽ lại mọi thứ phụ thuộc vào bé đang chơi. */
@@ -212,6 +222,7 @@
   function renderPlayers() {
     const list = $('player-list');
     if (!list || !P) return;
+    beginRead();
     const act = P.active();
     list.innerHTML = P.list().map(function (p) {
       const on = p.id === act.id;
@@ -223,6 +234,7 @@
     if (rm) rm.disabled = P.list().length <= 1;
     const form = $('player-form');
     if (form) form.hidden = !PlayersUI.mode;
+    endRead();
   }
 
   function openPlayerForm(mode) {
@@ -347,6 +359,10 @@
       const b = e.target && e.target.closest ? e.target.closest('.player-item') : null;
       if (!b || !P) return;
       P.setActive(b.getAttribute('data-id'));
+      // renderPlayers() dựng lại danh sách nên nút vừa bấm biến mất: đưa tiêu điểm về mục đang chọn
+      setTimeout(function () {
+        try { const a = document.querySelector('#player-list .player-item.active'); if (a) a.focus(); } catch (e) { /* bỏ qua */ }
+      }, 40);
     });
     on('btn-player-add', 'click', function () { openPlayerForm('add'); });
     on('btn-player-rename', 'click', function () { openPlayerForm('rename'); });
@@ -381,6 +397,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         if (Gate.open) { e.preventDefault(); closeGate(); focusLater('btn-player-remove'); return; }
+        if (PlayersUI.open && PlayersUI.mode) { e.preventDefault(); PlayersUI.mode = null; renderPlayers(); focusLater('btn-player-add'); return; }
         if (PlayersUI.open) { e.preventDefault(); closePlayers(); }
       } else if (e.key === 'Tab') trapTab(e);
     });

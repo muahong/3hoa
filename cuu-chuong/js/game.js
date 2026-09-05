@@ -2050,7 +2050,7 @@
         '<div class="icon">' + l.icon + '</div>' +
         '<div class="name">' + esc(l.title) + (l.id === weak ? ' <span class="ribbon">👉 Gợi ý</span>' : '') + '</div>' +
         '<div class="desc">' + esc(l.desc) + '</div>' +
-        (l.table && mastered('t' + l.table) ? '<div class="mastered">✅ Đã thuộc</div>' : '') +
+        (mastered(topicKey(l)) ? '<div class="mastered">✅ Đã thuộc</div>' : '') +
         '<div class="meta"><span class="best">🏆 ' + fmt(any.best) + note + '</span><span class="stars" aria-label="' + any.stars + ' sao">' + starsHtml(any.stars) + '</span></div>' +
         '</div>';
     }).join('');
@@ -2235,7 +2235,7 @@
       '<span class="stars" aria-label="' + any.stars + ' sao">' + starsHtml(any.stars) + '</span>' +
       '<span>🏆 ' + fmt(any.best) + '</span>' +
       (n ? '<span>' + Math.round(c / n * 100) + '% (' + n + ' câu)</span>' : '<span class="muted">chưa chơi</span>') +
-      (l.table && mastered('t' + l.table) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
+      (mastered(topicKey(l)) ? '<span class="mastered">✅ Đã thuộc</span>' : '') +
       (isWeak(l) ? '<span class="weak">⚠️ Cần luyện thêm</span>' : '') + '</div>';
   }
 

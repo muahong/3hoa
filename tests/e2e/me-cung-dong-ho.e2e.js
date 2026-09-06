@@ -150,7 +150,10 @@ async function run1() {
     await hook('X.teleport(' + pw.r + ', ' + pw.c + ') || true');
     await H.godMode();
     assert.ok((await page.evaluate(() => window.__MeCung.G.fright)) > 0, 'ma buồn ngủ');
-    const ghosts = await page.evaluate(() => { const X = window.__MeCung; X.G.invuln = 1e9; for (let k = 0; k < 60; k++) { X.update(0.05); X.G.invuln = 1e9; } return X.G.ghosts.map((g) => g.state); });
+    // Reading is now safe until the first movement command; explicitly begin
+    // movement before testing release, then stop so this fixture stays on its star.
+    await page.keyboard.press('ArrowUp'); await page.keyboard.press(' ');
+    const ghosts = await page.evaluate(() => { const X = window.__MeCung; X.G.invuln = 1e9; for (let k = 0; k < 100; k++) { X.update(0.05); X.G.invuln = 1e9; } return X.G.ghosts.map((g) => g.state); });
     assert.ok(ghosts.some((s) => s !== 'home'), 'có ma đã ra: ' + ghosts);
     assert.ok(ghosts.filter((s) => s !== 'home').every((s) => s === 'fright'), 'ma ra trong lúc buồn ngủ phải buồn ngủ: ' + ghosts);
     assert.ok(await H.visible('#hud-power'), 'thẻ sao hiện');
@@ -560,7 +563,7 @@ async function run4() {
     });
     assert.equal(sw.supported, true, 'trình duyệt có service worker');
     assert.ok(sw.active && !sw.timeout, 'service worker đã cài và đệm CORE: ' + JSON.stringify(sw));
-    assert.ok(sw.keys.indexOf('me-cung-dong-ho-v4') >= 0, 'tên bộ nhớ đệm v4: ' + sw.keys.join(','));
+    assert.ok(sw.keys.indexOf('me-cung-dong-ho-v6') >= 0, 'tên bộ nhớ đệm v6: ' + sw.keys.join(','));
     // Tắt hẳn máy chủ rồi tải lại: mọi tệp phải đến từ bộ nhớ đệm
     if (typeof server.closeAllConnections === 'function') server.closeAllConnections();
     await new Promise((r) => server.close(r));

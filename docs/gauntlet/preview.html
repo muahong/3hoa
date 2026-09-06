@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3hoa — Bản review gauntlet</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#182636;font:17px/1.6 system-ui,sans-serif}main{max-width:1320px;margin:auto;padding:24px}h1,h2{line-height:1.2}a{color:#075c82}nav{display:flex;flex-wrap:wrap;gap:12px}nav a{background:white;border:1px solid #9cabb9;border-radius:12px;padding:12px 16px;text-decoration:none;min-height:48px}article{margin:24px 0;background:white;padding:20px;border-radius:16px;border:1px solid #d4dde6}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}figure{margin:0}img{width:100%;height:auto;display:block;background:#e1e6ef;border-radius:8px}figcaption{font-weight:700}.note{color:#536474;font-size:15px}.pending{border-left:5px solid #d58a19;padding:12px 18px;background:#fff7e7}summary{cursor:pointer;min-height:44px}a:focus-visible,summary:focus-visible{outline:3px solid #075c82;outline-offset:3px}@media(max-width:600px){main{padding:14px}.pair{grid-template-columns:1fr}}
+</style><main>
+<h1>3hoa · Bản review gauntlet</h1>
+<p>Bản local để chơi và so sánh. Trạng thái nghiệm thu ở <a href="status.md">status.md</a>; ảnh chỉ là bằng chứng hình ảnh, không thay thế kiểm thử luồng chơi.</p>
+<nav><a href="../../">Trang chủ</a><a href="../../me-cung-dong-ho/">Mê Cung</a><a href="../../math-ninja/">Ninja</a><a href="../../cuu-chuong/">Vệ Binh</a><a href="../../thap-dong-ho/">Tháp</a><a href="../../xe-tang-thoi-gian/">Xe Tăng</a><a href="../../cuoi-ho/">Cưỡi Hổ</a></nav>
+<p class="pending">Đợt nâng cấp đang kiểm chứng. Chưa phát hành lên 3hoa.com. Ảnh bên dưới được giữ trong thư mục bằng chứng local không commit; bản clone mới cần chạy lại harness để tạo ảnh.</p>
+<article><h2>Mê Cung · điện thoại ngang 844 × 390</h2><p class="note">Cùng viewport, DPR 1, mục tiêu 11 giờ; topology thay đổi là một phần của gói. So sánh khả năng định vị cú, đọc đồng hồ và khoảng trống cho điều khiển.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/maze/after-844-gameplay.png"><img src="../../tests/e2e/out/gauntlet/maze/after-844-gameplay.png" alt="Phương án A: mê cung màn hình ngang"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/maze/before-844-gameplay.png"><img src="../../tests/e2e/out/gauntlet/maze/before-844-gameplay.png" alt="Phương án B: mê cung màn hình ngang"></a></figure></div><details><summary>Xem mốc phiên bản sau khi so sánh</summary>A là bản đang sửa, B là baseline a1f0458. Không phải thử nghiệm sở thích với trẻ em.</details></article>
+<article><h2>Mê Cung · điện thoại dọc 390 × 844</h2><div class="pair">
+<figure><figcaption>A</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/maze/before-390-gameplay.png" alt="Phương án A: mê cung màn hình dọc"></figure>
+<figure><figcaption>B</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/maze/after-390-gameplay.png" alt="Phương án B: mê cung màn hình dọc"></figure></div><details><summary>Xem mốc phiên bản sau khi so sánh</summary>A là baseline a1f0458; B là bản đang sửa.</details></article>
+<article><h2>Bằng chứng và giới hạn</h2><p><a href="baseline-three.md">Baseline Ninja / Vệ Binh / Tháp</a> · <a href="baseline-action.md">Baseline Xe Tăng / Cưỡi Hổ</a> · <a href="input-probes.md">Lỗi thao tác tái hiện</a> · <a href="references.md">Tư liệu đối chiếu</a></p><p>Windows Chromium với các viewport giả lập. Chưa kiểm tra iPad vật lý, Safari hoặc giọng Việt thật. Kết quả seed, input, offline và hiệu năng phải được đọc theo phạm vi cụ thể trong báo cáo; không suy từ screenshot ra kết quả thắng.</p></article>
+</main></html>

@@ -103,6 +103,7 @@ html, body {
   z-index: 5;
 }
 .screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0s linear 0.25s; }
+.screen.hidden * { pointer-events: none !important; }
 .screen > * { pointer-events: auto; }
 /* Bảng nội dung hiện ra mềm mại (tắt khi bé/hệ thống chọn ít hiệu ứng) */
 .screen .panel { transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15), opacity 0.25s ease; }
@@ -314,6 +315,7 @@ html, body {
 /* Bố cục HUD "đóng băng": thẻ sao xếp ngang cạnh điểm, gợi ý nằm đè (absolute) -> chiều cao HUD không đổi giữa ván, mê cung không nhảy */
 .hud-left { grid-area: left; display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; align-items: center; }
 .hud-center { grid-area: center; position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.move-status { margin: 2px 0 0; height: 33px; flex-shrink: 0; font-size: 13px; line-height: 1.25; font-weight: 700; color: #fff; text-align: center; max-width: 360px; }
 .hud-right { grid-area: right; display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
 .score-box { background: rgba(255,255,255,0.94); border-radius: 18px; padding: 6px 16px 4px; min-width: 120px; box-shadow: 0 4px 14px rgba(0,0,0,0.25); line-height: 1; }
 .score-box .label { display: block; font-size: 13px; letter-spacing: 2px; font-weight: 800; color: var(--ink-soft); }
@@ -716,4 +718,29 @@ html, body {
   position: sticky; bottom: 0; z-index: 1;
   margin-top: 8px; padding: 10px 0 2px;
   background: linear-gradient(transparent, var(--paper) 45%);
+}
+
+/* Short landscape: give the board the full height, retain 44px controls. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #hud { width: 198px; padding: 8px 6px 8px 8px; }
+  .hud-top { display: flex; flex-direction: column; gap: 4px; }
+  .hud-left { width: 100%; display: grid; grid-template-columns: 74px 1fr; gap: 4px; }
+  .hud-right { order: -1; gap: 8px; }
+  .hud-center { width: 100%; gap: 4px; }
+  .target-card { min-width: 0; width: 100%; min-height: 128px; padding: 8px 8px 50px; gap: 4px; justify-content: center; flex-wrap: wrap; }
+  .target-card .target-label { font-size: 11px; }
+  .target-text { font-size: 18px; }
+  .target-clock svg { width: 80px; height: 80px; }
+  .speak-btn { top: auto; bottom: 3px; transform: none; }
+  .hint-btn { right: 58px; }
+  .move-status { height: 16px; font-size: 12px; }
+  #btn-pause { width: 46px; height: 46px; min-height: 46px; }
+  .score-box { min-width: 0; padding: 4px 6px; }
+  .score-box .label { font-size: 10px; }
+  .score-box .value { font-size: 22px; }
+  .stage-chip { font-size: 12px; padding: 5px 4px; text-align: center; }
+  .power-chip { grid-column: 1 / -1; padding: 2px 6px; font-size: 11px; line-height: 1.2; }
+  .lives { padding: 6px 8px; }
+  .lives span { font-size: 22px; }
+  .hint { position: fixed; left: 50%; top: auto; bottom: 8px; max-width: 90vw; font-size: 15px; }
 }

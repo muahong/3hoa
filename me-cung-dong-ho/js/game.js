@@ -155,7 +155,7 @@
     W: 0, H: 0, dpr: 1, touch: false,
     state: 'menu',            // menu | levels | lesson | learn | countdown | playing | dying | ready | clear | paused | quiz | result
     level: null, levelIdx: -1,
-    mazeId: 'A', maze: null, cell: 40, ox: 0, oy: 0, field: { x: 0, y: 0, w: 0, h: 0 },
+    mazeId: 'A', mazeSeed: 1, compact: false, route: null, destination: null, reading: false, maze: null, cell: 40, ox: 0, oy: 0, field: { x: 0, y: 0, w: 0, h: 0 },
     player: null, ghosts: [], dots: null, dotsLeft: 0, powers: [], items: [],
     round: 0, roundInfo: null, roundStart: 0, nextRoundAt: -1, roundWrong: 0, streak: 0,
     score: 0, lives: MAX_LIVES, found: 0, wrong: 0, ghostsEaten: 0, mistakes: [],
@@ -247,6 +247,7 @@
     if (!w || !h) return;
     G.dpr = Math.min(window.devicePixelRatio || 1, 2);
     G.W = w; G.H = h;
+    if (G.roundInfo) { renderTarget(false); updateHud(); }
     canvas.width = Math.round(w * G.dpr);
     canvas.height = Math.round(h * G.dpr);
     canvas.style.width = w + 'px';
@@ -266,7 +267,8 @@
     const f = { x: sal + 8, y: sat + 8, w: W - sal - sar - 16, h: H - sat - sab - 16 };
     if (inGame() || G.state === 'quiz' || G.state === 'result') {
       const hr = ui.hudTop.getBoundingClientRect();
-      if (hr.height) f.y = Math.max(f.y, hr.bottom + 6);
+      if (G.W > G.H && G.H <= 500) { f.x = Math.max(f.x, hr.right + 10); f.w = W - sar - 8 - f.x; }
+      else if (hr.height) f.y = Math.max(f.y, hr.bottom + 6);
       if (G.touch) {
         const pr = ui.dpad.getBoundingClientRect();
         if (pr.width) {
@@ -295,7 +297,7 @@
 
   /** Chọn mê cung vừa màn hình: ưu tiên mê cung của màn, nếu ô quá nhỏ thì dùng mê cung nhỏ hơn. */
   function chooseMaze(preferred, f) {
-    const transposed = f.h > f.w;
+    const transposed = G.H > G.W;
     // Chừa lề phòng khi thẻ mục tiêu của các lượt sau dài hơn (HUD cao thêm)
     const ff = { w: f.w - 8, h: f.h - 28 };
     const order = [preferred].concat(['C', 'B', 'A'].filter(function (id) { return id !== preferred; }));
@@ -317,7 +319,7 @@
   function layout() {
     G.field = measureField();
     if (!G.maze) return;
-    const wantT = G.field.h > G.field.w;
+    const wantT = G.H > G.W;
     if (wantT !== G.maze.transposed) transposeState(wantT);
     const m = G.maze;
     G.cell = Math.max(14, Math.floor(Math.min(G.field.w / m.cols, G.field.h / m.rows)));
@@ -328,7 +330,7 @@
 
   /** Xoay toàn bộ trạng thái khi thiết bị đổi hướng (hàng <-> cột). */
   function transposeState(wantT) {
-    G.maze = M.build(G.mazeId, wantT);
+    G.maze = M.build(G.mazeId, wantT, G.maze.seed, G.maze.compact);
     const dots = [];
     for (let r = 0; r < G.maze.rows; r++) { dots.push([]); for (let c = 0; c < G.maze.cols; c++) dots[r].push(G.dots[c][r]); }
     G.dots = dots;
@@ -343,6 +345,8 @@
     G.ghosts.forEach(swapEnt);
     G.items.forEach(swapCell);
     G.powers.forEach(swapCell);
+    if (G.route) G.route.forEach(swapCell);
+    swapCell(G.destination);
   }
 
   /* ================= NỀN & LỚP MÊ CUNG ================= */
@@ -499,6 +503,13 @@
 
   function playerDecide(p) {
     const m = G.maze, r = p.from.r, c = p.from.c;
+    if (p.stop || G.reading) return null;
+    if (G.route) {
+      while (G.route.length && G.route[0].r === r && G.route[0].c === c) G.route.shift();
+      if (!G.route.length) { stopInput(); return null; }
+      const next = G.route[0];
+      return M.openDirs(m, r, c).find(function (d) { const n = M.norm(m, r + d.dy, c + d.dx); return n.r === next.r && n.c === next.c; }) || null;
+    }
     if (p.want && M.isOpen(m, r + p.want.dy, c + p.want.dx)) { return p.want; }
     if (p.moving && p.dir && M.isOpen(m, r + p.dir.dy, c + p.dir.dx)) return p.dir;
     return null;
@@ -506,7 +517,10 @@
 
   function setWant(d) {
     const p = G.player;
-    if (!p) return;
+    if (!p || G.state !== 'playing') return;
+    const underway = p.moving && p.t > 0 && p.t < 1;
+    if (underway || M.isOpen(G.maze, p.from.r + d.dy, p.from.c + d.dx)) leaveReading();
+    G.route = null; G.destination = null; p.stop = false;
     p.want = d;
     // Quay đầu ngay lập tức khi đang đi
     if (p.moving && p.dir && p.t > 0 && p.t < 1 && d.dx === -p.dir.dx && d.dy === -p.dir.dy) {
@@ -518,6 +532,35 @@
       p.t = 1 - p.t;
       syncPos(p);
     }
+  }
+
+  function stopInput() {
+    G.route = null; G.destination = null;
+    if (G.player) { G.player.want = null; G.player.stop = true; }
+    if (typeof swipe !== 'undefined') swipe.active = false;
+  }
+  function leaveReading() {
+    if (!G.reading) return;
+    G.reading = false; G.invuln = Math.max(G.invuln, 4);
+    G.ghosts.forEach(function (g, i) { g.releaseAt = Math.max(g.releaseAt, G.time + 4 + i * 3); });
+  }
+  function setDestination(target) {
+    const p = G.player;
+    if (!p || G.state !== 'playing' || !M.norm(G.maze, target.r, target.c)) return false;
+    const blocked = G.items.filter(function (it) { return !it.taken && !it.wrongAt; });
+    let start = p.moving && p.t < 1 ? M.norm(G.maze, p.to.r, p.to.c) : p.from;
+    let route = M.path(G.maze, start, target, blocked);
+    if (p.moving && p.t > 0 && p.t < 1) {
+      const back = M.path(G.maze, p.from, target, blocked);
+      const otherAnswerAhead = blocked.some(function (it) { return it.r === start.r && it.c === start.c && (it.r !== target.r || it.c !== target.c); });
+      if (back && (!route || otherAnswerAhead || back.length + p.t < route.length + 1 - p.t)) {
+        setWant({ dx: -p.dir.dx, dy: -p.dir.dy }); route = back;
+      }
+    }
+    if (!route) { toast('Chưa có lối tới đây. Chạm một ô đường đi nhé!'); return false; }
+    leaveReading(); p.want = null; p.stop = false;
+    G.route = route; G.destination = { r: target.r, c: target.c };
+    return true;
   }
 
   function ghostTarget(g) {
@@ -594,7 +637,9 @@
     G.field = measureField();
     const ch = chooseMaze(level.maze, G.field);
     G.mazeId = ch.id;
-    G.maze = M.build(ch.id, ch.transposed);
+    G.mazeSeed = Math.floor(Math.random() * 4294967296);
+    G.compact = Math.min(G.W, G.H) < 500;
+    G.maze = M.build(ch.id, ch.transposed, G.mazeSeed, G.compact);
     G.dots = G.maze.dot.map(function (row) { return row.slice(); });
     G.dotsLeft = G.maze.dotCount;
     G.powers = G.maze.powers.map(function (p) { return { r: p.r, c: p.c, taken: false }; });
@@ -605,6 +650,9 @@
     G.hud = { score: -1, lives: -1, level: '', power: -1 };
     G.quiz = null; G.result = null;
     spawnEntities();
+    // Stage/score text contributes to the grid's intrinsic width. Populate it
+    // before measuring so clock-reference cards wrap at their final width.
+    updateHud();
     layout();
     startRound(true, G.roundInfo);
     runCountdown();
@@ -617,7 +665,7 @@
     p.anim = 0; p.dying = 0; p.mood = ''; p.moodT = 0; p.onArrive = onPlayerArrive;
     G.player = p;
     G.ghosts = [];
-    const n = clamp(G.level.ghosts, 1, 4);
+    const n = Math.max(1, G.level.ghosts - 1);
     const corners = [{ r: 1, c: 1 }, { r: 1, c: m.cols - 2 }, { r: m.rows - 2, c: 1 }, { r: m.rows - 2, c: m.cols - 2 }];
     for (let i = 0; i < n; i++) {
       const kind = GHOST_KINDS[i];
@@ -640,11 +688,12 @@
     const p = G.player;
     p.from = { r: m.player.r, c: m.player.c }; p.to = { r: m.player.r, c: m.player.c };
     p.t = 1; p.moving = false; p.dir = { dx: 0, dy: -1 }; p.want = null; p.dying = 0;
+    stopInput(); G.reading = true;
     syncPos(p);
     G.ghosts.forEach(function (g, i) {
       g.from = { r: g.home.r, c: g.home.c }; g.to = { r: g.home.r, c: g.home.c };
       g.t = 1; g.moving = false; g.dir = null; g.state = 'home';
-      g.releaseAt = G.time + (first ? 1.0 : 1.5) + i * 2.2;
+      g.releaseAt = G.time + 4 + i * 3;
       syncPos(g);
     });
     G.fright = 0;
@@ -699,6 +748,7 @@
     G.nextRoundAt = -1;
     G.items = [];
     placeClocks(G.roundInfo);
+    stopInput(); G.reading = true;
     // Hồi lại ngôi sao đã ăn
     G.powers.forEach(function (p) { p.taken = false; });
     renderTarget(true);
@@ -708,26 +758,9 @@
   /** Đặt các đồng hồ vào các chỗ trống, xa Cú Tí và cách nhau. */
   function placeClocks(info) {
     const m = G.maze, p = G.player;
-    const dist = M.distances(m, p.from.r, p.from.c);
     const n = info.items.length;
-    const spots = m.spots.slice();
-    let best = null;
-    for (let attempt = 0; attempt < 40 && !best; attempt++) {
-      const minPlayer = attempt < 20 ? 4 : attempt < 30 ? 3 : 2;
-      const minGap = attempt < 10 ? 4 : attempt < 20 ? 3 : 2;
-      const cand = C.shuffle(spots.filter(function (s) { return dist[s.r][s.c] >= minPlayer; }));
-      const chosen = [];
-      for (let i = 0; i < cand.length && chosen.length < n; i++) {
-        const s = cand[i];
-        let ok = true;
-        for (let k = 0; k < chosen.length; k++) {
-          if (Math.abs(chosen[k].r - s.r) + Math.abs(chosen[k].c - s.c) < minGap) { ok = false; break; }
-        }
-        if (ok) chosen.push(s);
-      }
-      if (chosen.length >= n) best = chosen;
-    }
-    if (!best) best = C.shuffle(spots).slice(0, n);
+    const best = M.fairSpots(m, p.from, n);
+    if (!best) throw new Error('Không đủ vị trí đáp án an toàn');
     G.items = info.items.map(function (t, i) {
       const s = best[i] || best[0];
       return { r: s.r, c: s.c, time: t, correct: C.same(t, info.target), style: info.style, taken: false, born: G.anim, wobble: Math.random() * TAU };
@@ -737,7 +770,16 @@
   function renderTarget(pop) {
     const ri = G.roundInfo;
     if (!ri) return;
-    ui.targetText.innerHTML = (ri.review ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + ri.html;
+    let html = ri.html;
+    const rail = G.W > G.H && G.H <= 500;
+    if (rail && ri.hudClock) {
+      // The picture supplies the reference time; keep its face readable and
+      // shorten only the repeated prose in the narrow landscape rail.
+      html = ri.extra ? 'Bây giờ như hình.<br>Sau <b>' + (ri.extra.delta === 60 ? '1 giờ' : ri.extra.delta + ' phút') + '</b>?' : 'Tìm số <b>cùng giờ</b>';
+    }
+    const label = ui.target.querySelector('.target-label');
+    if (label) label.textContent = rail && ri.review ? '📝 ÔN LẠI' : 'MỤC TIÊU';
+    ui.targetText.innerHTML = (ri.review && !rail ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + html;
     if (ri.hudClock) {
       ui.targetClock.hidden = false;
       ui.targetClock.innerHTML = C.svgClock(ri.hudClock, { size: 112 });
@@ -876,6 +918,7 @@
   function onItem(it) {
     const p = G.player, ri = G.roundInfo, level = G.level;
     if (!p || !ri || !level) return;
+    stopInput();
     const x = px(p.x), y = py(p.y);
     if (it.correct) {
       it.taken = true;
@@ -935,7 +978,7 @@
       }
       loseLife(false);
       // Nghỉ một nhịp để bé kịp đọc lời giải thích (ma và Cú Tí đứng yên); không đè lên nhịp "mất tim cuối"
-      if (G.state === 'playing') { G.state = 'ready'; G.stateT = 1.8; G.invuln = 2.5; }
+      if (G.state === 'playing') { G.state = 'ready'; G.stateT = 1.8; G.invuln = 2.5; G.reading = true; }
     }
   }
 
@@ -1292,11 +1335,12 @@
     if (G.state !== 'playing') { updateHud(); return; }
 
     G.ghosts.forEach(function (g) {
+      if (G.reading || G.time < g.releaseAt) return;
       if (g.state === 'home') {
         if (G.time >= g.releaseAt) { g.state = G.fright > 0 ? 'fright' : 'active'; g.dir = null; g.moving = false; }
         else return;
       }
-      g.speed = G.level.speed * (g.state === 'fright' ? 0.55 : 1) * (G.round >= 3 ? 1.08 : 1);
+      g.speed = G.level.speed * 0.7 * (g.state === 'fright' ? 0.55 : 1) * (G.round >= 3 ? 1.08 : 1);
       stepEntity(g, dt, ghostDecide);
       const dx = g.x - p.x, dy = g.y - p.y;
       if (dx * dx + dy * dy < 0.42) onGhostCatch(g);
@@ -1317,7 +1361,7 @@
       for (let i = 0; i < spans.length; i++) spans[i].classList.toggle('lost', i >= G.lives);
       ui.lives.setAttribute('aria-label', 'Còn ' + G.lives + ' tim');
     }
-    const lvl = G.level ? 'Màn ' + G.level.n + ' · 🕐 ' + Math.min(G.round, G.level.rounds) + '/' + G.level.rounds + (G.W >= 700 ? ' đồng hồ' : '') : '';
+    const lvl = G.level ? 'Màn ' + G.level.n + ' · 🕐 ' + Math.min(G.round, G.level.rounds) + '/' + G.level.rounds + (G.W >= 700 && G.H > 500 ? ' đồng hồ' : '') : '';
     if (h.level !== lvl) { h.level = lvl; ui.levelChip.textContent = lvl; }
     const pw = G.fright > 0 ? Math.ceil(G.fright) : 0;
     if (h.power !== pw) {
@@ -1355,6 +1399,7 @@
     if (G.mazeLayer) ctx.drawImage(G.mazeLayer, G.ox - 4, G.oy - 4, G.mazeLayerW, G.mazeLayerH);
     drawDots();
     drawPowers();
+    drawRoute();
     drawItems();
     G.ghosts.forEach(drawGhost);
     drawPlayer();
@@ -1376,6 +1421,21 @@
     const x = G.W * 0.5 + Math.sin(t * 0.5) * G.W * 0.35;
     const y = G.H * 0.88 + Math.sin(t * 2) * 8;
     drawOwl(x, y, clamp(G.W * 0.03, 18, 30), { dx: Math.cos(t * 0.5) >= 0 ? 1 : -1, dy: 0 }, t, 0, 'happy');
+  }
+
+  function drawRoute() {
+    if (G.route && G.destination && G.player) {
+      ctx.save(); ctx.strokeStyle = '#9cffe1'; ctx.lineWidth = Math.max(3, G.cell * 0.09); ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(px(G.player.x), py(G.player.y));
+      G.route.forEach(function (p) { ctx.lineTo(px(p.c + 0.5), py(p.r + 0.5)); }); ctx.stroke();
+      ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(px(G.destination.c + 0.5), py(G.destination.r + 0.5), G.cell * 0.47, 0, TAU); ctx.stroke(); ctx.restore();
+    }
+    const label = document.getElementById('move-status');
+    if (label) {
+      const small = G.W > G.H && G.H <= 500;
+      const text = small ? (G.reading ? 'Cứ đọc nhé, ma đang chờ!' : G.route ? 'Chạm nơi khác để đổi đích' : 'Chạm đích · Vuốt để đi') : G.reading ? '🦉 Cứ đọc nhé! Ma chờ con di chuyển.' : G.route ? '👣 Đi theo đường xanh · Chạm để đổi đích' : 'Chạm đích · Vuốt / phím để đi · Chạm cú để dừng';
+      if (label.textContent !== text) label.textContent = text;
+    }
   }
 
   function drawDots() {
@@ -1602,7 +1662,7 @@
     const p = G.player;
     if (!p) return;
     const R = G.cell * 0.42;
-    if (G.invuln > 0 && G.state === 'playing' && Math.floor(G.anim * 10) % 2 === 0) ctx.globalAlpha = 0.5;
+    if (G.invuln > 0 && !G.reading && G.state === 'playing' && Math.floor(G.anim * 10) % 2 === 0) ctx.globalAlpha = 0.5;
     // Đứng yên thì nhún nhẹ cho có sức sống
     const bob = p.moving || Motion.lite ? 0 : Math.sin(G.anim * 2.2) * R * 0.09;
     drawOwl(px(p.x), py(p.y) + bob, R, p.dir, p.moving ? p.anim : 0, p.dying, p.moodT > 0 ? p.mood : '');
@@ -1879,6 +1939,7 @@
   function pauseGame() {
     if (G.state !== 'playing' && G.state !== 'ready') return;
     G.prevState = G.state;
+    stopInput();
     G.state = 'paused';
     Voice.stop();
     ui.pauseInfo.textContent = G.roundInfo ? 'Đang tìm: ' + G.roundInfo.html.replace(/<[^>]+>/g, '') : 'Nghỉ một chút rồi chơi tiếp nhé!';
@@ -1901,7 +1962,7 @@
   const swipe = { active: false, id: -1, ax: 0, ay: 0, sx: 0, sy: 0, moved: false };
   function onCanvasDown(e) {
     Sfx.unlock();
-    if (!inGame()) return;
+    if (G.state !== 'playing') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     swipe.active = true; swipe.id = e.pointerId; swipe.ax = swipe.sx = e.clientX; swipe.ay = swipe.sy = e.clientY; swipe.moved = false;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
@@ -1922,11 +1983,9 @@
     if (!swipe.active || e.pointerId !== swipe.id) return;
     swipe.active = false;
     if (!swipe.moved && G.player && G.state === 'playing') {
-      // Chạm nhẹ: đi về phía điểm chạm
-      const dx = e.clientX - px(G.player.x), dy = e.clientY - py(G.player.y);
-      if (Math.abs(dx) > G.cell * 0.4 || Math.abs(dy) > G.cell * 0.4) {
-        setWant(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DIR.right : DIR.left) : (dy > 0 ? DIR.down : DIR.up));
-      }
+      const rect = canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+      if (Math.hypot(x - px(G.player.x), y - py(G.player.y)) < G.cell * 0.5) stopInput();
+      else setDestination({ r: Math.floor((y - G.oy) / G.cell), c: Math.floor((x - G.ox) / G.cell) });
     }
   }
 
@@ -1934,7 +1993,7 @@
     canvas.addEventListener('pointerdown', onCanvasDown);
     canvas.addEventListener('pointermove', onCanvasMove);
     canvas.addEventListener('pointerup', onCanvasUp);
-    canvas.addEventListener('pointercancel', function () { swipe.active = false; });
+    canvas.addEventListener('pointercancel', stopInput);
     ui.dpad.addEventListener('pointerdown', function (e) {
       const b = e.target.closest ? e.target.closest('button[data-dir]') : null;
       if (!b) return;
@@ -1976,7 +2035,8 @@
         if (G.state === 'playing' || G.state === 'ready') pauseGame(); else if (G.state === 'paused') resumeGame();
         return;
       }
-      if (!inGame()) return;
+      if (G.state !== 'playing') return;
+      if (k === ' ') { stopInput(); e.preventDefault(); return; }
       const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
       if (map[k]) { setWant(DIR[map[k]]); e.preventDefault(); }
     });
@@ -2452,7 +2512,7 @@
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
   window.__MeCung = {
     G: G, Store: Store, startLevel: startLevel, showLesson: showLesson, startRound: startRound, startQuiz: startQuiz, quizAnswer: quizAnswer, quizNext: quizNext,
-    endLevel: endLevel, setWant: setWant, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem, askHint: askHint,
+    endLevel: endLevel, setWant: setWant, setDestination: setDestination, stopInput: stopInput, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem, askHint: askHint,
     teleport: function (r, c) { const p = G.player; p.from = { r: r, c: c }; p.to = { r: r, c: c }; p.t = 1; p.moving = false; syncPos(p); onPlayerArrive(p); }
   };
 

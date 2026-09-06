@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="game-shell.css">
 </head>
 <body>
 <div id="app">
@@ -37,7 +38,7 @@
         <div class="stage-chip" id="hud-level">Màn 1 · 🕐 1/4</div>
         <div class="power-chip" id="hud-power" hidden>⭐ Ma buồn ngủ!</div>
       </div>
-      <div class="hud-center">
+      <div class="hud-center"><p id="move-status" class="move-status" role="status">Chạm đích để Cú Tí đi tới</p>
         <div class="target-card" id="hud-target">
           <div class="target-clock" id="hud-target-clock" hidden></div>
           <div>
@@ -126,7 +127,7 @@
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
-      <p class="footer-note">Đi trong mê cung, tránh Ma Ngủ Gật và tìm đúng đồng hồ! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+      <p class="footer-note">Đi trong mê cung, tránh Ma Ngủ Gật và tìm đúng đồng hồ! · <a class="game-home" href="../">← Trang chủ 3hoa</a></p>
     </div>
   </div>
 
@@ -235,7 +236,8 @@
       <div class="btn-row">
         <button class="btn ghost small" id="btn-restart">🔄 Chơi lại màn</button>
         <button class="btn ghost small" id="btn-lesson-again">📘 Xem lại bài học</button>
-        <button class="btn ghost small" id="btn-quit">🏠 Về trang chính</button>
+        <button class="btn ghost small" id="btn-quit">☰ Menu trò chơi</button>
+        <a class="game-home" id="pause-home" href="../">← Trang chủ 3hoa</a>
       </div>
     </div>
   </div>

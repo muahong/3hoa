@@ -63,6 +63,24 @@ NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/<game>.e2e.js     # đầu
 - `tests/lib/load.js` nạp các mô-đun của game vào một `window` giả (không cần trình duyệt); `tests/e2e/lib/browser.js` phục vụ thư mục gốc và mở trang bằng Chromium (`withGame(dir, fn, { viewport, initScript, reducedMotion })`).
 - Trong sandbox không có mạng nên yêu cầu tới Google Fonts thất bại – đó là bình thường, bộ kiểm thử đã bỏ qua lỗi này; giao diện dùng font dự phòng.
 
+### Windows / Codex desktop
+
+Đợt kiểm tra 2026-09-06 dùng Node 22.23.2 và Chromium có sẵn trong runtime Codex. Đường dẫn có thể thay đổi giữa các máy; kiểm tra trước khi chạy:
+
+```powershell
+$env:NODE_PATH = 'C:\Users\son.nguyen\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+node -e "console.log(require('playwright').chromium.executablePath())"
+node tests/run.js
+node tests/e2e/hub.e2e.js
+node tests/e2e/gauntlet-matrix.e2e.js
+node tests/e2e/gauntlet-cache.e2e.js
+python -m http.server 8787 --bind 127.0.0.1
+```
+
+Mở `http://127.0.0.1:8787/docs/gauntlet/preview.html` để xem bản review local. `docs/gauntlet/status.md` ghi phạm vi thực sự đạt, phần còn mở và các lệnh kiểm tra. `gauntlet-cache.e2e.js` phục vụ bản baseline từ Git rồi cập nhật sang working tree trong context riêng, không dùng hồ sơ browser của người dùng.
+
+`game-shell.css` của từng game được sinh từ `scripts/refresh-games.py`. Sửa nguồn Python rồi chạy `python scripts/refresh-games.py`; script đồng bộ đường về trang chủ, thêm CSS vào CORE và tăng cache chỉ khi output thay đổi. Không sửa trực tiếp CSS được sinh. Các game vẫn tự chứa và trang chủ vẫn không có service worker.
+
 ## Triển khai
 
 1. Sửa file rồi `git push` lên nhánh `main`; GitHub Pages tự triển khai sau khoảng 1 phút.

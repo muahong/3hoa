@@ -49,12 +49,41 @@ const server = http.createServer((req, res) => {
       const targetCache = workerSource.match(/const CACHE = '([^']+)'/)[1];
       const core = [...workerSource.match(/const CORE = \[([\s\S]*?)\];/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
       assert.ok(!oldCache.includes(targetCache), game + ': cache version really changed');
+      // Make the second historical child selectable, using the OLD application's UI.
+      await page.locator('#btn-player').tap();
+      await page.locator('#btn-player-add').tap();
+      await page.locator('#player-name').fill('QA thứ hai');
+      await page.locator('#btn-player-save').tap();
+      await page.locator('#btn-players-back').tap();
+      assert.match(await page.locator('#btn-player').innerText(), /QA thứ hai/);
+      await page.locator('#btn-player').tap();
+      await page.locator('.player-item[data-id="p1"]').tap();
+      if (await page.locator('#btn-players-back').isVisible()) await page.locator('#btn-players-back').tap();
       // A second game's cache and a real profile survive activation. All in test context.
       await page.evaluate(async () => {
         await caches.open('other-game-gauntlet-sentinel');
         localStorage.setItem('gauntlet-sentinel', 'keep');
+        // Explicit historical progress fixture, never counted as real-input completion.
+        // Let the OLD version sanitize it before checking the NEW version preserves it.
+        const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
+        const S = X.Store;
+        const sample = Object.assign(S.blank(), {
+          unlocked: 3,
+          records: { l1: { best: 900, stars: 2, passed: true, plays: 4 }, 'answer:a1:90': { best: 900, stars: 2 }, 't2:mul:90': { best: 900, stars: 2 } },
+          levels: { L1: { best: 900, stars: 2, done: 1 }, l1: { best: 900, stars: 2, quiz: true } },
+          stats: { plays: 4, correct: 12, wrong: 3, seconds: 180, last: 1756800000000, byTopic: {} }
+        });
+        S.data.players.p1 = S.sanitize(sample);
+        const second = window.Players.list().find(p => p.name === 'QA thứ hai');
+        if (!second) throw new Error('Missing selectable second profile');
+        S.data.players[second.id] = S.sanitize(sample);
+        S.save();
       });
       const savedBefore = await page.evaluate(() => ({ ...localStorage }));
+      const progressBefore = await page.evaluate(() => {
+        const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
+        return X.Store.data.players;
+      });
       old = false;
       await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); await r.update(); });
       await page.waitForFunction(async ({ target, oldKeys }) => {
@@ -63,6 +92,10 @@ const server = http.createServer((req, res) => {
       }, { target: targetCache, oldKeys: oldCache }, { timeout: 20000 });
       await page.reload();
       await page.locator('#menu .game-home').waitFor({ state: 'visible' });
+      assert.deepEqual(await page.evaluate(() => {
+        const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
+        return X.Store.data.players;
+      }), progressBefore, game + ': historical progress loaded for both children');
       const check = await page.evaluate(async ({ target, core }) => {
         const c = await caches.open(target);
         const missing = [];
@@ -78,8 +111,19 @@ const server = http.createServer((req, res) => {
       await page.reload();
       await page.locator('#menu .game-home').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#menu .game-home').getAttribute('href'), '../');
+      for (const id of Object.keys(progressBefore)) {
+        await page.locator('#btn-player').tap();
+        await page.locator(`.player-item[data-id="${id}"]`).tap();
+        if (await page.locator('#btn-players-back').isVisible()) await page.locator('#btn-players-back').tap();
+        const active = await page.evaluate(() => {
+          const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
+          return { id: window.Players.active().id, progress: X.Store.p() };
+        });
+        assert.equal(active.id, id, game + ': historical child selectable offline');
+        assert.deepEqual(active.progress, progressBefore[id], game + ': selected child retains historical record');
+      }
       await page.screenshot({ path: path.join(OUT, game + '-offline.png') });
-      results.push({ game, oldCache, targetCache, scope: check.scope, upgrade: 'PASS', offlineMenu: 'PASS', preservedKeys: Object.keys(savedBefore) });
+      results.push({ game, oldCache, targetCache, scope: check.scope, upgrade: 'PASS', offlineMenu: 'PASS', selectableHistoricalChildren: Object.keys(progressBefore).length, preservedKeys: Object.keys(savedBefore) });
       console.log(game + ': actual old-cache upgrade + offline menu + storage/scope PASS');
       await context.close();
     }

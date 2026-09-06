@@ -19,6 +19,15 @@ test('profile.js is identical in every game and the hub', () => {
 });
 
 for (const g of GAMES) {
+  test(g + ': home buttons return in the same tab from menu and pause; shell is available offline', () => {
+    const html = read(g + '/index.html');
+    const links = Array.from(html.matchAll(/<a\b[^>]*class="hub-home"[^>]*>/g)).map(m => m[0]);
+    assert.equal(links.length, 2);
+    for (const link of links) { assert.match(link, /href="\.\.\/"/); assert.doesNotMatch(link, /target=/); }
+    assert.doesNotMatch(html, /href="https:\/\/3hoa.com"[^>]*target="_blank"/);
+    assert.match(read(g + '/sw.js'), /'\.\/game-shell\.css'/);
+    assert.ok(read(g + '/game-shell.css').includes('focus-visible'));
+  });
   test(g + ': index.html has CSP, referrer, script order, shared screens, no inline handlers', () => {
     const html = read(g + '/index.html');
     assert.match(html, /<meta http-equiv="Content-Security-Policy"/, 'thiếu CSP meta');

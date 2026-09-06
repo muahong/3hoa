@@ -1,10 +1,11 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'ninja-toan-v5';
+const CACHE = 'ninja-toan-v6';
 const CORE = [
   './',
   './index.html',
   './style.css',
+  './game-shell.css',
   './js/audio.js',
   './js/math.js',
   './js/fruits.js',

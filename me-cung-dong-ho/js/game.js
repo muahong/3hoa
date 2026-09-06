@@ -328,7 +328,9 @@
 
   /** Xoay toàn bộ trạng thái khi thiết bị đổi hướng (hàng <-> cột). */
   function transposeState(wantT) {
-    G.maze = M.build(G.mazeId, wantT);
+    G.maze = M.build(G.mazeId, wantT, G.mazeSeed);
+    if (G.route) G.route.forEach(function (p) { const r = p.r; p.r = p.c; p.c = r; });
+    if (G.routeGoal) { const r = G.routeGoal.r; G.routeGoal.r = G.routeGoal.c; G.routeGoal.c = r; }
     const dots = [];
     for (let r = 0; r < G.maze.rows; r++) { dots.push([]); for (let c = 0; c < G.maze.cols; c++) dots[r].push(G.dots[c][r]); }
     G.dots = dots;
@@ -499,14 +501,26 @@
 
   function playerDecide(p) {
     const m = G.maze, r = p.from.r, c = p.from.c;
+    if (G.routeGoal) {
+      while (G.route.length && G.route[0].r === r && G.route[0].c === c) G.route.shift();
+      if (!G.route.length) { G.routeGoal = null; p.want = null; p.moving = false; return null; }
+      const next = G.route[0];
+      return M.openDirs(m, r, c).find(function (d) { const n = M.norm(m, r + d.dy, c + d.dx); return n.r === next.r && n.c === next.c; }) || null;
+    }
     if (p.want && M.isOpen(m, r + p.want.dy, c + p.want.dx)) { return p.want; }
     if (p.moving && p.dir && M.isOpen(m, r + p.dir.dy, c + p.dir.dx)) return p.dir;
+    // Follow a bend automatically, but stop at a fork so the child chooses.
+    if (p.moving && p.dir) {
+      const exits = M.openDirs(m, r, c).filter(function (d) { return d.dx !== -p.dir.dx || d.dy !== -p.dir.dy; });
+      if (exits.length === 1) return exits[0];
+    }
     return null;
   }
 
   function setWant(d) {
     const p = G.player;
     if (!p) return;
+    G.route = []; G.routeGoal = null;
     p.want = d;
     // Quay đầu ngay lập tức khi đang đi
     if (p.moving && p.dir && p.t > 0 && p.t < 1 && d.dx === -p.dir.dx && d.dy === -p.dir.dy) {
@@ -594,7 +608,8 @@
     G.field = measureField();
     const ch = chooseMaze(level.maze, G.field);
     G.mazeId = ch.id;
-    G.maze = M.build(ch.id, ch.transposed);
+    G.mazeSeed = (Math.random() * 4294967296) >>> 0;
+    G.maze = M.build(ch.id, ch.transposed, G.mazeSeed);
     G.dots = G.maze.dot.map(function (row) { return row.slice(); });
     G.dotsLeft = G.maze.dotCount;
     G.powers = G.maze.powers.map(function (p) { return { r: p.r, c: p.c, taken: false }; });
@@ -638,19 +653,21 @@
   function resetPositions(first) {
     const m = G.maze;
     const p = G.player;
+    G.route = []; G.routeGoal = null;
+    G.startedMoving = false;
     p.from = { r: m.player.r, c: m.player.c }; p.to = { r: m.player.r, c: m.player.c };
     p.t = 1; p.moving = false; p.dir = { dx: 0, dy: -1 }; p.want = null; p.dying = 0;
     syncPos(p);
     G.ghosts.forEach(function (g, i) {
       g.from = { r: g.home.r, c: g.home.c }; g.to = { r: g.home.r, c: g.home.c };
       g.t = 1; g.moving = false; g.dir = null; g.state = 'home';
-      g.releaseAt = G.time + (first ? 1.0 : 1.5) + i * 2.2;
+      g.releaseAt = G.time + (first ? 5 : 4) + i * 3;
       syncPos(g);
     });
     G.fright = 0;
     G.frightCombo = 0;
     Music.setTempo(1);
-    G.invuln = 2.0;
+    G.invuln = 4.0;
   }
 
   function runCountdown() {
@@ -723,7 +740,11 @@
         for (let k = 0; k < chosen.length; k++) {
           if (Math.abs(chosen[k].r - s.r) + Math.abs(chosen[k].c - s.c) < minGap) { ok = false; break; }
         }
-        if (ok) chosen.push(s);
+        if (ok) {
+          const trial = chosen.concat([s]);
+          // Never force the owl through another answer to reach a clock.
+          if (trial.every(function (goal) { return M.path(m, p.from, goal, trial) !== null; })) chosen.push(s);
+        }
       }
       if (chosen.length >= n) best = chosen;
     }
@@ -1289,14 +1310,19 @@
     const p = G.player;
     p.anim += dt;
     stepEntity(p, dt, playerDecide);
+    if (!G.startedMoving && p.moving) {
+      G.startedMoving = true; G.invuln = 4;
+      G.ghosts.forEach(function (g, i) { g.releaseAt = G.time + 5 + i * 3; });
+    }
     if (G.state !== 'playing') { updateHud(); return; }
 
     G.ghosts.forEach(function (g) {
       if (g.state === 'home') {
+        if (!G.startedMoving) return;
         if (G.time >= g.releaseAt) { g.state = G.fright > 0 ? 'fright' : 'active'; g.dir = null; g.moving = false; }
         else return;
       }
-      g.speed = G.level.speed * (g.state === 'fright' ? 0.55 : 1) * (G.round >= 3 ? 1.08 : 1);
+      g.speed = Math.min(PLAYER_SPEED * 0.72, G.level.speed * 0.78) * (g.state === 'fright' ? 0.55 : 1);
       stepEntity(g, dt, ghostDecide);
       const dx = g.x - p.x, dy = g.y - p.y;
       if (dx * dx + dy * dy < 0.42) onGhostCatch(g);
@@ -1354,6 +1380,13 @@
     }
     if (G.mazeLayer) ctx.drawImage(G.mazeLayer, G.ox - 4, G.oy - 4, G.mazeLayerW, G.mazeLayerH);
     drawDots();
+    if (G.routeGoal && G.route && G.route.length) {
+      ctx.save(); ctx.strokeStyle = '#72f4d0'; ctx.fillStyle = '#72f4d0';
+      ctx.globalAlpha = 0.75; ctx.lineWidth = Math.max(3, G.cell * 0.07); ctx.lineCap = 'round';
+      ctx.setLineDash([G.cell * 0.12, G.cell * 0.14]); ctx.beginPath(); ctx.moveTo(px(G.player.x), py(G.player.y));
+      G.route.forEach(function (p) { ctx.lineTo(px(p.c + 0.5), py(p.r + 0.5)); }); ctx.stroke();
+      ctx.setLineDash([]); ctx.beginPath(); ctx.arc(px(G.routeGoal.c + 0.5), py(G.routeGoal.r + 0.5), G.cell * 0.26, 0, TAU); ctx.stroke(); ctx.restore();
+    }
     drawPowers();
     drawItems();
     G.ghosts.forEach(drawGhost);
@@ -1910,7 +1943,7 @@
   function onCanvasMove(e) {
     if (!swipe.active || e.pointerId !== swipe.id) return;
     const dx = e.clientX - swipe.ax, dy = e.clientY - swipe.ay;
-    const TH = 22;
+    const TH = 12;
     if (Math.abs(dx) > TH || Math.abs(dy) > TH) {
       const d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DIR.right : DIR.left) : (dy > 0 ? DIR.down : DIR.up);
       setWant(d);
@@ -1922,12 +1955,22 @@
     if (!swipe.active || e.pointerId !== swipe.id) return;
     swipe.active = false;
     if (!swipe.moved && G.player && G.state === 'playing') {
-      // Chạm nhẹ: đi về phía điểm chạm
-      const dx = e.clientX - px(G.player.x), dy = e.clientY - py(G.player.y);
-      if (Math.abs(dx) > G.cell * 0.4 || Math.abs(dy) > G.cell * 0.4) {
-        setWant(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? DIR.right : DIR.left) : (dy > 0 ? DIR.down : DIR.up));
-      }
+      const rect = canvas.getBoundingClientRect();
+      const c = Math.floor((e.clientX - rect.left - G.ox) / G.cell);
+      const r = Math.floor((e.clientY - rect.top - G.oy) / G.cell);
+      goToCell(r, c);
     }
+  }
+
+  function goToCell(r, c) {
+    if (!G.maze || r < 0 || c < 0 || r >= G.maze.rows || c >= G.maze.cols || G.maze.wall[r][c]) return false;
+    const p = G.player, start = p.moving && p.t < 1 ? M.norm(G.maze, p.to.r, p.to.c) : p.from;
+    const goal = { r: r, c: c };
+    const blocked = G.items.filter(function (it) { return !it.taken && !(it.r === r && it.c === c); });
+    const route = M.path(G.maze, start, goal, blocked);
+    if (!route) { toast('Chọn một điểm gần hơn để tránh đồng hồ khác nhé!'); return false; }
+    G.route = route; G.routeGoal = goal; p.want = null;
+    return true;
   }
 
   function bindInput() {
@@ -1944,6 +1987,10 @@
       b.classList.add('pressed');
       setTimeout(function () { b.classList.remove('pressed'); }, 140);
       setWant(DIR[b.getAttribute('data-dir')]);
+    });
+    ui.dpad.addEventListener('click', function (e) {
+      const b = e.target.closest ? e.target.closest('button[data-dir]') : null;
+      if (b && e.detail === 0 && G.state === 'playing') setWant(DIR[b.getAttribute('data-dir')]);
     });
     document.addEventListener('touchmove', function (e) { if ((e.target === canvas || ui.dpad.contains(e.target)) && e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('touchstart', function (e) { if (e.target === canvas && e.cancelable) e.preventDefault(); }, { passive: false });
@@ -2452,7 +2499,7 @@
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
   window.__MeCung = {
     G: G, Store: Store, startLevel: startLevel, showLesson: showLesson, startRound: startRound, startQuiz: startQuiz, quizAnswer: quizAnswer, quizNext: quizNext,
-    endLevel: endLevel, setWant: setWant, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem, askHint: askHint,
+    endLevel: endLevel, setWant: setWant, goToCell: goToCell, placeClocks: placeClocks, playerDecide: playerDecide, stepEntity: stepEntity, update: update, render: render, layout: layout, goLevels: goLevels, goMenu: goMenu, goLearn: goLearn, onItem: onItem, askHint: askHint,
     teleport: function (r, c) { const p = G.player; p.from = { r: r, c: c }; p.to = { r: r, c: c }; p.t = 1; p.moving = false; syncPos(p); onPlayerArrive(p); }
   };
 

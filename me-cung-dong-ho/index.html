@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="game-shell.css">
 </head>
 <body>
 <div id="app">
@@ -68,6 +69,7 @@
   <!-- ================= MENU CHÍNH ================= -->
   <div id="menu" class="screen">
     <div class="panel">
+      <a class="hub-home" href="../" aria-label="Về trang chủ 3hoa.com">← Trang chủ 3hoa.com</a>
       <div class="logo-row">
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
@@ -118,6 +120,7 @@
         <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
       </button>
       <p class="subtitle">Học xem đồng hồ cho các bạn lớp 2, lớp 3 🕐🦉</p>
+      <div class="game-benefits"><span>Chạm để dẫn đường</span><span>Mê cung luôn mới</span><span>Học giờ qua trò chơi</span></div>
       <div class="btn-row">
         <button class="btn big" id="btn-play">▶ CHƠI NGAY</button>
       </div>
@@ -126,7 +129,7 @@
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
-      <p class="footer-note">Đi trong mê cung, tránh Ma Ngủ Gật và tìm đúng đồng hồ! · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+      <p class="footer-note">Chạm vào lối đi hoặc đồng hồ để Cú Tí tự tìm đường. Vuốt hay dùng phím mũi tên để đổi hướng! · 3hoa.com</p>
     </div>
   </div>
 
@@ -209,7 +212,7 @@
         <div class="howto-item"><div class="em">👻</div><div class="tx">Tránh <b>Ma Ngủ Gật</b>! Bị ma bắt hoặc ăn nhầm đồng hồ sẽ mất 1 tim ❤️. Hết 3 tim là thua.</div></div>
         <div class="howto-item"><div class="em">⭐</div><div class="tx">Ăn <b>ngôi sao</b> để ma buồn ngủ (chuyển màu xanh). Lúc đó chạm vào ma sẽ được thêm điểm.</div></div>
         <div class="howto-item"><div class="em">🧠</div><div class="tx">Tìm đủ đồng hồ là qua màn. Trả lời đúng phần <b>hỏi đáp</b> để mở <b>màn tiếp theo</b>.</div></div>
-        <div class="howto-item"><div class="em">🎮</div><div class="tx">Điều khiển: <b>vuốt</b> trên màn hình hoặc bấm nút mũi tên. Trên máy tính dùng phím <b>mũi tên</b> hoặc W A S D.</div></div>
+        <div class="howto-item"><div class="em">🎮</div><div class="tx"><b>Chạm vào lối đi hoặc đồng hồ</b> để Cú Tí tự tìm đường và dừng ở điểm đã chọn. Đường xanh chỉ lộ trình, con vẫn cần tránh ma! <b>Vuốt nhẹ</b>, bấm nút mũi tên hoặc dùng phím <b>↑ ↓ ← → / W A S D</b> để tự lái và đổi hướng bất cứ lúc nào.</div></div>
       </div>
       <div class="tip" id="ipad-tip">💡 Mẹo trên iPad: bấm nút <b>Chia sẻ</b> rồi chọn <b>Thêm vào Màn hình chính</b> để chơi toàn màn hình.</div>
       <div class="btn-row">
@@ -227,6 +230,7 @@
   <div id="pause" class="screen hidden dim">
     <div class="panel">
       <h2>⏸ Tạm dừng</h2>
+      <p class="hub-return"><a class="hub-home" href="../">← Trang chủ 3hoa.com</a></p>
       <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
       <div class="toggle-row" data-audio-toggles></div>
       <div class="btn-row">

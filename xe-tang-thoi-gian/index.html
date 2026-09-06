@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="game-shell.css">
 </head>
 <body>
 <div id="app">
@@ -55,48 +56,17 @@
   <!-- ================= MENU CHÍNH ================= -->
   <div id="menu" class="screen">
     <div class="panel">
+      <a class="hub-home" href="../" aria-label="Về trang chủ 3hoa.com">← Trang chủ 3hoa.com</a>
       <div class="logo-row">
         <div class="logo-mark">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <defs>
-            <linearGradient id="tk-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ed957"/><stop offset="1" stop-color="#3f9c3a"/></linearGradient>
-            <linearGradient id="tk-turret" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5cc24a"/><stop offset="1" stop-color="#2e7d32"/></linearGradient>
-            <linearGradient id="tk-track" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5f7a"/><stop offset="1" stop-color="#2b2d42"/></linearGradient>
-          </defs>
-          <path d="M170 30 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#ffe66d"/>
-          <path d="M28 52 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#fff"/>
-          <rect x="128" y="86" width="60" height="14" rx="7" fill="#2b2d42"/>
-          <rect x="172" y="82" width="20" height="22" rx="6" fill="#5b5f7a"/>
-          <rect x="22" y="128" width="156" height="42" rx="21" fill="url(#tk-track)" stroke="#1b1c2c" stroke-width="3"/>
-          <circle cx="46" cy="149" r="12" fill="#9aa2c2"/><circle cx="46" cy="149" r="5" fill="#2b2d42"/>
-          <circle cx="80" cy="149" r="12" fill="#9aa2c2"/><circle cx="80" cy="149" r="5" fill="#2b2d42"/>
-          <circle cx="114" cy="149" r="12" fill="#9aa2c2"/><circle cx="114" cy="149" r="5" fill="#2b2d42"/>
-          <circle cx="148" cy="149" r="12" fill="#9aa2c2"/><circle cx="148" cy="149" r="5" fill="#2b2d42"/>
-          <path d="M34 130 L46 104 H156 L170 130 Z" fill="url(#tk-body)" stroke="#256b22" stroke-width="3" stroke-linejoin="round"/>
-          <g fill="#ff6fa5"><circle cx="58" cy="114" r="3"/><circle cx="62.3" cy="117" r="3"/><circle cx="60.7" cy="122" r="3"/><circle cx="55.3" cy="122" r="3"/><circle cx="53.7" cy="117" r="3"/></g>
-          <circle cx="58" cy="118.5" r="2.2" fill="#ffd94a"/>
-          <g fill="#ffffff"><circle cx="74" cy="114" r="3"/><circle cx="78.3" cy="117" r="3"/><circle cx="76.7" cy="122" r="3"/><circle cx="71.3" cy="122" r="3"/><circle cx="69.7" cy="117" r="3"/></g>
-          <circle cx="74" cy="118.5" r="2.2" fill="#ffd94a"/>
-          <g fill="#ffa94d"><circle cx="90" cy="114" r="3"/><circle cx="94.3" cy="117" r="3"/><circle cx="92.7" cy="122" r="3"/><circle cx="87.3" cy="122" r="3"/><circle cx="85.7" cy="117" r="3"/></g>
-          <circle cx="90" cy="118.5" r="2.2" fill="#ffd94a"/>
-          <circle cx="104" cy="88" r="38" fill="url(#tk-turret)" stroke="#256b22" stroke-width="3"/>
-          <circle cx="104" cy="88" r="28" fill="#ffffff" stroke="#2b2d42" stroke-width="3"/>
-          <g stroke="#2b2d42" stroke-width="2.5" stroke-linecap="round">
-            <line x1="104" y1="64" x2="104" y2="69"/><line x1="104" y1="107" x2="104" y2="112"/>
-            <line x1="80" y1="88" x2="85" y2="88"/><line x1="123" y1="88" x2="128" y2="88"/>
-          </g>
-          <line x1="104" y1="88" x2="104" y2="72" stroke="#2b2d42" stroke-width="4" stroke-linecap="round"/>
-          <line x1="104" y1="88" x2="120" y2="88" stroke="#ef476f" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="104" cy="88" r="3" fill="#2b2d42"/>
-          <line x1="70" y1="60" x2="78" y2="80" stroke="#2b2d42" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="69" cy="58" r="4" fill="#ff6b35"/>
-        </svg>
+        <canvas id="menu-tank-art" role="img" aria-label="Xe tăng xanh có đồng hồ, nòng xoay và bánh xích" class="hero-character" width="560" height="360"></canvas>
         </div>
         <div>
           <h1 class="title">XE TĂNG<br>THỜI GIAN<small>HỌC XEM ĐỒNG HỒ</small></h1>
         </div>
       </div>
       <p class="subtitle">Bắn robot, học xem giờ cho các bạn lớp 2, lớp 3 🕒🤖</p>
+      <div class="game-benefits"><span>Học xem giờ</span><span>Chạm robot để bắn</span><span>Khám phá từng màn</span></div>
       <div class="player-row">
         <button type="button" class="player-chip" id="btn-player" aria-label="Đổi người chơi">
           <span class="pl-avatar" aria-hidden="true">🐯</span><span class="pl-name">Bé</span><span class="pl-hint" aria-hidden="true">▾</span>
@@ -109,7 +79,7 @@
         <button class="btn ghost small" id="btn-howto">❓ Cách chơi</button>
       </div>
       <div class="toggle-row" data-audio-toggles></div>
-      <p class="footer-note">Mỗi màn: 📖 học → 🎯 bắn → 🧠 hỏi đáp để mở màn mới · <a href="https://3hoa.com" target="_blank" rel="noopener">3hoa.com</a></p>
+      <p class="footer-note">Mỗi màn: 📖 học → 🎯 bắn → 🧠 hỏi đáp để mở màn mới · 3hoa.com</p>
     </div>
   </div>
 
@@ -214,6 +184,7 @@
   <div id="pause" class="screen hidden dim">
     <div class="panel">
       <h2>⏸ Tạm dừng</h2>
+      <p class="hub-return"><a class="hub-home" href="../">← Trang chủ 3hoa.com</a></p>
       <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
       <div class="toggle-row" data-audio-toggles></div>
       <div class="btn-row">

@@ -576,7 +576,7 @@ test('cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; �
 });
 
 test('cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"', () => {
-  const css = readGame('style.css');
+  const css = readGame('style.css').replace(/\r\n/g, '\n');
   const a = css.indexOf('@media (max-height: 480px)');
   assert.ok(a > 0, 'có khối cho máy nằm ngang');
   const block = css.slice(a, css.indexOf('}\n', css.indexOf('.tap-tip', a)));

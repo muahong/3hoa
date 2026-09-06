@@ -1267,7 +1267,43 @@
     c.restore();
   }
 
+  const tankArt = new Image();
+  tankArt.src = 'assets/tank-body.png';
+
   function drawTank(c) {
+    if (!tankArt.complete || !tankArt.naturalWidth) { drawTankFallback(c); return; }
+    const t = G.tank, s = t.size, ty = -s * 0.28;
+    c.save(); c.translate(t.x, t.y);
+    c.fillStyle = 'rgba(12,35,29,.22)';
+    c.beginPath(); c.ellipse(0, s * 0.6, s * 1.25, s * 0.2, 0, 0, TAU); c.fill();
+    const artW = s * 2.65, artH = artW * tankArt.naturalHeight / tankArt.naturalWidth;
+    c.drawImage(tankArt, -artW / 2, s * 0.68 - artH, artW, artH);
+    // Keep the barrel's real aiming angle and recoil; the clock stays live.
+    c.save(); c.translate(0, ty); c.rotate(t.angle);
+    const rec = t.recoil * s * 0.25;
+    const metal = c.createLinearGradient(0, -s * 0.13, 0, s * 0.13);
+    metal.addColorStop(0, '#d8eee4'); metal.addColorStop(0.3, '#7daca0'); metal.addColorStop(1, '#254f4b');
+    c.fillStyle = metal; c.strokeStyle = '#183e39'; c.lineWidth = Math.max(1, s * 0.025);
+    C.roundRect(c, s * 0.12 - rec, -s * 0.11, s * 0.91, s * 0.22, s * 0.07); c.fill(); c.stroke();
+    c.fillStyle = '#dcaf4b'; C.roundRect(c, s * 0.89 - rec, -s * 0.15, s * 0.2, s * 0.3, s * 0.06); c.fill(); c.stroke();
+    if (t.recoil > 0.6) {
+      c.fillStyle = '#ffe994'; c.globalAlpha = (t.recoil - 0.6) * 2.5;
+      c.beginPath(); c.arc(s * 1.12 - rec, 0, s * 0.27 * t.recoil, 0, TAU); c.fill();
+    }
+    c.restore();
+    const turret = c.createRadialGradient(-s * 0.16, ty - s * 0.2, 0, 0, ty, s * 0.51);
+    turret.addColorStop(0, '#aae79e'); turret.addColorStop(0.55, '#30885b'); turret.addColorStop(1, '#124e3b');
+    c.fillStyle = turret; c.strokeStyle = '#dbb651'; c.lineWidth = s * 0.055;
+    c.beginPath(); c.arc(0, ty, s * 0.49, 0, TAU); c.fill(); c.stroke();
+    drawLiveClock(c, 0, ty, s * 0.36, G.nowH, G.nowM, { minuteTicks: false, numbers: 'quarter', shadow: false });
+    c.strokeStyle = '#295b50'; c.lineWidth = Math.max(2, s * 0.035);
+    c.beginPath(); c.moveTo(-s * 0.68, -s * 0.1); c.quadraticCurveTo(-s * 0.78, -s * 0.55, -s * 0.64, -s * 0.88); c.stroke();
+    c.fillStyle = '#ffe48b'; c.beginPath(); c.arc(-s * 0.64, -s * 0.88, s * 0.065, 0, TAU); c.fill();
+    if (t.hit > 0.3) { c.globalAlpha = Math.min(0.35, t.hit * 0.25); c.fillStyle = '#ff8667'; c.beginPath(); c.ellipse(0, 0, s * 1.3, s * 0.7, 0, 0, TAU); c.fill(); }
+    c.restore();
+  }
+
+  function drawTankFallback(c) {
     const t = G.tank, s = t.size;
     const x = t.x, y = t.y;
     c.save();
@@ -1588,6 +1624,17 @@
     rs.sort(byY);
     for (let i = 0; i < rs.length; i++) if (!rs[i].dead) drawRobot(c, rs[i]);
     drawTank(c);
+    if (G.state === 'menu') {
+      const art = $('menu-tank-art');
+      if (art) {
+        const ac = art.getContext('2d');
+        ac.clearRect(0, 0, art.width, art.height); ac.save();
+        ac.translate(art.width / 2, art.height * 0.65);
+        const scale = art.width / (G.tank.size * 3.5);
+        ac.scale(scale, scale); ac.translate(-G.tank.x, -G.tank.y);
+        drawTank(ac); ac.restore();
+      }
+    }
     drawShells(c);
     drawParts(c);
     drawTexts(c);

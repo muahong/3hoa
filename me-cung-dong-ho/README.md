@@ -8,10 +8,14 @@ Chạy trực tiếp trên trình duyệt (Safari trên iPad, Chrome, Edge...), 
 ## Chơi thử trên máy tính
 
 ```bash
-python -m http.server 8787 --directory me-cung-dong-ho
+python -m http.server 8787
 ```
 
-rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính dùng **phím mũi tên** hoặc **W A S D** để đi, **Esc** để tạm dừng. Trên iPad/điện thoại: **vuốt** trên màn hình, **chạm** vào nơi muốn đi hoặc bấm các nút mũi tên.
+Chạy lệnh từ thư mục gốc `3hoa`, rồi mở `http://localhost:8787/me-cung-dong-ho/`. Trên máy tính dùng **phím mũi tên** hoặc **W A S D** để đi, **Esc** để tạm dừng. Trên iPad/điện thoại: **chạm vào lối đi hoặc đồng hồ** để Cú Tí tự tìm đường và dừng đúng đích; **vuốt nhẹ** hoặc bấm các nút mũi tên để tự lái. Đường xanh chỉ đường đi, không đảm bảo tránh ma.
+
+Mỗi lần vào màn hoặc chơi lại có một mê cung ngẫu nhiên mới, có nhiều vòng đi và không có ngõ cụt. Seed được giữ trong ván để xoay ngang/dọc không làm đổi bản đồ. Ma xuất phát xa Cú Tí, chỉ bắt đầu đuổi sau khi bé di chuyển; tốc độ ma thấp hơn Cú Tí, có 4 giây bảo vệ khi xuất phát lại. Bản đồ còn đặt sao cứu trợ gần điểm xuất phát.
+
+Nút **← Trang chủ 3hoa.com** ở menu và màn tạm dừng trở về danh sách game trong cùng tab.
 
 ## Đưa lên website 3hoa.com
 

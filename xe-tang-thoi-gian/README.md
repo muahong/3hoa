@@ -69,6 +69,8 @@ Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung 
 
 ## Tùy chỉnh nhanh
 
+**Đọc rồi thử lại:** khi chọn robot sai hoặc bấm 💡, bảng giải thích tạm dừng thời gian và robot đến khi bé bấm **Đã đọc · Thử lại** (hoặc Enter/Space). Lần sai đầu chưa chỉ đáp án đúng; lần sai thứ hai/gợi ý vẫn giữ mức thưởng 20 điểm. Escape hay chuyển sang ứng dụng khác giữ phần đang đọc; xác nhận xong mới hiện bảng tạm dừng. Nút ⤢ hoặc phím Z mở đồng hồ lớn để đọc bất cứ lúc nào đang hỏi; zoom thủ công đóng ngay bằng Escape, Z hoặc nút Đóng.
+
 - **Thêm hoặc sửa màn chơi, bài học, câu hỏi đáp**: chỉnh mảng `LEVELS` trong `js/levels.js` (`questions` số câu mỗi màn, `fall` số giây robot tiến tới xe tăng, `speed` hệ số tốc độ, `lesson`, `quiz`).
 - **Số câu hỏi đáp và ngưỡng đạt**: `QUIZ_N`, `QUIZ_PASS` trong `js/game.js`.
 - **Ngưỡng sao**: hàm `starsFor` trong `js/game.js` – tính theo **số câu** bị sai (mỗi câu chỉ tính một lần dù bắn trượt mấy lần) và số tim còn lại: 3 sao khi không sai câu nào và còn đủ tim, 2 sao khi sai ≤ 2 câu và còn ≥ 2 tim.

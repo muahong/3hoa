@@ -12,12 +12,19 @@
   10. Bảng đồng hồ trên điện thoại luôn ≥ 100 px (xếp 2 cột thay vì thu nhỏ)
    Chạy: NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/xe-tang-thoi-gian.e2e.js */
 const assert = require('node:assert/strict');
-const { withGame, assertClean } = require('./lib/browser.js');
+const { withGame: runGame, assertClean: checkClean } = require('./lib/browser.js');
+let sessionNumber = 0;
+const withGame = (...args) => { const n = ++sessionNumber; return process.env.ONLY && !process.env.ONLY.split(',').includes(String(n)) ? Promise.resolve({ skipped: true }) : runGame(...args); };
+const assertClean = (log, label) => log.skipped ? console.log(label + ' — skipped by ONLY') : checkClean(log, label);
 
 const DIR = 'xe-tang-thoi-gian';
 const KEY = 'xe-tang-thoi-gian-v1';
 const seed = (obj) => "localStorage.setItem('" + KEY + "', " + JSON.stringify(JSON.stringify(obj)) + ");";
 const sleep = (page, ms) => page.waitForTimeout(ms);
+// Reading is deliberate now: acknowledge through the real dialog before the next test action.
+async function acknowledgeReading(page) {
+  if (await page.evaluate(() => window.__XeTang.G.readingHold)) await page.locator('#btn-clock-close').click();
+}
 const shown = (page, sel) => page.$eval(sel, (el) => !el.classList.contains('hidden') && !el.hidden);
 const FIRE_OK = "(function(){var r=X.liveRobots().find(function(r){return r.opt.ok&&r.state!=='wrong'}); if(r) X.fireAt(r); return !!r})()";
 const FIRE_WRONG = "(function(){var r=X.liveRobots().find(function(r){return !r.opt.ok&&r.state!=='wrong'}); if(r) X.fireAt(r); return !!r})()";
@@ -40,7 +47,7 @@ async function playRound(page, hook, obs) {
       const pr = await page.$eval('#hud-progress', (e) => e.textContent);
       if (pr.indexOf('Ôn lại') >= 0) obs.reviewSeen = true;
       if (await hook('X.G.q && X.G.q.review')) obs.reviewQ = true;
-      await hook(FIRE_OK);
+      await acknowledgeReading(page); await hook(FIRE_OK);
     }
     await sleep(page, 700);
   }
@@ -74,7 +81,7 @@ async function checkRobots(hook, label) {
 /** Bắt đầu màn 6 cho đến khi được câu có 4 bảng chữ (xếp 2 hàng ở màn hẹp – trường hợp khó nhất khi xoay) */
 async function startTextRound(page, hook) {
   for (let k = 0; k < 8; k++) {
-    await hook('X.startGame(Levels.LEVELS[5])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[5])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     if (await hook('X.G.q.options.length === 4 && X.G.q.options.every(function(o){return !o.clock})')) return;
@@ -206,15 +213,15 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await shot('results-landscape');
 
     // Đường sai: bắn sai 2 lần → vòng vàng + gợi ý; chip ✓ biến mất sau khi sang câu; vỡ tuyến → thử lại
-    await hook('X.startGame(Levels.LEVELS[0])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     assert.equal(await hook('X.G.reviewSlots'), null, 'kho ôn trống → không chèn');
-    await hook(FIRE_WRONG);
+    await acknowledgeReading(page); await hook(FIRE_WRONG);
     await sleep(page, 600);
     assert.equal(await hook('X.G.qWrongs'), 1);
     assert.equal(await hook('X.G.hearts'), 3);
-    await hook(FIRE_WRONG);
+    await acknowledgeReading(page); await hook(FIRE_WRONG);
     await sleep(page, 600);
     assert.equal(await hook('X.G.qWrongs'), 2);
     assert.ok(await hook('X.liveRobots().some(function(r){return r.hint && r.opt.ok})'), 'đáp án đúng được đánh dấu sau 2 lần sai');
@@ -227,7 +234,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await hook('X.G.review.length'), 1, 'ghi nhận cần ôn');
     assert.ok(await hook('Object.keys(X.Store.p().missed).length >= 1'), 'kho ôn lại có mục');
     const scoreBefore = await hook('X.G.score');
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 600);
     assert.equal(await hook('X.G.score') - scoreBefore, 20, 'bắn bảng đã đánh dấu được 20 điểm');
     await sleep(page, 1500);
@@ -246,7 +253,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await hook('X.G.hint'), true, 'câu hỏi lại đã được đánh dấu sẵn đáp án');
     assert.ok(await hook('X.liveRobots().some(function(r){return r.hint && r.opt.ok})'), 'vòng vàng trên đáp án đúng khi hỏi lại');
     const beforeRetry = await hook('X.G.score');
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 700);
     assert.equal(await hook('X.G.score') - beforeRetry, 20, 'câu hỏi lại sau khi vỡ tuyến chỉ được 20 điểm (không được điểm đầy)');
     // Nút 💡 Gợi ý theo yêu cầu: đánh dấu đáp án + đọc lời giải thích, câu đó chỉ được 20 điểm
@@ -262,10 +269,10 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok(await hook('X.G.slowT') > 0, '💡 làm robot đi chậm lại');
     assert.equal(await page.$eval('#btn-hint', (b) => b.disabled), true, 'mỗi câu chỉ gợi ý một lần');
     const beforeHint = await hook('X.G.score');
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 700);
     assert.equal(await hook('X.G.score') - beforeHint, 20, 'câu đã xem gợi ý chỉ được 20 điểm');
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'kết quả khi hết máu');
     assert.ok((await page.$eval('#result-title', (e) => e.textContent)).indexOf('hết máu') >= 0);
     assert.equal(await hook('X.G.texts.length'), 0, 'không còn chữ canvas đè bảng kết quả');
@@ -459,7 +466,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await page.setViewportSize({ width: 820, height: 1180 });
     await sleep(page, 400);
     for (let k = 0; k < 3; k++) {
-      await hook('X.startGame(Levels.LEVELS[7])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[7])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       const pl = await promptLines(page);
@@ -467,7 +474,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     }
     await shot('play-portrait-l8');
     // Bảng kết quả ở màn dọc (ảnh chụp đối chiếu bố cục)
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'bảng kết quả màn dọc');
     await sleep(page, 700);
     assert.equal(await page.$eval('#gameover .panel', (e) => getComputedStyle(e).animationName), 'panel-in');
@@ -485,7 +492,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
   /* ---------------- 3. Điện thoại 390×844 ---------------- */
   const log3 = await withGame(DIR, async ({ page, hook, shot }) => {
     await shot('menu-phone');
-    await hook('X.startGame(Levels.LEVELS[5])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[5])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await hook('(X.G.streak = 6, X.G.score = 12345, 0)');
@@ -499,7 +506,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok(await hook('(function(){var b=document.getElementById("hud-prompt").getBoundingClientRect().bottom; return X.liveRobots().every(function(r){var hr=Math.min(r.w,r.h)*0.26; return r.y - r.h/2 - hr*2.4 >= b - 1})})()'), 'robot (cả cánh quạt) nằm dưới thẻ câu hỏi');
     await shot('play-phone-l6');
     for (let k = 0; k < 3; k++) {
-      await hook('X.startGame(Levels.LEVELS[7])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[7])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       const pl = await promptLines(page);
@@ -517,7 +524,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await page.setViewportSize({ width: 390, height: 844 });
     await sleep(page, 900);
     await checkRobots(hook, 'điện thoại dọc lại');
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'kết quả');
     await sleep(page, 500);
     await shot('results-phone');
@@ -542,10 +549,10 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.disabled), true, 'công tắc bị khóa vì máy đang giảm chuyển động');
     assert.equal(await page.$eval('#menu .toggle[data-set="fx"]', (b) => b.textContent), '✨ Hiệu ứng: Ít (theo cài đặt máy)', 'nhãn nói rõ lý do');
     assert.equal(await page.$eval('#menu .panel', (e) => getComputedStyle(e).animationName), 'none', 'ít chuyển động: bảng không chạy hiệu ứng hiện ra');
-    await hook('X.startGame(Levels.LEVELS[5])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[5])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 700);
     assert.ok(await hook('X.G.parts.length') < 60, 'ít hạt khi ít chuyển động');
     await sleep(page, 2500);
@@ -557,10 +564,10 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
   const log5 = await withGame(DIR, async ({ page, hook }) => {
     assert.equal(await hook('X.Store.data.players.p1.progress.l1.best'), 0);
     assert.equal(await hook('X.Store.data.players.p1.progress.l1.passed'), false);
-    await hook('X.startGame(Levels.LEVELS[0])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'kết quả với dữ liệu hỏng');
     assert.equal(await hook('X.Store.prog("l1").plays'), 1);
     await hook('X.startQuiz(Levels.LEVELS[0])');
@@ -592,7 +599,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
   };
   const log6 = await withGame(DIR, async ({ page, hook, shot }) => {
     assert.equal(await hook('Object.keys(X.Store.p().missed).length'), 3);
-    await hook('X.startGame(Levels.LEVELS[0])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
     assert.equal(await hook('X.G.reviewSlots ? X.G.reviewSlots.size : 0'), 2, '25% của 8 câu = 2 câu ôn (kho có 2 mục hợp màn 1)');
     await waitState(page, hook, 'playing');
     const obs = await playRound(page, hook);
@@ -619,7 +626,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
 
   /* ---------------- 7. Hiệu năng (dpr 2, màn 6: 4 bảng đồng hồ) ---------------- */
   const log7 = await withGame(DIR, async ({ page, hook }) => {
-    await hook('X.startGame(Levels.LEVELS[5])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[5])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await sleep(page, 4000);
@@ -646,7 +653,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     });
 
     // Màn 4 (lời giải thích dài nhất) — nút 💡 chỉ sáng đúng lúc đang hỏi
-    await hook('X.startGame(Levels.LEVELS[3])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[3])');
     assert.equal(await hook('X.G.state'), 'countdown');
     await sleep(page, 200);
     assert.equal(await page.$eval('#btn-hint', (b) => b.disabled), true, 'đang đếm ngược: nút 💡 phải mờ');
@@ -670,7 +677,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
 
     // Bắn trúng câu đã gợi ý: chữ bay lên phải ngắn và ≥ 14px, lời giải thích đầy đủ nằm ở chip
     await page.evaluate(() => { window.__ft.length = 0; });
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 900);
     const ft = await page.evaluate(() => window.__ft.slice());
     const floats = ft.filter((e) => e.t.indexOf('Nhớ nhé:') === 0);
@@ -696,7 +703,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok(wide.length && wide.every((e) => e.px >= 14), 'chữ quá rộng bị co dưới 14px: ' + JSON.stringify(wide[0]));
 
     // Màn 7: giọng đọc không phát chuỗi đồng hồ điện tử thô "18:09", chip vẫn hiện đúng chữ đó
-    await hook('X.startGame(Levels.LEVELS[6])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[6])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await hook('(X.G.q = Clock.fromInfo({ kind: "digital", variant: 2, h24: 18, m: 9 }, { n: 4 }), X.G.hint = false, 0)');
@@ -712,7 +719,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok((await page.$eval('#hud-hint', (e) => e.textContent)).indexOf('18:09') >= 0, 'chip vẫn hiện "18:09" cho bé nhìn');
 
     // Vỡ tuyến: chip giải thích phải ở lại đủ lâu để bé đọc (không còn 1,6 s)
-    await hook('X.startGame(Levels.LEVELS[6])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[6])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await hook('(X.G.q = Clock.fromInfo({ kind: "digital", variant: 2, h24: 14, m: 21 }, { n: 4 }), 0)');
@@ -734,7 +741,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     (await page.evaluate(() => window.__said.slice())).forEach((s) => assert.doesNotMatch(s, /\d{1,2}:\d{2}/, 'vỡ tuyến đọc chuỗi thô: ' + s));
 
     // Bàn phím: Enter/Space khi tiêu điểm ở nút HUD phải bấm nút đó, không bắn xe tăng
-    await hook('X.startGame(Levels.LEVELS[0])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     const before = await hook('({correct: X.G.correct, wrong: X.G.wrong, n: X.liveRobots().length})');
@@ -745,6 +752,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await hook('X.G.hint'), true, 'Enter trên nút 💡 bật gợi ý');
     const after = await hook('({correct: X.G.correct, wrong: X.G.wrong, n: X.liveRobots().length})');
     assert.deepEqual(after, before, 'không được bắn robot khi tiêu điểm ở nút HUD');
+    await acknowledgeReading(page);
     await page.evaluate(() => { window.__said.length = 0; });
     await page.focus('#btn-say');
     await page.keyboard.press(' ');
@@ -758,7 +766,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.ok(await hook('X.G.correct + X.G.wrong') > before.correct + before.wrong, 'phím số vẫn bắn khi tiêu điểm ở nền');
 
     // Bảng kết quả: nút 💡 mờ (không còn thông báo sai ngữ cảnh)
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'bảng kết quả');
     await sleep(page, 300);
     assert.equal(await page.$eval('#btn-hint', (b) => b.disabled), true, 'trên bảng kết quả nút 💡 phải mờ');
@@ -809,23 +817,23 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await shot('lesson-l6-labels');
 
     // Thưởng tim: 5 câu đúng ngay liên tiếp khi đang thiếu tim
-    await hook('X.startGame(Levels.LEVELS[0])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await hook('(X.G.hearts = 1, X.G.perfect = 0, 0)');
     for (let i = 0; i < 5; i++) {
       await waitAsk(page, hook);
-      await hook(FIRE_OK);
+      await acknowledgeReading(page); await hook(FIRE_OK);
       await sleep(page, 900);
     }
     assert.equal(await hook('X.G.hearts'), 2, 'đúng ngay 5 câu liền → được thưởng lại 1 tim');
     assert.equal(await hook('X.G.perfect'), 5);
     // Bắn sai làm chuỗi "đúng ngay" bắt đầu lại
     await waitAsk(page, hook);
-    await hook(FIRE_WRONG);
+    await acknowledgeReading(page); await hook(FIRE_WRONG);
     await sleep(page, 600);
     assert.equal(await hook('X.G.perfect'), 0, 'bắn sai → chuỗi đúng ngay về 0');
-    await hook('X.endGame("nolife")');
+    await acknowledgeReading(page); await hook('X.endGame("nolife")');
     await waitFor(page, () => shown(page, '#gameover'), 6000, 'kết quả');
 
     // Sao tính theo số câu sai: bắn trượt 3 lần trong CÙNG một câu vẫn chỉ là 1 câu sai
@@ -845,7 +853,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     // Màn 5 (xem đến 5 phút) và màn 1 (giờ đúng) đều có câu "bắn đồng hồ" – bảng phải ≥ 100 px
     for (const lv of [0, 4, 6]) {
       for (let k = 0; k < 10; k++) {
-        await hook('X.startGame(Levels.LEVELS[' + lv + '])');
+        await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[' + lv + '])');
         await waitState(page, hook, 'playing');
         await waitAsk(page, hook);
         const clocks = await hook('X.liveRobots().filter(function(r){return r.clock}).map(function(r){return {w:Math.round(r.w),x0:Math.round(r.x0)}})');
@@ -861,7 +869,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     // Gặp thật một câu 4 đồng hồ (màn 7) và kiểm tra bố cục: trong màn hình, trên tuyến, không chồng nhau
     let found = false;
     for (let k = 0; k < 25 && !found; k++) {
-      await hook('X.startGame(Levels.LEVELS[6])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[6])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       found = await hook('X.liveRobots().filter(function(r){return r.clock}).length === 4');
@@ -896,7 +904,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
       new MutationObserver(() => window.__hintMut.push({ hidden: el.hidden, t: el.textContent }))
         .observe(el, { attributes: true, childList: true, characterData: true, subtree: true });
     });
-    await hook('X.startGame(Levels.LEVELS[6])');
+    await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[6])');
     await waitState(page, hook, 'playing');
     await waitAsk(page, hook);
     await hook('(X.layout(), 0)');            // đo lại khi xoay màn hình cũng không được đụng vùng aria-live
@@ -913,7 +921,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     /* (c) C12: mặt đồng hồ của thẻ câu hỏi ≥ 120 px trên màn ≥ 700 px */
     let hasClock = null;
     for (let k = 0; k < 12 && !hasClock; k++) {
-      await hook('X.startGame(Levels.LEVELS[0])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       hasClock = await page.$('#prompt-visual canvas');
@@ -934,7 +942,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
       return ft; })()`);
     assert.ok(ft11 > 200, 'thời gian rơi thử nghiệm đủ dài (' + ft11 + ' s)');
     const scoreA = await hook('X.G.score');
-    await hook(FIRE_OK);
+    await acknowledgeReading(page); await hook(FIRE_OK);
     await sleep(page, 800);
     const gained = await hook('X.G.score') - scoreA;
     await hook('(X.G.level.fall = ' + origFall + ', 0)');
@@ -942,13 +950,13 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
 
     /* (e) C10: 8 câu cần ôn vẫn để lộ đủ nút thoát ở cả ba khổ màn hình */
     async function resultsFit(tag) {
-      await hook('X.startGame(Levels.LEVELS[7])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[7])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       await hook(`(function(){ var G = X.G; G.review = [];
         for (var i = 0; i < 8; i++) { var q = Levels.LEVELS[7].gen(); G.review.push({ key: q.key + '#' + i, q: q, text: q.answer.label, speech: q.answer.speech, prompt: q.prompt.text }); }
         G.wrong = 8; G.correct = 3; return G.review.length; })()`);
-      await hook('X.endGame("nolife")');
+      await acknowledgeReading(page); await hook('X.endGame("nolife")');
       await waitFor(page, () => shown(page, '#gameover'), 8000, 'bảng kết quả ' + tag);
       await sleep(page, 700);
       const box = await page.evaluate(() => {
@@ -984,7 +992,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     // Điện thoại: mặt đồng hồ thẻ câu hỏi vẫn nhỏ (không áp quy tắc 120 px của màn rộng)
     let hasClockP = null;
     for (let k = 0; k < 12 && !hasClockP; k++) {
-      await hook('X.startGame(Levels.LEVELS[0])');
+      await acknowledgeReading(page); await hook('X.startGame(Levels.LEVELS[0])');
       await waitState(page, hook, 'playing');
       await waitAsk(page, hook);
       hasClockP = await page.$('#prompt-visual canvas');
@@ -1011,5 +1019,5 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
   assertClean(log11, 'xe-tang 11 · bảng kết quả, đồng hồ câu hỏi, vùng chạm, aria-live, thưởng nhanh');
 
   if (process.exitCode) { console.error('CÓ LỖI'); process.exit(1); }
-  console.log('Xe Tăng Thời Gian e2e: 11 phiên hoàn tất, ảnh chụp trong tests/e2e/out/' + DIR + '/');
+  console.log('Xe Tăng Thời Gian e2e: hoàn tất ' + (process.env.ONLY ? 'các phiên ' + process.env.ONLY : '11 phiên') + ', ảnh chụp trong tests/e2e/out/' + DIR + '/');
 })().catch((e) => { console.error(e); process.exit(1); });

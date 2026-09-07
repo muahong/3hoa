@@ -520,7 +520,7 @@ function fnBody(src, from, to) {
 function playWrong(X, level, n, opts) {
   X.startGame(level, opts);
   X.G.state = 'playing';
-  const settle = function () { let g = 0; while (X.G.state === 'playing' && X.G.phase !== 'choose' && g++ < 3000) X.update(0.05); };
+  const settle = function () { let g = 0; while (X.G.state === 'playing' && X.G.phase !== 'choose' && g++ < 3000) { X.update(0.05); if (X.G.phase === 'learn' && X.G.learnT >= 0.9) X.skipLearn(); } };
   for (let i = 0; i < n; i++) {
     settle();
     if (X.G.state !== 'playing' || X.G.phase !== 'choose') break;
@@ -545,6 +545,21 @@ test('cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván t
   assert.equal(g2.hearts, 4, 'tập luyện: giữ nguyên đủ tim');
   assert.equal(g2.state, 'playing', 'sai 5 câu vẫn chơi tiếp');
   assert.ok(g2.wrong >= 5, 'vẫn đếm câu sai để ôn lại');
+});
+
+test('cuoi-ho: lời giải sau sai giữ nguyên đến thao tác tiếp, không đếm lại lỗi', () => {
+  const { X } = bootWith(undefined);
+  X.startGame(L.LEVELS[0]); X.G.state = 'playing';
+  for (let n = 0; X.G.phase !== 'choose' && n < 3000; n++) X.update(0.05);
+  X.choose((X.curGate().q.answer + 1) % 3);
+  for (let n = 0; X.G.phase !== 'learn' && n < 100; n++) X.update(0.05);
+  const before = { i: X.G.gateIdx, hearts: X.G.hearts, wrong: X.G.wrong, score: X.G.score };
+  for (let n = 0; n < 220; n++) X.update(0.05);
+  assert.equal(X.G.phase, 'learn');
+  assert.deepEqual({ i: X.G.gateIdx, hearts: X.G.hearts, wrong: X.G.wrong, score: X.G.score }, before);
+  X.skipLearn(); X.skipLearn();
+  assert.equal(X.G.gateIdx, before.i + 1, 'hai lần tiếp không bỏ qua hai câu');
+  assert.equal(X.G.wrong, before.wrong, 'lời giải không bị tính thành đúng hay sai thêm');
 });
 
 test('cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh', () => {
@@ -576,7 +591,9 @@ test('cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; �
 });
 
 test('cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"', () => {
-  const css = readGame('style.css');
+  // Git on Windows checks out CRLF. Normalize before locating a CSS line end;
+  // otherwise slice extends into the separate <=360px rule and reports a false failure.
+  const css = readGame('style.css').replace(/\r\n/g, '\n');
   const a = css.indexOf('@media (max-height: 480px)');
   assert.ok(a > 0, 'có khối cho máy nằm ngang');
   const block = css.slice(a, css.indexOf('}\n', css.indexOf('.tap-tip', a)));

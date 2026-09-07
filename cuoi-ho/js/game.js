@@ -214,7 +214,7 @@
     ground: 0, hudBottom: 0, r: 60, tigerX: 200, stopX: 400, jumpDist: 160, speed: 380, laneY: [0, 0, 0],
     scroll: 0, phase: 'run',  // run | choose | jump | learn | finish | done
     gates: [], gateIdx: 0, gateTime: 0, jumpT: 0, learnT: 0, finishX: 0, doneT: 0, gap: 600,
-    tiger: { y: 0, phase: 0, state: 'run', hurt: 0, cheer: 0, blink: 0, tilt: 0, jumpH: 0 },
+    tiger: { y: 0, phase: 0, state: 'run', hurt: 0, cheer: 0, blink: 0, tilt: 0, jumpH: 0, land: 0 },
     parts: [], texts: [], bg: null, tileGround: null, tileAud: null, tileW: 480, audW: 720,
     shake: 0, flash: null, glowCache: {}, flameCache: {}, clockCache: {}, layers: {}, builtKey: '', vignette: null, tigerGfx: null,
     score: 0, hearts: MAX_HEARTS, streak: 0, bestStreak: 0, correct: 0, wrong: 0, review: [], firstChoice: true,
@@ -235,7 +235,7 @@
     hud: $('hud'), menu: $('menu'), levels: $('levels'), lesson: $('lesson'), notes: $('notes'), howto: $('howto'),
     countdown: $('countdown'), pause: $('pause'), gameover: $('gameover'), quiz: $('quiz'), toast: $('toast'),
     score: $('hud-score'), stage: $('hud-stage'), combo: $('hud-combo'), question: $('hud-question'), visual: $('hud-visual'), prompt: $('hud-prompt'),
-    timer: $('hud-timer'), timerFill: $('hud-timer-fill'), time: $('hud-time'), hearts: $('hud-hearts'), hint: $('hud-hint'), tapTip: $('tap-tip'),
+    timer: $('hud-timer'), timerFill: $('hud-timer-fill'), time: $('hud-time'), hearts: $('hud-hearts'), hint: $('hud-hint'), tapTip: $('tap-tip'), learnContinue: $('btn-learn-continue'),
     btnHint: $('btn-hint'), btnPause: $('btn-pause'), btnPractice: $('btn-practice'), btnDrill: $('btn-drill'),
     countNum: $('count-num'), levelGrid: $('level-grid'), journeyStats: $('journey-stats'),
     lessonTitle: $('lesson-title'), slideVisual: $('slide-visual'), slideText: $('slide-text'), slideDots: $('slide-dots'),
@@ -779,9 +779,11 @@
 
   /** Lời giải thích (chữ + giọng đọc) khi sai/hết giờ; giữ trên màn hình đến khi hổ chạy tiếp. Bé có thể chạm để chạy tiếp. */
   function explainHint(prefix, q) {
+    ui.hud.classList.add('learning');
     showHint('<b>' + esc(prefix + q.answerText) + '</b> · ' + esc(q.explain), 'bad', 0, true);
-    ui.tapTip.textContent = '👆 Chạm để chạy tiếp';
-    ui.tapTip.hidden = false;
+    ui.tapTip.hidden = true;
+    ui.learnContinue.hidden = false;
+    ui.learnContinue.disabled = true;
   }
 
   function onWrong(gate) {
@@ -797,7 +799,7 @@
     Sfx.play('burn');
     Sfx.play('roar');
     // Chữ bay đặt phía trên, bên phải hổ (sau cú nhảy cụm vòng nằm bên trái hổ) để không che vòng đúng đang hé lộ
-    addText('Ái! Nóng quá!', G.tigerX + G.r * 0.2, G.ground - G.r * 2.5, { color: '#ff5c7a', size: G.r * 0.55, life: 1.3, vy: -20, align: 'left' });
+    addText('Cùng xem lại nhé!', G.tigerX + G.r * 0.2, G.ground - G.r * 2.5, { color: '#fff5da', size: G.r * 0.42, life: 1.0, vy: -20, align: 'left' });
     cardFx('shake');
     loseHeart();
     explainHint('Đáp án: ', q);
@@ -870,6 +872,7 @@
   function updatePlaying(dt) {
     G.time += dt;
     const tg = G.tiger;
+    tg.land = Math.max(0, tg.land - dt * 4);
     if (tg.hurt > 0) tg.hurt = Math.max(0, tg.hurt - dt);
     if (tg.cheer > 0) tg.cheer = Math.max(0, tg.cheer - dt);
     const gate = curGate();
@@ -895,7 +898,7 @@
         tg.phase += dt * 4;
         if (t >= 0.5 && !gate.evaluated) evaluate(gate);
         if (t >= 1) {
-          tg.y = 0; tg.tilt = 0; gate.passed = true;
+          tg.y = 0; tg.tilt = 0; tg.land = 1; gate.passed = true;
           Sfx.play('land');
           if (gate.result === 'ok') { G.gateIdx++; G.phase = 'run'; }
           else { G.phase = 'learn'; G.learnT = 0; }
@@ -905,15 +908,8 @@
       case 'learn':
         G.learnT += dt;
         tg.state = 'idle';
-        // Đợi đọc xong lời giải thích (tối đa thêm 6 giây); bé có thể chạm màn hình để chạy tiếp ngay
-        if (G.learnT >= LEARN_T && !(Voice.speaking() && G.learnT < LEARN_T + 6)) {
-          if (G.hearts <= 0) { endGame('nolife'); return; }
-          G.gateIdx++;
-          G.phase = 'run';
-          ui.hint.hidden = true;
-          ui.tapTip.hidden = true;
-          ui.tapTip.textContent = TAP_TIP_TEXT;
-        }
+        // Bé tự quyết khi đã đọc xong; không coi thời gian chờ là hiểu bài.
+        ui.learnContinue.disabled = G.learnT < 0.9;
         break;
       case 'finish':
         G.scroll += G.speed * dt;
@@ -1345,13 +1341,17 @@
     for (let k = 0; k < legs.length; k++) {
       const ax = legs[k][0] + (far ? -0.12 * u : 0), ay = legs[k][1], off = legs[k][2];
       let a;
-      if (jumping) a = (ax > 0 ? 0.8 : -0.8) * (far ? 0.75 : 1);
+      const flight = jumping ? Math.min(1, G.jumpT / JUMP_T) : 0;
+      const tuck = jumping ? Math.sin(Math.PI * flight) : 0;
+      if (jumping) a = (ax > 0 ? 0.7 : -0.65) * tuck + (flight > 0.72 ? (ax > 0 ? 0.25 : -0.2) : 0);
       else if (running) a = Math.sin(ph + off + (far ? Math.PI * 0.55 : 0)) * 0.7;
       else a = far ? 0.14 : -0.08;
-      const len = 0.92 * u;
-      const fx = ax + Math.sin(a) * len, fy = ay + Math.cos(a) * len;
+      const len = (0.72 - tuck * 0.26) * u;
+      const fx = ax + Math.sin(a) * len, fy = Math.min(-0.16 * u, ay + Math.cos(a) * len);
+      const kneeX = (ax + fx) / 2 + (ax > 0 ? -1 : 1) * (0.12 + tuck * 0.22) * u;
+      const kneeY = (ay + fy) / 2 - tuck * 0.08 * u;
       c.strokeStyle = col; c.lineWidth = 0.34 * u; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(ax, ay); c.lineTo(fx, fy); c.stroke();
+      c.beginPath(); c.moveTo(ax, ay); c.lineTo(kneeX, kneeY); c.lineTo(fx, fy); c.stroke();
       c.fillStyle = paw;
       c.beginPath(); c.ellipse(fx + 0.08 * u, fy + 0.02 * u, 0.27 * u, 0.17 * u, 0, 0, TAU); c.fill();
       c.strokeStyle = '#2b1a12'; c.lineWidth = 0.09 * u;
@@ -1365,6 +1365,7 @@
     const bounce = running ? Math.abs(Math.sin(ph)) * 0.05 * u : 0;
     c.save();
     c.translate(0, -bounce);
+    if (G.phase === 'jump') { c.translate(bx, by); c.rotate(-tg.tilt * 0.35); c.translate(-bx, -by); }
     // Áo choàng bay
     const wave = Math.sin(G.anim * 9) * 0.14 * u + (running || G.phase === 'jump' ? 0.1 * u : 0);
     c.fillStyle = '#7b5ea7';
@@ -1500,7 +1501,8 @@
     c.beginPath(); c.ellipse(x + 0.2 * u, G.ground + 0.12 * u, 1.75 * u * sh, 0.26 * u * sh, 0, 0, TAU); c.fill();
     c.save();
     c.translate(x, y - bob);
-    if (tg.hurt > 0) c.translate((Math.random() - 0.5) * 0.14 * u, (Math.random() - 0.5) * 0.14 * u);
+    if (!Motion.lite && tg.land > 0) c.scale(1 + tg.land * 0.035, 1 - tg.land * 0.09);
+    if (tg.hurt > 0 && !Motion.lite) c.translate((Math.random() - 0.5) * 0.14 * u, (Math.random() - 0.5) * 0.14 * u);
     if (jumping) { c.translate(0, -1.1 * u); c.rotate(tg.tilt); c.translate(0, 1.1 * u); }
     // Đuôi: ngoáy mạnh hơn trong lúc chờ bé chọn (hổ vẫn "sống", màn hình không đứng im)
     const thinking = G.state === 'playing' && G.phase === 'choose' && !Motion.lite;
@@ -1788,6 +1790,8 @@
     ui.hint.hidden = true;
     ui.tapTip.hidden = true;
     ui.tapTip.textContent = TAP_TIP_TEXT;
+    ui.learnContinue.hidden = true;
+    ui.hud.classList.remove('learning');
     renderQuestion(null);
     ui.timer.classList.add('idle');
     ui.timerFill.style.width = '100%';
@@ -1801,7 +1805,7 @@
     G.texts.length = 0;
     G.shake = 0;
     G.flash = null;
-    G.tiger.y = 0; G.tiger.tilt = 0; G.tiger.hurt = 0; G.tiger.cheer = 0;
+    G.tiger.y = 0; G.tiger.tilt = 0; G.tiger.hurt = 0; G.tiger.cheer = 0; G.tiger.land = 0;
   }
 
   /** Số tim của một màn: màn 1–3 (bé mới học) được 4 tim, còn lại 3. */
@@ -2535,13 +2539,19 @@
   /** Bé chạm/ấn để chạy tiếp ngay khi đang xem đáp án đúng (sau ít nhất 0,9 giây để kịp nhìn). */
   function skipLearn() {
     if (G.state !== 'playing' || G.phase !== 'learn' || G.learnT < 0.9) return;
-    G.learnT = Math.max(G.learnT, LEARN_T + 6);
     Voice.stop();
+    ui.hud.classList.remove('learning');
+    ui.learnContinue.hidden = true;
+    ui.learnContinue.disabled = true;
+    ui.hint.hidden = true;
+    if (G.hearts <= 0) { endGame('nolife'); return; }
+    G.gateIdx++;
+    G.phase = 'run';
   }
 
   function onCanvasDown(e) {
     Sfx.unlock();
-    if (G.state === 'playing' && G.phase === 'learn') { skipLearn(); if (e.cancelable) e.preventDefault(); return; }
+    if (G.state === 'playing' && G.phase === 'learn') return;
     if (G.state !== 'playing' || G.phase !== 'choose') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const gate = curGate();
@@ -2617,7 +2627,7 @@
       if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
       return;
     }
-    if (G.state === 'playing' && G.phase === 'learn') { if (e.key === 'Enter' || e.key === ' ') { skipLearn(); e.preventDefault(); } return; }
+    if (G.state === 'playing' && G.phase === 'learn') { if (!e.repeat && (e.key === 'Enter' || e.key === ' ')) { skipLearn(); e.preventDefault(); } return; }
     if (G.state !== 'playing' || G.phase !== 'choose') return;
     // Thẻ câu hỏi đang được chọn bằng bàn phím: Enter/Space phóng to đồng hồ thay vì chọn vòng lửa
     if ((e.key === 'Enter' || e.key === ' ') && ui.question && document.activeElement === ui.question) { toggleZoom(); e.preventDefault(); return; }
@@ -2735,6 +2745,7 @@
       ui.question.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') e.preventDefault(); });
     }
     click('btn-pause', function () { pauseGame(); });
+    click('btn-learn-continue', function () { skipLearn(); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { const l = G.level; if (l) startGame(l); });
     click('btn-pause-lesson', function () { if (G.level) showLesson(G.level, 'pause'); });

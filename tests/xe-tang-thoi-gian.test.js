@@ -356,7 +356,34 @@ test('ví dụ bài học: nhãn nút ngắn gọn, nhãn dưới đồng hồ d
 
 /* ---------------- Store (nạp cả game.js vào window giả) ---------------- */
 const FULL = ['js/audio.js', 'js/clock.js', 'js/levels.js', 'js/profile.js', 'js/game.js'];
-const loadFull = (st) => loadGame(GAME, FULL, { localStorage: st });
+const loadFull = (st) => {
+  const win = loadGame(GAME, FULL, { localStorage: st });
+  const getElement = win.document.getElementById;
+  win.document.getElementById = (id) => { const el = getElement(id); if (id === 'clock-zoom') { el.showModal = () => {}; el.close = () => {}; } return el; };
+  return win;
+};
+
+test('xe tăng: ngắm trước khi phóng đạn, tap lặp không tạo hai đạn cùng mục tiêu', () => {
+  const win = loadFull(makeStorage()), X = win.__XeTang, G = X.G;
+  X.startGame(win.Levels.LEVELS[0]); G.state = 'playing'; G.phase = 'ask';
+  G.q = win.Levels.LEVELS[0].gen();
+  const target = { idx: 0, x: 100, x0: 100, y: 180, y0: 180, w: 100, h: 70, vy: 0, ph: 0, t: 0, scale: 1, alpha: 1, dead: false, state: 'live', opt: G.q.options[0] };
+  G.robots = [target];
+  const oldAngle = G.tank.angle;
+  X.fireAt(target); X.fireAt(target);
+  assert.equal(G.shells.length, 0, 'chưa phóng khi nòng chưa quay');
+  assert.equal(G.tank.angle, oldAngle, 'không snap ngay trong input');
+  for (let i = 0; G.shells.length === 0 && i < 40; i++) X.update(0.01);
+  assert.equal(G.shells.length, 1);
+  const shell = G.shells[0];
+  assert.equal(shell.robot, target);
+  assert.ok(Math.abs(G.tank.angle - oldAngle) > 0.01);
+  X.fireAt(target);
+  assert.equal(G.shells.length, 1);
+  assert.equal(G.tank.aimRobot, null);
+  const radius = Math.hypot(shell.x0 - G.tank.x, shell.y0 - (G.tank.y - G.tank.size * 0.25));
+  assert.ok(Math.abs(radius - G.tank.size * 1.07) < 0.001, 'đạn xuất phát tại miệng nòng');
+});
 
 test('Store: dữ liệu cũ (progress ở cấp cao nhất) di trú vào players.p1, ép kiểu, lưu lại', () => {
   const st = makeStorage();
@@ -483,6 +510,10 @@ test('nút 💡 Gợi ý: đánh dấu đáp án đúng, robot đi chậm lại,
   assert.equal(X.useHint(), true, 'dùng được khi đang hỏi');
   assert.equal(G.hint, true, 'câu này tính điểm gợi ý (20)');
   assert.equal(G.slowT, 2.5, 'robot đi chậm lại trong lúc bé nghe giải thích');
+  assert.equal(G.readingHold, true, 'gợi ý mở nhịp đọc chủ động');
+  const frozenTime = G.time;
+  X.update(12);
+  assert.equal(G.time, frozenTime, 'không trôi thời gian khi đang đọc');
   const marked = G.robots.filter((r) => r.hint);
   assert.equal(marked.length, 1, 'chỉ đánh dấu một bảng');
   assert.equal(marked[0].opt.ok, true, 'bảng được đánh dấu là đáp án đúng');

@@ -1,0 +1,13 @@
+thap-dong-ho: loading old version
+thap-dong-ho: waiting old service worker
+thap-dong-ho: updating service worker
+thap-dong-ho: loading offline
+{"game":"thap-dong-ho","pending":["http://127.0.0.1:54246/thap-dong-ho/"],"dom":"DOM diagnostic timed out after 2s"}
+page.reload: Timeout 30000ms exceeded.
+Call log:
+  - waiting for navigation until "load"
+
+    at D:\Projects\3hoa\tests\e2e\gauntlet-cache.e2e.js:121:24 {
+  log: [ '  - waiting for navigation until "load"' ],
+  name: 'TimeoutError'
+}

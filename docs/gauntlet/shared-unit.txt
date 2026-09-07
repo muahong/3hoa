@@ -1,0 +1,460 @@
+TAP version 13
+# Subtest: profile.js is identical in every game and the hub
+ok 1 - profile.js is identical in every game and the hub
+  ---
+  duration_ms: 2.4819
+  type: 'test'
+  ...
+# Subtest: math-ninja: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 2 - math-ninja: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.7843
+  type: 'test'
+  ...
+# Subtest: math-ninja: service worker precaches profile.js and bumped its cache version
+ok 3 - math-ninja: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.6071
+  type: 'test'
+  ...
+# Subtest: math-ninja: game.js routes progress through the active player and has the shared hooks
+ok 4 - math-ninja: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.7951
+  type: 'test'
+  ...
+# Subtest: math-ninja: style.css has focus-visible and reduced-motion rules
+ok 5 - math-ninja: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.8065
+  type: 'test'
+  ...
+# Subtest: math-ninja: tests exist
+ok 6 - math-ninja: tests exist
+  ---
+  duration_ms: 0.1761
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 7 - cuu-chuong: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.3652
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: service worker precaches profile.js and bumped its cache version
+ok 8 - cuu-chuong: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.4037
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: game.js routes progress through the active player and has the shared hooks
+ok 9 - cuu-chuong: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.7711
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: style.css has focus-visible and reduced-motion rules
+ok 10 - cuu-chuong: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.4679
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: tests exist
+ok 11 - cuu-chuong: tests exist
+  ---
+  duration_ms: 0.1497
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 12 - me-cung-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.3219
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: service worker precaches profile.js and bumped its cache version
+ok 13 - me-cung-dong-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.5512
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: game.js routes progress through the active player and has the shared hooks
+ok 14 - me-cung-dong-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.7554
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: style.css has focus-visible and reduced-motion rules
+ok 15 - me-cung-dong-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.3246
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: tests exist
+ok 16 - me-cung-dong-ho: tests exist
+  ---
+  duration_ms: 0.1266
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 17 - thap-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.6417
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: service worker precaches profile.js and bumped its cache version
+ok 18 - thap-dong-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.646
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: game.js routes progress through the active player and has the shared hooks
+ok 19 - thap-dong-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.7057
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: style.css has focus-visible and reduced-motion rules
+ok 20 - thap-dong-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.6523
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: tests exist
+ok 21 - thap-dong-ho: tests exist
+  ---
+  duration_ms: 0.114
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 22 - xe-tang-thoi-gian: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.3255
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: service worker precaches profile.js and bumped its cache version
+ok 23 - xe-tang-thoi-gian: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.311
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: game.js routes progress through the active player and has the shared hooks
+ok 24 - xe-tang-thoi-gian: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.6307
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: style.css has focus-visible and reduced-motion rules
+ok 25 - xe-tang-thoi-gian: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.2015
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: tests exist
+ok 26 - xe-tang-thoi-gian: tests exist
+  ---
+  duration_ms: 0.0796
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 27 - cuoi-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 0.2549
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: service worker precaches profile.js and bumped its cache version
+ok 28 - cuoi-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 0.2846
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: game.js routes progress through the active player and has the shared hooks
+ok 29 - cuoi-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 0.5836
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: style.css has focus-visible and reduced-motion rules
+ok 30 - cuoi-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 0.2045
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: tests exist
+ok 31 - cuoi-ho: tests exist
+  ---
+  duration_ms: 0.0765
+  type: 'test'
+  ...
+# Subtest: hub: CSP, no inline handlers, profile.js + hub.js loaded
+ok 32 - hub: CSP, no inline handlers, profile.js + hub.js loaded
+  ---
+  duration_ms: 0.224
+  type: 'test'
+  ...
+# Subtest: math-ninja [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 33 - math-ninja [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.1389
+  type: 'test'
+  ...
+# Subtest: cuu-chuong [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 34 - cuu-chuong [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.0369
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 35 - me-cung-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.1382
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 36 - thap-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.1324
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 37 - xe-tang-thoi-gian [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.205
+  type: 'test'
+  ...
+# Subtest: cuoi-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 38 - cuoi-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 1.6841
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: reading helpers
+ok 39 - cuoi-ho: reading helpers
+  ---
+  duration_ms: 2.0251
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l1 (Giờ đúng)
+ok 40 - cuoi-ho: generator invariants l1 (Giờ đúng)
+  ---
+  duration_ms: 23.3694
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l2 (Giờ rưỡi)
+ok 41 - cuoi-ho: generator invariants l2 (Giờ rưỡi)
+  ---
+  duration_ms: 20.1605
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l3 (Giờ 15 phút)
+ok 42 - cuoi-ho: generator invariants l3 (Giờ 15 phút)
+  ---
+  duration_ms: 18.8245
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l4 (Đếm từng 5 phút)
+ok 43 - cuoi-ho: generator invariants l4 (Đếm từng 5 phút)
+  ---
+  duration_ms: 21.1144
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l5 (Giờ kém)
+ok 44 - cuoi-ho: generator invariants l5 (Giờ kém)
+  ---
+  duration_ms: 18.047
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l6 (Chính xác đến phút)
+ok 45 - cuoi-ho: generator invariants l6 (Chính xác đến phút)
+  ---
+  duration_ms: 23.133
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l7 (Một ngày 24 giờ)
+ok 46 - cuoi-ho: generator invariants l7 (Một ngày 24 giờ)
+  ---
+  duration_ms: 19.7185
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l8 (Tính thời gian)
+ok 47 - cuoi-ho: generator invariants l8 (Tính thời gian)
+  ---
+  duration_ms: 21.9452
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l9 (Siêu Hổ)
+ok 48 - cuoi-ho: generator invariants l9 (Siêu Hổ)
+  ---
+  duration_ms: 19.4857
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 never says "số 0" / "0 phút"; clock-option pairs differ by ≥ 5 minutes
+ok 49 - cuoi-ho: L6 never says "số 0" / "0 phút"; clock-option pairs differ by ≥ 5 minutes
+  ---
+  duration_ms: 31.9186
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 never offers an impossible minute value (> 59 phút)
+ok 50 - cuoi-ho: L6 never offers an impossible minute value (> 59 phút)
+  ---
+  duration_ms: 28.2788
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 giờ tối, 12 giờ sáng/chiều)
+ok 51 - cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 giờ tối, 12 giờ sáng/chiều)
+  ---
+  duration_ms: 21.8536
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: không màn nào đưa ra số phút không có trên đồng hồ (> 59 phút)
+ok 52 - cuoi-ho: không màn nào đưa ra số phút không có trên đồng hồ (> 59 phút)
+  ---
+  duration_ms: 77.4073
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 (đọc đồng hồ, lựa chọn chữ) không có đáp án nhiễu lệch 1–4 phút tuỳ tiện
+ok 53 - cuoi-ho: L6 (đọc đồng hồ, lựa chọn chữ) không có đáp án nhiễu lệch 1–4 phút tuỳ tiện
+  ---
+  duration_ms: 30.7796
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L2/L3 explanation names the shown answer; L8 explains clock positions as numbers
+ok 54 - cuoi-ho: L2/L3 explanation names the shown answer; L8 explains clock positions as numbers
+  ---
+  duration_ms: 41.8797
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: distractor sets vary between draws (uniq shuffles candidates)
+ok 55 - cuoi-ho: distractor sets vary between draws (uniq shuffles candidates)
+  ---
+  duration_ms: 92.8764
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: fresh() avoids repeating recent questions
+ok 56 - cuoi-ho: fresh() avoids repeating recent questions
+  ---
+  duration_ms: 41.0892
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: level / lesson / quiz definitions are well-formed
+ok 57 - cuoi-ho: level / lesson / quiz definitions are well-formed
+  ---
+  duration_ms: 7.1907
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: clockSvg / visualHtml / optionHtml
+ok 58 - cuoi-ho: clockSvg / visualHtml / optionHtml
+  ---
+  duration_ms: 2.1007
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: clockSvg draws the numerals last with a halo, and both hands stay visible
+ok 59 - cuoi-ho: clockSvg draws the numerals last with a halo, and both hands stay visible
+  ---
+  duration_ms: 0.7064
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: math / 24h-strip visuals render and escape
+ok 60 - cuoi-ho: math / 24h-strip visuals render and escape
+  ---
+  duration_ms: 0.1774
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: lessons explain the "why" of the hour hand and of the 24-hour day
+ok 61 - cuoi-ho: lessons explain the "why" of the hour hand and of the 24-hour day
+  ---
+  duration_ms: 0.2237
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: only L8 word problems get extra seconds, and mkQ carries extraTime
+ok 62 - cuoi-ho: only L8 word problems get extra seconds, and mkQ carries extraTime
+  ---
+  duration_ms: 48.1877
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: uniq / mkQ / T / C
+ok 63 - cuoi-ho: uniq / mkQ / T / C
+  ---
+  duration_ms: 1.0399
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: legacy top-level progress migrates to players.p1 and is sanitized
+ok 64 - cuoi-ho Store: legacy top-level progress migrates to players.p1 and is sanitized
+  ---
+  duration_ms: 8.8501
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: garbage / hostile storage never throws and yields a blank bucket
+ok 65 - cuoi-ho Store: garbage / hostile storage never throws and yields a blank bucket
+  ---
+  duration_ms: 36.1451
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: per-player buckets, accessors follow the active player
+ok 66 - cuoi-ho Store: per-player buckets, accessors follow the active player
+  ---
+  duration_ms: 16.8138
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: noteMissed / noteOk / reviewPool / addStats
+ok 67 - cuoi-ho Store: noteMissed / noteOk / reviewPool / addStats
+  ---
+  duration_ms: 15.3433
+  type: 'test'
+  ...
+# Subtest: cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván thường vẫn mất tim)
+ok 68 - cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván thường vẫn mất tim)
+  ---
+  duration_ms: 17.5543
+  type: 'test'
+  ...
+# Subtest: cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh
+ok 69 - cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh
+  ---
+  duration_ms: 1.3288
+  type: 'test'
+  ...
+# Subtest: cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; ⏸/💡 khóa khi bảng che ván chơi
+ok 70 - cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; ⏸/💡 khóa khi bảng che ván chơi
+  ---
+  duration_ms: 1.2576
+  type: 'test'
+  ...
+# Subtest: cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"
+ok 71 - cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"
+  ---
+  duration_ms: 0.4337
+  type: 'test'
+  ...
+# Subtest: hub: summarize reads legacy and migrated shapes per player
+ok 72 - hub: summarize reads legacy and migrated shapes per player
+  ---
+  duration_ms: 5.8356
+  type: 'test'
+  ...
+# Subtest: hub: garbage storage never throws and reads as "chưa chơi"
+ok 73 - hub: garbage storage never throws and reads as "chưa chơi"
+  ---
+  duration_ms: 8.0635
+  type: 'test'
+  ...
+# Subtest: hub: summarizeAll / aggregate totals and read-only storage
+ok 74 - hub: summarizeAll / aggregate totals and read-only storage
+  ---
+  duration_ms: 2.3157
+  type: 'test'
+  ...
+# Subtest: hub: GAMES table is frozen and consistent
+ok 75 - hub: GAMES table is frozen and consistent
+  ---
+  duration_ms: 1.1358
+  type: 'test'
+  ...
+1..75
+# tests 75
+# suites 0
+# pass 75
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4394.2827

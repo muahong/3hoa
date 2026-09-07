@@ -1,0 +1,12 @@
+math-ninja: actual old-cache upgrade + offline menu + storage/scope PASS
+cuu-chuong: actual old-cache upgrade + offline menu + storage/scope PASS
+me-cung-dong-ho: actual old-cache upgrade + offline menu + storage/scope PASS
+thap-dong-ho: actual old-cache upgrade + offline menu + storage/scope PASS
+page.reload: Timeout 30000ms exceeded.
+Call log:
+  - waiting for navigation until "load"
+
+    at D:\Projects\3hoa\tests\e2e\gauntlet-cache.e2e.js:111:18 {
+  log: [ '  - waiting for navigation until "load"' ],
+  name: 'TimeoutError'
+}

@@ -131,7 +131,3 @@ async function ninjaRotation(){
   fs.writeFileSync(path.join(OUT,'ninja-rotation-closure.json'),JSON.stringify(observations,null,2));
  },{viewport:{width:390,height:844}});fs.writeFileSync(path.join(OUT,'ninja-rotation-console.json'),JSON.stringify(log,null,2));assert.equal(assertClean(log,'Ninja N1 rotation closure'),true);
 }
-
-
-
-

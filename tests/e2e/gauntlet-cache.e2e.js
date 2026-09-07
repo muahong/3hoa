@@ -14,12 +14,21 @@ const games = process.argv.slice(2).length ? process.argv.slice(2) : ['math-ninj
 const mime = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png' };
 const baseline = new Map();
 let old = true;
+let activeDiagnostic = { stage: 'boot', events: [], serverRequests: [] };
+function stage(label) { activeDiagnostic.stage = label; activeDiagnostic.stageAt = new Date().toISOString(); event('stage', { label }); }
+function event(kind, data) { activeDiagnostic.events.push({ at: Date.now(), kind, ...data }); if (activeDiagnostic.events.length > 100) activeDiagnostic.events.shift(); }
+function dump(reason) {
+  fs.writeFileSync(path.join(OUT, (activeDiagnostic.game || 'boot') + '-watchdog.json'), JSON.stringify({ ...activeDiagnostic, reason }, null, 2));
+}
+const deadline = (promise, ms, label) => { let timer; return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(label + ' exceeded Node deadline ' + ms + 'ms')), ms); })]).finally(() => clearTimeout(timer)); };
 function read(rel) {
   if (!old) return fs.readFileSync(path.join(ROOT, rel));
   if (!baseline.has(rel)) baseline.set(rel, execFileSync('git', ['show', REF + ':' + rel], { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }));
   return baseline.get(rel);
 }
 const server = http.createServer((req, res) => {
+  activeDiagnostic.serverRequests.push({ at: Date.now(), url: req.url, old });
+  if (activeDiagnostic.serverRequests.length > 80) activeDiagnostic.serverRequests.shift();
   try {
     let rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '');
     if (!rel || rel.endsWith('/')) rel += 'index.html';
@@ -35,14 +44,38 @@ const server = http.createServer((req, res) => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = 'http://127.0.0.1:' + server.address().port;
   const browser = await chromium.launch();
-  const results = [];
+  let prior = null;
+  try { prior = JSON.parse(fs.readFileSync(path.join(OUT, 'results.json'), 'utf8')); } catch { /* first run */ }
+  const results = prior && prior.baseline === REF && Array.isArray(prior.results) ? prior.results.slice() : [];
+  const invocationId = new Date().toISOString();
+  const writeResults = () => fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify({ baseline: REF, browser: browser.version(), combinedInvocations: !!(prior && prior.results && prior.results.length), latestInvocation: invocationId, latestInvocationGames: games, results }, null, 2));
   try {
     for (const game of games) {
+      activeDiagnostic = { game, stage: 'starting', events: [], serverRequests: [] };
+      const watchdog = setTimeout(() => { dump('Hard per-game watchdog 100s'); console.error(game + ': hard watchdog; diagnostics written'); process.exit(2); }, 100000);
+      watchdog.unref();
       old = true;
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, locale: 'vi-VN' });
       const page = await context.newPage();
+      page.setDefaultTimeout(20000);
+      page.setDefaultNavigationTimeout(30000);
+      const pending = new Set();
+      activeDiagnostic.pending = [];
+      page.on('request', r => pending.add(r.url()));
+      page.on('requestfinished', r => pending.delete(r.url()));
+      page.on('requestfailed', r => pending.delete(r.url()));
+      page.on('request', r => { activeDiagnostic.pending = [...pending]; event('request', { url: r.url(), resourceType: r.resourceType() }); });
+      page.on('response', r => event('response', { url: r.url(), status: r.status(), fromSW: r.fromServiceWorker() }));
+      page.on('requestfailed', r => { activeDiagnostic.pending = [...pending]; event('requestfailed', { url: r.url(), failure: r.failure() }); });
+      page.on('requestfinished', () => { activeDiagnostic.pending = [...pending]; });
+      page.on('pageerror', e => event('pageerror', { error: String(e) }));
+      page.on('crash', () => event('crash', {}));
+      context.on('serviceworker', w => event('serviceworker', { url: w.url() }));
+      stage('old-navigation');
+      console.log(game + ': loading old version');
       await page.goto(origin + '/' + game + '/');
-      await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+      console.log(game + ': waiting old service worker');
+      await page.evaluate(async () => { await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Old service worker not ready within 20s')),20000))]); });
       await page.waitForFunction(() => !!navigator.serviceWorker.controller);
       const oldCache = await page.evaluate(() => caches.keys());
       const workerSource = fs.readFileSync(path.join(ROOT, game, 'sw.js'), 'utf8');
@@ -85,12 +118,15 @@ const server = http.createServer((req, res) => {
         return X.Store.data.players;
       });
       old = false;
-      await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); await r.update(); });
+      console.log(game + ': updating service worker');
+      stage('upgrade');
+      await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration(); await Promise.race([r.update(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Service worker update exceeded 20s')),20000))]); });
       await page.waitForFunction(async ({ target, oldKeys }) => {
         const keys = await caches.keys();
         return keys.includes(target) && oldKeys.every(k => !keys.includes(k));
       }, { target: targetCache, oldKeys: oldCache }, { timeout: 20000 });
-      await page.reload();
+      stage('new-online-navigation');
+      await deadline(page.reload(), 35000, game + ' online reload');
       await page.locator('#menu .game-home').waitFor({ state: 'visible' });
       assert.deepEqual(await page.evaluate(() => {
         const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
@@ -108,7 +144,16 @@ const server = http.createServer((req, res) => {
       for (const key of Object.keys(savedBefore)) assert.equal(check.storage[key], savedBefore[key], game + ': storage ' + key + ' preserved');
       assert.equal(new URL(check.scope).pathname, '/' + game + '/');
       await context.setOffline(true);
-      await page.reload();
+      stage('offline-navigation');
+      console.log(game + ': loading offline');
+      try { await deadline(page.reload(), 15000, game + ' offline reload'); } catch (error) {
+        const diagnostic = { game, pending: [...pending], dom: await Promise.race([page.evaluate(() => ({ready:document.readyState, title:document.title, text:document.body.innerText.slice(0,1400)})).catch(() => null),new Promise(resolve=>setTimeout(()=>resolve('DOM diagnostic timed out after 2s'),2000))]) };
+        fs.writeFileSync(path.join(OUT, game + '-offline-timeout.json'), JSON.stringify(diagnostic,null,2));
+        console.error(JSON.stringify(diagnostic));
+        activeDiagnostic.pending = [...pending]; dump(String(error));
+        throw error;
+      }
+      stage('offline-profile-checks');
       await page.locator('#menu .game-home').waitFor({ state: 'visible' });
       assert.equal(await page.locator('#menu .game-home').getAttribute('href'), '../');
       for (const id of Object.keys(progressBefore)) {
@@ -123,10 +168,16 @@ const server = http.createServer((req, res) => {
         assert.deepEqual(active.progress, progressBefore[id], game + ': selected child retains historical record');
       }
       await page.screenshot({ path: path.join(OUT, game + '-offline.png') });
-      results.push({ game, oldCache, targetCache, scope: check.scope, upgrade: 'PASS', offlineMenu: 'PASS', selectableHistoricalChildren: Object.keys(progressBefore).length, preservedKeys: Object.keys(savedBefore) });
+      const result = { game, oldCache, targetCache, scope: check.scope, upgrade: 'PASS', offlineMenu: 'PASS', selectableHistoricalChildren: Object.keys(progressBefore).length, preservedKeys: Object.keys(savedBefore), verifiedAt: new Date().toISOString(), invocationId, browser: browser.version() };
+      const priorIndex = results.findIndex(r => r.game === game);
+      if (priorIndex >= 0) results.splice(priorIndex, 1);
+      results.push(result);
+      fs.writeFileSync(path.join(OUT, game + '-result.json'), JSON.stringify({ baseline: REF, ...result }, null, 2));
+      writeResults(); // Persist each successful game even if a later navigation hangs.
       console.log(game + ': actual old-cache upgrade + offline menu + storage/scope PASS');
+      stage('complete'); dump('PASS'); clearTimeout(watchdog);
       await context.close();
     }
-    fs.writeFileSync(path.join(OUT, 'results.json'), JSON.stringify({ baseline: REF, browser: browser.version(), results }, null, 2));
-  } finally { await browser.close(); server.close(); }
+    writeResults();
+  } finally { await deadline(browser.close(), 5000, 'browser.close').catch(e => console.error(String(e))); server.closeAllConnections(); server.close(); }
 })().catch(e => { console.error(e); server.close(); process.exitCode = 1; });

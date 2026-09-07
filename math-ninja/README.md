@@ -75,6 +75,10 @@ Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 tim. Chém số sai hoặc
 - **Đã thuộc ✅** – khi đúng từ 90% trên ít nhất 20 câu của một màn, thẻ màn đó được gắn huy hiệu "Đã thuộc" (ở lưới chọn màn và trong 📊 Kết quả).
 - **Bước tiếp theo** – được 3 sao thì bảng kết quả mời chơi **màn tiếp theo**; hết tim thì mời chơi **màn dễ hơn**. Lưới chọn màn gắn nhãn 👉 Chơi tiếp cho màn nên luyện.
 
+### Khoảng đọc sau lỗi và thao tác cảm ứng
+
+Sau khi chém sai, quả và thời gian ván đứng yên 3,5–9 giây tùy độ dài lời giải; nhãn **⏸ Đọc cách làm** cho biết bé đang có thời gian đọc. Hết khoảng đọc, cùng câu được chơi tiếp. Một lần đặt ngón tay rồi vuốt chỉ có thể mất tối đa một tim, dù đường vuốt đi qua nhiều quả sai; nhấc tay hoặc hủy chạm kết thúc đường vuốt. Bom vẫn được ưu tiên khi chém cùng một nhóm quả.
+
 ## Âm thanh
 
 - **Âm thanh** (nút 🔊): tiếng chém, nước bắn, chuông đúng/sai, bom, tim, combo... (tổng hợp bằng Web Audio, không cần file mp3).

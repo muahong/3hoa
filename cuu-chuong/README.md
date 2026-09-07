@@ -67,6 +67,10 @@ Bé bí thì bấm nút **💡** ở góc trên bên phải (hoặc phím **H** 
 
 Mọi lời mách và lời giải thích đều được **đọc thành tiếng** (nếu máy có giọng tiếng Việt). Màn kết quả ghi rõ số câu bé đã nhìn đáp án và số lần dùng gợi ý.
 
+### Đọc lời mách không bị mất thời gian
+
+Khi bé trả lời sai hoặc xin gợi ý, mọi thiên thạch và đồng hồ đếm giờ đứng yên trong khoảng đọc có nhãn **⏸ Đọc cách làm** (3,5–7 giây tùy lời mách; đáp án/gợi ý trực tiếp 4,5 giây). Bé vẫn gõ, xóa và bắn để sửa; bắn đúng kết thúc khoảng đọc ngay. Câu hỏi đang sửa giữ nguyên mục tiêu. Khi hết khoảng đọc, nhịp rơi tiếp tục bình thường.
+
 ## Nhiều bé dùng chung một máy 👧🧒
 
 Bấm vào **thẻ tên** dưới tiêu đề ở menu chính để mở màn **👋 Ai đang chơi?**: thêm bạn mới (tên tối đa 16 chữ, chọn hình đại diện), đổi tên, đổi hình, xóa bạn.

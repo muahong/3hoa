@@ -773,6 +773,15 @@
     updateSpawnY();
   }
 
+  // Đồng hồ đếm giờ và mọi thiên thạch đứng yên trong khoảng đọc.
+  // Bé vẫn nhập/xóa/bắn để tự sửa; bắn đúng kết thúc khoảng đọc ngay.
+  function holdForReading(seconds) {
+    G.readLeft = seconds;
+    clearTimeout(showHint._t);
+    ui.hint.classList.add('reading');
+    updateSpawnY();
+  }
+
   /** Băng-rôn "Đợt N!" là phần tử DOM (không vẽ lên canvas nữa) để không đè lên nhãn thiên thạch. */
   function showStageBanner(n) {
     const el = ui.stageBanner;
@@ -869,6 +878,7 @@
     m.vy *= 0.6;
     G.holdUntil = Math.max(G.holdUntil, G.time + 1.2);
     showHint('Đáp án: ' + m.q.full + ' – gõ theo nhé!', 'info', 1e9);
+    holdForReading(4.5);
     Voice.say(T.speakEq(T.explainFor(m.q)));
     Sfx.play('hint');
     renderAnswerCard(true);
@@ -886,6 +896,7 @@
     }
     if (t.hint) {                                // đã lộ đáp án: đọc lại cho bé nghe
       showHint('Đáp án: ' + t.q.full + ' – gõ theo nhé!', 'info', 1e9);
+      holdForReading(4.5);
       Voice.say(T.speakEq(T.explainFor(t.q)));
       return;
     }
@@ -895,6 +906,7 @@
       const tip = T.hintFor(t.q);
       Sfx.play('hint');
       showHint('💡 ' + tip, 'info', 4500);
+      holdForReading(4.5);
       Voice.say(T.speakEq(tip));
       addText('💡', t.x, t.y - t.r * 1.15, { color: '#ffe066', size: G.baseR * 0.8, life: 1.0, vy: -20 });
       G.holdUntil = Math.max(G.holdUntil, G.time + 1.2);
@@ -944,6 +956,8 @@
   }
 
   function onHit(m) {
+    G.readLeft = 0;
+    ui.hint.classList.remove('reading');
     const q = m.q;
     fireLaser(m);
     destroyMeteor(m, false);
@@ -1028,10 +1042,12 @@
       // Sai hai lần: hiện đáp án kèm lời giải thích, thiên thạch to hơn và rơi chậm lại
       if (target.hint) { showHint('Đáp án: ' + target.q.full + ' – gõ theo nhé!', 'info', 1e9); Voice.say(T.speakEq(T.explainFor(target.q))); }
       else revealAnswer(target);
+      holdForReading(4.5);
     } else {
       // Sai lần đầu: mách cách nghĩ (chưa lộ đáp án) để bé tự tính lại
       const tip = T.hintFor(target.q);
       showHint('Chưa đúng. ' + tip, 'bad', 3200);
+      holdForReading(Math.min(7, Math.max(3.5, tip.length * 0.07)));
       Voice.say('Chưa đúng rồi. ' + T.speakEq(tip));
       G.holdUntil = Math.max(G.holdUntil, G.time + 0.8);
     }
@@ -1067,6 +1083,7 @@
     addText('BÙM!', m.x, m.y - m.r, { color: '#ffb703', size: G.baseR * 1.4, life: 1.2 });
     if (m.hint) hideHint();
     showHint('Ối! ' + T.explainFor(m.q), 'bad', 3200);
+    holdForReading(4.5);
     Voice.say('Ối! ' + T.speakEq(T.explainFor(m.q)));
     G.holdUntil = G.time + 1.8;                  // để bé kịp nghe lời giải thích
     noteReview(m.q);
@@ -1081,6 +1098,7 @@
     for (let i = 0; i < arr.length; i++) {
       const m = arr[i];
       if (m.dead) continue;
+      if (G.state === 'playing' && G.readLeft > 0 && m.popping <= 0) { arr[w++] = m; continue; }
       if (m.popping > 0) {
         m.popping -= dt;
         m.scale = Math.max(0.01, m.popping / POP_T);
@@ -1158,6 +1176,16 @@
   }
 
   function updatePlaying(dt) {
+    if (G.readLeft > 0) {
+      G.readLeft = Math.max(0, G.readLeft - dt);
+      G.holdUntil = Math.max(G.time, G.holdUntil - dt);
+      if (!G.readLeft) {
+        ui.hint.classList.remove('reading');
+        const target = getTarget();
+        if (!target || !target.hint) hideHint();
+      }
+      return;
+    }
     G.time += dt;
     G.timeLeft -= dt;
     if (G.timeLeft <= 0) { G.timeLeft = 0; endGame('timeup'); return; }
@@ -1692,6 +1720,7 @@
   }
 
   function startGame(level) {
+    G.readLeft = 0;
     clearTimeout(G.cdTimer);
     G.level = level;
     G.mode = level.table ? 'table' : 'challenge';

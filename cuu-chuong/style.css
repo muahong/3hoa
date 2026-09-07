@@ -954,3 +954,5 @@ html, body {
   margin-top: 8px; padding: 10px 0 2px;
   background: linear-gradient(transparent, var(--paper) 45%);
 }
+/* Không giục bé tính trong khi đang đọc lời mách. */
+.hint.reading::before { content: '⏸ Đọc cách làm · '; font-weight: 900; }

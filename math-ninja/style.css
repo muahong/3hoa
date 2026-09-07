@@ -697,8 +697,11 @@ html, body {
 /* Điện thoại nhỏ (≤ 420 px): thu gọn menu để cả nhóm "Thời gian mỗi ván" và chân trang vẫn nằm trong bảng,
    đồng thời giữ thanh tiêu đề "Chọn màn chơi" không tràn ngang (C11) */
 @media (max-width: 420px) {
-  #menu .panel { padding: 16px 18px 14px; }
-  #menu .btn-row { margin-top: 12px; }
+  #menu .panel { padding: 12px 18px 12px; }
+  #menu .btn-row { margin-top: 8px; }
+  #menu .logo-row { gap: 6px; }
+  #menu .logo-row svg { width: 64px; height: 64px; }
+  #menu .subtitle { margin-bottom: 8px; }
   .btn.big { font-size: 25px; padding: 16px 30px; min-height: 62px; }
   .logo-row { gap: 12px; }
   .logo-row svg { width: 84px; height: 84px; }
@@ -987,3 +990,5 @@ html, body {
   #menu .player-chip { position: static; margin: 0 auto 10px; }
   .stats { grid-template-columns: repeat(3, 1fr); }
 }
+/* Lời giải có khoảng đọc riêng; nhãn vẫn nằm trong dải HUD có sẵn. */
+.hint.reading::before { content: '⏸ Đọc cách làm · '; font-weight: 900; }

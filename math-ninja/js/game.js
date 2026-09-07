@@ -298,6 +298,7 @@
   function isOpen(el) { return !!el && !el.classList.contains('hidden'); }
   function showHud(on) { ui.hud.classList.toggle('hidden', !on); }
   function toast(msg, ms) {
+    ui.toast.hidden = false;
     ui.toast.textContent = msg;
     // Bảng phủ mờ (tạm dừng, kết quả, hồ sơ...) che mất đáy màn hình → đưa thông báo lên trên
     let dim = false;
@@ -949,7 +950,13 @@
     G.streak = 0;
     addText('Sai rồi!', f.x, f.y - f.r * 1.2, { color: '#ff5c7a', size: G.R * 1.0, life: 1.1 });
     addText('✗', f.x, f.y, { color: '#ff2d55', size: G.R * 1.3, life: 0.8, vy: -20 });
-    if (hint) showHint(hint, 'bad');
+    if (hint) {
+      // Khoảng đọc không lấy thời gian chơi, không nhận thêm nhát chém.
+      G.readLeft = Math.min(9, Math.max(3.5, (800 + hint.length * 110) / 1000));
+      showHint(hint, 'bad');
+      clearTimeout(showHint._t);
+      ui.hint.classList.add('reading');
+    }
     Voice.say('Sai rồi! ' + (hint ? speakMath(hint) : ''));
     cardFx('shake');
     if (!Motion.lite) { G.flash = { c: '255,60,90', a: 0.25 }; G.shake = Math.max(G.shake, 0.45); }
@@ -1089,7 +1096,7 @@
   }
 
   function canSlice() {
-    return G.state === 'playing' || G.state === 'menu' || G.state === 'levels';
+    return (G.state === 'playing' && !(G.readLeft > 0)) || G.state === 'menu' || G.state === 'levels';
   }
 
   /** Bổ đôi quả (chỉ hình ảnh + âm thanh, không tính điểm/lỗi). */
@@ -1108,6 +1115,7 @@
    * blade (có thể null) dùng để chặn mất 2 tim trong cùng một đường vuốt.
    */
   function sliceSegment(blade, x0, y0, x1, y1) {
+    if (G.state === 'playing' && G.readLeft > 0) return;
     const hits = [];
     for (let i = 0; i < G.fruits.length; i++) {
       const f = G.fruits[i];
@@ -1123,7 +1131,11 @@
 
     // 1) Bom luôn thắng: nổ và bỏ qua phần còn lại của nhát vuốt
     const bomb = hits.find(function (h) { return h.f.kind === 'bomb'; });
-    if (bomb) { sliceFruit(bomb.f, angle, at(bomb).x, at(bomb).y); return; }
+    if (bomb) {
+      if (playing && blade && blade.penalized) { popFruit(bomb.f); return; }
+      if (playing && blade) blade.penalized = true;
+      sliceFruit(bomb.f, angle, at(bomb).x, at(bomb).y); return;
+    }
 
     // 2) Tim: ăn ngay, không ảnh hưởng phần còn lại
     hits.filter(function (h) { return h.f.kind === 'heart'; })
@@ -1135,9 +1147,8 @@
     const wrongOk = function () {
       // Cùng một đường vuốt không được lấy 2 tim (ngón tay quét ngang qua cả hàng quả)
       if (!blade) return true;
-      const now = performance.now();
-      if (now - (blade.lastWrongAt || 0) < 150) return false;
-      blade.lastWrongAt = now;
+      if (blade.penalized) return false;
+      blade.penalized = true;
       return true;
     };
 
@@ -1338,6 +1349,15 @@
   }
 
   function updatePlaying(dt) {
+    if (G.readLeft > 0) {
+      G.readLeft = Math.max(0, G.readLeft - dt);
+      if (!G.readLeft) {
+        ui.hint.classList.remove('reading');
+        ui.hint.hidden = true;
+        renderQuestionCard(false);
+      }
+      return;
+    }
     G.time += dt;
     G.timeLeft -= dt;
     if (G.timeLeft <= 0) { G.timeLeft = 0; endGame('timeup'); return; }
@@ -1724,6 +1744,7 @@
 
   /* ================= VÒNG ĐỜI VÁN CHƠI ================= */
   function clearWorld() {
+    G.readLeft = 0;
     G.fruits.length = 0;
     clearHalves();
     G.parts.length = 0;
@@ -1823,6 +1844,10 @@
 
   function resumeGame() {
     if (G.state !== 'paused') return;
+    // Thông báo xoay máy đã hoàn thành nhiệm vụ; không che câu hỏi khi chơi lại.
+    clearTimeout(toast._t);
+    ui.toast.classList.remove('show', 'top');
+    ui.toast.hidden = true;
     Sfx.unlock();
     Music.setDuck('pause', null);
     if (G.resumeCountdown) {
@@ -2319,7 +2344,7 @@
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
     const t = performance.now();
-    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, lastWrongAt: 0 });
+    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, penalized: false });
     if (e.cancelable) e.preventDefault();
   }
 
@@ -2347,6 +2372,9 @@
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerEnd);
     canvas.addEventListener('pointercancel', onPointerEnd);
+    canvas.addEventListener('lostpointercapture', onPointerEnd);
+    window.addEventListener('pointerup', onPointerEnd);
+    window.addEventListener('pointercancel', onPointerEnd);
     canvas.addEventListener('pointerleave', onPointerEnd);
     // Chặn cuộn/zoom của Safari khi thao tác trên canvas (chỉ trên canvas, để các bảng vẫn cuộn được)
     canvas.addEventListener('touchmove', function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });

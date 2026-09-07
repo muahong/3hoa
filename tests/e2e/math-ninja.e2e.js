@@ -103,9 +103,10 @@ async function waitOver(page) {
 /** Chém quả mang giá trị v (đợi quả bay lên). Trả về false nếu hết giờ chờ. */
 async function sliceValue(page, v, ms) {
   const t0 = Date.now();
-  while (Date.now() - t0 < (ms || 6000)) {
+  while (Date.now() - t0 < (ms || 14000)) {
     const done = await page.evaluate((val) => {
       const X = window.__NinjaToan;
+      if (X.G.readLeft > 0) return false;
       const f = X.G.fruits.find((o) => o.launched && !o.dead && o.popping <= 0 && o.value === val);
       if (!f) return false;
       X.sliceSegment(f.x - f.r * 1.6, f.y, f.x + f.r * 1.6, f.y);
@@ -317,6 +318,7 @@ async function answerGate(page, hook) {
     ok((await hook('X.G.missedList')).indexOf(qText) >= 0, 'câu sai vào danh sách "Cần ôn lại" của ván');
 
     // A6: chém bom không tính là sai toán và không tính là "lỡ"
+    await page.waitForFunction(() => !(window.__NinjaToan.G.readLeft > 0), null, { timeout: 12000 });
     await page.evaluate(() => {
       const X = window.__NinjaToan;
       X.G.wrong = 0; X.G.bombs = 0; X.G.misses = 0; X.G.hearts = 3;
@@ -362,7 +364,8 @@ async function answerGate(page, hook) {
     eq(pool.length, 3, 'kho ôn lại có 3 câu từ dữ liệu gieo sẵn');
     await startLevel(page, hook, 'a1');
     let sawReview = false, sawTag = false, reviewKey = null;
-    for (let i = 0; i < 14 && (await hook('X.G.state')) === 'playing'; i++) {
+    // Cửa sổ đủ rộng cho xác suất ôn 1/4; seed bên dưới giúp lần chạy tái lập.
+    for (let i = 0; i < 24 && (await hook('X.G.state')) === 'playing'; i++) {
       const q = await hook('X.G.question ? { review: !!X.G.question.review, key: X.G.question.key, answer: X.G.question.answer } : null');
       if (q && q.review) {
         sawReview = true;
@@ -394,7 +397,7 @@ async function answerGate(page, hook) {
           }
         }
       }
-    })
+    }) + ';(function(){var seed=360906;Math.random=function(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};})();'
   });
   assertClean(log, '[6] ôn lại thông minh');
   }
@@ -650,10 +653,11 @@ async function answerGate(page, hook) {
     const box = await page.evaluate(() => {
       const b = document.getElementById('btn-pause').getBoundingClientRect();
       const s = document.getElementById('hud-stage').getBoundingClientRect();
-      return { right: b.right, stageH: s.height, w: window.innerWidth };
+      const line = document.createRange(); line.selectNodeContents(document.getElementById('hud-stage'));
+      return { right: b.right, stageH: s.height, stageLines: line.getClientRects().length, w: window.innerWidth };
     });
     ok(box.right <= box.w + 0.5, 'nút tạm dừng không bị đẩy khỏi màn hình (' + box.right.toFixed(0) + ' ≤ ' + box.w + ')');
-    ok(box.stageH < 32, 'chip "Màn" không xuống hai dòng (' + box.stageH.toFixed(0) + ' px)');
+    eq(box.stageLines, 1, 'chip "Màn" có đúng một dòng chữ (không phụ thuộc chiều cao font)');
     ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'trang không tràn ngang');
     await shot('phone');
     await hook('X.endGame("timeup")');

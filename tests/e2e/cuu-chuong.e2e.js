@@ -169,7 +169,8 @@ async function wrongAndHint() {
     const shields = await hook('(function(){var m=X.getTarget(); m.x = X.G.planet.cx; m.y = X.G.planet.cy - X.G.shieldR; X.update(0.02); return X.G.shields;})()');
     assert.equal(shields, 2, 'chạm khiên phải mất đúng 1 khiên');
     ok((await hook('X.G.holdUntil')) > (await hook('X.G.time')), 'phải có khoảng lặng sau khi vỡ khiên');
-    await page.waitForTimeout(2500);                    // đủ để câu hỏi kế tiếp được đọc
+    await page.waitForFunction(() => !(window.__CuuChuong.G.readLeft > 0), null, { timeout: 10000 });
+    await page.waitForTimeout(2000);                    // đọc xong rồi mới chuyển câu/spawn
     const sp = await page.evaluate(() => window.SPEECH_LOG || []);
     const i = sp.map((s, k) => (s.indexOf('speak:Ối!') === 0 ? k : -1)).filter((k) => k >= 0).pop();
     ok(i >= 0, 'phải đọc lời giải thích khi vỡ khiên: ' + sp.join('|'));
@@ -828,7 +829,10 @@ async function perf() {
     ['ảnh chụp ba khổ màn hình', gallery],
     ['hiệu năng', perf]
   ];
+  let blockNo = 0;
   for (const [name, fn] of blocks) {
+    blockNo++;
+    if (process.env.ONLY && !process.env.ONLY.split(',').includes(String(blockNo))) continue;
     try {
       const log = await fn();
       if (log) assertClean(log, name);

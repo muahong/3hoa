@@ -49,10 +49,19 @@ Touch and number keys selected real rings; native question focus/Enter toggled e
 
 Visual/motion judgment: the rider remains visibly attached through ascent, bent-leg flight, and return to ground. Run/jump/result motion was experienced in play, not inferred from menu art; `cuoi-ho-motion-mid.png` shows the actual selected-ring flight. The post-runtime diff supports the observed tuck/landing/rider counter-rotation behavior. Answer text remains high contrast against ring centers; the question card stays clear of the wrong-answer explanation on the small portrait capture. Landscape rings/clock are smaller but readable in this adult review; zoom remains available. Remaining limits: level 1 only for legitimate completion; no claim that every later word problem fits, no physical touch/audio/accessibility-device test, and no exact foot-contact or performance measurement.
 
+### Final Tiger optimization closure
+
+The final locked change enables the learning acknowledgment only when it is still disabled and `learnT >= 0.9`, rather than writing `disabled` every animation frame; service-worker cache changes from v9 to v10. Runtime was experienced before reading that diff. No geometry or answer logic changed in this final diff.
+
+`node tests/e2e/gauntlet-review-action-games.js --tiger-closure` passed with actual wrong-answer input, with no game mutators. Initial `learnT < 0.9` had a disabled button: native touch and early Enter did not continue. Actual held-key Enter repeat after 1.05 seconds also did not acknowledge. During a further 3-second wait, phase stayed `learn`, question index, gate timer, and explanation text remained unchanged, and the button was enabled. Fresh Enter advanced. A second real wrong answer reset the disabled guard; deliberate button acknowledgment after the guard advanced again. Screenshot: `tiger-final-reading-hold.png`; JSON: `cuoi-ho.performanceClosure`. Page, console, and request logs were empty. All reviewer browsers were stopped after this focused run.
+
+Final Tiger verdict remains **PASS within the previously stated scope**. The earlier full legitimate completion, four-view captures, and save/reload evidence are preserved rather than repeated for this one-line change. This is a behavior closure, not independent performance proof; no stable 60 fps claim is made. Main-owned timing evidence and its variance remain separate.
+
 ## Snapshot identity
 
 - Tank original review `js/game.js` SHA-256: `537EE3501D2D358EB5CA0D28E0F5329BEF1018D088CDE1825A938DB2B9ECF070`.
 - Tank independently closed fix `js/game.js` SHA-256: `F7BC414CB32CE54ED19B22BC889483E63F33E827D962F134D00BFBC045877692`.
-- Tiger `js/game.js` SHA-256: `3109B1462BC0C5030AC13EEDCD99A1E40B9105C53367BDCCB7EF5BCF0D6C9677`.
+- Tiger original review `js/game.js` SHA-256: `3109B1462BC0C5030AC13EEDCD99A1E40B9105C53367BDCCB7EF5BCF0D6C9677`.
+- Tiger final optimization closure `js/game.js` SHA-256: `F859DBC7E2CD7D213E2BBD5C45C9FD6EAF545D0DAD0C7D999CE431413EFB6335`.
 
 Post-experience diff inspection confirmed coordinated aiming/native zoom changes in Tank and deliberate learning/leg/landing/rider changes in Tiger. No builder rationale or prior PASS report was used to choose these verdicts.

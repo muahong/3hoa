@@ -909,7 +909,7 @@
         G.learnT += dt;
         tg.state = 'idle';
         // Bé tự quyết khi đã đọc xong; không coi thời gian chờ là hiểu bài.
-        ui.learnContinue.disabled = G.learnT < 0.9;
+        if (ui.learnContinue.disabled && G.learnT >= 0.9) ui.learnContinue.disabled = false;
         break;
       case 'finish':
         G.scroll += G.speed * dt;

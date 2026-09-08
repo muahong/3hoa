@@ -1,4 +1,4 @@
-# Independent runtime review — Tháp Đồng Hồ, Cửu Chương, Math Ninja
+# Independent runtime review: Tháp Đồng Hồ, Cửu Chương, Math Ninja
 
 Review dates: 2026-09-06 to 2026-09-07, Asia/Bangkok. Scope is these three games only. This report does not certify the other three games or a production release.
 
@@ -20,7 +20,7 @@ The reviewer opened each locked product and used its normal menu/game UI before 
 - Full higher-level curriculum coverage, rare bomb collisions and physical stylus input are outside this bounded review. These are behavior/visual checks, not frame-rate benchmarks. Runtime console assertions exclude unavailable Google Fonts as documented by the repository helper. CC emitted four warnings whose messages the first final run did not retain; no claim of zero warnings is made.
 - Screenshots and JSON are local, ignored evidence under `out/gauntlet/review-three-games/`. Some early Tower modal screenshots contain their entrance animation; use gameplay, selected, quiz and JSON evidence for claims. `cc-timed-result.png` records the end-of-time banner, with the result itself confirmed through replay and the persisted report.
 
-## Tháp Đồng Hồ — PASS
+## Tháp Đồng Hồ: PASS
 
 Each size completed eight actual correct drops and one intentional wrong drop, scored 2,100, and saved two stars. The quiz had one wrong answer, explicit retry and three actual UI answers; it accurately reported 2/3 first-try and unlocked level 2. Replay started at zero; Home/reload retained score/stars/unlock, and the newly unlocked lesson was actually selectable.
 
@@ -32,7 +32,7 @@ Evidence: `results.json`, `run.log`, `portrait-selected.png`, `landscape-selecte
 
 Source confirmation after play: `thap-dong-ho/js/game.js` lines 1593–1606 (ghost/selected preview), 2351–2397 (pointer down/move/up/cancel), 1920–1941 (pause/resume).
 
-## Cửu Chương — PASS
+## Cửu Chương: PASS
 
 Real one-minute Bảng 2 mixed multiplication/division round: **38 correct, 1 wrong input, 15,600 points, 3 shields at timeout**. Replay starts with zero score. Home/reload report records one minute, 39 attempts, 97% and the same best score. A separate unsolved normal round legitimately lost all three shields and displayed the loss/review screen.
 
@@ -44,13 +44,13 @@ Two initial harness failures were not product failures: Playwright's locator tap
 
 Source confirmation after play: `cuu-chuong/js/game.js` lines 815–869 (entry/delete/fire), 1024–1056 (wrong explanation), 2347–2373 (target selection and stale-input reset).
 
-## Math Ninja — runtime findings and closure
+## Math Ninja: runtime findings and closure
 
 Answer mode completed a real minute with **26 correct, 1 wrong, 10,200 points**; the persisted report shows 27 attempts, 96%, three stars and one minute. Replay was playable at zero, and Home/reload retained the report. The script reached these assertions before a pair-entry selector failed because the mode control has role `tab`, not `button`; pair mode is tested separately without repeating the completed answer round.
 
 Touchcancel leaves no active blade. Pause during a held touch clears it and freezes the clock. An intentional wrong fruit costs exactly one heart, scores zero and displays the correct equation; its reading interval freezes time and blocks further penalties. A correct touch scores. Touch across portrait/landscape/tablet and desktop mouse slices work after normal resize/pause/resume.
 
-**N1 — P2 — equation obscured after rotation (CLOSED).** Start answer mode at 390×844, rotate to 844×390, then immediately press Resume. The rotation toast remains across the question card while the timer and fruit motion resume. The equation is partially hidden for roughly two seconds. Evidence: `ninja-landscape-live.png`; source trigger `math-ninja/js/game.js:334`. This is a functional reading obstruction, not a style preference. Main independently confirmed it and assigned a narrow fix. Closure requires clearing the rotation toast on Resume or placing it away from learning content, followed by the same immediate-resume reproduction and a readable in-progress equation.
+**N1, P2, equation obscured after rotation (CLOSED).** Start answer mode at 390×844, rotate to 844×390, then immediately press Resume. The rotation toast remains across the question card while the timer and fruit motion resume. The equation is partially hidden for roughly two seconds. Evidence: `ninja-landscape-live.png`; source trigger `math-ninja/js/game.js:334`. This is a functional reading obstruction, not a style preference. Main independently confirmed it and assigned a narrow fix. Closure requires clearing the rotation toast on Resume or placing it away from learning content, followed by the same immediate-resume reproduction and a readable in-progress equation.
 
 Pair-mode focused run PASS: 23 correct pairs, zero wrong, 8,825 points and three hearts at the real 60-second timeout. The first fruit is visibly retained (`3 + ? = 10`, “Tìm số 7!”), then the complementary fruit is selected by a second real touch. Evidence: `ninja-results.json`, `ninja-pair-run.log`, `ninja-pair-held.png`, `ninja-pair-result.png`. N1 focused closure PASS on the final locked product: the toast is already hidden immediately after Resume and remains hidden at +250 ms in both landscape and portrait. A real correct touch and then a real wrong touch were accepted; reverse rotation during the wrong-answer reading interval preserves the same visible equation/explanation (`9 + 1 = 10`) and active reading time. Evidence: `ninja-rotation-closure.json`, `ninja-rotation-console.json` (empty error/warning arrays), `ninja-rotation-run.log`, `ninja-rotation-closed-landscape.png`, `ninja-reading-preserved-on-rotate.png`. Source confirmation: `resumeGame()` clears the transient toast while leaving the learning hint alone. No full-round replay was needed after this narrow change.
 

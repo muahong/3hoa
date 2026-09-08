@@ -1,4 +1,4 @@
-# Hiệu năng — mẫu đo có giới hạn
+# Hiệu năng: mẫu đo có giới hạn
 
 Windows Chromium headless, Intel i7-1370P, DPR 1, không throttle. Mỗi mẫu 120 khoảng RAF, seed 3060906. Các browser test đã dừng trước lượt main đo; không kiểm soát được mọi tác vụ của hệ điều hành. RAF là cadence trình duyệt; CDP TaskDuration là main-thread task, không phải CPU/GPU toàn máy.
 

@@ -1,4 +1,4 @@
-# Shared navigation review — final verdict: PASS
+# Shared navigation review: final verdict: PASS
 
 Independent review, 2026-09-06, local http://127.0.0.1:8787. Product files read-only. Browser input and screenshots preceded reading the generator/test-helper diff; no builder self-assessment was supplied. Reference criteria: `docs/gauntlet/references.md` (reference products not installed or directly tested).
 
@@ -6,7 +6,7 @@ Initial verdict was REVISE for SH-01/SH-02 below. The main builder fixed the sha
 
 ## Observable findings
 
-### SH-01 — P2: hidden pause panel intercepts immediate gameplay input
+### SH-01: P2: hidden pause panel intercepts immediate gameplay input
 
 **Closed.** In all five games at 390×844, an immediate post-resume hit test now returns `CANVAS#game`, with no hidden ancestor. A subsequent real touchscreen tap dispatches `pointerdown` to that canvas in every case. Re-pause → `Menu trò chơi` → menu home also passed and stayed in the same tab. Evidence: `closure-final.log` (exit 0), `*-menu-closure.png`.
 
@@ -17,7 +17,7 @@ Initial verdict was REVISE for SH-01/SH-02 below. The main builder fixed the sha
 - Evidence: `tests/e2e/out/gauntlet/review-shared/ninja-resume-immediate.png`; browser probe output recorded in review conversation. Same structural CSS requires checking other games, but direct reproduction here is Ninja only.
 - Closure: disable pointer events for hidden screen descendants; immediately after touchscreen resume assert hit testing reaches the game and an immediate gameplay gesture registers. Repeat representative touch game plus pause navigation.
 
-### SH-02 — P3: Cửu Chương back arrow is narrower than 44px
+### SH-02: P3: Cửu Chương back arrow is narrower than 44px
 
 **Closed.** `#btn-levels-back` measured exactly 44×44 CSS px after the change, and touch back → Chơi ngay worked. Shared generator now declares `.screen-head .btn { min-width:44px; min-height:44px; }`. Evidence: `closure-final.log`, line 234.
 

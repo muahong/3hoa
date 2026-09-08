@@ -1,4 +1,4 @@
-# Gói mê cung — vòng 1
+# Gói mê cung: vòng 1
 
 Owner: maze_builder. Reviewer: main, chưa đánh giá.
 

@@ -1,10 +1,10 @@
-# Input probes — trước sửa
+# Input probes: trước sửa
 
 Ngày 2026-09-06, Windows Chromium headless 145.0.7632.6. Chạy `node tests/e2e/gauntlet-input-probes.js`; thêm slug game làm đối số để chạy một game. Script chỉ đọc state và dùng touch thật, không gọi hàm game để ghi điểm/thắng/thua. Lượt performance cố định PRNG seed 360906, viewport 390×844, DPR 1, context mới.
 
 ## Lỗi đã tái hiện
 
-### Tháp Đồng Hồ — P1: kéo/hủy đã làm thả sai
+### Tháp Đồng Hồ: P1: kéo/hủy đã làm thả sai
 
 1. Chơi màn Giờ đúng bằng UI.
 2. `touchStart` trên cột đồng hồ hiện tại; chưa `touchEnd`.
@@ -14,7 +14,7 @@ Lượt không seed: trước input `id1 col0 target2 mode=fall`; sau down `mode
 
 Tác động: trẻ bắt đầu kéo từ đồng hồ rồi hủy vẫn bị ghi sai, dù chưa xác nhận thả. Gốc mã: `onCanvasDown` gọi `hardDrop()` nếu `col === p.col`. Đóng lỗi khi touch down không commit, drag từ cột hiện tại đi được, cancel không thả/ghi sai, tap xác nhận có chủ đích vẫn thả đúng.
 
-### Ninja Toán Học — P1: một gesture lấy hai tim
+### Ninja Toán Học: P1: một gesture lấy hai tim
 
 1. Vào Cộng trừ đến 10.
 2. Một `touchStart`, giữ ngón; tiếp tục `touchMove` qua hai quả sai nhìn thấy, cách nhau hơn 150ms.
@@ -26,7 +26,7 @@ Tác động: một động tác chậm của trẻ có thể lấy 2/3 mạng. 
 
 Phản hồi sai có tồn tại đủ vài giây: lượt đầu còn hiện 3743ms và ẩn 4006ms (tính từ lúc bắt đầu theo dõi, lỗi thứ hai tại 658ms). Không xác nhận lỗi “thẻ biến mất quá nhanh”; vấn đề là game vẫn chạy và nhận thêm lỗi trong khoảng đọc.
 
-## Cửu Chương — quan sát có giới hạn
+## Cửu Chương: quan sát có giới hạn
 
 Gõ `1` → BẮN sai → gõ lại `1` → đợi 1,3s → xóa → gợi ý. Target id2 và câu `16 : 2` giữ nguyên; input và xóa hoạt động, không thấy lỗi đổi target trong mẫu.
 

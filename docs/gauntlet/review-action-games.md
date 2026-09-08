@@ -1,4 +1,4 @@
-# Independent actual-play review — action games
+# Independent actual-play review: action games
 
 Date: 2026-09-07, Asia/Bangkok. Locked-source review; no product edits, commits, or builder report used before first experience. Initial Tank finding and evidence are preserved below; focused closure independently verified the subsequent locked fix.
 
@@ -19,7 +19,7 @@ Captured active gameplay at 390×844, 844×390, 820×1180 with reduced motion, a
 
 The first Tank automation attempt assumed the prompt-zoom button existed on every random question. A target-clock question correctly has no prompt zoom, so that assertion was invalid. The review script now tests native focus/Enter/Escape only when the button is visible. A subsequent actual-clock prompt passed. This was a test correction, not a product defect.
 
-## Xe tăng thời gian — original P2 reading hold (now closed)
+## Xe tăng thời gian: original P2 reading hold (now closed)
 
 **Reproduce:** start level 1 through lesson; shoot one incorrect robot; leave the screen untouched for 2.5 seconds. The wrong choice is crossed out, but the text inviting correction disappears and robots keep falling while the child reads.
 
@@ -33,7 +33,7 @@ The first Tank automation attempt assumed the prompt-zoom button existed on ever
 
 **Independent closure, 2026-09-07:** first experienced the fixed runtime before reading its implementation. New reading modal appeared immediately after a real wrong shot, initially disabled acknowledgment, and retained the message after waiting. Then `node tests/e2e/gauntlet-review-action-games.js --closure` passed with actual inputs. During the measured 3-second hold, game time stayed exactly `0.46660000000000046` and robot 0 Y stayed exactly `316.5046850083337`; every robot position and the teaching message were unchanged. Early Enter and actual repeated held Enter could not close it. Outside touch, `z`, `p`, and rotation retained the reading state; post-resize positions stayed fixed after layout settled. Touch acknowledgment entered the requested pending pause; resume worked. A second wrong answer also held: Escape could not bypass, intentional Enter acknowledged, and an actual correct shot advanced the question. No game mutators or completion fixtures were used.
 
-For short landscape, reached level 8 through its real parent multiplication gate and unlock UI, then made two wrong shots at 780×360. The screenshot `tank-closure-elapsed-780x360.png` visibly contains both clocks, “Từ 6 giờ 45 phút đến 7 giờ 30 phút là bao lâu?”, explanation “45 phút · Kim dài đi từ số 9 đến số 6 là 45 phút.”, and the acknowledgment. Button bounds: x257.61, y264, width264.77, height60 — fully inside the viewport. Acknowledgment and a subsequent correct shot advanced normally. This verifies that sampled elapsed question, not every possible later wording. Evidence is in JSON `xe-tang-thoi-gian.closure`; page/console/request logs were empty.
+For short landscape, reached level 8 through its real parent multiplication gate and unlock UI, then made two wrong shots at 780×360. The screenshot `tank-closure-elapsed-780x360.png` visibly contains both clocks, “Từ 6 giờ 45 phút đến 7 giờ 30 phút là bao lâu?”, explanation “45 phút · Kim dài đi từ số 9 đến số 6 là 45 phút.”, and the acknowledgment. Button bounds: x257.61, y264, width264.77, height60, fully inside the viewport. Acknowledgment and a subsequent correct shot advanced normally. This verifies that sampled elapsed question, not every possible later wording. Evidence is in JSON `xe-tang-thoi-gian.closure`; page/console/request logs were empty.
 
 The first closure attempt sampled geometry before the deferred resize completed; that comparison correctly differed because layout changed. The harness now waits 300 ms for relayout before checking held positions. This was a test timing correction, not a product defect. The prior legitimate level/quiz/persistence passes remain recorded; this narrow closure did not repeat their full suite. Reviewer browsers were closed before handing the environment back for quiet performance measurement.
 
@@ -41,7 +41,7 @@ The first closure attempt sampled geometry before the deferred resize completed;
 
 **Visual/motion judgment, separate from defect:** tank body/tracks remain together while moving; aim selection leads to visible barrel turn and a shell traveling toward the selected target, with recoil/impact rather than an unexplained score change (`*-motion-mid.png`). Clock hands and target labels remained distinguishable in the four captures; native enlargement is useful at small size. Decorative flowers and background are stylistic preference, not a blocker. This is a bounded adult reviewer judgment, not a child usability study or frame-rate claim.
 
-## Cưỡi hổ — PASS within exercised scope
+## Cưỡi hổ: PASS within exercised scope
 
 Legitimate level-one result: 7 correct, 1 wrong, 1750 points, two stars. After the wrong jump, the explanation remains visible in `learn` through the deliberate 2.5-second wait with question index unchanged; the explicit “Đã hiểu · Chạy tiếp” button controls continuation. Quiz wrong answer → retry → correct completion unlocks level 2. Saved Store is exactly equal after reload. Evidence: `cuoi-ho-wrong.png`, `cuoi-ho-wrong-after-2500ms.png`, `cuoi-ho-result.png`, `cuoi-ho-quiz-wrong.png`, `cuoi-ho-quiz-done.png`, `cuoi-ho-saved-levels.png` and JSON.
 

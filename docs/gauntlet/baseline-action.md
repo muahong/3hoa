@@ -1,4 +1,4 @@
-# Baseline — Xe Tăng Thời Gian / Cưỡi Hổ Vượt Lửa
+# Baseline: Xe Tăng Thời Gian / Cưỡi Hổ Vượt Lửa
 
 Ngày: 2026-09-06 (Asia/Bangkok). Checkout lúc bắt đầu: `a1f0458`. Chỉ khảo sát, không sửa product. Đã đọc README gốc và README hai game. Ghi chú về đợt refresh do người dùng cung cấp chưa có trong checkout lúc bắt đầu.
 
@@ -12,7 +12,7 @@ Ngày: 2026-09-06 (Asia/Bangkok). Checkout lúc bắt đầu: `a1f0458`. Chỉ k
 
 ## Phát hiện ưu tiên
 
-### A1 — Cưỡi Hổ tự bỏ qua lời giải sau khi sai dù giao diện ghi “Chạm để chạy tiếp”
+### A1: Cưỡi Hổ tự bỏ qua lời giải sau khi sai dù giao diện ghi “Chạm để chạy tiếp”
 
 **Đã tái hiện, mức cao cho vòng học.** Vào màn 1, chọn vòng sai, để tay khỏi màn hình. UI hiện lời giải và “Chạm để chạy tiếp”; sau 4 giây không input đã chuyển từ Vòng 1/8 sang Vòng 2/8 và mất lời giải. Cặp chứng cứ `cuoi-ho-390-after-choice.{png,txt}` / `cuoi-ho-390-no-input-4sec-later.{png,txt}` (desktop có cùng hành vi).
 
@@ -20,13 +20,13 @@ Ngày: 2026-09-06 (Asia/Bangkok). Checkout lúc bắt đầu: `a1f0458`. Chỉ k
 
 **Tiêu chí sửa:** sai/hết giờ giữ câu hỏi, đáp án đúng, giải thích và tiến độ hiện tại ít nhất 10 giây nếu chưa có thao tác; chỉ nút Tiếp tục / Enter / Space chủ động mới chuyển. Tap đáp án phải không vô tình bỏ qua ngay. Lời giải và nút tiếp tục vẫn vừa màn hình ngang thấp.
 
-### A2 — Cưỡi Hổ: sai chỉ được xem đáp án rồi đi tiếp, chưa có lượt tự sửa
+### A2: Cưỡi Hổ: sai chỉ được xem đáp án rồi đi tiếp, chưa có lượt tự sửa
 
 **Quan sát + source.** Sau chọn sai, vòng đúng xanh có ✓, vòng sai đỏ có ✕ (đây là điểm tốt), nhưng tap tiếp hoặc tự tiếp đều tăng `gateIdx`, không yêu cầu bé chọn lại câu vừa sai. Tiến trình vì thế chưa chứng minh bé đã sửa được lỗi đó.
 
 **Tiêu chí cải tiến:** có nhịp “Thử lại” trên cùng câu đã giải thích hoặc câu tương đương; không trừ tim lặp cho lỗi đó, không tính lượt sửa thành đúng ngay từ đầu; giữ bằng chứng sai ban đầu. Thực hiện sau A1 nếu đủ phạm vi.
 
-### A3 — Xe Tăng: đồng hồ câu hỏi ở mobile nhỏ, chưa có cách phóng to
+### A3: Xe Tăng: đồng hồ câu hỏi ở mobile nhỏ, chưa có cách phóng to
 
 **Quan sát.** `xe-tang-thoi-gian-390-gameplay.png`: đồng hồ trong HUD khoảng 80 px; robot đáp án chữ đủ lớn và vùng chạm tốt. Câu cần phân biệt vạch phút ở màn sau có nguy cơ khó đọc; chưa trực tiếp chơi màn sau, nên đây là rủi ro cần xác minh, không kết luận lỗi mọi câu. Cưỡi Hổ đã có zoom thẻ câu hỏi làm mẫu trong cùng sản phẩm.
 

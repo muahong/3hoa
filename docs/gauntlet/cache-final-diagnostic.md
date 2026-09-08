@@ -1,4 +1,4 @@
-# Chẩn đoán cache final — 2026-09-07
+# Chẩn đoán cache final: 2026-09-07
 
 ## Kết quả có thể xác nhận
 

@@ -39,7 +39,7 @@ Chromium headless trên Windows đã kiểm; chưa kiểm iPad/Safari vật lý.
 
 Trong probe đầu của Tank 844×390, assertion hoàn thành đủ câu thất bại khi HUD chiếm hai hàng. Ảnh/log intermediate bị harness ghi đè trong vòng sửa, không còn file before riêng để đối chiếu trực tiếp; không dùng baseline gốc a1f0458 làm bằng chứng tái hiện chính xác intermediate. Bản cuối đã hoàn thành đủ màn ở kích thước này và giữ hình/các kiểm tra cuối; paired capture gốc do main làm riêng.
 
-## Sửa P2 sau review độc lập — 2026-09-07
+## Sửa P2 sau review độc lập: 2026-09-07
 
 Review chỉ ra phản hồi chọn robot sai tự mất sau 1.8 giây trong lúc robot/thời gian vẫn chạy. Tank đã tái sử dụng dialog đồng hồ làm nhịp đọc cho **onWrong** và **💡 gợi ý**: world/time/robot đứng yên, chữ giữ nguyên đến “Đã đọc · Thử lại” hoặc Enter/Space chủ động. Lần sai đầu vẫn chưa đánh dấu đáp án; lần sai thứ hai và manual hint vẫn chỉ thưởng **20 điểm**, đúng hằng số trước sửa. Không thay luật vỡ tuyến hay dữ liệu chương trình.
 

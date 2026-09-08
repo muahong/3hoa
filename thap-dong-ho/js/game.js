@@ -2348,15 +2348,20 @@
     return clamp(Math.floor((x - B.x) / B.cell), 0, COLS - 1);
   }
 
+  /** Vùng chạm của bảng, nới 0,6 ô hai bên: chạm được thì cũng chọn và thả được. */
+  function insideBoard(e) {
+    const B = G.board;
+    return e.clientX >= B.x - B.cell * 0.6 && e.clientX <= B.x + B.w + B.cell * 0.6 &&
+      e.clientY >= B.top - 20 && e.clientY <= B.y + B.h + B.plateH + 20;
+  }
+
   function onCanvasDown(e) {
     Sfx.unlock();
     if (G.state !== 'playing') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const p = G.piece;
     if (!p || p.mode !== 'fall') return;
-    const B = G.board;
-    if (e.clientX < B.x - B.cell * 0.6 || e.clientX > B.x + B.w + B.cell * 0.6) return;
-    if (e.clientY < B.top - 20 || e.clientY > B.y + B.h + B.plateH + 20) return;
+    if (!insideBoard(e)) return;
     const col = boardColAt(e.clientX);
     if (G.drag) return;
     G.drag = { id: e.pointerId, pieceId: p.id, x0: e.clientX, y0: e.clientY, col0: col,
@@ -2379,10 +2384,9 @@
     const d = G.drag;
     if (!d || d.id !== e.pointerId) return;
     G.drag = null;
-    const p = G.piece, B = G.board;
+    const p = G.piece;
     if (!p || p.id !== d.pieceId || p.mode !== 'fall' || G.state !== 'playing') return;
-    const inside = e.clientX >= B.x && e.clientX <= B.x + B.w && e.clientY >= B.top - 20 && e.clientY <= B.y + B.h + B.plateH + 20;
-    if (e.type !== 'pointerup' || !inside) { p.selected = false; return; }
+    if (e.type !== 'pointerup' || !insideBoard(e)) { p.selected = false; return; }
     if (d.confirm && !d.moved && boardColAt(e.clientX) === p.col) hardDrop();
     else p.selected = true;
   }

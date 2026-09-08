@@ -1,4 +1,4 @@
-# Independent review — Mê cung đồng hồ
+# Independent review: Mê cung đồng hồ
 
 Date: 2026-09-06. First verdict: **REVISE**. Final maze gameplay/layout verdict after two closure rounds: **PASS** within the desktop Chromium emulation scope below.
 
@@ -6,7 +6,7 @@ Reviewer experienced the fresh menu, lesson 1, touch gameplay, a deliberate wron
 
 ## Required revisions
 
-### P1 — A blocked first direction wakes ghosts without moving the child
+### P1: A blocked first direction wakes ghosts without moving the child
 
 - Game/screen: Mê cung đồng hồ, level 1, 390×844, new session.
 - Repro: menu → play → Giờ đúng → Vào mê cung → wait for playing → press ArrowUp at spawn `(1,7)`, facing the boundary wall → wait 6.5 seconds.
@@ -15,7 +15,7 @@ Reviewer experienced the fresh menu, lesson 1, touch gameplay, a deliberate wron
 - Evidence: `tests/e2e/out/gauntlet/review-maze/blocked-direction.png` and `blocked-direction.json`. Source corroboration after play: `setWant` calls `leaveReading` before checking whether the direction can move.
 - Closing condition: blocked keyboard, D-pad and swipe input leave reading protection active; a viable movement starts normal play and the grace period. Verify this with actual input and unchanged player/ghost positions while blocked.
 
-### P2 — Level 7 target card overlaps the board after input on portrait tablet
+### P2: Level 7 target card overlaps the board after input on portrait tablet
 
 - Game/screen: Mê cung đồng hồ, level 7, 820×1180.
 - Repro: fresh menu → play → parent unlock through the visible multiplication gate → Đồng hồ điện tử → Vào mê cung → direction input → Space to stop.
@@ -47,7 +47,7 @@ The local A/B gallery was reviewed after gameplay, so this was **not a blind exp
 
 Shared shell/navigation, installed-device behavior and service-worker update integration are not certified by this first maze verdict; main integration owns those checks. No user-facing or production deployment was performed by this reviewer.
 
-## Closure round 1 — two fixes closed; one additional geometry failure
+## Closure round 1: two fixes closed; one additional geometry failure
 
 Verdict remains **REVISE**. Existing requirements were not weakened.
 
@@ -55,7 +55,7 @@ Verdict remains **REVISE**. Existing requirements were not weakened.
 - Original P2 **closed**: level 7 reading/route/stopped states now separate HUD from board at all four requested viewports. Portrait tablet gap was 10.86 px; tablet landscape gap was 8 px. Rotation preserved seed, transposed topology and board separation. Evidence: `first-closure.json` and `edge-*` screenshots.
 - The first geometry assertion checked board separation. Visual inspection caught a missing dimension in that assertion: all target controls must also remain inside the viewport. The harness now asserts those bounds too; this intentionally exposes the issue below rather than accepting a false green check.
 
-### P2 — Level 7 landscape phone clips target controls below the viewport
+### P2: Level 7 landscape phone clips target controls below the viewport
 
 - Game/screen: level 7, 844×390; reading, route and stopped states.
 - Repro: use the visible parent gate to unlock level 7 → Vào mê cung. The bottom of the left target card is already cut off; starting/stopping a route does not resolve it.
@@ -64,7 +64,7 @@ Verdict remains **REVISE**. Existing requirements were not weakened.
 - Evidence preserved before another revision: `landscape-clipped-before.png` and `landscape-clipped-before.json` under the review evidence directory. Focused `--edges --landscape` exits nonzero on the bounds checks.
 - Closing condition: retain the entire target card, full hint/speech hit areas and readable clock within the landscape phone viewport; check both level 7 and level 8 long targets at 360px and 390px heights, including rotation. Do not hide controls to pass.
 
-## Closure round 2 — PASS
+## Closure round 2: PASS
 
 The locked product was tested again before reading builder explanations. All three observed findings are now **closed**. No product source was edited by the reviewer and no assertion was lowered.
 

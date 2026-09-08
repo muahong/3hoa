@@ -896,7 +896,7 @@
     }
     if (t.hint) {                                // đã lộ đáp án: đọc lại cho bé nghe
       showHint('Đáp án: ' + t.q.full + ' – gõ theo nhé!', 'info', 1e9);
-      holdForReading(4.5);
+      if (!t.reread) { t.reread = true; holdForReading(4.5); }   // dừng giờ thêm đúng 1 lần; bấm mãi không đóng băng ván
       Voice.say(T.speakEq(T.explainFor(t.q)));
       return;
     }
@@ -1040,9 +1040,8 @@
     noteReview(target.q);
     if (target.wrongs >= 2 || target.hint || target.asked) {
       // Sai hai lần: hiện đáp án kèm lời giải thích, thiên thạch to hơn và rơi chậm lại
-      if (target.hint) { showHint('Đáp án: ' + target.q.full + ' – gõ theo nhé!', 'info', 1e9); Voice.say(T.speakEq(T.explainFor(target.q))); }
-      else revealAnswer(target);
-      holdForReading(4.5);
+      if (target.hint) { showHint('Đáp án: ' + target.q.full + ' – gõ theo nhé!', 'info', 1e9); holdForReading(4.5); Voice.say(T.speakEq(T.explainFor(target.q))); }
+      else revealAnswer(target);                 // đã tự dừng giờ 4,5 giây
     } else {
       // Sai lần đầu: mách cách nghĩ (chưa lộ đáp án) để bé tự tính lại
       const tip = T.hintFor(target.q);

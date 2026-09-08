@@ -1,4 +1,4 @@
-# 3hoa — bản nâng cấp local
+# 3hoa: bản nâng cấp local
 
 **Sáu game đã đạt review độc lập trong phạm vi đã thử; chưa phát hành.** Preview: `http://127.0.0.1:8787/docs/gauntlet/preview.html`.
 

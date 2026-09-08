@@ -1113,6 +1113,7 @@
    * bom được ưu tiên; nếu có quả đúng thì tính đúng; nếu toàn quả sai chỉ mất 1 tim.
    * blade (có thể null) dùng để chặn mất 2 tim trong cùng một đường vuốt.
    */
+  const PENALTY_WINDOW_MS = 300;   // cùng một đường vuốt: tối đa 1 tim mỗi 300 ms
   function sliceSegment(blade, x0, y0, x1, y1) {
     if (G.state === 'playing' && G.readLeft > 0) return;
     const hits = [];
@@ -1127,12 +1128,14 @@
     const angle = Math.atan2(y1 - y0, x1 - x0);
     const at = function (h) { return { x: x0 + (x1 - x0) * h.t, y: y0 + (y1 - y0) * h.t }; };
     const playing = G.state === 'playing';
+    // Một đường vuốt chỉ mất 1 tim mỗi 300 ms; giữ ngón tay lâu vẫn bị phạt tiếp nếu lại chém sai hay chém bom
+    const penalizedRecently = function () { return !!blade && performance.now() - blade.penalizedAt < PENALTY_WINDOW_MS; };
 
     // 1) Bom luôn thắng: nổ và bỏ qua phần còn lại của nhát vuốt
     const bomb = hits.find(function (h) { return h.f.kind === 'bomb'; });
     if (bomb) {
-      if (playing && blade && blade.penalized) { popFruit(bomb.f); return; }
-      if (playing && blade) blade.penalized = true;
+      if (playing && penalizedRecently()) { popFruit(bomb.f); return; }
+      if (playing && blade) blade.penalizedAt = performance.now();
       sliceFruit(bomb.f, angle, at(bomb).x, at(bomb).y); return;
     }
 
@@ -1146,8 +1149,8 @@
     const wrongOk = function () {
       // Cùng một đường vuốt không được lấy 2 tim (ngón tay quét ngang qua cả hàng quả)
       if (!blade) return true;
-      if (blade.penalized) return false;
-      blade.penalized = true;
+      if (penalizedRecently()) return false;
+      blade.penalizedAt = performance.now();
       return true;
     };
 
@@ -2343,7 +2346,7 @@
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
     const t = performance.now();
-    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, penalized: false });
+    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, penalizedAt: -1e9 });
     if (e.cancelable) e.preventDefault();
   }
 

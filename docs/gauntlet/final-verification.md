@@ -22,7 +22,7 @@ Main đã chơi mê cung qua in-app browser, chạm đúng đồng hồ được
 
 Thử chạy Chromium GUI đã cài (build1234 rồi1208) để kiểm tra đổi tab thật đều bị lỗi launch `spawn UNKNOWN`; không cài browser mới hoặc đổi thiết lập hệ thống. Các test visibilitychange/blur do harness phát phải được ghi là sự kiện mô phỏng. Chưa chứng nhận tự động pause khi đổi tab trên browser GUI/thiết bị thật.
 
-## Bản cuối — 2026-09-07
+## Bản cuối: 2026-09-07
 
 - Gameplay: sáu game independent PASS, các lỗi review đã đóng; source hashes trong từng report. Tiger giữ nguyên sau PASS; Ninja và Tank có focused closure sau sửa.
 - Unit: **222/222 PASS**, sau Ninja/Tank closure, `final-unit.txt`. Sau Tiger tối ưu một dòng, chạy lại 34/34 Tiger và focused input/independent review; không lặp toàn bộ suite.

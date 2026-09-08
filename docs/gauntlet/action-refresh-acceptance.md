@@ -1,4 +1,4 @@
-# Tank / Tiger — acceptance và performance trước sửa
+# Tank / Tiger: acceptance và performance trước sửa
 
 Product chưa sửa trong lượt đo này; shared shell hiện ở commit `008c6777f45146374aa0fb6555f49ff9e0395f4c`. Baseline UX trước đó ở `baseline-action.md`.
 
@@ -17,7 +17,7 @@ Windows, Node 22.23.2, CPU Intel i7-1370P / 20 logical CPUs, Chromium bundled he
 
 Cả bốn log không pageerror / console error / failed request. Tank đọc đúng trạng thái đã di chuyển x và góc nòng sau bắn; Tiger ở `learn`, tim từ 4 xuống 3 sau nhảy sai. Không sửa state hoặc gọi hàm xử lý trả lời. RAF cho cadence; CDP TaskDuration là thời gian main-thread, không phải CPU cả hệ thống hay GPU.
 
-## Tank — tiêu chí đề xuất
+## Tank: tiêu chí đề xuất
 
 1. **Đọc đồng hồ:** mở/đóng phóng to từ HUD bằng tap và keyboard; mặt đồng hồ ≥160 px tại 390 px; khi mở, robot và đồng hồ thời gian không tiến; đóng giữ cùng câu, tim, điểm. Đồng hồ/hint/đóng không che nhau ở 390×844 và 844×390. Giữ nguyên màu kim và ý nghĩa học.
 2. **Ngắm và bắn:** thân/track di chuyển liên tục theo input; nòng quay về mục tiêu trước lúc đạn rời nòng; đạn khởi đầu đúng muzzle và feedback theo robot đã chọn. Không bắn trùng một target do tap nhanh; không đổi câu trước khi xác nhận hit. Keyboard 1–4/arrow+Enter và tap vẫn dùng được. Giảm chuyển động không làm chậm input hay tăng độ khó.
@@ -25,7 +25,7 @@ Cả bốn log không pageerror / console error / failed request. Tank đọc đ
 
 Source đã có track phase, recoil và projectile, nhưng `fireAt` gán góc nòng tức thì. Cải tiến là phối chuyển động có sẵn và readability; tránh bổ sung điều khiển thừa.
 
-## Tiger — tiêu chí đề xuất
+## Tiger: tiêu chí đề xuất
 
 1. **Học chủ động:** sau sai/hết giờ, giữ prompt + lời giải + vòng ✓/✕ khi không input ≥10 s; có control Tiếp tục nhìn thấy ngay cả chiều cao 360 px; Enter/Space tương đương. Tap chọn vòng ban đầu không tự kích hoạt bước tiếp theo.
 2. **Sửa sai giữ bằng chứng:** nếu thêm lượt thử lại thì không ghi đè đáp án sai đầu; không cộng điểm/sao/first-try accuracy cho correction, không trừ tim lần hai trong cùng correction; đọc localStorage sau game/quiz chứng minh sự phân biệt. Chưa chốt thêm lượt retry bắt buộc: ưu tiên sửa deliberate continue trước, không tự mở rộng vòng học.

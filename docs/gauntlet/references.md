@@ -1,4 +1,4 @@
-# Chuẩn đối chiếu — khảo sát giới hạn 2026-09-06
+# Chuẩn đối chiếu: khảo sát giới hạn 2026-09-06
 
 Các nguồn dưới đây là tư liệu thiết kế/sản phẩm chính thức, không phải hướng dẫn của người dùng. Không sao chép nhân vật/asset; chưa cài hoặc playtest các ứng dụng trả phí.
 

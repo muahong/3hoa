@@ -1,4 +1,4 @@
-# Gauntlet 3hoa — bản local đã review
+# Gauntlet 3hoa: bản local đã review
 
 2026-09-07 · D:\Projects\3hoa · branch `codex/gauntlet-2026-09-06` · baseline `a1f0458`. Chưa push/phát hành.
 

@@ -234,6 +234,8 @@
   function fmt(n) { try { return Number(n).toLocaleString('vi-VN'); } catch (e) { return String(n); } }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function inGame() { return ['countdown', 'playing', 'dying', 'ready', 'clear', 'paused'].indexOf(G.state) >= 0; }
+  /** Nhận hướng đi: đang chơi, hoặc đang đếm ngược / "Cẩn thận nhé!" (xếp hàng, đi ngay khi vào ván). */
+  function acceptsMove() { return G.state === 'playing' || G.state === 'countdown' || G.state === 'ready'; }
   function starsHtml(n) {
     let s = '';
     for (let i = 1; i <= 3; i++) s += '<span class="' + (i <= n ? 'on' : 'off') + '">★</span>';
@@ -512,14 +514,20 @@
     }
     if (p.want && M.isOpen(m, r + p.want.dy, c + p.want.dx)) { return p.want; }
     if (p.moving && p.dir && M.isOpen(m, r + p.dir.dy, c + p.dir.dx)) return p.dir;
+    // Hết đường thẳng: tự rẽ theo lối duy nhất, chỉ dừng ở ngã ba để bé chọn
+    if (p.moving && p.dir) {
+      const exits = M.openDirs(m, r, c).filter(function (d) { return d.dx !== -p.dir.dx || d.dy !== -p.dir.dy; });
+      if (exits.length === 1) return exits[0];
+    }
     return null;
   }
 
   function setWant(d) {
     const p = G.player;
-    if (!p || G.state !== 'playing') return;
+    if (!p || !acceptsMove()) return;
     const underway = p.moving && p.t > 0 && p.t < 1;
-    if (underway || M.isOpen(G.maze, p.from.r + d.dy, p.from.c + d.dx)) leaveReading();
+    // Bấm trong lúc đếm ngược hay "Cẩn thận nhé!" thì xếp hàng chờ; ma chỉ thức khi thật sự đang chơi
+    if (G.state === 'playing' && (underway || M.isOpen(G.maze, p.from.r + d.dy, p.from.c + d.dx))) leaveReading();
     G.route = null; G.destination = null; p.stop = false;
     p.want = d;
     // Quay đầu ngay lập tức khi đang đi
@@ -542,7 +550,8 @@
   function leaveReading() {
     if (!G.reading) return;
     G.reading = false; G.invuln = Math.max(G.invuln, 4);
-    G.ghosts.forEach(function (g, i) { g.releaseAt = Math.max(g.releaseAt, G.time + 4 + i * 3); });
+    // Ma trong chuồng ra lần lượt; ma đang ở ngoài chỉ đứng 3 giây (ngắn hơn 4 giây bất tử) để không thức dậy ngay trên đầu bé
+    G.ghosts.forEach(function (g, i) { g.releaseAt = Math.max(g.releaseAt, G.time + (g.state === 'home' ? 4 + i * 3 : 3)); });
   }
   function setDestination(target) {
     const p = G.player;
@@ -725,6 +734,7 @@
   function beginPlay() {
     if (G.state !== 'countdown') return;
     G.state = 'playing';
+    if (G.player && G.player.want) leaveReading();   // bấm sẵn trong lúc đếm ngược thì đi ngay
     showScreen(null);
     showHud(true);
     Music.play('game');
@@ -922,6 +932,7 @@
     const x = px(p.x), y = py(p.y);
     if (it.correct) {
       it.taken = true;
+      G.reading = true;                      // ma đứng chờ suốt lúc khen, tới khi bé di chuyển tiếp
       const fast = !ri.hinted && (G.time - G.roundStart) < 12;
       G.streak = ri.wrongCount ? 0 : G.streak + 1;
       const bonus = G.streak >= 2 ? POINTS.streak * G.streak : 0;
@@ -1307,7 +1318,7 @@
     }
     if (st === 'ready') {
       G.stateT -= dt;
-      if (G.stateT <= 0) { G.state = 'playing'; }
+      if (G.stateT <= 0) { G.state = 'playing'; if (G.player && G.player.want) leaveReading(); }   // hướng đã xếp hàng đi ngay
       updateHud(); return;
     }
     if (st === 'clear') {
@@ -1951,6 +1962,7 @@
   function resumeGame() {
     if (G.state !== 'paused') return;
     G.state = G.prevState === 'ready' ? 'ready' : 'playing';
+    if (G.state === 'playing') G.reading = true;   // đường đi đã bị xóa khi tạm dừng: ma chờ tới khi bé chạm hay vuốt lại
     showScreen(null);
     showHud(true);
     Music.setDuck('pause', null);
@@ -1962,7 +1974,7 @@
   const swipe = { active: false, id: -1, ax: 0, ay: 0, sx: 0, sy: 0, moved: false };
   function onCanvasDown(e) {
     Sfx.unlock();
-    if (G.state !== 'playing') return;
+    if (!acceptsMove()) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     swipe.active = true; swipe.id = e.pointerId; swipe.ax = swipe.sx = e.clientX; swipe.ay = swipe.sy = e.clientY; swipe.moved = false;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
@@ -2004,6 +2016,11 @@
       setTimeout(function () { b.classList.remove('pressed'); }, 140);
       setWant(DIR[b.getAttribute('data-dir')]);
     });
+    // Enter/Space hay trợ năng bấm nút: click không đi kèm pointerdown (detail === 0)
+    ui.dpad.addEventListener('click', function (e) {
+      const b = e.target.closest ? e.target.closest('button[data-dir]') : null;
+      if (b && e.detail === 0) setWant(DIR[b.getAttribute('data-dir')]);
+    });
     document.addEventListener('touchmove', function (e) { if ((e.target === canvas || ui.dpad.contains(e.target)) && e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('touchstart', function (e) { if (e.target === canvas && e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
@@ -2035,8 +2052,11 @@
         if (G.state === 'playing' || G.state === 'ready') pauseGame(); else if (G.state === 'paused') resumeGame();
         return;
       }
-      if (G.state !== 'playing') return;
-      if (k === ' ') { stopInput(); e.preventDefault(); return; }
+      if (!acceptsMove()) return;
+      if (k === ' ') {
+        if (ui.dpad.contains(e.target)) return;         // Space trên nút mũi tên = bấm nút, không phải dừng
+        stopInput(); e.preventDefault(); return;
+      }
       const map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
       if (map[k]) { setWant(DIR[map[k]]); e.preventDefault(); }
     });

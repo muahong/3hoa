@@ -1,0 +1,16 @@
+thap-dong-ho: loading old version
+thap-dong-ho: waiting old service worker
+thap-dong-ho: updating service worker
+thap-dong-ho: loading offline
+thap-dong-ho: actual old-cache upgrade + offline menu + storage/scope PASS
+xe-tang-thoi-gian: loading old version
+xe-tang-thoi-gian: waiting old service worker
+xe-tang-thoi-gian: updating service worker
+xe-tang-thoi-gian: loading offline
+xe-tang-thoi-gian: actual old-cache upgrade + offline menu + storage/scope PASS
+cuoi-ho: loading old version
+cuoi-ho: waiting old service worker
+cuoi-ho: updating service worker
+cuoi-ho: loading offline
+cuoi-ho: actual old-cache upgrade + offline menu + storage/scope PASS
+Error: browser.close exceeded Node deadline 5000ms

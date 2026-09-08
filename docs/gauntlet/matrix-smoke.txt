@@ -1,0 +1,8 @@
+{"game":"math-ninja","viewport":{"width":390,"height":844},"dpr":1,"reducedMotion":"no-preference","input":"touch","mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 390 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":844,"height":390},"dpr":1,"reducedMotion":"no-preference","input":"touch","mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 844 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":820,"height":1180},"dpr":1,"reducedMotion":"reduce","input":"touch","mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 820 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":1180,"height":820},"dpr":1,"reducedMotion":"no-preference","input":"mouse/keyboard","mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 1180 — sạch (không lỗi trang/console).

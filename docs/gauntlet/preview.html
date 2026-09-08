@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3hoa: Bản review gauntlet</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fb;color:#182636;font:17px/1.6 system-ui,sans-serif}main{max-width:1320px;margin:auto;padding:24px}h1,h2{line-height:1.2}a{color:#075c82}nav{display:flex;flex-wrap:wrap;gap:12px}nav a{background:white;border:1px solid #9cabb9;border-radius:12px;padding:12px 16px;text-decoration:none;min-height:48px}article{margin:24px 0;background:white;padding:20px;border-radius:16px;border:1px solid #d4dde6}.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}figure{margin:0}img{width:100%;height:auto;display:block;background:#e1e6ef;border-radius:8px}figcaption{font-weight:700}.note{color:#536474;font-size:15px}.pending{border-left:5px solid #d58a19;padding:12px 18px;background:#fff7e7}summary{cursor:pointer;min-height:44px}a:focus-visible,summary:focus-visible{outline:3px solid #075c82;outline-offset:3px}@media(max-width:600px){main{padding:14px}.pair{grid-template-columns:1fr}}
+</style><main>
+<h1>3hoa · Bản review gauntlet</h1>
+<p>Bản local để chơi và so sánh. Báo cáo ở <a href="final-report.md">final-report.md</a> và <a href="status.md">status.md</a>; ảnh chỉ là bằng chứng hình ảnh, không thay thế kiểm thử luồng chơi.</p>
+<nav><a href="../../">Trang chủ</a><a href="../../me-cung-dong-ho/">Mê Cung</a><a href="../../math-ninja/">Ninja</a><a href="../../cuu-chuong/">Vệ Binh</a><a href="../../thap-dong-ho/">Tháp</a><a href="../../xe-tang-thoi-gian/">Xe Tăng</a><a href="../../cuoi-ho/">Cưỡi Hổ</a></nav>
+<p class="pending">Sáu game đã qua review độc lập trong phạm vi đã thử. Chưa phát hành lên 3hoa.com. Ảnh bên dưới được giữ trong thư mục bằng chứng local không commit; bản clone mới cần chạy lại harness để tạo ảnh.</p>
+<article><h2>Mê Cung · điện thoại ngang 844 × 390</h2><p class="note">Cùng viewport, DPR 1, mục tiêu 11 giờ; topology thay đổi là một phần của gói. So sánh khả năng định vị cú, đọc đồng hồ và khoảng trống cho điều khiển.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/maze/after-844-gameplay.png"><img src="../../tests/e2e/out/gauntlet/maze/after-844-gameplay.png" alt="Phương án A: mê cung màn hình ngang"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/maze/before-844-gameplay.png"><img src="../../tests/e2e/out/gauntlet/maze/before-844-gameplay.png" alt="Phương án B: mê cung màn hình ngang"></a></figure></div><details><summary>Xem mốc phiên bản sau khi so sánh</summary>A là bản đang sửa, B là baseline a1f0458. Không phải thử nghiệm sở thích với trẻ em.</details></article>
+<article><h2>Mê Cung · điện thoại dọc 390 × 844</h2><div class="pair">
+<figure><figcaption>A</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/maze/before-390-gameplay.png" alt="Phương án A: mê cung màn hình dọc"></figure>
+<figure><figcaption>B</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/maze/after-390-gameplay.png" alt="Phương án B: mê cung màn hình dọc"></figure></div><details><summary>Xem mốc phiên bản sau khi so sánh</summary>A là baseline a1f0458; B là bản đang sửa.</details></article>
+<section id="other-game-pairs"><h2>Năm game còn lại · ảnh đối chiếu</h2><p class="note">Ảnh gameplay ở mốc thời gian kiểm soát, không phải phép đo hiệu năng hoặc bằng chứng thắng. A/B đổi vị trí giữa các game; xem phiên bản sau khi đối chiếu.</p>
+<article><h2>Ninja Toán Học</h2>
+<p class="note">390 × 844 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-math-ninja-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-math-ninja-390-gameplay.png" alt="Ninja Toán Học phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-math-ninja-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-math-ninja-390-gameplay.png" alt="Ninja Toán Học phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+<details><summary>Xem desktop 1180 × 820</summary>
+<p class="note">1180 × 820 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-math-ninja-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-math-ninja-1180-gameplay.png" alt="Ninja Toán Học phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-math-ninja-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-math-ninja-1180-gameplay.png" alt="Ninja Toán Học phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+</details>
+</article>
+<article><h2>Vệ Binh Cửu Chương</h2>
+<p class="note">390 × 844 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-cuu-chuong-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-cuu-chuong-390-gameplay.png" alt="Vệ Binh Cửu Chương phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-cuu-chuong-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-cuu-chuong-390-gameplay.png" alt="Vệ Binh Cửu Chương phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: bản đang nghiệm thu; B: baseline a1f0458. Không phải khảo sát trẻ em.</details>
+<details><summary>Xem desktop 1180 × 820</summary>
+<p class="note">1180 × 820 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-cuu-chuong-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-cuu-chuong-1180-gameplay.png" alt="Vệ Binh Cửu Chương phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-cuu-chuong-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-cuu-chuong-1180-gameplay.png" alt="Vệ Binh Cửu Chương phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: bản đang nghiệm thu; B: baseline a1f0458. Không phải khảo sát trẻ em.</details>
+</details>
+</article>
+<article><h2>Tháp Đồng Hồ</h2>
+<p class="note">390 × 844 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-thap-dong-ho-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-thap-dong-ho-390-gameplay.png" alt="Tháp Đồng Hồ phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-thap-dong-ho-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-thap-dong-ho-390-gameplay.png" alt="Tháp Đồng Hồ phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+<details><summary>Xem desktop 1180 × 820</summary>
+<p class="note">1180 × 820 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-thap-dong-ho-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-thap-dong-ho-1180-gameplay.png" alt="Tháp Đồng Hồ phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-thap-dong-ho-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-thap-dong-ho-1180-gameplay.png" alt="Tháp Đồng Hồ phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+</details>
+</article>
+<article><h2>Xe Tăng Thời Gian</h2>
+<p class="note">390 × 844 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-xe-tang-thoi-gian-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-xe-tang-thoi-gian-390-gameplay.png" alt="Xe Tăng Thời Gian phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-xe-tang-thoi-gian-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-xe-tang-thoi-gian-390-gameplay.png" alt="Xe Tăng Thời Gian phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: bản đang nghiệm thu; B: baseline a1f0458. Không phải khảo sát trẻ em.</details>
+<details><summary>Xem desktop 1180 × 820</summary>
+<p class="note">1180 × 820 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-xe-tang-thoi-gian-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-xe-tang-thoi-gian-1180-gameplay.png" alt="Xe Tăng Thời Gian phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-xe-tang-thoi-gian-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-xe-tang-thoi-gian-1180-gameplay.png" alt="Xe Tăng Thời Gian phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: bản đang nghiệm thu; B: baseline a1f0458. Không phải khảo sát trẻ em.</details>
+</details>
+</article>
+<article><h2>Cưỡi Hổ Vượt Lửa</h2>
+<p class="note">390 × 844 · DPR 1 · seed khởi tạo 360906. Cùng câu hỏi.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-cuoi-ho-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-cuoi-ho-390-gameplay.png" alt="Cưỡi Hổ Vượt Lửa phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-cuoi-ho-390-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-cuoi-ho-390-gameplay.png" alt="Cưỡi Hổ Vượt Lửa phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+<details><summary>Xem desktop 1180 × 820</summary>
+<p class="note">1180 × 820 · DPR 1 · seed khởi tạo 360906. Câu hỏi khác nhau do trình tự dùng số ngẫu nhiên thay đổi; chỉ đối chiếu bố cục và độ rõ hình ảnh.</p><div class="pair">
+<figure><figcaption>A</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/before-cuoi-ho-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/before-cuoi-ho-1180-gameplay.png" alt="Cưỡi Hổ Vượt Lửa phương án A"></a></figure>
+<figure><figcaption>B</figcaption><a href="../../tests/e2e/out/gauntlet/pairs/after-cuoi-ho-1180-gameplay.png"><img loading="lazy" src="../../tests/e2e/out/gauntlet/pairs/after-cuoi-ho-1180-gameplay.png" alt="Cưỡi Hổ Vượt Lửa phương án B"></a></figure>
+</div><details><summary>Xem mốc phiên bản</summary>A: baseline a1f0458; B: bản đang nghiệm thu. Không phải khảo sát trẻ em.</details>
+</details>
+</article>
+</section>
+<article><h2>Bằng chứng và giới hạn</h2><p><a href="baseline-three.md">Baseline Ninja / Vệ Binh / Tháp</a> · <a href="baseline-action.md">Baseline Xe Tăng / Cưỡi Hổ</a> · <a href="input-probes.md">Lỗi thao tác tái hiện</a> · <a href="references.md">Tư liệu đối chiếu</a></p><p>Windows Chromium với các viewport giả lập. Chưa kiểm tra iPad vật lý, Safari hoặc giọng Việt thật. Kết quả seed, input, offline và hiệu năng phải được đọc theo phạm vi cụ thể trong báo cáo; không suy từ screenshot ra kết quả thắng.</p></article>
+<article><h2>Phản hồi học tập và chuyển động</h2><p class="note">Ảnh trạng thái từ harness; chuỗi input và kết quả ở báo cáo. Ảnh lời giải dài dùng fixture câu hỏi từ generator.</p><div class="pair"><figure><figcaption>Ninja: đọc cách làm</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/three-package/math-ninja-phone-feedback.png" alt="Ninja: đọc cách làm"></figure><figure><figcaption>Cửu Chương: đọc và sửa</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/three-package/cuu-chuong-phone-feedback.png" alt="Cửu Chương: đọc và sửa"></figure><figure><figcaption>Tháp: phản hồi chọn sai</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/three-package/thap-dong-ho-phone-feedback.png" alt="Tháp: phản hồi chọn sai"></figure><figure><figcaption>Xe Tăng: lời giải dài trên màn hình ngang</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/tank-reading/780x360-elapsed-0.png" alt="Xe Tăng: lời giải dài trên màn hình ngang"></figure><figure><figcaption>Cưỡi Hổ: đang bay</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/action-refresh/motion/cuoi-ho-390-air-or-projectile.png" alt="Cưỡi Hổ: đang bay"></figure><figure><figcaption>Xe Tăng: phản hồi bắn trúng</figcaption><img loading="lazy" src="../../tests/e2e/out/gauntlet/action-refresh/motion/xe-tang-thoi-gian-390-air-or-projectile.png" alt="Xe Tăng: phản hồi bắn trúng"></figure></div></article></main></html>

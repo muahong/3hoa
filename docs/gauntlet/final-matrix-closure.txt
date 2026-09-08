@@ -1,0 +1,16 @@
+{"game":"math-ninja","viewport":{"width":390,"height":844},"dpr":1,"reducedMotion":"no-preference","input":"touch","profileSwitchReload":"PASS","autoPausedOnRotate":true,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 390 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":844,"height":390},"dpr":1,"reducedMotion":"no-preference","input":"touch","autoPausedOnRotate":true,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 844 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":820,"height":1180},"dpr":1,"reducedMotion":"reduce","input":"touch","autoPausedOnRotate":true,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 820 — sạch (không lỗi trang/console).
+{"game":"math-ninja","viewport":{"width":1180,"height":820},"dpr":1,"reducedMotion":"no-preference","input":"mouse/keyboard","autoPausedOnRotate":true,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+math-ninja 1180 — sạch (không lỗi trang/console).
+{"game":"xe-tang-thoi-gian","viewport":{"width":390,"height":844},"dpr":1,"reducedMotion":"no-preference","input":"touch","profileSwitchReload":"PASS","autoPausedOnRotate":false,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+xe-tang-thoi-gian 390 — sạch (không lỗi trang/console).
+{"game":"xe-tang-thoi-gian","viewport":{"width":844,"height":390},"dpr":1,"reducedMotion":"no-preference","input":"touch","autoPausedOnRotate":false,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+xe-tang-thoi-gian 844 — sạch (không lỗi trang/console).
+{"game":"xe-tang-thoi-gian","viewport":{"width":820,"height":1180},"dpr":1,"reducedMotion":"reduce","input":"touch","autoPausedOnRotate":false,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+xe-tang-thoi-gian 820 — sạch (không lỗi trang/console).
+{"game":"xe-tang-thoi-gian","viewport":{"width":1180,"height":820},"dpr":1,"reducedMotion":"no-preference","input":"mouse/keyboard","autoPausedOnRotate":false,"mute":"PASS","profile":"PASS","rotate":"PASS","restart":"PASS","pauseResume":"PASS","home":"PASS"}
+xe-tang-thoi-gian 1180 — sạch (không lỗi trang/console).

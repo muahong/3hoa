@@ -67,6 +67,10 @@ Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất đị
 - **Ít hiệu ứng**: nút ✨ Hiệu ứng: Nhiều/Ít trên trang chính (và tự động khi hệ thống bật "giảm chuyển động") giảm hạt, tắt rung/chớp màn hình, tắt pháo giấy.
 - **Điện thoại dựng đứng**: cụm ◀ ⬇ ▶ được thu gọn còn mỗi nút 💡 đặt bên lề trái (chạm thẳng vào cột để đưa đồng hồ tới, chạm lần nữa để thả) – nhờ vậy ô bảng rộng thêm khoảng 30 % và chữ trên đĩa đáp án đọc được. Máy tính bảng và máy tính vẫn có đủ bốn nút.
 
+### Chọn cột và xác nhận thả bằng cảm ứng
+
+Chạm lần đầu để chọn cột; ô đáp phía dưới có viền sáng cho biết đồng hồ sẽ đáp ở đâu. Chạm lại cột đã chọn rồi nhấc ngón để thả. Kéo ngang chỉ di chuyển/chọn cột, không thả; hủy chạm hoặc nhấc ngón ngoài bảng không thả. Quy tắc này áp dụng cả cột đồng hồ xuất hiện ban đầu. Các phím và nút THẢ vẫn thả trực tiếp.
+
 ## Kiểm thử
 
 Chạy từ thư mục gốc của kho:

@@ -40,6 +40,7 @@
       <div class="hud-center">
         <div class="prompt-card" id="hud-prompt">
           <div class="prompt-visual" id="prompt-visual" hidden></div>
+          <button class="say-btn zoom-btn" id="btn-clock-zoom" aria-label="Phóng to đồng hồ, tạm dừng để đọc" hidden>⤢</button>
           <div class="prompt-text" id="prompt-text">Sẵn sàng…</div>
           <button class="say-btn" id="btn-say" aria-label="Đọc lại câu hỏi">🔊</button>
           <button class="say-btn hint-btn" id="btn-hint" aria-label="Gợi ý đáp án">💡</button>
@@ -54,6 +55,15 @@
   </div>
 
   <!-- ================= MENU CHÍNH ================= -->
+  <dialog id="clock-zoom" aria-labelledby="clock-zoom-title">
+    <h2 id="clock-zoom-title">Cùng nhìn đồng hồ</h2>
+    <p>Đã tạm dừng · Bé cứ thong thả đọc nhé.</p>
+    <div id="clock-zoom-visual"></div>
+    <p id="clock-zoom-question"></p>
+    <p id="clock-zoom-teaching" role="status" hidden></p>
+    <button class="btn" id="btn-clock-close" autofocus>Đóng · Chơi tiếp ▶</button>
+  </dialog>
+
   <div id="menu" class="screen">
     <div class="panel">
       <a class="hub-home" href="../" aria-label="Về trang chủ 3hoa.com">← Trang chủ 3hoa.com</a>
@@ -184,7 +194,7 @@
   <div id="pause" class="screen hidden dim">
     <div class="panel">
       <h2>⏸ Tạm dừng</h2>
-      <p class="hub-return"><a class="hub-home" href="../">← Trang chủ 3hoa.com</a></p>
+      <p class="hub-return"><a class="hub-home" id="pause-home" href="../">← Trang chủ 3hoa.com</a></p>
       <p id="pause-info">Nghỉ một chút rồi chơi tiếp nhé!</p>
       <div class="toggle-row" data-audio-toggles></div>
       <div class="btn-row">
@@ -193,7 +203,7 @@
       <div class="btn-row">
         <button class="btn ghost small" id="btn-pause-lesson">📖 Học lại (chơi lại từ đầu)</button>
         <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
-        <button class="btn ghost small" id="btn-quit">🏠 Về trang chính</button>
+        <button class="btn ghost small" id="btn-quit">☰ Menu trò chơi</button>
       </div>
     </div>
   </div>

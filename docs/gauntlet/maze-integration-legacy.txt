@@ -1,0 +1,6 @@
+me-cung run 4 (ngoại tuyến qua service worker) — sạch (không lỗi trang/console).
+iPad dọc: ô = 39 px, mê cung xoay dọc, vùng chơi 804×750
+perf iPad dọc, màn 7 đang chơi: update 0.058 ms · render 0.740 ms · frame 0.798 ms
+perf (iPad dọc) = {"n":26,"update":30.899999976158142,"render":14.00000000745058,"frame":44.89999998360872,"avgUpdate":0.07333333343267441,"avgRender":1.8416666669150195,"avgFrame":1.9150000003476937}
+me-cung run 8 (iPad dọc 820×1180) — sạch (không lỗi trang/console).
+me-cung e2e: PASS

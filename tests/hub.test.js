@@ -35,7 +35,7 @@ test('hub: summarize reads legacy and migrated shapes per player', () => {
   const thOther = H.summarize('thap-dong-ho', 'pab');
   assert.deepEqual([thOther.stars, thOther.done, thOther.played], [1, 1, true]);
   const nj = H.summarize('math-ninja', 'p1');
-  assert.deepEqual([nj.stars, nj.max, nj.done, nj.best], [4, 48, 2, 1200]);
+  assert.deepEqual([nj.stars, nj.max, nj.done, nj.best], [4, 63, 2, 1200]);   // 14 màn chém đáp án + 7 màn ghép đôi, mỗi màn 3 sao
   const cc = H.summarize('cuu-chuong', 'p1');
   assert.deepEqual([cc.stars, cc.max, cc.done, cc.unit], [4, 45, 2, 'màn']);
   const mc = H.summarize('me-cung-dong-ho', 'p1');
@@ -62,9 +62,9 @@ test('hub: summarizeAll / aggregate totals and read-only storage', () => {
   const H = w.__Hub;
   const all = H.summarizeAll('p1');
   assert.equal(all.length, 6);
-  assert.deepEqual(arr(all).map((s) => s.max), [48, 45, 24, 24, 27, 27]);
+  assert.deepEqual(arr(all).map((s) => s.max), [63, 45, 24, 24, 27, 27]);
   const agg = H.aggregate(all);
-  assert.equal(agg.max, 195);
+  assert.equal(agg.max, 210);
   assert.equal(agg.stars, 4 + 4 + 3 + 5 + 0 + 9);
   assert.equal(agg.seconds, 600);
   assert.doesNotThrow(() => H.render());

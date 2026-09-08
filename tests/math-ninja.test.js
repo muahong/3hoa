@@ -15,9 +15,12 @@ const readGameFile = (rel) => fs.readFileSync(path.join(GAME_DIR, rel), 'utf8');
 
 const MG = loadGame('math-ninja', ['js/math.js']).MathGen;
 const N = 1000;                       // số câu sinh ra cho mỗi màn ở mỗi phép kiểm tra
-const ANSWER_IDS = ['a1', 'a2', 'a3', 'a4', 'm1', 'a5', 'm2', 'm3', 'm4', 'a6'];
-const PAIR_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
-const calc = (a, b, op) => (op === '+' ? a + b : op === '-' ? a - b : a * b);
+const ANSWER_IDS = ['a1', 'a2', 'a3', 'a4', 'm1', 'd1', 'a5', 'm2', 'd2', 'm3', 'd3', 'm4', 'd4', 'a6'];
+const PAIR_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
+const OPS = ['+', '-', '*', '/'];
+const calc = (a, b, op) => (op === '+' ? a + b : op === '-' ? a - b : op === '/' ? a / b : a * b);
+/** Ký hiệu hiển thị -> mã phép tính: '+', '−', '×', ':' */
+const opOf = (sym) => (sym === '+' ? '+' : sym === MG.MINUS ? '-' : sym === MG.DIV ? '/' : '*');
 /* deepEqual không dùng được: đối tượng đến từ vm context khác nên prototype khác nhau */
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 
@@ -52,7 +55,8 @@ test('mọi bộ sinh: answer đúng phép tính, không âm, trong phạm vi, t
     for (let i = 0; i < N; i++) {
       const q = lvl.gen();
       const tag = lvl.id + ' ' + q.a + q.op + q.b;
-      assert.ok(['+', '-', '*'].includes(q.op), tag + ': op lạ');
+      assert.ok(OPS.includes(q.op), tag + ': op lạ');
+      if (q.op === '/') assert.ok(q.b > 0 && q.a % q.b === 0, tag + ': phép chia phải chia hết');
       assert.ok(Number.isInteger(q.a) && Number.isInteger(q.b), tag + ': toán hạng không nguyên');
       assert.ok(q.a >= 0 && q.b >= 0, tag + ': toán hạng âm');
       assert.equal(q.answer, calc(q.a, q.b, q.op), tag + ': đáp án sai');
@@ -165,7 +169,8 @@ test('pairResultText: không bao giờ ra phép trừ ngược, hai vế luôn b
         assert.ok(m, lvl.id + ': chuỗi lạ "' + t + '"');
         const [, l, op, r, res] = m;
         if (op === MG.MINUS) assert.ok(Number(l) >= Number(r), lvl.id + ': trừ ngược "' + t + '"');
-        assert.equal(calc(Number(l), Number(r), op === '+' ? '+' : op === MG.MINUS ? '-' : '*'), Number(res), lvl.id + ': "' + t + '" sai');
+        if (op === MG.DIV) assert.ok(Number(l) >= Number(r) && Number(r) > 0, lvl.id + ': chia ngược hoặc chia cho 0 "' + t + '"');
+        assert.equal(calc(Number(l), Number(r), opOf(op)), Number(res), lvl.id + ': "' + t + '" sai');
         assert.ok(Number(res) >= 0, lvl.id + ': "' + t + '" ra số âm');
       }
     }
@@ -173,6 +178,8 @@ test('pairResultText: không bao giờ ra phép trừ ngược, hai vế luôn b
   assert.equal(MG.pairResultText({ op: '-', target: 1 }, 2, 3), '3 − 2 = 1');
   assert.equal(MG.pairResultText({ op: '+', target: 10 }, 3, 7), '3 + 7 = 10');
   assert.equal(MG.pairResultText({ op: '*', target: 42 }, 6, 7), '6 × 7 = 42');
+  assert.equal(MG.pairResultText({ op: '/', target: 6 }, 7, 42), '42 : 7 = 6');
+  assert.equal(MG.pairResultText({ op: '/', target: 6 }, 42, 7), '42 : 7 = 6');
 });
 
 test('pairText: hai dấu ? khi chưa chém, dấu ? đứng trước khi giữ số bé của phép trừ', () => {
@@ -197,6 +204,74 @@ test('isPair: đúng với cả hai thứ tự, sai với cặp khác', () => {
   const times = { op: '*', target: 42 };
   assert.ok(MG.isPair(times, 6, 7) && MG.isPair(times, 7, 6));
   assert.ok(!MG.isPair(times, 6, 8));
+  const div = { op: '/', target: 6 };
+  assert.ok(MG.isPair(div, 42, 7) && MG.isPair(div, 7, 42));
+  assert.ok(!MG.isPair(div, 42, 6), '42 : 6 = 7, không phải 6');
+  assert.ok(!MG.isPair(div, 6, 6), 'hai quả bằng nhau chia cho nhau bằng 1');
+  assert.ok(!MG.isPair(div, 0, 6) && !MG.isPair(div, 6, 0), 'không chia cho 0');
+});
+
+/* ---------------- 4b. Phép chia ---------------- */
+test('các màn chia: số chia đúng bảng, thương trong bảng, chia số lớn nhẩm được', () => {
+  const inTable = (id, divisors, kLo) => {
+    const lvl = MG.levelById(id);
+    for (let i = 0; i < N; i++) {
+      const q = lvl.gen();
+      const tag = id + ' ' + q.text;
+      assert.equal(q.op, '/', tag + ': không phải phép chia');
+      assert.ok(divisors.includes(q.b), tag + ': số chia ngoài bảng ' + divisors.join(','));
+      assert.ok(q.answer >= kLo && q.answer <= 10, tag + ': thương ngoài bảng');
+    }
+  };
+  inTable('d1', [2, 5, 10], 1);
+  inTable('d2', [2, 3, 4, 5], 1);
+  inTable('d3', [2, 3, 4, 5, 6, 7, 8, 9], 2);
+  const big = MG.levelById('d4');
+  let twoDigit = 0, round = 0, threeDigit = 0;
+  for (let i = 0; i < N; i++) {
+    const q = big.gen();
+    const tag = 'd4 ' + q.text;
+    assert.ok(q.b >= 2 && q.b <= 9, tag + ': số chia phải có 1 chữ số');
+    assert.ok(q.answer >= 10 && q.a <= 999, tag + ': phải là số lớn (thương ≥ 10, số bị chia ≤ 999)');
+    if (q.a % 10 === 0) round++;
+    else if (q.a < 100) twoDigit++;
+    else {
+      threeDigit++;
+      // 3 chữ số thì từng hàng phải chia hết (848 : 4 chứ không phải 736 : 4) để bé nhẩm được
+      for (const ch of String(q.a)) assert.equal(Number(ch) % q.b, 0, tag + ': hàng ' + ch + ' không chia hết cho ' + q.b);
+    }
+  }
+  assert.ok(twoDigit > N / 5 && round > N / 10 && threeDigit > N / 20, 'phải có đủ ba dạng: ' + twoDigit + '/' + round + '/' + threeDigit);
+});
+
+test('Siêu Ninja có trộn phép chia, và chỉ chia trong bảng', () => {
+  const lvl = MG.levelById('a6');
+  let div = 0;
+  for (let i = 0; i < 5000; i++) {
+    const q = lvl.gen();
+    if (q.op !== '/') continue;
+    div++;
+    assert.ok(q.b >= 2 && q.b <= 9 && q.answer <= 10, 'Siêu Ninja sinh phép chia ngoài bảng "' + q.text + '"');
+  }
+  assert.ok(div > 300, 'Siêu Ninja hầu như không có phép chia (' + div + '/5000)');
+});
+
+test('distractors phép chia: có "trừ thay vì chia" và "nhầm bảng bên cạnh", không có 0 vô nghĩa', () => {
+  const q = MG.make(24, 4, '/', 20);          // 24 : 4 = 6; nhầm 24 : 3 = 8; 24 − 4 = 20
+  let sub = 0, neighbor = 0;
+  for (let i = 0; i < 300; i++) {
+    const d = MG.distractors(q, 5);
+    if (d.includes(20)) sub++;
+    if (d.includes(8)) neighbor++;
+  }
+  assert.ok(sub > 0, 'không thấy 24 − 4 = 20');
+  assert.ok(neighbor > 0, 'không thấy 24 : 3 = 8');
+  for (const lvl of ['d1', 'd2', 'd3', 'd4'].map(MG.levelById)) {
+    for (let i = 0; i < 300; i++) {
+      const g = lvl.gen();
+      for (const v of MG.distractors(g, 5)) assert.ok(v <= g.max, lvl.id + ' ' + g.text + ': nhiễu ' + v + ' vượt max');
+    }
+  }
 });
 
 /* ---------------- 6. Sprite trái cây ---------------- */
@@ -510,6 +585,47 @@ function checkExplain(q, s) {
     assert.equal(n[8], q.answer, q.text + ': kết quả cuối khác đáp án trong "' + s + '"');
     return true;
   }
+  // "42 : 7 = 6 vì 7 × 6 = 42"
+  m = s.match(/^(\d+) : (\d+) = (\d+) vì (\d+) × (\d+) = (\d+)$/);
+  if (m) {
+    const n = m.map(Number);
+    assert.equal(n[1], q.a, q.text + ': số bị chia đổi trong "' + s + '"');
+    assert.equal(n[2], q.b, q.text + ': số chia đổi trong "' + s + '"');
+    assert.equal(n[3], q.answer, q.text + ': kết quả khác đáp án trong "' + s + '"');
+    assert.equal(n[4], n[2], q.text + ': bảng nhân dùng sai thừa số trong "' + s + '"');
+    assert.equal(n[5], n[3], q.text + ': bảng nhân dùng sai thừa số trong "' + s + '"');
+    assert.equal(n[4] * n[5], n[6], q.text + ': phép nhân kiểm tra sai trong "' + s + '"');
+    assert.equal(n[6], n[1], q.text + ': tích không bằng số bị chia trong "' + s + '"');
+    assert.ok(n[3] >= 2, q.text + ': thương 0 hoặc 1 thì không cần giải thích "' + s + '"');
+    return true;
+  }
+  // "8 : 4 = 2 nên 80 : 4 = 20"
+  m = s.match(/^(\d+) : (\d+) = (\d+) nên (\d+) : (\d+) = (\d+)$/);
+  if (m) {
+    const n = m.map(Number);
+    assert.equal(n[1] * 10, n[4], q.text + ': số nhỏ phải bằng số bị chia bỏ một chữ số 0 trong "' + s + '"');
+    assert.equal(n[2], n[5], q.text + ': số chia đổi trong "' + s + '"');
+    assert.equal(n[1], n[2] * n[3], q.text + ': bước nhỏ sai trong "' + s + '"');
+    assert.equal(n[3] * 10, n[6], q.text + ': thêm số 0 sai trong "' + s + '"');
+    assert.equal(n[4], q.a, q.text + ': số bị chia đổi trong "' + s + '"');
+    assert.equal(n[6], q.answer, q.text + ': kết quả khác đáp án trong "' + s + '"');
+    return true;
+  }
+  // "72 : 6 = 60 : 6 + 12 : 6 = 10 + 2 = 12"
+  m = s.match(/^(\d+) : (\d+) = (\d+) : (\d+) \+ (\d+) : (\d+) = (\d+) \+ (\d+) = (\d+)$/);
+  if (m) {
+    const n = m.map(Number);
+    assert.equal(n[1], q.a, q.text + ': số bị chia đổi trong "' + s + '"');
+    assert.equal(n[2], q.b, q.text + ': số chia đổi trong "' + s + '"');
+    assert.equal(n[3] + n[5], n[1], q.text + ': tách số bị chia sai trong "' + s + '"');
+    assert.ok(n[3] % 10 === 0 && n[3] > 0 && n[5] > 0, q.text + ': phần đầu phải tròn chục, hai phần khác 0 trong "' + s + '"');
+    assert.ok(n[4] === n[2] && n[6] === n[2], q.text + ': số chia đổi giữa chừng trong "' + s + '"');
+    assert.equal(n[3], n[4] * n[7], q.text + ': phần đầu chia sai trong "' + s + '"');
+    assert.equal(n[5], n[6] * n[8], q.text + ': phần sau chia sai trong "' + s + '"');
+    assert.equal(n[7] + n[8], n[9], q.text + ': cộng hai thương sai trong "' + s + '"');
+    assert.equal(n[9], q.answer, q.text + ': kết quả khác đáp án trong "' + s + '"');
+    return true;
+  }
   return false;
 }
 
@@ -533,6 +649,13 @@ test('explain(q): mọi bước đều đúng số học và kết thúc bằng 
   assert.equal(MG.explain(MG.make(20, 7, '-', 24)), '20 − 10 = 10, thêm 3 nữa là 13');
   assert.equal(MG.explain(MG.make(36, 27, '+', 120)), '36 + 20 = 56, thêm 7 nữa là 63');
   assert.equal(MG.explain(MG.make(6, 7, '*', 110)), '6 × 7 = 6 × 5 + 6 × 2 = 30 + 12 = 42');
+  assert.equal(MG.explain(MG.make(42, 7, '/', 20)), '42 : 7 = 6 vì 7 × 6 = 42');
+  assert.equal(MG.explain(MG.make(80, 4, '/', 500)), '8 : 4 = 2 nên 80 : 4 = 20');
+  assert.equal(MG.explain(MG.make(120, 3, '/', 500)), '12 : 3 = 4 nên 120 : 3 = 40');
+  assert.equal(MG.explain(MG.make(72, 6, '/', 500)), '72 : 6 = 60 : 6 + 12 : 6 = 10 + 2 = 12');
+  assert.equal(MG.explain(MG.make(84, 4, '/', 500)), '84 : 4 = 80 : 4 + 4 : 4 = 20 + 1 = 21');
+  assert.equal(MG.explain(MG.make(848, 4, '/', 500)), '848 : 4 = 840 : 4 + 8 : 4 = 210 + 2 = 212');
+  assert.equal(MG.explain(MG.make(2, 2, '/', 20)), '', '2 : 2 = 1 quá dễ');
   // Phép quá dễ thì không cần giải thích
   assert.equal(MG.explain(MG.make(3, 4, '+', 12)), '');
   assert.equal(MG.explain(MG.make(9, 5, '-', 12)), '');
@@ -577,6 +700,12 @@ test('misconception(q, v): gọi đúng tên lỗi quen thuộc, im lặng với
   assert.match(MG.misconception(mul, 13), /phép nhân/);
   assert.match(MG.misconception(MG.make(9, 4, '+', 24), 5), /phép cộng/);
   assert.match(MG.misconception(MG.make(9, 4, '-', 24), 13), /phép trừ/);
+  const div = MG.make(42, 7, '/', 20);
+  assert.match(MG.misconception(div, 5), /bảng chia/);
+  assert.match(MG.misconception(div, 7), /bảng chia/);
+  assert.match(MG.misconception(div, 35), /phép chia/);
+  assert.match(MG.misconception(MG.make(120, 3, '/', 500), 4), /chữ số 0/);
+  assert.equal(MG.misconception(MG.make(84, 4, '/', 500), 22), '', 'chia số lớn thì ±1 không phải lỗi bảng chia');
   assert.equal(MG.misconception(carry, 999), '');
   assert.equal(MG.misconception(carry, carry.answer), '');
   assert.equal(MG.misconception(null, 3), '');

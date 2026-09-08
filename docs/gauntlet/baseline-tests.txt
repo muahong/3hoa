@@ -1,0 +1,1334 @@
+TAP version 13
+# Subtest: profile.js is identical in every game and the hub
+ok 1 - profile.js is identical in every game and the hub
+  ---
+  duration_ms: 99.7101
+  type: 'test'
+  ...
+# Subtest: math-ninja: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 2 - math-ninja: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 2.0706
+  type: 'test'
+  ...
+# Subtest: math-ninja: service worker precaches profile.js and bumped its cache version
+ok 3 - math-ninja: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 53.2404
+  type: 'test'
+  ...
+# Subtest: math-ninja: game.js routes progress through the active player and has the shared hooks
+ok 4 - math-ninja: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 158.1741
+  type: 'test'
+  ...
+# Subtest: math-ninja: style.css has focus-visible and reduced-motion rules
+ok 5 - math-ninja: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 32.2348
+  type: 'test'
+  ...
+# Subtest: math-ninja: tests exist
+ok 6 - math-ninja: tests exist
+  ---
+  duration_ms: 1.1283
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 7 - cuu-chuong: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 2.0477
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: service worker precaches profile.js and bumped its cache version
+ok 8 - cuu-chuong: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 50.9822
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: game.js routes progress through the active player and has the shared hooks
+ok 9 - cuu-chuong: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 173.7559
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: style.css has focus-visible and reduced-motion rules
+ok 10 - cuu-chuong: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 59.6494
+  type: 'test'
+  ...
+# Subtest: cuu-chuong: tests exist
+ok 11 - cuu-chuong: tests exist
+  ---
+  duration_ms: 1.6164
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 12 - me-cung-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 163.7956
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: service worker precaches profile.js and bumped its cache version
+ok 13 - me-cung-dong-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 111.8055
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: game.js routes progress through the active player and has the shared hooks
+ok 14 - me-cung-dong-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 290.8704
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: style.css has focus-visible and reduced-motion rules
+ok 15 - me-cung-dong-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 64.8586
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho: tests exist
+ok 16 - me-cung-dong-ho: tests exist
+  ---
+  duration_ms: 0.9422
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 17 - thap-dong-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 2.5382
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: service worker precaches profile.js and bumped its cache version
+ok 18 - thap-dong-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 109.0307
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: game.js routes progress through the active player and has the shared hooks
+ok 19 - thap-dong-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 331.6244
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: style.css has focus-visible and reduced-motion rules
+ok 20 - thap-dong-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 62.6296
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho: tests exist
+ok 21 - thap-dong-ho: tests exist
+  ---
+  duration_ms: 2.6259
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 22 - xe-tang-thoi-gian: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 80.2941
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: service worker precaches profile.js and bumped its cache version
+ok 23 - xe-tang-thoi-gian: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 68.2959
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: game.js routes progress through the active player and has the shared hooks
+ok 24 - xe-tang-thoi-gian: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 3.8201
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: style.css has focus-visible and reduced-motion rules
+ok 25 - xe-tang-thoi-gian: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 1.5294
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian: tests exist
+ok 26 - xe-tang-thoi-gian: tests exist
+  ---
+  duration_ms: 0.7655
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+ok 27 - cuoi-ho: index.html has CSP, referrer, script order, shared screens, no inline handlers
+  ---
+  duration_ms: 106.4847
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: service worker precaches profile.js and bumped its cache version
+ok 28 - cuoi-ho: service worker precaches profile.js and bumped its cache version
+  ---
+  duration_ms: 62.1856
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: game.js routes progress through the active player and has the shared hooks
+ok 29 - cuoi-ho: game.js routes progress through the active player and has the shared hooks
+  ---
+  duration_ms: 170.184
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: style.css has focus-visible and reduced-motion rules
+ok 30 - cuoi-ho: style.css has focus-visible and reduced-motion rules
+  ---
+  duration_ms: 28.7002
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: tests exist
+ok 31 - cuoi-ho: tests exist
+  ---
+  duration_ms: 0.9072
+  type: 'test'
+  ...
+# Subtest: hub: CSP, no inline handlers, profile.js + hub.js loaded
+ok 32 - hub: CSP, no inline handlers, profile.js + hub.js loaded
+  ---
+  duration_ms: 85.2541
+  type: 'test'
+  ...
+# Subtest: math-ninja [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 33 - math-ninja [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 7.638
+  type: 'test'
+  ...
+# Subtest: cuu-chuong [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 34 - cuu-chuong [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 5.3691
+  type: 'test'
+  ...
+# Subtest: me-cung-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 35 - me-cung-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 6.2607
+  type: 'test'
+  ...
+# Subtest: thap-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 36 - thap-dong-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 6.5888
+  type: 'test'
+  ...
+# Subtest: xe-tang-thoi-gian [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 37 - xe-tang-thoi-gian [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 6.5742
+  type: 'test'
+  ...
+# Subtest: cuoi-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+ok 38 - cuoi-ho [canon]: report tiles, mastery badge, toggles, gate, entry points, welcome
+  ---
+  duration_ms: 7.1583
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: reading helpers
+ok 39 - cuoi-ho: reading helpers
+  ---
+  duration_ms: 6.0806
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l1 (Giờ đúng)
+ok 40 - cuoi-ho: generator invariants l1 (Giờ đúng)
+  ---
+  duration_ms: 63.7208
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l2 (Giờ rưỡi)
+ok 41 - cuoi-ho: generator invariants l2 (Giờ rưỡi)
+  ---
+  duration_ms: 72.7616
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l3 (Giờ 15 phút)
+ok 42 - cuoi-ho: generator invariants l3 (Giờ 15 phút)
+  ---
+  duration_ms: 70.3204
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l4 (Đếm từng 5 phút)
+ok 43 - cuoi-ho: generator invariants l4 (Đếm từng 5 phút)
+  ---
+  duration_ms: 109.5212
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l5 (Giờ kém)
+ok 44 - cuoi-ho: generator invariants l5 (Giờ kém)
+  ---
+  duration_ms: 89.1066
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l6 (Chính xác đến phút)
+ok 45 - cuoi-ho: generator invariants l6 (Chính xác đến phút)
+  ---
+  duration_ms: 163.2822
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l7 (Một ngày 24 giờ)
+ok 46 - cuoi-ho: generator invariants l7 (Một ngày 24 giờ)
+  ---
+  duration_ms: 168.7654
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l8 (Tính thời gian)
+ok 47 - cuoi-ho: generator invariants l8 (Tính thời gian)
+  ---
+  duration_ms: 174.6193
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: generator invariants l9 (Siêu Hổ)
+ok 48 - cuoi-ho: generator invariants l9 (Siêu Hổ)
+  ---
+  duration_ms: 184.4707
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 never says "số 0" / "0 phút"; clock-option pairs differ by ≥ 5 minutes
+ok 49 - cuoi-ho: L6 never says "số 0" / "0 phút"; clock-option pairs differ by ≥ 5 minutes
+  ---
+  duration_ms: 241.3799
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 never offers an impossible minute value (> 59 phút)
+ok 50 - cuoi-ho: L6 never offers an impossible minute value (> 59 phút)
+  ---
+  duration_ms: 350.0963
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 giờ tối, 12 giờ sáng/chiều)
+ok 51 - cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 giờ tối, 12 giờ sáng/chiều)
+  ---
+  duration_ms: 175.6544
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: không màn nào đưa ra số phút không có trên đồng hồ (> 59 phút)
+ok 52 - cuoi-ho: không màn nào đưa ra số phút không có trên đồng hồ (> 59 phút)
+  ---
+  duration_ms: 511.9899
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L6 (đọc đồng hồ, lựa chọn chữ) không có đáp án nhiễu lệch 1–4 phút tuỳ tiện
+ok 53 - cuoi-ho: L6 (đọc đồng hồ, lựa chọn chữ) không có đáp án nhiễu lệch 1–4 phút tuỳ tiện
+  ---
+  duration_ms: 213.5062
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: L2/L3 explanation names the shown answer; L8 explains clock positions as numbers
+ok 54 - cuoi-ho: L2/L3 explanation names the shown answer; L8 explains clock positions as numbers
+  ---
+  duration_ms: 515.0196
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: distractor sets vary between draws (uniq shuffles candidates)
+ok 55 - cuoi-ho: distractor sets vary between draws (uniq shuffles candidates)
+  ---
+  duration_ms: 1321.1584
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: fresh() avoids repeating recent questions
+ok 56 - cuoi-ho: fresh() avoids repeating recent questions
+  ---
+  duration_ms: 443.6632
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: level / lesson / quiz definitions are well-formed
+ok 57 - cuoi-ho: level / lesson / quiz definitions are well-formed
+  ---
+  duration_ms: 50.561
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: clockSvg / visualHtml / optionHtml
+ok 58 - cuoi-ho: clockSvg / visualHtml / optionHtml
+  ---
+  duration_ms: 11.4534
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: clockSvg draws the numerals last with a halo, and both hands stay visible
+ok 59 - cuoi-ho: clockSvg draws the numerals last with a halo, and both hands stay visible
+  ---
+  duration_ms: 4.3032
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: math / 24h-strip visuals render and escape
+ok 60 - cuoi-ho: math / 24h-strip visuals render and escape
+  ---
+  duration_ms: 0.771
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: lessons explain the "why" of the hour hand and of the 24-hour day
+ok 61 - cuoi-ho: lessons explain the "why" of the hour hand and of the 24-hour day
+  ---
+  duration_ms: 1.0994
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: only L8 word problems get extra seconds, and mkQ carries extraTime
+ok 62 - cuoi-ho: only L8 word problems get extra seconds, and mkQ carries extraTime
+  ---
+  duration_ms: 376.0604
+  type: 'test'
+  ...
+# Subtest: cuoi-ho: uniq / mkQ / T / C
+ok 63 - cuoi-ho: uniq / mkQ / T / C
+  ---
+  duration_ms: 6.0788
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: legacy top-level progress migrates to players.p1 and is sanitized
+ok 64 - cuoi-ho Store: legacy top-level progress migrates to players.p1 and is sanitized
+  ---
+  duration_ms: 53.2905
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: garbage / hostile storage never throws and yields a blank bucket
+ok 65 - cuoi-ho Store: garbage / hostile storage never throws and yields a blank bucket
+  ---
+  duration_ms: 250.1014
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: per-player buckets, accessors follow the active player
+ok 66 - cuoi-ho Store: per-player buckets, accessors follow the active player
+  ---
+  duration_ms: 104.8074
+  type: 'test'
+  ...
+# Subtest: cuoi-ho Store: noteMissed / noteOk / reviewPool / addStats
+ok 67 - cuoi-ho Store: noteMissed / noteOk / reviewPool / addStats
+  ---
+  duration_ms: 84.0415
+  type: 'test'
+  ...
+# Subtest: cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván thường vẫn mất tim)
+ok 68 - cuoi-ho tập luyện: nhãn "không mất tim" đúng sự thật (ván thường vẫn mất tim)
+  ---
+  duration_ms: 105.1057
+  type: 'test'
+  ...
+# Subtest: cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh
+ok 69 - cuoi-ho drawRingMark: chỉ vòng bé chọn SAI mới bị đóng dấu ✕ đỏ, vòng chọn đúng có dấu ✓ xanh
+  ---
+  duration_ms: 5.7598
+  type: 'test'
+  ...
+# Subtest: cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; ⏸/💡 khóa khi bảng che ván chơi
+ok 70 - cuoi-ho HUD: thẻ câu hỏi là nút bấm được bằng bàn phím; ⏸/💡 khóa khi bảng che ván chơi
+  ---
+  duration_ms: 5.4842
+  type: 'test'
+  ...
+# Subtest: cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"
+not ok 71 - cuoi-ho style.css: điện thoại nằm ngang vẫn thấy mẹo "Chạm để chạy tiếp"
+  ---
+  duration_ms: 3.6272
+  type: 'test'
+  location: 'D:\\Projects\\3hoa\\tests\\cuoi-ho.test.js:578:1'
+  failureType: 'testCodeFailure'
+  error: 'không ẩn hẳn mẹo ở 480px'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (D:\Projects\3hoa\tests\cuoi-ho.test.js:583:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: mỗi bảng nhân/chia sinh câu hỏi hợp lệ (8 bảng × 3 phép × 500 câu)
+ok 72 - mỗi bảng nhân/chia sinh câu hỏi hợp lệ (8 bảng × 3 phép × 500 câu)
+  ---
+  duration_ms: 431.6494
+  type: 'test'
+  ...
+# Subtest: các màn thử thách sinh câu hỏi hợp lệ (7 màn × 500 câu)
+ok 73 - các màn thử thách sinh câu hỏi hợp lệ (7 màn × 500 câu)
+  ---
+  duration_ms: 195.1318
+  type: 'test'
+  ...
+# Subtest: c5 luôn là tìm thừa số, c6 luôn là nhân chia số lớn, c7 trộn nhiều kiểu
+ok 74 - c5 luôn là tìm thừa số, c6 luôn là nhân chia số lớn, c7 trộn nhiều kiểu
+  ---
+  duration_ms: 43.6068
+  type: 'test'
+  ...
+# Subtest: không hỏi lại ngay câu vừa hỏi
+ok 75 - không hỏi lại ngay câu vừa hỏi
+  ---
+  duration_ms: 8.5598
+  type: 'test'
+  ...
+# Subtest: lời đọc tiếng Việt tự nhiên
+ok 76 - lời đọc tiếng Việt tự nhiên
+  ---
+  duration_ms: 1.3321
+  type: 'test'
+  ...
+# Subtest: bảng cửu chương để xem có đủ 10 dòng, nhân và chia khớp nhau
+ok 77 - bảng cửu chương để xem có đủ 10 dòng, nhân và chia khớp nhau
+  ---
+  duration_ms: 2.3573
+  type: 'test'
+  ...
+# Subtest: levelById
+ok 78 - levelById
+  ---
+  duration_ms: 1.4417
+  type: 'test'
+  ...
+# Subtest: định nghĩa 15 màn chơi hợp lệ
+ok 79 - định nghĩa 15 màn chơi hợp lệ
+  ---
+  duration_ms: 2.3573
+  type: 'test'
+  ...
+# Subtest: bảng lớp 2 không đảo thừa số, bảng lớp 3 thì có
+ok 80 - bảng lớp 2 không đảo thừa số, bảng lớp 3 thì có
+  ---
+  duration_ms: 101.8554
+  type: 'test'
+  ...
+# Subtest: câu 3 chữ số được cho rơi chậm hơn
+ok 81 - câu 3 chữ số được cho rơi chậm hơn
+  ---
+  duration_ms: 1.6917
+  type: 'test'
+  ...
+# Subtest: fromInfo dựng lại đúng câu đã lưu và từ chối dữ liệu hỏng
+ok 82 - fromInfo dựng lại đúng câu đã lưu và từ chối dữ liệu hỏng
+  ---
+  duration_ms: 20.5952
+  type: 'test'
+  ...
+# Subtest: gợi ý và lời giải thích luôn có, đọc được và không sai phép tính
+ok 83 - gợi ý và lời giải thích luôn có, đọc được và không sai phép tính
+  ---
+  duration_ms: 115.8615
+  type: 'test'
+  ...
+# Subtest: gợi ý bám sát cách dạy ở tiểu học cho từng kiểu câu
+ok 84 - gợi ý bám sát cách dạy ở tiểu học cho từng kiểu câu
+  ---
+  duration_ms: 2.6391
+  type: 'test'
+  ...
+# Subtest: checkEq chỉ chấp nhận phép tính đúng
+ok 85 - checkEq chỉ chấp nhận phép tính đúng
+  ---
+  duration_ms: 0.703
+  type: 'test'
+  ...
+# Subtest: Store: di trú dữ liệu cũ sang bé p1, giữ thiết lập của máy
+ok 86 - Store: di trú dữ liệu cũ sang bé p1, giữ thiết lập của máy
+  ---
+  duration_ms: 193.935
+  type: 'test'
+  ...
+# Subtest: Store: players rỗng mà còn kỷ lục cũ thì vẫn phải di trú (không mất kỷ lục)
+ok 87 - Store: players rỗng mà còn kỷ lục cũ thì vẫn phải di trú (không mất kỷ lục)
+  ---
+  duration_ms: 34.6718
+  type: 'test'
+  ...
+# Subtest: Store: dữ liệu rác không làm hỏng game và không lây nhiễm prototype
+ok 88 - Store: dữ liệu rác không làm hỏng game và không lây nhiễm prototype
+  ---
+  duration_ms: 389.729
+  type: 'test'
+  ...
+# Subtest: Store: câu cần ôn phải dựng lại được, tối đa 60 câu, đúng 2 lần thì xóa
+ok 89 - Store: câu cần ôn phải dựng lại được, tối đa 60 câu, đúng 2 lần thì xóa
+  ---
+  duration_ms: 45.8058
+  type: 'test'
+  ...
+# Subtest: Store: thống kê, kỷ lục chung mọi chế độ và xóa tiến trình
+ok 90 - Store: thống kê, kỷ lục chung mọi chế độ và xóa tiến trình
+  ---
+  duration_ms: 45.0174
+  type: 'test'
+  ...
+# Subtest: Store: mỗi bé một bucket riêng
+ok 91 - Store: mỗi bé một bucket riêng
+  ---
+  duration_ms: 117.2894
+  type: 'test'
+  ...
+# Subtest: Store: thống kê giữ riêng khóa của màn thử thách (c1…c7)
+ok 92 - Store: thống kê giữ riêng khóa của màn thử thách (c1…c7)
+  ---
+  duration_ms: 27.762
+  type: 'test'
+  ...
+# Subtest: Báo cáo: màn thử thách chưa chơi ghi "chưa chơi", không mượn số liệu của bảng
+ok 93 - Báo cáo: màn thử thách chưa chơi ghi "chưa chơi", không mượn số liệu của bảng
+  ---
+  duration_ms: 18.6606
+  type: 'test'
+  ...
+# Subtest: hub: summarize reads legacy and migrated shapes per player
+ok 94 - hub: summarize reads legacy and migrated shapes per player
+  ---
+  duration_ms: 106.9928
+  type: 'test'
+  ...
+# Subtest: hub: garbage storage never throws and reads as "chưa chơi"
+ok 95 - hub: garbage storage never throws and reads as "chưa chơi"
+  ---
+  duration_ms: 26.8254
+  type: 'test'
+  ...
+# Subtest: hub: summarizeAll / aggregate totals and read-only storage
+ok 96 - hub: summarizeAll / aggregate totals and read-only storage
+  ---
+  duration_ms: 7.9272
+  type: 'test'
+  ...
+# Subtest: hub: GAMES table is frozen and consistent
+ok 97 - hub: GAMES table is frozen and consistent
+  ---
+  duration_ms: 4.3542
+  type: 'test'
+  ...
+# Subtest: loader: every content module loads and exposes its global
+ok 98 - loader: every content module loads and exposes its global
+  ---
+  duration_ms: 394.7596
+  type: 'test'
+  ...
+# Subtest: loader: cuoi-ho generators produce exactly one correct option
+ok 99 - loader: cuoi-ho generators produce exactly one correct option
+  ---
+  duration_ms: 301.575
+  type: 'test'
+  ...
+# Subtest: ANSWER_LEVELS / PAIR_LEVELS: ids, thứ tự và các trường bắt buộc
+ok 100 - ANSWER_LEVELS / PAIR_LEVELS: ids, thứ tự và các trường bắt buộc
+  ---
+  duration_ms: 5.8373
+  type: 'test'
+  ...
+# Subtest: mọi bộ sinh: answer đúng phép tính, không âm, trong phạm vi, text khớp
+ok 101 - mọi bộ sinh: answer đúng phép tính, không âm, trong phạm vi, text khớp
+  ---
+  duration_ms: 72.7869
+  type: 'test'
+  ...
+# Subtest: gen20 không còn "20 − 0" hay "a − a" (A28)
+ok 102 - gen20 không còn "20 − 0" hay "a − a" (A28)
+  ---
+  duration_ms: 19.4173
+  type: 'test'
+  ...
+# Subtest: make(a, b, op, max) tính đúng và giữ nguyên tham số
+ok 103 - make(a, b, op, max) tính đúng và giữ nguyên tham số
+  ---
+  duration_ms: 0.4263
+  type: 'test'
+  ...
+# Subtest: distractors(q, k): đủ số lượng, nguyên, không trùng nhau và khác đáp án
+ok 104 - distractors(q, k): đủ số lượng, nguyên, không trùng nhau và khác đáp án
+  ---
+  duration_ms: 1579.5367
+  type: 'test'
+  ...
+# Subtest: distractors mô phỏng lỗi "quên nhớ" (ans − 10) ở màn cộng trừ có nhớ
+ok 105 - distractors mô phỏng lỗi "quên nhớ" (ans − 10) ở màn cộng trừ có nhớ
+  ---
+  duration_ms: 21.4429
+  type: 'test'
+  ...
+# Subtest: bộ sinh Ghép đôi: cặp hợp lệ, hai giá trị nằm trong [lo, hi]
+ok 106 - bộ sinh Ghép đôi: cặp hợp lệ, hai giá trị nằm trong [lo, hi]
+  ---
+  duration_ms: 69.9019
+  type: 'test'
+  ...
+# Subtest: pairWave(q, n): đúng một cặp hợp lệ, giá trị không trùng (trừ chính cặp đôi)
+ok 107 - pairWave(q, n): đúng một cặp hợp lệ, giá trị không trùng (trừ chính cặp đôi)
+  ---
+  duration_ms: 270.5408
+  type: 'test'
+  ...
+# Subtest: pairResultText: không bao giờ ra phép trừ ngược, hai vế luôn bằng nhau (A3)
+ok 108 - pairResultText: không bao giờ ra phép trừ ngược, hai vế luôn bằng nhau (A3)
+  ---
+  duration_ms: 100.5681
+  type: 'test'
+  ...
+# Subtest: pairText: hai dấu ? khi chưa chém, dấu ? đứng trước khi giữ số bé của phép trừ
+ok 109 - pairText: hai dấu ? khi chưa chém, dấu ? đứng trước khi giữ số bé của phép trừ
+  ---
+  duration_ms: 3.1107
+  type: 'test'
+  ...
+# Subtest: isPair: đúng với cả hai thứ tự, sai với cặp khác
+ok 110 - isPair: đúng với cả hai thứ tự, sai với cặp khác
+  ---
+  duration_ms: 1.7886
+  type: 'test'
+  ...
+# Subtest: Sprites.build dựng đủ sprite cho mọi loại quả, bom và tim
+ok 111 - Sprites.build dựng đủ sprite cho mọi loại quả, bom và tim
+  ---
+  duration_ms: 19.9869
+  type: 'test'
+  ...
+# Subtest: Sprites.halfSprite nướng sẵn nửa quả, dùng lại ô và không bao giờ trả sai hình
+ok 112 - Sprites.halfSprite nướng sẵn nửa quả, dùng lại ô và không bao giờ trả sai hình
+  ---
+  duration_ms: 15.552
+  type: 'test'
+  ...
+# Subtest: Store: dữ liệu cũ ở cấp cao nhất chuyển sang players.p1 và được đóng gói lại
+ok 113 - Store: dữ liệu cũ ở cấp cao nhất chuyển sang players.p1 và được đóng gói lại
+  ---
+  duration_ms: 177.8221
+  type: 'test'
+  ...
+# Subtest: Store: players rỗng hoặc chỉ có id hỏng vẫn nhận được dữ liệu cũ (CANON.md §7)
+ok 114 - Store: players rỗng hoặc chỉ có id hỏng vẫn nhận được dữ liệu cũ (CANON.md §7)
+  ---
+  duration_ms: 89.0718
+  type: 'test'
+  ...
+# Subtest: Store: dữ liệu rác hoặc độc hại không ném lỗi và cho bucket trắng
+ok 115 - Store: dữ liệu rác hoặc độc hại không ném lỗi và cho bucket trắng
+  ---
+  duration_ms: 505.3019
+  type: 'test'
+  ...
+# Subtest: Store: mỗi bé một bucket riêng, accessor đi theo bé đang chơi
+ok 116 - Store: mỗi bé một bucket riêng, accessor đi theo bé đang chơi
+  ---
+  duration_ms: 175.1485
+  type: 'test'
+  ...
+# Subtest: Store: kho ôn lại thông minh (noteMissed / noteOk / reviewPool)
+ok 117 - Store: kho ôn lại thông minh (noteMissed / noteOk / reviewPool)
+  ---
+  duration_ms: 141.3195
+  type: 'test'
+  ...
+# Subtest: Store: kho ôn giới hạn 60 mục, bỏ mục cũ nhất
+ok 118 - Store: kho ôn giới hạn 60 mục, bỏ mục cũ nhất
+  ---
+  duration_ms: 77.3458
+  type: 'test'
+  ...
+# Subtest: Store: thống kê cho báo cáo phụ huynh (addStats)
+ok 119 - Store: thống kê cho báo cáo phụ huynh (addStats)
+  ---
+  duration_ms: 32.094
+  type: 'test'
+  ...
+# Subtest: Store: thống kê hỏng khi tải lại được ép về số hợp lệ
+ok 120 - Store: thống kê hỏng khi tải lại được ép về số hợp lệ
+  ---
+  duration_ms: 65.2645
+  type: 'test'
+  ...
+# Subtest: style.css: có khối thu gọn cho điện thoại ≤ 420 px
+ok 121 - style.css: có khối thu gọn cho điện thoại ≤ 420 px
+  ---
+  duration_ms: 4.6496
+  type: 'test'
+  ...
+# Subtest: style.css: nút bị khóa nhìn thấy rõ và vùng chạm liên kết chân trang ≥ 44 px
+ok 122 - style.css: nút bị khóa nhìn thấy rõ và vùng chạm liên kết chân trang ≥ 44 px
+  ---
+  duration_ms: 2.9291
+  type: 'test'
+  ...
+# Subtest: style.css: chữ trong báo cáo đủ tương phản (không dùng cam/xanh nhạt)
+ok 123 - style.css: chữ trong báo cáo đủ tương phản (không dùng cam/xanh nhạt)
+  ---
+  duration_ms: 5.584
+  type: 'test'
+  ...
+# Subtest: README mô tả đúng số nút bật/tắt hiện có trong game.js
+ok 124 - README mô tả đúng số nút bật/tắt hiện có trong game.js
+  ---
+  duration_ms: 7.6103
+  type: 'test'
+  ...
+# Subtest: explain(q): mọi bước đều đúng số học và kết thúc bằng đáp án
+ok 125 - explain(q): mọi bước đều đúng số học và kết thúc bằng đáp án
+  ---
+  duration_ms: 239.9875
+  type: 'test'
+  ...
+# Subtest: explain(q): không dạy mẹo "10 − 10 = 0" ở màn lớp 1
+ok 126 - explain(q): không dạy mẹo "10 − 10 = 0" ở màn lớp 1
+  ---
+  duration_ms: 348.1041
+  type: 'test'
+  ...
+# Subtest: misconception(q, v): gọi đúng tên lỗi quen thuộc, im lặng với số ngẫu nhiên
+ok 127 - misconception(q, v): gọi đúng tên lỗi quen thuộc, im lặng với số ngẫu nhiên
+  ---
+  duration_ms: 118.816
+  type: 'test'
+  ...
+# Subtest: genMix chỉ dùng số tròn khi vào phạm vi 1000
+ok 128 - genMix chỉ dùng số tròn khi vào phạm vi 1000
+  ---
+  duration_ms: 189.9509
+  type: 'test'
+  ...
+# Subtest: màn số lớn bay chậm lại để bé kịp nhẩm (a5, m4 ≤ 0.9)
+ok 129 - màn số lớn bay chậm lại để bé kịp nhẩm (a5, m4 ≤ 0.9)
+  ---
+  duration_ms: 1.0982
+  type: 'test'
+  ...
+# Subtest: index.html: có nút 💡 Gợi ý, hai nút bước tiếp theo và lớp mưa giấy màu
+ok 130 - index.html: có nút 💡 Gợi ý, hai nút bước tiếp theo và lớp mưa giấy màu
+  ---
+  duration_ms: 3.5026
+  type: 'test'
+  ...
+# Subtest: style.css: dải gợi ý xuống dòng được và mưa giấy màu tắt khi giảm chuyển động
+ok 131 - style.css: dải gợi ý xuống dòng được và mưa giấy màu tắt khi giảm chuyển động
+  ---
+  duration_ms: 5.0611
+  type: 'test'
+  ...
+# Subtest: style.css: chữ trắng trên nút đạt 4.5:1 ở MỌI điểm của dải màu (C10)
+ok 132 - style.css: chữ trắng trên nút đạt 4.5:1 ở MỌI điểm của dải màu (C10)
+  ---
+  duration_ms: 9.3488
+  type: 'test'
+  ...
+# Subtest: style.css: chữ trên bảng kết quả và thẻ màn đạt 4.5:1 (C4/C9)
+ok 133 - style.css: chữ trên bảng kết quả và thẻ màn đạt 4.5:1 (C4/C9)
+  ---
+  duration_ms: 8.2384
+  type: 'test'
+  ...
+# Subtest: style.css: chữ trên bảng vàng, chip thời gian, chân trang và dải gợi ý đạt 4.5:1
+ok 134 - style.css: chữ trên bảng vàng, chip thời gian, chân trang và dải gợi ý đạt 4.5:1
+  ---
+  duration_ms: 10.8313
+  type: 'test'
+  ...
+# Subtest: style.css: mọi vùng chạm (nút, chip, thẻ) đều ≥ 44 px ở mọi khổ màn hình
+ok 135 - style.css: mọi vùng chạm (nút, chip, thẻ) đều ≥ 44 px ở mọi khổ màn hình
+  ---
+  duration_ms: 10.3025
+  type: 'test'
+  ...
+# Subtest: style.css: mưa giấy màu rơi phía sau bảng kết quả
+ok 136 - style.css: mưa giấy màu rơi phía sau bảng kết quả
+  ---
+  duration_ms: 3.9913
+  type: 'test'
+  ...
+# Subtest: game.js: câu dùng gợi ý chỉ 50 điểm và không tăng combo (C2)
+ok 137 - game.js: câu dùng gợi ý chỉ 50 điểm và không tăng combo (C2)
+  ---
+  duration_ms: 7.07
+  type: 'test'
+  ...
+# Subtest: me-cung: fmtText / fmtDigital / periodOf / addMin đúng với mọi (h, m)
+ok 138 - me-cung: fmtText / fmtDigital / periodOf / addMin đúng với mọi (h, m)
+  ---
+  duration_ms: 77.1493
+  type: 'test'
+  ...
+# Subtest: me-cung: makeRound × 500 mỗi màn – đúng một đồng hồ đúng, khóa duy nhất, đúng tập phút
+ok 139 - me-cung: makeRound × 500 mỗi màn – đúng một đồng hồ đúng, khóa duy nhất, đúng tập phút
+  ---
+  duration_ms: 601.3131
+  type: 'test'
+  ...
+# Subtest: me-cung: makeRound với exclude không lặp mục tiêu; 500 màn mô phỏng không trùng mục tiêu
+ok 140 - me-cung: makeRound với exclude không lặp mục tiêu; 500 màn mô phỏng không trùng mục tiêu
+  ---
+  duration_ms: 3597.9618
+  type: 'test'
+  ...
+# Subtest: me-cung: makeRound(level, forced) trả về đúng mục tiêu ôn lại với review = true
+ok 141 - me-cung: makeRound(level, forced) trả về đúng mục tiêu ôn lại với review = true
+  ---
+  duration_ms: 604.8958
+  type: 'test'
+  ...
+# Subtest: me-cung: màn 8 – 3 lượt đầu không cộng "nhớ", lượt sau chỉ nhớ với số tròn 15 phút (C4)
+ok 142 - me-cung: màn 8 – 3 lượt đầu không cộng "nhớ", lượt sau chỉ nhớ với số tròn 15 phút (C4)
+  ---
+  duration_ms: 688.9137
+  type: 'test'
+  ...
+# Subtest: me-cung: explainRead / describeItem không rỗng, nhắc "kém" đúng chỗ
+ok 143 - me-cung: explainRead / describeItem không rỗng, nhắc "kém" đúng chỗ
+  ---
+  duration_ms: 5.133
+  type: 'test'
+  ...
+# Subtest: me-cung: mọi câu hỏi trong ngân hàng × 500 – ≥ 4 đáp án, duy nhất, có giải thích, giọng đọc sạch
+ok 144 - me-cung: mọi câu hỏi trong ngân hàng × 500 – ≥ 4 đáp án, duy nhất, có giải thích, giọng đọc sạch
+  ---
+  duration_ms: 2259.3685
+  type: 'test'
+  ...
+# Subtest: me-cung: l4 – buổi trong câu hỏi khớp periodOf (không "10 giờ tối" cho 22 giờ)
+ok 145 - me-cung: l4 – buổi trong câu hỏi khớp periodOf (không "10 giờ tối" cho 22 giờ)
+  ---
+  duration_ms: 82.6394
+  type: 'test'
+  ...
+# Subtest: me-cung: qRead / qPickClock / reviewQuestion mang khóa ôn lại; buildQuiz × 2000 mỗi màn
+ok 146 - me-cung: qRead / qPickClock / reviewQuestion mang khóa ôn lại; buildQuiz × 2000 mỗi màn
+  ---
+  duration_ms: 8472.8054
+  type: 'test'
+  ...
+# Subtest: me-cung: buildQuiz × 2000 mỗi màn – luôn có ít nhất một câu kèm hình đồng hồ (C5)
+ok 147 - me-cung: buildQuiz × 2000 mỗi màn – luôn có ít nhất một câu kèm hình đồng hồ (C5)
+  ---
+  duration_ms: 3987.7981
+  type: 'test'
+  ...
+# Subtest: me-cung: mistakeQuestion cho từng kiểu đồng hồ – có cả đồng hồ đã chọn lẫn mục tiêu, đáp án là đồng hồ đã chọn
+ok 148 - me-cung: mistakeQuestion cho từng kiểu đồng hồ – có cả đồng hồ đã chọn lẫn mục tiêu, đáp án là đồng hồ đã chọn
+  ---
+  duration_ms: 320.6523
+  type: 'test'
+  ...
+# Subtest: me-cung: màn 8 luôn hiện đồng hồ kim của mốc bắt đầu trên HUD (C17)
+ok 149 - me-cung: màn 8 luôn hiện đồng hồ kim của mốc bắt đầu trên HUD (C17)
+  ---
+  duration_ms: 30.722
+  type: 'test'
+  ...
+# Subtest: me-cung: svgClock / svgDigital – vòng số phút và ghi chú giờ/phút (C22)
+ok 150 - me-cung: svgClock / svgDigital – vòng số phút và ghi chú giờ/phút (C22)
+  ---
+  duration_ms: 2.986
+  type: 'test'
+  ...
+# Subtest: me-cung: LEVELS / LESSONS hợp lệ
+ok 151 - me-cung: LEVELS / LESSONS hợp lệ
+  ---
+  duration_ms: 1.0387
+  type: 'test'
+  ...
+# Subtest: me-cung: mọi mê cung × 2 hướng – đi tới được mọi hạt, đủ chỗ đặt đồng hồ
+ok 152 - me-cung: mọi mê cung × 2 hướng – đi tới được mọi hạt, đủ chỗ đặt đồng hồ
+  ---
+  duration_ms: 4.0189
+  type: 'test'
+  ...
+# Subtest: me-cung Store: dữ liệu cũ (unlocked/records ở mức trên) di trú vào players.p1 và được làm sạch
+ok 153 - me-cung Store: dữ liệu cũ (unlocked/records ở mức trên) di trú vào players.p1 và được làm sạch
+  ---
+  duration_ms: 107.3128
+  type: 'test'
+  ...
+# Subtest: me-cung Store: players rỗng hoặc chỉ có id sai vẫn di trú dữ liệu cũ vào p1
+ok 154 - me-cung Store: players rỗng hoặc chỉ có id sai vẫn di trú dữ liệu cũ vào p1
+  ---
+  duration_ms: 22.9553
+  type: 'test'
+  ...
+# Subtest: me-cung Store: dữ liệu hỏng / độc hại không làm sập, __proto__ bị bỏ
+ok 155 - me-cung Store: dữ liệu hỏng / độc hại không làm sập, __proto__ bị bỏ
+  ---
+  duration_ms: 96.1326
+  type: 'test'
+  ...
+# Subtest: me-cung Store: noteMissed / noteOk / reviewPool / addStats / resetActive và tách biệt theo người chơi
+ok 156 - me-cung Store: noteMissed / noteOk / reviewPool / addStats / resetActive và tách biệt theo người chơi
+  ---
+  duration_ms: 73.5594
+  type: 'test'
+  ...
+# Subtest: profile: default player is created and persisted
+ok 157 - profile: default player is created and persisted
+  ---
+  duration_ms: 7.1466
+  type: 'test'
+  ...
+# Subtest: profile: add / rename / avatar / switch / remove with validation
+ok 158 - profile: add / rename / avatar / switch / remove with validation
+  ---
+  duration_ms: 7.8795
+  type: 'test'
+  ...
+# Subtest: profile: corrupt / hostile storage is sanitized
+ok 159 - profile: corrupt / hostile storage is sanitized
+  ---
+  duration_ms: 4.4746
+  type: 'test'
+  ...
+# Subtest: profile: cap at 8 players and cross-tab storage event re-reads
+ok 160 - profile: cap at 8 players and cross-tab storage event re-reads
+  ---
+  duration_ms: 6.5844
+  type: 'test'
+  ...
+# Subtest: clock: Vietnamese reading for every (h, m) in plain / kém / 24h styles
+ok 161 - clock: Vietnamese reading for every (h, m) in plain / kém / 24h styles
+  ---
+  duration_ms: 92.8706
+  type: 'test'
+  ...
+# Subtest: clock: genFor(n) respects each level's minutes and style (1000 samples per level)
+ok 162 - clock: genFor(n) respects each level's minutes and style (1000 samples per level)
+  ---
+  duration_ms: 50.307
+  type: 'test'
+  ...
+# Subtest: clock: near(t) yields ≥ 3 unique, valid, different distractor clocks (500 per level)
+ok 163 - clock: near(t) yields ≥ 3 unique, valid, different distractor clocks (500 per level)
+  ---
+  duration_ms: 197.7911
+  type: 'test'
+  ...
+# Subtest: clock: near(t) puts ±1/±2 minute neighbours last so level 6 gets coarse distractors first (C1)
+ok 164 - clock: near(t) puts ±1/±2 minute neighbours last so level 6 gets coarse distractors first (C1)
+  ---
+  duration_ms: 249.0776
+  type: 'test'
+  ...
+# Subtest: clock: clockQuestion(n) has exactly one correct option among 3 unique texts (500 per level)
+ok 165 - clock: clockQuestion(n) has exactly one correct option among 3 unique texts (500 per level)
+  ---
+  duration_ms: 403.1124
+  type: 'test'
+  ...
+# Subtest: clock: quizFor(n, mistakes) — 3 questions, missed clocks come back, no duplicate options (300 per level)
+ok 166 - clock: quizFor(n, mistakes) — 3 questions, missed clocks come back, no duplicate options (300 per level)
+  ---
+  duration_ms: 272.5265
+  type: 'test'
+  ...
+# Subtest: clock: quizFor(8) capstone asks a hard-level concept, or the weakest level when known (C10)
+ok 167 - clock: quizFor(8) capstone asks a hard-level concept, or the weakest level when known (C10)
+  ---
+  duration_ms: 311.8899
+  type: 'test'
+  ...
+# Subtest: clock: lesson html colours the two hand names so they match the legend under the clock (C12)
+ok 168 - clock: lesson html colours the two hand names so they match the legend under the clock (C12)
+  ---
+  duration_ms: 2.0975
+  type: 'test'
+  ...
+# Subtest: clock: CONCEPT / LESSONS / LEVELS are well-formed
+ok 169 - clock: CONCEPT / LESSONS / LEVELS are well-formed
+  ---
+  duration_ms: 7.021
+  type: 'test'
+  ...
+# Subtest: clock: SVG — badge/digital drawn before the hands, kém ring labels anchored outside, aria-label
+ok 170 - clock: SVG — badge/digital drawn before the hands, kém ring labels anchored outside, aria-label
+  ---
+  duration_ms: 25.4373
+  type: 'test'
+  ...
+# Subtest: store: legacy top-level progress migrates into players.p1 and is sanitized
+ok 171 - store: legacy top-level progress migrates into players.p1 and is sanitized
+  ---
+  duration_ms: 153.1335
+  type: 'test'
+  ...
+# Subtest: store: hostile / junk storage never breaks boot or pollutes prototypes
+ok 172 - store: hostile / junk storage never breaks boot or pollutes prototypes
+  ---
+  duration_ms: 133.6874
+  type: 'test'
+  ...
+# Subtest: store: missed / ok / reviewPool / addStats / resetActive and per-player isolation
+ok 173 - store: missed / ok / reviewPool / addStats / resetActive and per-player isolation
+  ---
+  duration_ms: 45.8793
+  type: 'test'
+  ...
+# Subtest: store: legacy progress still migrates when the saved object already carries a players map that yields nothing
+ok 174 - store: legacy progress still migrates when the saved object already carries a players map that yields nothing
+  ---
+  duration_ms: 61.8375
+  type: 'test'
+  ...
+# Subtest: gameplay: newLabel keeps a board readable — ≤ 1 pair within 2 minutes, Siêu Tháp always mixes sub-levels (C1)
+ok 175 - gameplay: newLabel keeps a board readable — ≤ 1 pair within 2 minutes, Siêu Tháp always mixes sub-levels (C1)
+  ---
+  duration_ms: 560.191
+  type: 'test'
+  ...
+# Subtest: clock: ring labels stay readable on screen — rendered font size ≥ 11 px at every call site
+ok 176 - clock: ring labels stay readable on screen — rendered font size ≥ 11 px at every call site
+  ---
+  duration_ms: 6.3267
+  type: 'test'
+  ...
+# Subtest: gameplay: stars scale with the length of the round (C5)
+ok 177 - gameplay: stars scale with the length of the round (C5)
+  ---
+  duration_ms: 11.4839
+  type: 'test'
+  ...
+# Subtest: gameplay: 🐢 chơi chậm sticks to the level across retries and clears on success (C3)
+ok 178 - gameplay: 🐢 chơi chậm sticks to the level across retries and clears on success (C3)
+  ---
+  duration_ms: 138.1069
+  type: 'test'
+  ...
+# Subtest: gameplay: an on-demand hint never scores more than the automatic one
+ok 179 - gameplay: an on-demand hint never scores more than the automatic one
+  ---
+  duration_ms: 5.1662
+  type: 'test'
+  ...
+# Subtest: audio: Voice.sentences splits long narration per sentence without lookbehind (Safari < 16.4 safe)
+ok 180 - audio: Voice.sentences splits long narration per sentence without lookbehind (Safari < 16.4 safe)
+  ---
+  duration_ms: 8.9706
+  type: 'test'
+  ...
+# Subtest: lesson: hand names carry their own hand colour, different from ordinary bold text (C12)
+ok 181 - lesson: hand names carry their own hand colour, different from ordinary bold text (C12)
+  ---
+  duration_ms: 40.177
+  type: 'test'
+  ...
+# Subtest: hud: the chip row never wraps on tablets, so the hint chip stays put (C14)
+ok 182 - hud: the chip row never wraps on tablets, so the hint chip stays put (C14)
+  ---
+  duration_ms: 14.3099
+  type: 'test'
+  ...
+# Subtest: readTime: đủ 12×60 thời điểm theo 3 cách đọc plain / ruoi / kem
+ok 183 - readTime: đủ 12×60 thời điểm theo 3 cách đọc plain / ruoi / kem
+  ---
+  duration_ms: 10.9543
+  type: 'test'
+  ...
+# Subtest: readSession / session: ranh giới các buổi theo sách Toán 2
+ok 184 - readSession / session: ranh giới các buổi theo sách Toán 2
+  ---
+  duration_ms: 0.651
+  type: 'test'
+  ...
+# Subtest: addMinutes / readDuration / digital / digitalOpt
+ok 185 - addMinutes / readDuration / digital / digitalOpt
+  ---
+  duration_ms: 2.482
+  type: 'test'
+  ...
+# Subtest: hourHandText / minuteHandText / explainRead: phút 1–4 nói "số 12", không "số 0"
+ok 186 - hourHandText / minuteHandText / explainRead: phút 1–4 nói "số 12", không "số 0"
+  ---
+  duration_ms: 1.3705
+  type: 'test'
+  ...
+# Subtest: readQ: 600 câu, đáp án khớp đồng hồ đề bài
+ok 187 - readQ: 600 câu, đáp án khớp đồng hồ đề bài
+  ---
+  duration_ms: 273.2827
+  type: 'test'
+  ...
+# Subtest: matchQ: 600 câu, đồng hồ đúng khớp nhãn, giọng đọc không "số số"
+ok 188 - matchQ: 600 câu, đồng hồ đúng khớp nhãn, giọng đọc không "số số"
+  ---
+  duration_ms: 225.629
+  type: 'test'
+  ...
+# Subtest: fiveQ: 600 câu, số × 5
+ok 189 - fiveQ: 600 câu, số × 5
+  ---
+  duration_ms: 182.2124
+  type: 'test'
+  ...
+# Subtest: h24Q: 600 câu, 4 biến thể đúng quy ước 24 giờ
+ok 190 - h24Q: 600 câu, 4 biến thể đúng quy ước 24 giờ
+  ---
+  duration_ms: 181.6881
+  type: 'test'
+  ...
+# Subtest: kemQ: 600 câu, "giờ kém" nhất quán với giờ thường
+ok 191 - kemQ: 600 câu, "giờ kém" nhất quán với giờ thường
+  ---
+  duration_ms: 246.9516
+  type: 'test'
+  ...
+# Subtest: exactQ: 600 câu, từng phút & điện tử
+ok 192 - exactQ: 600 câu, từng phút & điện tử
+  ---
+  duration_ms: 302.409
+  type: 'test'
+  ...
+# Subtest: elapsedQ: 600 câu, giờ kết thúc = bắt đầu + khoảng
+ok 193 - elapsedQ: 600 câu, giờ kết thúc = bắt đầu + khoảng
+  ---
+  duration_ms: 197.4394
+  type: 'test'
+  ...
+# Subtest: mọi màn: 600 câu / màn qua gen() (C.fresh) thỏa bất biến và ràng buộc kiến thức
+ok 194 - mọi màn: 600 câu / màn qua gen() (C.fresh) thỏa bất biến và ràng buộc kiến thức
+  ---
+  duration_ms: 2745.6062
+  type: 'test'
+  ...
+# Subtest: fromInfo: tạo lại đúng câu (cùng dạng, cùng đề, cùng đáp án) với đáp án nhiễu hợp lệ
+ok 195 - fromInfo: tạo lại đúng câu (cùng dạng, cùng đề, cùng đáp án) với đáp án nhiễu hợp lệ
+  ---
+  duration_ms: 1345.1668
+  type: 'test'
+  ...
+# Subtest: định nghĩa màn, bài học, hỏi đáp hợp lệ
+ok 196 - định nghĩa màn, bài học, hỏi đáp hợp lệ
+  ---
+  duration_ms: 2.659
+  type: 'test'
+  ...
+# Subtest: ngân hàng hỏi đáp màn 9 chỉ gồm câu của các màn 4–8 (không hỏi lại kiến thức màn 1–3)
+ok 197 - ngân hàng hỏi đáp màn 9 chỉ gồm câu của các màn 4–8 (không hỏi lại kiến thức màn 1–3)
+  ---
+  duration_ms: 0.8512
+  type: 'test'
+  ...
+# Subtest: vạch phút được nhấn mạnh đúng ở các dạng bài đếm từng phút
+ok 198 - vạch phút được nhấn mạnh đúng ở các dạng bài đếm từng phút
+  ---
+  duration_ms: 66.4927
+  type: 'test'
+  ...
+# Subtest: ví dụ bài học: nhãn nút ngắn gọn, nhãn dưới đồng hồ dạy sự tương đương, giờ 24 hợp lệ
+ok 199 - ví dụ bài học: nhãn nút ngắn gọn, nhãn dưới đồng hồ dạy sự tương đương, giờ 24 hợp lệ
+  ---
+  duration_ms: 1.6952
+  type: 'test'
+  ...
+# Subtest: Store: dữ liệu cũ (progress ở cấp cao nhất) di trú vào players.p1, ép kiểu, lưu lại
+ok 200 - Store: dữ liệu cũ (progress ở cấp cao nhất) di trú vào players.p1, ép kiểu, lưu lại
+  ---
+  duration_ms: 118.8234
+  type: 'test'
+  ...
+# Subtest: Store: dữ liệu hỏng / thù địch được làm sạch, quá lớn thì đặt lại
+ok 201 - Store: dữ liệu hỏng / thù địch được làm sạch, quá lớn thì đặt lại
+  ---
+  duration_ms: 80.4319
+  type: 'test'
+  ...
+# Subtest: Store: kho ôn lại (noteMissed/noteOk/reviewPool), thống kê, xóa tiến trình, tách theo người chơi
+ok 202 - Store: kho ôn lại (noteMissed/noteOk/reviewPool), thống kê, xóa tiến trình, tách theo người chơi
+  ---
+  duration_ms: 105.5356
+  type: 'test'
+  ...
+# Subtest: nút 💡 Gợi ý: đánh dấu đáp án đúng, robot đi chậm lại, chỉ dùng một lần mỗi câu
+ok 203 - nút 💡 Gợi ý: đánh dấu đáp án đúng, robot đi chậm lại, chỉ dùng một lần mỗi câu
+  ---
+  duration_ms: 14.7286
+  type: 'test'
+  ...
+# Subtest: thời gian rơi theo dạng bài: câu dài được nhiều thời gian hơn, nhịp tăng tốc không quá 25%
+ok 204 - thời gian rơi theo dạng bài: câu dài được nhiều thời gian hơn, nhịp tăng tốc không quá 25%
+  ---
+  duration_ms: 11.05
+  type: 'test'
+  ...
+# Subtest: sao tính theo số CÂU sai (không theo số lần bắn trượt) và thưởng tim sau 5 câu đúng liền
+ok 205 - sao tính theo số CÂU sai (không theo số lần bắn trượt) và thưởng tim sau 5 câu đúng liền
+  ---
+  duration_ms: 12.4664
+  type: 'test'
+  ...
+# Subtest: bảng đồng hồ trên màn hẹp: xếp 2 cột thay vì thu nhỏ dưới 100 px
+ok 206 - bảng đồng hồ trên màn hẹp: xếp 2 cột thay vì thu nhỏ dưới 100 px
+  ---
+  duration_ms: 13.1656
+  type: 'test'
+  ...
+# Subtest: chip "cần ôn lại": bỏ phần "Bắn đồng hồ chỉ …" ở đầu câu hỏi
+ok 207 - chip "cần ôn lại": bỏ phần "Bắn đồng hồ chỉ …" ở đầu câu hỏi
+  ---
+  duration_ms: 13.0044
+  type: 'test'
+  ...
+# Subtest: hỏi đáp màn 9: 2 câu luyện tập + 2 câu khái niệm
+ok 208 - hỏi đáp màn 9: 2 câu luyện tập + 2 câu khái niệm
+  ---
+  duration_ms: 43.3342
+  type: 'test'
+  ...
+# Subtest: speakable: đọc "14:21" thành "14 giờ 21 phút", không câu nào còn chuỗi đồng hồ điện tử thô
+ok 209 - speakable: đọc "14:21" thành "14 giờ 21 phút", không câu nào còn chuỗi đồng hồ điện tử thô
+  ---
+  duration_ms: 336.7852
+  type: 'test'
+  ...
+# Subtest: lời giải thích: mọi Voice.say có q.explain đều đi qua speakable, chip vẫn giữ nguyên "hh:mm"
+ok 210 - lời giải thích: mọi Voice.say có q.explain đều đi qua speakable, chip vẫn giữ nguyên "hh:mm"
+  ---
+  duration_ms: 21.1607
+  type: 'test'
+  ...
+# Subtest: chữ nổi trên canvas luôn ngắn (đọc được trên điện thoại) và có sàn cỡ chữ 14px
+ok 211 - chữ nổi trên canvas luôn ngắn (đọc được trên điện thoại) và có sàn cỡ chữ 14px
+  ---
+  duration_ms: 184.5726
+  type: 'test'
+  ...
+# Subtest: tương phản chữ/nền (WCAG AA): nút chính ≥ 3:1, chip và chữ nhỏ ≥ 4.5:1
+ok 212 - tương phản chữ/nền (WCAG AA): nút chính ≥ 3:1, chip và chữ nhỏ ≥ 4.5:1
+  ---
+  duration_ms: 6.3185
+  type: 'test'
+  ...
+# Subtest: bảng kết quả: danh sách "cần ôn lại" bị giới hạn để các nút không bị đẩy ra ngoài màn hình
+ok 213 - bảng kết quả: danh sách "cần ôn lại" bị giới hạn để các nút không bị đẩy ra ngoài màn hình
+  ---
+  duration_ms: 1.6141
+  type: 'test'
+  ...
+# Subtest: mặt đồng hồ của thẻ câu hỏi to hơn trên màn rộng (CSS mới là nơi quyết định kích thước)
+ok 214 - mặt đồng hồ của thẻ câu hỏi to hơn trên màn rộng (CSS mới là nơi quyết định kích thước)
+  ---
+  duration_ms: 0.5329
+  type: 'test'
+  ...
+# Subtest: vùng chạm ≥ 44 px (SPEC §4): liên kết chân trang, nút bật/tắt, chip ôn lại
+ok 215 - vùng chạm ≥ 44 px (SPEC §4): liên kết chân trang, nút bật/tắt, chip ôn lại
+  ---
+  duration_ms: 0.647
+  type: 'test'
+  ...
+# Subtest: đồng hồ điện tử trong bài học có kiểu "màn LED" như ở thẻ câu hỏi và hỏi đáp
+ok 216 - đồng hồ điện tử trong bài học có kiểu "màn LED" như ở thẻ câu hỏi và hỏi đáp
+  ---
+  duration_ms: 0.7145
+  type: 'test'
+  ...
+# Subtest: đo chiều cao chip gợi ý không được lộ đáp án ở vùng aria-live
+ok 217 - đo chiều cao chip gợi ý không được lộ đáp án ở vùng aria-live
+  ---
+  duration_ms: 0.4788
+  type: 'test'
+  ...
+# Subtest: thưởng nhanh đo theo thời gian rơi của CHÍNH câu vừa trả lời (trước khi tăng qIndex)
+ok 218 - thưởng nhanh đo theo thời gian rơi của CHÍNH câu vừa trả lời (trước khi tăng qIndex)
+  ---
+  duration_ms: 0.5673
+  type: 'test'
+  ...
+1..218
+# tests 218
+# suites 0
+# pass 217
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 25081.7326

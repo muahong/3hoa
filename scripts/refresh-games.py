@@ -13,6 +13,9 @@ BENEFITS = {
     'cuoi-ho': ['Học giờ & thời gian', 'Chọn vòng để nhảy', 'Có chế độ tập luyện'],
 }
 CSS = '''/* Shared game shell. Source: scripts/refresh-games.py; keep each PWA self-contained. */
+/* Header buttons stay finger-sized; a hidden screen never swallows taps while it fades out. */
+.screen-head .btn { min-width: 44px; min-height: 44px; }
+.screen.hidden * { pointer-events: none !important; }
 #menu .panel { position: relative; padding-top: 86px; border: 1px solid rgba(255,255,255,.9); background: rgba(255,255,255,.97); box-shadow: 0 24px 70px rgba(15,25,56,.25), inset 0 1px 0 #fff; }
 .hub-home { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 48px; padding: 9px 16px; border: 1px solid #c9d9e2; border-radius: 16px; background: #edf6fa; color: #22546b; font: 800 17px/1.25 var(--font); text-decoration: none; box-shadow: 0 3px 0 #c9d9e2; touch-action: manipulation; }
 #menu .hub-home { position: absolute; left: 22px; top: 20px; }
@@ -84,7 +87,7 @@ def apply():
             # Home is also available from pause, without covering the playing field.
             start = html.index('<div id="pause"')
             end = html.index('</h2>', start) + 5
-            html = html[:end] + '\n      <p class="hub-return"><a class="hub-home" href="../">← Trang chủ 3hoa.com</a></p>' + html[end:]
+            html = html[:end] + '\n      <p class="hub-return"><a class="hub-home" id="pause-home" href="../">← Trang chủ 3hoa.com</a></p>' + html[end:]
             (folder / 'index.html').write_text(html, encoding='utf-8')
         (folder / 'game-shell.css').write_text(CSS, encoding='utf-8')
         sw = (folder / 'sw.js').read_text(encoding='utf-8')

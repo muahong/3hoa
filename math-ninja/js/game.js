@@ -130,7 +130,7 @@
       if (!info || typeof info !== 'object') return null;
       const lvl = typeof info.level === 'string' ? MG.levelById(info.level) : null;
       if (!lvl) return null;
-      const op = info.op === '+' || info.op === '-' || info.op === '*' ? info.op : null;
+      const op = info.op === '+' || info.op === '-' || info.op === '*' || info.op === '/' ? info.op : null;
       if (!op) return null;
       if (Array.isArray(info.pair)) {
         if (info.pair.length !== 2) return null;
@@ -298,6 +298,7 @@
   function isOpen(el) { return !!el && !el.classList.contains('hidden'); }
   function showHud(on) { ui.hud.classList.toggle('hidden', !on); }
   function toast(msg, ms) {
+    ui.toast.hidden = false;
     ui.toast.textContent = msg;
     // Bảng phủ mờ (tạm dừng, kết quả, hồ sơ...) che mất đáy màn hình → đưa thông báo lên trên
     let dim = false;
@@ -949,7 +950,13 @@
     G.streak = 0;
     addText('Sai rồi!', f.x, f.y - f.r * 1.2, { color: '#ff5c7a', size: G.R * 1.0, life: 1.1 });
     addText('✗', f.x, f.y, { color: '#ff2d55', size: G.R * 1.3, life: 0.8, vy: -20 });
-    if (hint) showHint(hint, 'bad');
+    if (hint) {
+      // Khoảng đọc không lấy thời gian chơi, không nhận thêm nhát chém.
+      G.readLeft = Math.min(9, Math.max(3.5, (800 + hint.length * 110) / 1000));
+      showHint(hint, 'bad');
+      clearTimeout(showHint._t);
+      ui.hint.classList.add('reading');
+    }
     Voice.say('Sai rồi! ' + (hint ? speakMath(hint) : ''));
     cardFx('shake');
     if (!Motion.lite) { G.flash = { c: '255,60,90', a: 0.25 }; G.shake = Math.max(G.shake, 0.45); }
@@ -1029,21 +1036,19 @@
           if (G.relaunchAt < 0) G.relaunchAt = G.time + 0.35;
           return false;
         }
-        const op = MG.opSymbol(q.op);
         const need = q.op === '+' ? q.target - f.value
           : q.op === '*' ? (f.value !== 0 && q.target % f.value === 0 ? q.target / f.value : null)
-          : null;
-        const pairTxt = q.op === '-'
-          ? Math.max(q.pair[0], q.pair[1]) + ' ' + op + ' ' + Math.min(q.pair[0], q.pair[1]) + ' = ' + q.target
-          : q.pair[0] + ' ' + op + ' ' + q.pair[1] + ' = ' + q.target;
+          : null;                                   // trừ và chia: số cần tìm tùy quả này là số lớn hay số bé, không gợi ý
+        const pairTxt = MG.pairResultText(q, q.pair[0], q.pair[1]);
         onWrong(f, (need != null && need > 0 ? f.value + ' cần ' + need + '. ' : '') + 'Cặp đúng: ' + pairTxt);
         Store.noteMissed(q.key, q.info);
         noteReview(MG.pairResultText(q, q.pair[0], q.pair[1]));
         return false;
       }
       G.held = f.value;
-      if (q.op === '-') {
-        const needA = f.value - q.target;
+      if (q.op === '-' || q.op === '/') {
+        // Dạng a: quả đang giữ là số lớn (đứng trước): held − ? / held : ?. Dạng b: là số bé, dấu ? đứng trước.
+        const needA = q.op === '-' ? f.value - q.target : (f.value % q.target === 0 ? f.value / q.target : 0);
         const hasA = needA > 0 && G.fruits.some(function (o) { return o !== f && !o.dead && o.kind === 'fruit' && o.value === needA; });
         G.heldForm = hasA ? 'a' : 'b';
       } else {
@@ -1053,6 +1058,7 @@
       Sfx.play('pop');
       const need = q.op === '+' ? q.target - f.value
         : q.op === '*' ? q.target / f.value
+        : q.op === '/' ? (G.heldForm === 'a' ? f.value / q.target : f.value * q.target)
         : (G.heldForm === 'a' ? f.value - q.target : f.value + q.target);
       addText('Tìm số ' + need + '!', f.x, f.y - f.r * 1.2, { color: '#5ce1e6', size: G.R * 0.95, life: 1.2 });
       Voice.say('Tìm số ' + need + '!');
@@ -1089,7 +1095,7 @@
   }
 
   function canSlice() {
-    return G.state === 'playing' || G.state === 'menu' || G.state === 'levels';
+    return (G.state === 'playing' && !(G.readLeft > 0)) || G.state === 'menu' || G.state === 'levels';
   }
 
   /** Bổ đôi quả (chỉ hình ảnh + âm thanh, không tính điểm/lỗi). */
@@ -1107,7 +1113,9 @@
    * bom được ưu tiên; nếu có quả đúng thì tính đúng; nếu toàn quả sai chỉ mất 1 tim.
    * blade (có thể null) dùng để chặn mất 2 tim trong cùng một đường vuốt.
    */
+  const PENALTY_WINDOW_MS = 300;   // cùng một đường vuốt: tối đa 1 tim mỗi 300 ms
   function sliceSegment(blade, x0, y0, x1, y1) {
+    if (G.state === 'playing' && G.readLeft > 0) return;
     const hits = [];
     for (let i = 0; i < G.fruits.length; i++) {
       const f = G.fruits[i];
@@ -1120,10 +1128,16 @@
     const angle = Math.atan2(y1 - y0, x1 - x0);
     const at = function (h) { return { x: x0 + (x1 - x0) * h.t, y: y0 + (y1 - y0) * h.t }; };
     const playing = G.state === 'playing';
+    // Một đường vuốt chỉ mất 1 tim mỗi 300 ms; giữ ngón tay lâu vẫn bị phạt tiếp nếu lại chém sai hay chém bom
+    const penalizedRecently = function () { return !!blade && performance.now() - blade.penalizedAt < PENALTY_WINDOW_MS; };
 
     // 1) Bom luôn thắng: nổ và bỏ qua phần còn lại của nhát vuốt
     const bomb = hits.find(function (h) { return h.f.kind === 'bomb'; });
-    if (bomb) { sliceFruit(bomb.f, angle, at(bomb).x, at(bomb).y); return; }
+    if (bomb) {
+      if (playing && penalizedRecently()) { popFruit(bomb.f); return; }
+      if (playing && blade) blade.penalizedAt = performance.now();
+      sliceFruit(bomb.f, angle, at(bomb).x, at(bomb).y); return;
+    }
 
     // 2) Tim: ăn ngay, không ảnh hưởng phần còn lại
     hits.filter(function (h) { return h.f.kind === 'heart'; })
@@ -1135,9 +1149,8 @@
     const wrongOk = function () {
       // Cùng một đường vuốt không được lấy 2 tim (ngón tay quét ngang qua cả hàng quả)
       if (!blade) return true;
-      const now = performance.now();
-      if (now - (blade.lastWrongAt || 0) < 150) return false;
-      blade.lastWrongAt = now;
+      if (penalizedRecently()) return false;
+      blade.penalizedAt = performance.now();
       return true;
     };
 
@@ -1338,6 +1351,15 @@
   }
 
   function updatePlaying(dt) {
+    if (G.readLeft > 0) {
+      G.readLeft = Math.max(0, G.readLeft - dt);
+      if (!G.readLeft) {
+        ui.hint.classList.remove('reading');
+        ui.hint.hidden = true;
+        renderQuestionCard(false);
+      }
+      return;
+    }
     G.time += dt;
     G.timeLeft -= dt;
     if (G.timeLeft <= 0) { G.timeLeft = 0; endGame('timeup'); return; }
@@ -1724,6 +1746,7 @@
 
   /* ================= VÒNG ĐỜI VÁN CHƠI ================= */
   function clearWorld() {
+    G.readLeft = 0;
     G.fruits.length = 0;
     clearHalves();
     G.parts.length = 0;
@@ -1823,6 +1846,10 @@
 
   function resumeGame() {
     if (G.state !== 'paused') return;
+    // Thông báo xoay máy đã hoàn thành nhiệm vụ; không che câu hỏi khi chơi lại.
+    clearTimeout(toast._t);
+    ui.toast.classList.remove('show', 'top');
+    ui.toast.hidden = true;
     Sfx.unlock();
     Music.setDuck('pause', null);
     if (G.resumeCountdown) {
@@ -2064,7 +2091,7 @@
     const list = G.mode === 'answer' ? MG.ANSWER_LEVELS : MG.PAIR_LEVELS;
     ui.modeDesc.innerHTML = G.mode === 'answer'
       ? 'Nhìn phép tính, chém quả có <b>đáp án đúng</b>!'
-      : 'Chém <b>2 quả</b> cộng, trừ hoặc nhân với nhau bằng <b>số cho trước</b>!';
+      : 'Chém <b>2 quả</b> cộng, trừ, nhân hoặc chia với nhau bằng <b>số cho trước</b>!';
     // Kỷ lục gộp cả ba mức thời gian: bé chơi 1 phút vẫn thấy thành tích của ván 2 phút (C9)
     const agg = list.map(function (l) {
       let stars = 0, best = 0, bestDur = G.duration;
@@ -2319,7 +2346,7 @@
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* bỏ qua */ }
     const t = performance.now();
-    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, lastWrongAt: 0 });
+    G.blades.set(e.pointerId, { pts: [{ x: e.clientX, y: e.clientY, t: t }], lx: e.clientX, ly: e.clientY, lt: t, active: true, penalizedAt: -1e9 });
     if (e.cancelable) e.preventDefault();
   }
 
@@ -2347,6 +2374,9 @@
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerEnd);
     canvas.addEventListener('pointercancel', onPointerEnd);
+    canvas.addEventListener('lostpointercapture', onPointerEnd);
+    window.addEventListener('pointerup', onPointerEnd);
+    window.addEventListener('pointercancel', onPointerEnd);
     canvas.addEventListener('pointerleave', onPointerEnd);
     // Chặn cuộn/zoom của Safari khi thao tác trên canvas (chỉ trên canvas, để các bảng vẫn cuộn được)
     canvas.addEventListener('touchmove', function (e) { if (e.cancelable) e.preventDefault(); }, { passive: false });
@@ -2426,14 +2456,16 @@
     }
   }
 
-  /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12" */
+  /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12", "42 : 7" -> "42 chia 7".
+      Dấu chia chỉ nhận khi kẹp giữa hai số, để "Cặp đúng: 42 : 7" không thành "Cặp đúng chia 42". */
   function speakMath(s) {
     return String(s).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/≠/g, ' không bằng ')
+      .replace(/(\d) : (\d)/g, '$1 chia $2')
       .replace(/=/g, ' bằng ').replace(/✓/g, '').replace(/💡/g, '').replace(/ ?· ?/g, ', ')
       .replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
   }
 
-  function opWord(op) { return op === '+' ? ' cộng ' : op === '-' ? ' trừ ' : ' nhân '; }
+  function opWord(op) { return op === '+' ? ' cộng ' : op === '-' ? ' trừ ' : op === '/' ? ' chia ' : ' nhân '; }
 
   function questionSpeech() {
     const q = G.question;
@@ -2441,6 +2473,7 @@
     if (G.mode === 'answer') return q.a + opWord(q.op) + q.b + ' bằng mấy?';
     if (q.op === '+') return 'Hai số nào cộng lại bằng ' + q.target + '?';
     if (q.op === '*') return 'Hai số nào nhân với nhau bằng ' + q.target + '?';
+    if (q.op === '/') return 'Số nào chia cho số nào bằng ' + q.target + '?';
     return 'Hai số nào trừ nhau bằng ' + q.target + '?';
   }
 

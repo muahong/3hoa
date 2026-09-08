@@ -32,7 +32,7 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 | `index.html` | Khung giao diện: menu, chọn màn, bài học, học xem giờ, HUD (mục tiêu, 💡 gợi ý), nút di chuyển, hỏi đáp, kết quả, người chơi, báo cáo |
 | `style.css` | Giao diện đêm trăng thân thiện với trẻ em, tối ưu cảm ứng, đổi bố cục theo màn hình ngang/dọc |
 | `js/clock.js` | Kiến thức xem giờ: mô hình thời gian, đọc giờ tiếng Việt, vẽ đồng hồ (Canvas + SVG), màn chơi, bài học, ngân hàng câu hỏi, đáp án nhiễu "giống lỗi thường gặp" |
-| `js/mazes.js` | Ba mê cung ASCII (có đường hầm), tự xoay khi màn hình dọc, BFS |
+| `js/mazes.js` | Mê cung sinh theo seed (DFS, vòng nối, phòng rộng), BFS tránh các đáp án khác; giữ ba bản ASCII cho tương thích và kiểm thử |
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) – sao chép nguyên văn, nạp trước `game.js` |
 | `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ theo từng bé, ôn lại thông minh, báo cáo |

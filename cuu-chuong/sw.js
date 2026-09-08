@@ -1,6 +1,6 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'cuu-chuong-v4';
+const CACHE = 'cuu-chuong-v6';
 const CORE = [
   './',
   './index.html',

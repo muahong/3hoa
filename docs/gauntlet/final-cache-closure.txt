@@ -1,0 +1,19 @@
+math-ninja: loading old version
+math-ninja: waiting old service worker
+math-ninja: updating service worker
+math-ninja: loading offline
+math-ninja: actual old-cache upgrade + offline menu + storage/scope PASS
+cuu-chuong: loading old version
+cuu-chuong: waiting old service worker
+cuu-chuong: updating service worker
+cuu-chuong: loading offline
+cuu-chuong: actual old-cache upgrade + offline menu + storage/scope PASS
+me-cung-dong-ho: loading old version
+me-cung-dong-ho: waiting old service worker
+me-cung-dong-ho: updating service worker
+me-cung-dong-ho: loading offline
+me-cung-dong-ho: actual old-cache upgrade + offline menu + storage/scope PASS
+thap-dong-ho: loading old version
+thap-dong-ho: waiting old service worker
+thap-dong-ho: updating service worker
+thap-dong-ho: loading offline

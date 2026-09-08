@@ -182,7 +182,8 @@
     anim: 0, time: 0,
     field: { x: 0, y: 0, w: 0, h: 0 },
     horizon: 0, lineY: 0, spawnY: 0,
-    tank: { x: 0, y: 0, angle: -Math.PI / 2, recoil: 0, vx: 0, targetX: null, trackPh: 0, size: 60, hit: 0 },
+    tank: { x: 0, y: 0, angle: -Math.PI / 2, recoil: 0, vx: 0, targetX: null, trackPh: 0, size: 60, hit: 0, aimRobot: null },
+    clockZoom: false, readingHold: false, readingReadyAt: 0, readingPause: false,
     robots: [], shells: [], parts: [], texts: [], clouds: [],
     bg: null, shake: 0, flash: null,
     score: 0, hearts: MAX_HEARTS, streak: 0, bestStreak: 0, correct: 0, wrong: 0,
@@ -727,6 +728,7 @@
     G.retry = !!sameQ;
     G.qBorn = G.time;
     G.selected = -1;
+    G.tank.aimRobot = null;
     if (sameQ) q.options = shuffle(q.options.slice());
     clearTimeout(showHint._t);
     ui.hint.hidden = true;                         // không để chip ✓ của câu trước lơ lửng
@@ -765,12 +767,13 @@
   /** Nút 💡: đánh dấu đáp án đúng, đọc lời giải thích, robot đi chậm lại; câu đó chỉ còn HINT_POINTS. */
   function useHint() {
     const q = G.q;
-    if (G.state !== 'playing' || G.phase !== 'ask' || !q || G.hint) return false;
+    if (G.state !== 'playing' || G.phase !== 'ask' || !q || G.hint || G.clockZoom) return false;
     G.hint = true;
     G.slowT = 2.5;                                 // chờ bé nghe/đọc lời giải thích
     markAnswer();
     ui.btnHint.disabled = true;
     showHint(q.explain, 'info', 4000);
+    openClockZoom(q.explain);
     Voice.say(speakable(q.explain));
     Sfx.play('hint');
     return true;
@@ -787,6 +790,7 @@
   function renderPrompt(pop) {
     const q = G.q;
     if (!q) {
+      $('btn-clock-zoom').hidden = true;
       ui.promptText.textContent = G.state === 'playing' ? 'Sẵn sàng…' : '…';
       ui.promptVisual.hidden = true;
       ui.promptVisual.innerHTML = '';
@@ -795,6 +799,7 @@
     }
     ui.promptText.textContent = q.prompt.text;
     buildVisual(ui.promptVisual, q.prompt, false);
+    $('btn-clock-zoom').hidden = ui.promptVisual.hidden;
     ui.prompt.classList.toggle('stack', promptStacked(q));
     if (pop) {
       ui.prompt.classList.remove('ok', 'shake', 'pop');
@@ -837,19 +842,23 @@
 
   function muzzle() {
     const t = G.tank, s = t.size;
-    const len = s * 0.95 - t.recoil * s * 0.25;
+    const len = s * 1.07 - t.recoil * s * 0.25;
     return { x: t.x + Math.cos(t.angle) * len, y: t.y - s * 0.25 + Math.sin(t.angle) * len };
   }
 
   function fireAt(robot) {
-    if (G.state !== 'playing' || G.phase !== 'ask') return;
+    if (G.state !== 'playing' || G.phase !== 'ask' || G.clockZoom) return;
     if (!robot || robot.dead || robot.state === 'dying' || robot.state === 'flee') return;
     if (robot.state === 'wrong') { Sfx.play('target'); showHint('Bảng này sai rồi, chọn bảng khác nhé!', 'info', 1400); return; }
-    if (G.shells.some(function (s) { return s.robot === robot; })) return;
+    if (G.tank.aimRobot || G.shells.some(function (s) { return s.robot === robot; })) return;
+    G.tank.aimRobot = robot;
+    G.selected = robot.idx;
+  }
+
+  function launchShell(robot) {
     const t = G.tank;
-    t.angle = Math.atan2(robot.y - (t.y - t.size * 0.25), robot.x - t.x);
-    t.recoil = 1;
     const m = muzzle();
+    t.recoil = 1;
     G.shells.push({ x0: m.x, y0: m.y, x: m.x, y: m.y, x1: robot.x, y1: robot.y, t: 0, dur: SHELL_T, robot: robot, trail: [] });
     G.shake = Math.max(G.shake, 0.18);
     Sfx.play('shot');
@@ -949,12 +958,14 @@
       markAnswer();
       ui.btnHint.disabled = true;
       showHint(answerHint(q), 'info', 4500);
+      openClockZoom(answerHint(q));
       Voice.say('Đáp án là ' + q.answer.speech + '. ' + speakable(q.explain));
       Sfx.play('hint');
     } else {
       // Lần sai đầu: nói rõ bảng vừa chọn là gì (để bé tự đối chiếu) rồi mời thử lại – chưa lộ đáp án
       const why = r.opt.clock || r.opt.digital ? r.opt.speech + '. Chưa đúng, thử lại nhé!' : 'Bảng “' + r.opt.label + '” chưa đúng. Thử lại nhé!';
       showHint(why, 'bad', 1800);
+      openClockZoom(why);
       Voice.say(speakable(why));
     }
   }
@@ -1084,6 +1095,17 @@
     if (t.x < s) { t.x = s; t.vx = 0; }
     if (t.x > G.W - s) { t.x = G.W - s; t.vx = 0; }
     t.trackPh += t.vx * dt * 0.08;
+    const target = t.aimRobot || G.robots.find(function (r) { return r.idx === G.selected && !r.dead && r.state !== 'flee'; });
+    if (target) {
+      const goal = Math.atan2(target.y - (t.y - s * 0.25), target.x - t.x);
+      const delta = Math.atan2(Math.sin(goal - t.angle), Math.cos(goal - t.angle));
+      t.angle += clamp(delta, -dt * 12, dt * 12);
+      if (t.aimRobot && Math.abs(delta) <= dt * 12) {
+        const robot = t.aimRobot;
+        t.aimRobot = null;
+        if (G.phase === 'ask' && !robot.dead && robot.state !== 'dying' && robot.state !== 'flee' && robot.state !== 'wrong') launchShell(robot);
+      }
+    }
     if (Math.abs(t.vx) > 20 && Math.random() < dt * 8) Sfx.play('move');
   }
 
@@ -1185,6 +1207,7 @@
   }
 
   function update(dt) {
+    if (G.clockZoom) return;
     G.anim += dt;
     if (G.anim - G.nowT > 1) { const d = new Date(); G.nowH = d.getHours() % 12; G.nowM = d.getMinutes(); G.nowT = G.anim; }
     if (G.shake > 0) G.shake = Math.max(0, G.shake - dt * 2.2);
@@ -1729,6 +1752,7 @@
     G.reviewSlots = pickReviewSlots(level, G.qTotal);
     G.overAt = -1; G.resultShown = false; G.lastWarn = -1; G.slowT = 0; G.perfect = 0;
     G.tank.angle = -Math.PI / 2; G.tank.recoil = 0; G.tank.x = G.W / 2; G.tank.vx = 0; G.tank.targetX = null; G.tank.hit = 0;
+    G.tank.aimRobot = null;
     G.phase = 'idle';
     clearWorld();
     resetHud();
@@ -1788,6 +1812,9 @@
 
   function pauseGame() {
     if (G.state !== 'playing') return;
+    if (G.readingHold) { G.readingPause = true; Voice.stop(); return; }
+    closeClockZoom();
+    G.keys.left = false; G.keys.right = false; G.dragTank = false; G.tank.targetX = null;
     G.state = 'paused';
     Voice.stop();
     Music.setDuck('pause', 0.25);
@@ -1802,6 +1829,47 @@
     Sfx.unlock();
     Music.setDuck('pause', null);
     requestWake();
+  }
+
+  function openClockZoom(teaching) {
+    const reading = typeof teaching === 'string';
+    if (G.state !== 'playing' || G.phase !== 'ask' || (!reading && ui.promptVisual.hidden) || G.clockZoom) return;
+    G.clockZoom = true;
+    G.readingHold = reading;
+    G.readingPause = false;
+    G.readingReadyAt = reading ? performance.now() + 700 : 0;
+    G.keys.left = false; G.keys.right = false; G.dragTank = false; G.tank.targetX = null;
+    $('clock-zoom-title').textContent = reading ? 'Cùng xem lại nhé' : 'Cùng nhìn đồng hồ';
+    $('clock-zoom-teaching').hidden = !reading;
+    $('clock-zoom-teaching').textContent = reading ? teaching : '';
+    $('btn-clock-close').textContent = reading ? 'Đã đọc · Thử lại ▶' : 'Đóng · Chơi tiếp ▶';
+    $('btn-clock-close').disabled = reading;
+    $('clock-zoom').classList.toggle('reading-dialog', reading);
+    $('clock-zoom').classList.toggle('has-clock', !!(G.q.prompt.clocks && G.q.prompt.clocks.length));
+    if (reading) {
+      clearTimeout(showHint._t);
+      const ready = G.readingReadyAt;
+      setTimeout(function () { if (G.readingHold && G.readingReadyAt === ready) $('btn-clock-close').disabled = false; }, 720);
+    }
+    buildVisual($('clock-zoom-visual'), G.q.prompt, true);
+    $('clock-zoom-question').textContent = ui.promptText.textContent;
+    Voice.stop();
+    $('clock-zoom').showModal();
+    $('btn-clock-close').focus();
+  }
+
+  function closeClockZoom(acknowledged) {
+    if (!G.clockZoom) return;
+    if (G.readingHold && (acknowledged !== true || performance.now() < G.readingReadyAt)) return;
+    const pauseAfter = G.readingPause;
+    if (G.readingHold) ui.hint.hidden = true;
+    G.clockZoom = false;
+    G.readingHold = false;
+    G.readingPause = false;
+    $('btn-clock-close').disabled = false;
+    $('clock-zoom').close();
+    (ui.promptVisual.hidden ? ui.btnHint : $('btn-clock-zoom')).focus({ preventScroll: true });
+    if (pauseAfter) pauseGame();
   }
 
   function endGame(reason) {
@@ -2513,6 +2581,17 @@
     document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu') welcome(); }, true);
     document.addEventListener('keydown', function (e) {
       G.usedKeys = true;
+      if (G.clockZoom) {
+        if (G.readingHold) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!e.repeat) closeClockZoom(true); }
+          if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { e.preventDefault(); pauseGame(); }
+          if (e.key === 'Tab') { e.preventDefault(); if (!$('btn-clock-close').disabled) $('btn-clock-close').focus(); }
+          return;
+        }
+        if (e.key === 'Escape' || e.key === 'z' || e.key === 'Z') { e.preventDefault(); closeClockZoom(); }
+        if (e.key === 'Tab') { e.preventDefault(); $('btn-clock-close').focus(); }
+        return;
+      }
       const tag = e.target && e.target.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {   // đang gõ tên / đáp án: không bắt phím trò chơi
         if (e.key === 'Escape') escapeOverlay();
@@ -2534,12 +2613,13 @@
         return;
       }
       if (G.state !== 'playing') return;
+      if (e.key === 'z' || e.key === 'Z') { openClockZoom(); e.preventDefault(); return; }
       if (/^[1-5]$/.test(e.key)) {
         const r = G.robots.find(function (rb) { return !rb.dead && rb.idx === Number(e.key) - 1; });
         if (r) fireAt(r);
         e.preventDefault();
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { selectNext(-1); e.preventDefault(); }
-      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'Tab') { selectNext(1); e.preventDefault(); }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { selectNext(1); e.preventDefault(); }
       else if (e.key === 'Enter' || e.key === ' ') {
         if (G.selected < 0) selectNext(1);
         const r = G.robots.find(function (rb) { return !rb.dead && rb.idx === G.selected; });
@@ -2707,6 +2787,11 @@
     click('btn-lesson-back', function () { goLevels(); });
     click('btn-lesson-read', function () { readLesson(); });
     click('btn-lesson-play', function () { if (G.level) startGame(G.level); });
+    click('btn-clock-zoom', openClockZoom);
+    click('btn-clock-close', function () { closeClockZoom(true); });
+    ui.promptVisual.addEventListener('click', openClockZoom);
+    $('clock-zoom').addEventListener('cancel', function (e) { e.preventDefault(); closeClockZoom(); });
+    $('clock-zoom').addEventListener('click', function (e) { if (e.target === $('clock-zoom')) { const r = e.target.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeClockZoom(); } });
     click('btn-lesson-quiz', function () { if (G.level) startQuiz(G.level); });
     ui.lessonExamples.addEventListener('click', function (e) {
       const b = e.target.closest('button[data-i]');

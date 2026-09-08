@@ -1597,6 +1597,12 @@
     const land = ROWS - 1 - stackH(p.col);
     if (land < p.row + 0.5) return;
     drawTile(c, B.x + p.col * B.cell + 3, B.y + land * B.cell + 3, B.cell - 6, p.t, 'ghost', p.hint && p.col === p.target ? { tint: '#ffd166' } : null);
+    if (p.selected && p.mode === 'fall') {
+      c.save();
+      c.strokeStyle = '#fff3b0'; c.lineWidth = 3;
+      c.strokeRect(B.x + p.col * B.cell + 4, B.y + land * B.cell + 4, B.cell - 8, B.cell - 8);
+      c.restore();
+    }
   }
 
   function drawPiece(c) {
@@ -1916,6 +1922,8 @@
     if (G.state !== 'playing') return;
     G.state = 'paused';
     G.softDrop = false;
+    G.drag = null;
+    if (G.piece) G.piece.selected = false;
     Voice.stop();
     Music.setDuck('pause', 0.25);
     $('pause-info').textContent = 'Màn ' + G.level.n + ' · ' + G.level.title + ' · Điểm: ' + fmt(G.score) + ' · Đã đúng ' + G.correct + '/' + G.level.goal;
@@ -2340,19 +2348,26 @@
     return clamp(Math.floor((x - B.x) / B.cell), 0, COLS - 1);
   }
 
+  /** Vùng chạm của bảng, nới 0,6 ô hai bên: chạm được thì cũng chọn và thả được. */
+  function insideBoard(e) {
+    const B = G.board;
+    return e.clientX >= B.x - B.cell * 0.6 && e.clientX <= B.x + B.w + B.cell * 0.6 &&
+      e.clientY >= B.top - 20 && e.clientY <= B.y + B.h + B.plateH + 20;
+  }
+
   function onCanvasDown(e) {
     Sfx.unlock();
     if (G.state !== 'playing') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const p = G.piece;
     if (!p || p.mode !== 'fall') return;
-    const B = G.board;
-    if (e.clientX < B.x - B.cell * 0.6 || e.clientX > B.x + B.w + B.cell * 0.6) return;
-    if (e.clientY < B.top - 20 || e.clientY > B.y + B.h + B.plateH + 20) return;
+    if (!insideBoard(e)) return;
     const col = boardColAt(e.clientX);
-    G.drag = { id: e.pointerId, x0: e.clientX, col0: col, moved: false, t0: G.anim };
-    if (col === p.col) hardDrop();
-    else moveTo(col);
+    if (G.drag) return;
+    G.drag = { id: e.pointerId, pieceId: p.id, x0: e.clientX, y0: e.clientY, col0: col,
+      moved: false, confirm: !!p.selected && col === p.col };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* Safari dự phòng */ }
+    moveTo(col);
     if (e.cancelable) e.preventDefault();
   }
 
@@ -2360,14 +2375,20 @@
     const d = G.drag;
     if (!d || d.id !== e.pointerId || G.state !== 'playing') return;
     const col = boardColAt(e.clientX);
-    if (Math.abs(e.clientX - d.x0) > G.board.cell * 0.45) d.moved = true;
+    if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) > 10) d.moved = true;
     // Kéo ngang: chỉ đi qua cột còn chỗ (không "nhảy" và đáp ngay xuống một cột cao chỉ vì kéo lướt qua)
     if (d.moved && G.piece && col !== G.piece.col && canOccupy(col, G.piece.row)) moveTo(col);
   }
 
   function onCanvasUp(e) {
     const d = G.drag;
-    if (d && d.id === e.pointerId) G.drag = null;
+    if (!d || d.id !== e.pointerId) return;
+    G.drag = null;
+    const p = G.piece;
+    if (!p || p.id !== d.pieceId || p.mode !== 'fall' || G.state !== 'playing') return;
+    if (e.type !== 'pointerup' || !insideBoard(e)) { p.selected = false; return; }
+    if (d.confirm && !d.moved && boardColAt(e.clientX) === p.col) hardDrop();
+    else p.selected = true;
   }
 
   function bindInput() {
@@ -2375,6 +2396,9 @@
     canvas.addEventListener('pointermove', onCanvasMove);
     canvas.addEventListener('pointerup', onCanvasUp);
     canvas.addEventListener('pointercancel', onCanvasUp);
+    canvas.addEventListener('lostpointercapture', onCanvasUp);
+    window.addEventListener('pointerup', onCanvasUp);
+    window.addEventListener('pointercancel', onCanvasUp);
     ui.controls.addEventListener('pointerdown', function (e) {
       const b = e.target.closest ? e.target.closest('button[data-act]') : null;
       if (!b) return;

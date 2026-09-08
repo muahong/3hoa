@@ -1,0 +1,7 @@
+hub 1180x820 — sạch (không lỗi trang/console).
+hub 1180x820 — ảnh 164735 B, tổng 225009 B / 11 yêu cầu, cao 2137 px
+hub 820x1180 — sạch (không lỗi trang/console).
+hub 820x1180 — ảnh 164735 B, tổng 225009 B / 11 yêu cầu, cao 2106 px
+hub 390x844 — sạch (không lỗi trang/console).
+hub 390x844 — ảnh 164735 B, tổng 225009 B / 11 yêu cầu, cao 2519 px (reduced motion)
+hub e2e — tất cả đạt

@@ -33,7 +33,7 @@ function serve() {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port })));
 }
 
-const isFontNoise = (s) => /fonts\.g(oogleapis|static)\.com|ERR_CONNECTION_RESET|net::ERR_|Failed to load resource/.test(String(s));
+const isFontNoise = (s) => /fonts\.g(oogleapis|static)\.com/.test(String(s));
 
 async function withGame(dir, fn, opts) {
   opts = opts || {};
@@ -47,7 +47,7 @@ async function withGame(dir, fn, opts) {
   if (opts.initScript) await context.addInitScript(typeof opts.initScript === 'function' ? opts.initScript : { content: String(opts.initScript) });
   const page = await context.newPage();
   const log = { errors: [], warnings: [], pageErrors: [], failedRequests: [] };
-  page.on('console', (m) => { const t = m.text(); if (m.type() === 'error') { if (!isFontNoise(t)) log.errors.push(t); } else if (m.type() === 'warning') log.warnings.push(t); });
+  page.on('console', (m) => { const t = m.text(); if (m.type() === 'error') { if (!isFontNoise(t + ' ' + m.location().url)) log.errors.push(t); } else if (m.type() === 'warning') log.warnings.push(t); });
   page.on('pageerror', (e) => log.pageErrors.push(String((e && e.stack) || e)));
   page.on('requestfailed', (r) => { if (!isFontNoise(r.url())) log.failedRequests.push(r.url() + ' ' + (r.failure() && r.failure().errorText)); });
   page.on('response', (r) => { if (r.status() >= 400 && !isFontNoise(r.url())) log.failedRequests.push(r.url() + ' HTTP ' + r.status()); });

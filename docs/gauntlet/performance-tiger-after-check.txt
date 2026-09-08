@@ -1,0 +1,4 @@
+cuoi-ho-390x844 {"load":205.80000001192093,"meanMs":16.804166666666674,"p95Ms":16.700000000000728,"maxMs":33.30000000000018,"cpuTaskMs":1483.255,"action":{"kind":"wrong-ring","key":"2","question":"Đồng hồ chỉ mấy giờ?|t:11 giờ","correct":0},"state":{"state":"playing","phase":"learn","time":3.599799999999993,"clockZoom":false,"readingHold":false,"score":0,"hearts":3,"correct":0,"gateIdx":0,"tank":null}}
+cuoi-ho-390x844 — sạch (không lỗi trang/console). Cảnh báo: 2
+cuoi-ho-1180x820 {"load":264.30000001192093,"meanMs":18.610000000000007,"p95Ms":33.399999999999636,"maxMs":33.400000000001455,"cpuTaskMs":2151.615,"action":{"kind":"wrong-ring","key":"2","question":"Đồng hồ chỉ mấy giờ?|t:11 giờ","correct":0},"state":{"state":"playing","phase":"learn","time":3.916499999999995,"clockZoom":false,"readingHold":false,"score":0,"hearts":3,"correct":0,"gateIdx":0,"tank":null}}
+cuoi-ho-1180x820 — sạch (không lỗi trang/console). Cảnh báo: 2

@@ -898,3 +898,40 @@ html, body {
   margin-top: 8px; padding: 10px 0 2px;
   background: linear-gradient(transparent, var(--paper) 45%);
 }
+/* Paused reading view: native dialog traps focus and makes the game inert. */
+#clock-zoom { width: min(92vw, 500px); max-height: 92dvh; overflow: auto; border: 0; border-radius: 24px; padding: 18px; text-align: center; color: var(--ink); background: #fffdf5; box-shadow: 0 16px 70px #1238; }
+#clock-zoom::backdrop { background: rgba(8, 32, 30, .72); }
+#clock-zoom h2 { margin: 0; font-size: 24px; }
+#clock-zoom p { margin: 6px 0 12px; font-weight: 700; }
+#clock-zoom-visual { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; }
+#clock-zoom-visual canvas { width: 200px !important; height: 200px !important; max-width: none; }
+#clock-zoom-visual .digital { font-size: 48px; }
+#btn-clock-close { min-height: 48px; }
+#clock-zoom-teaching { padding: 10px 12px; border-radius: 14px; background: #fff0cb; color: #342c24; font-size: 18px; line-height: 1.4; }
+@media (max-height: 480px) { #clock-zoom-teaching { font-size: 15px; padding: 6px 10px; } #clock-zoom #btn-clock-close { position: sticky; bottom: 0; } }
+@media (max-height: 480px) and (min-width: 600px) {
+  #clock-zoom.reading-dialog.has-clock[open] { width: min(96vw, 900px); display: grid; grid-template-columns: minmax(370px, 1fr) minmax(0, 1fr); grid-template-areas: 'title title' 'note note' 'visual question' 'visual teaching' 'action action'; align-items: center; gap: 4px 10px; }
+  .reading-dialog.has-clock #clock-zoom-title { grid-area: title; }
+  .reading-dialog.has-clock > p:first-of-type { grid-area: note; }
+  .reading-dialog.has-clock #clock-zoom-visual { grid-area: visual; flex-wrap: nowrap; }
+  .reading-dialog.has-clock #clock-zoom-visual canvas { flex: none; }
+  .reading-dialog.has-clock #clock-zoom-visual .arrow { font-size: 18px; }
+  .reading-dialog.has-clock #clock-zoom-question { grid-area: question; }
+  .reading-dialog.has-clock #clock-zoom-teaching { grid-area: teaching; }
+  .reading-dialog.has-clock #btn-clock-close { grid-area: action; justify-self: center; }
+}
+.zoom-btn { font-size: 25px; }
+.prompt-card.stack .zoom-btn { top: auto; bottom: 6px; right: 6px; }
+#prompt-visual { cursor: zoom-in; }
+@media (max-height: 480px) { #clock-zoom { padding: 10px 16px; } #clock-zoom h2 { font-size: 18px; } #clock-zoom p { margin: 2px 0 4px; font-size: 14px; } #clock-zoom-visual canvas { width: 160px !important; height: 160px !important; } }
+@media (max-height: 480px) and (min-width: 700px) {
+  .hud-top { grid-template-areas: 'left center right'; grid-template-columns: 100px minmax(0, 1fr) 200px; gap: 6px; }
+  .hud-left { gap: 3px; }
+  .score-box { min-width: 60px; padding: 4px 10px; }
+  .score-box .label { display: none; }
+  .score-box .value { font-size: 25px; }
+  .prompt-card { min-width: 0; max-width: 100%; padding: 4px 6px; gap: 5px; }
+  .prompt-card .prompt-text { font-size: 17px; }
+  .prompt-card .prompt-visual canvas { width: 64px; height: 64px; }
+  .prompt-card .say-btn { width: 44px; height: 44px; min-width: 44px; }
+}

@@ -17,6 +17,9 @@ const LAND = { width: 1180, height: 820 }, PORT = { width: 820, height: 1180 }, 
 const NO_CONFIRM = "window.confirm = function () { throw new Error('window.confirm được gọi'); }; window.prompt = window.confirm;";
 
 async function waitChoose(page) {
+  if (await page.evaluate(() => window.__CuoiHo.G.phase === 'learn')) {
+    await page.locator('#btn-learn-continue').click();
+  }
   await page.waitForFunction(() => { const X = window.__CuoiHo; return X.G.state === 'playing' && X.G.phase === 'choose'; }, null, { timeout: 25000 });
 }
 async function waitOver(page) {
@@ -34,6 +37,7 @@ async function playRound(page, hook, opts) {
       const wrong = opts.wrongAt && opts.wrongAt.indexOf(st.i) >= 0;
       await hook('X.choose(' + (wrong ? '(X.curGate().q.answer + 1) % 3' : 'X.curGate().q.answer') + ')');
     }
+    if (st.s === 'playing' && st.p === 'learn') await page.locator('#btn-learn-continue').click();
     await page.waitForTimeout(100);
   }
   throw new Error('playRound: ván chơi quá lâu');
@@ -206,11 +210,12 @@ async function answerGate(page, hook, expr) {
     ok(await vis(page, '#hud-hint'), 'gợi ý đang hiện');
     eq(await hook('X.curGate().rings[' + q0.answer + '].reveal'), true, 'vòng đúng được hé lộ');
     eq(await hook('X.G.hearts'), 3, 'mất 1 tim (màn 2 có 4 tim)');
-    ok((await text(page, '#tap-tip')).indexOf('Chạm để chạy tiếp') >= 0 && (await vis(page, '#tap-tip')), 'mẹo "Chạm để chạy tiếp"');
+    ok((await text(page, '#btn-learn-continue')).indexOf('Chạy tiếp') >= 0 && (await vis(page, '#btn-learn-continue')), 'nút chủ động chạy tiếp');
     ok(await hook('X.G.tigerX + 1.14 * X.G.r < X.G.stopX - X.G.r'), 'đầu hổ không che vòng (ngang)');
     await shot('ipad-land-learn');
     eq(await hook('!!X.Store.p().missed[' + JSON.stringify(q0.key) + ']'), true, 'câu sai được ghi vào kho ôn lại');
     // hết giờ ở cụm tiếp theo
+    await page.locator('#btn-learn-continue').click();
     await page.waitForFunction(() => window.__CuoiHo.G.phase === 'run', null, { timeout: 12000 });
     ok(await page.evaluate(() => document.getElementById('tap-tip').hidden), 'mẹo ẩn khi chạy tiếp');
     await waitChoose(page);
@@ -663,7 +668,7 @@ async function answerGate(page, hook, expr) {
     eq(await hook('X.G.phase'), 'learn', 'vẫn dừng nghe giải thích sau 5 giây (chưa đọc xong)');
     eq(await page.evaluate(() => window.fakeTts.cancel.length), n0, 'không cắt lời giải thích');
     // chạm để chạy tiếp
-    await page.mouse.click(600, 700);
+    await page.locator('#btn-learn-continue').click();
     await page.waitForTimeout(150);
     eq(await hook('X.G.phase'), 'run', 'chạm → chạy tiếp ngay');
     eq(await page.evaluate(() => window.fakeTts.cancel.length), n0 + 1, 'chạm dừng giọng đọc');
@@ -790,6 +795,7 @@ async function answerGate(page, hook, expr) {
     ok((await hook('X.curGate().rings[X.curGate().chosen].flare')) === 0, 'ngọn lửa đỏ đã tắt');
     ok(late.wrongBadge > 6, 'dấu ✕ vẫn còn sau khi lửa đỏ tắt (' + late.wrongBadge + ')');
     // Gợi ý + bàn phím: con trỏ không được đứng lại trên vòng vừa bị tắt
+    await page.locator('#btn-learn-continue').click();
     await page.waitForFunction(() => window.__CuoiHo.G.phase === 'choose', null, { timeout: 12000 });
     const wl = await hook('[0, 1, 2].filter(function (i) { return i !== X.curGate().q.answer; })');
     await hook('(X.G.cursor = ' + wl[0] + ', X.G.kbd = true, 0)');
@@ -982,11 +988,11 @@ async function answerGate(page, hook, expr) {
     await page.waitForFunction(() => window.__CuoiHo.G.phase === 'learn', null, { timeout: 8000 });
     await page.waitForTimeout(250);
     const tip = await page.evaluate(() => {
-      const el = document.getElementById('tap-tip'), cs = getComputedStyle(el), r = el.getBoundingClientRect();
+      const el = document.getElementById('btn-learn-continue'), cs = getComputedStyle(el), r = el.getBoundingClientRect();
       return { hidden: el.hidden, display: cs.display, text: el.textContent, h: Math.round(r.height), bottom: Math.round(r.bottom) };
     });
     ok(!tip.hidden && tip.display !== 'none' && tip.h > 10, 'mẹo chạm để chạy tiếp vẫn hiện khi nằm ngang: ' + JSON.stringify(tip));
-    ok(tip.text.indexOf('Chạm') >= 0, 'mẹo nói đúng việc cần làm');
+    ok(tip.text.indexOf('Chạy tiếp') >= 0, 'nút nói đúng việc cần làm');
     ok(tip.bottom <= 390, 'mẹo nằm gọn trong màn hình');
     await shot('phone-landscape-play');
     await hook('X.goMenu()');

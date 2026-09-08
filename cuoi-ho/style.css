@@ -867,3 +867,9 @@ html, body {
   margin-top: 8px; padding: 10px 0 2px;
   background: linear-gradient(transparent, var(--paper) 45%);
 }
+#hud > .learn-continue { pointer-events: auto; }
+.learn-continue { align-self: center; margin-top: auto; margin-bottom: calc(var(--sab) + 12px); min-height: 48px; padding: 8px 20px; background: #fffdf4; color: #34204f; font-size: 18px; border: 3px solid #ffd166; z-index: 4; }
+.learn-continue:disabled { opacity: .65; }
+#hud.locked .learn-continue { visibility: hidden; pointer-events: none; }
+@media (max-height: 480px) { .learn-continue { min-height: 44px; margin-bottom: calc(var(--sab) + 3px); padding: 4px 14px; font-size: 16px; } }
+@media (max-height: 480px) and (min-width: 500px) { #hud.learning .hint { position: fixed; top: 42%; left: 30vw; right: 12px; width: auto; max-width: none; margin: 0; } }

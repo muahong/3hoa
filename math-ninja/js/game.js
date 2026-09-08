@@ -130,7 +130,7 @@
       if (!info || typeof info !== 'object') return null;
       const lvl = typeof info.level === 'string' ? MG.levelById(info.level) : null;
       if (!lvl) return null;
-      const op = info.op === '+' || info.op === '-' || info.op === '*' ? info.op : null;
+      const op = info.op === '+' || info.op === '-' || info.op === '*' || info.op === '/' ? info.op : null;
       if (!op) return null;
       if (Array.isArray(info.pair)) {
         if (info.pair.length !== 2) return null;
@@ -1036,21 +1036,19 @@
           if (G.relaunchAt < 0) G.relaunchAt = G.time + 0.35;
           return false;
         }
-        const op = MG.opSymbol(q.op);
         const need = q.op === '+' ? q.target - f.value
           : q.op === '*' ? (f.value !== 0 && q.target % f.value === 0 ? q.target / f.value : null)
-          : null;
-        const pairTxt = q.op === '-'
-          ? Math.max(q.pair[0], q.pair[1]) + ' ' + op + ' ' + Math.min(q.pair[0], q.pair[1]) + ' = ' + q.target
-          : q.pair[0] + ' ' + op + ' ' + q.pair[1] + ' = ' + q.target;
+          : null;                                   // trừ và chia: số cần tìm tùy quả này là số lớn hay số bé, không gợi ý
+        const pairTxt = MG.pairResultText(q, q.pair[0], q.pair[1]);
         onWrong(f, (need != null && need > 0 ? f.value + ' cần ' + need + '. ' : '') + 'Cặp đúng: ' + pairTxt);
         Store.noteMissed(q.key, q.info);
         noteReview(MG.pairResultText(q, q.pair[0], q.pair[1]));
         return false;
       }
       G.held = f.value;
-      if (q.op === '-') {
-        const needA = f.value - q.target;
+      if (q.op === '-' || q.op === '/') {
+        // Dạng a: quả đang giữ là số lớn (đứng trước): held − ? / held : ?. Dạng b: là số bé, dấu ? đứng trước.
+        const needA = q.op === '-' ? f.value - q.target : (f.value % q.target === 0 ? f.value / q.target : 0);
         const hasA = needA > 0 && G.fruits.some(function (o) { return o !== f && !o.dead && o.kind === 'fruit' && o.value === needA; });
         G.heldForm = hasA ? 'a' : 'b';
       } else {
@@ -1060,6 +1058,7 @@
       Sfx.play('pop');
       const need = q.op === '+' ? q.target - f.value
         : q.op === '*' ? q.target / f.value
+        : q.op === '/' ? (G.heldForm === 'a' ? f.value / q.target : f.value * q.target)
         : (G.heldForm === 'a' ? f.value - q.target : f.value + q.target);
       addText('Tìm số ' + need + '!', f.x, f.y - f.r * 1.2, { color: '#5ce1e6', size: G.R * 0.95, life: 1.2 });
       Voice.say('Tìm số ' + need + '!');
@@ -2089,7 +2088,7 @@
     const list = G.mode === 'answer' ? MG.ANSWER_LEVELS : MG.PAIR_LEVELS;
     ui.modeDesc.innerHTML = G.mode === 'answer'
       ? 'Nhìn phép tính, chém quả có <b>đáp án đúng</b>!'
-      : 'Chém <b>2 quả</b> cộng, trừ hoặc nhân với nhau bằng <b>số cho trước</b>!';
+      : 'Chém <b>2 quả</b> cộng, trừ, nhân hoặc chia với nhau bằng <b>số cho trước</b>!';
     // Kỷ lục gộp cả ba mức thời gian: bé chơi 1 phút vẫn thấy thành tích của ván 2 phút (C9)
     const agg = list.map(function (l) {
       let stars = 0, best = 0, bestDur = G.duration;
@@ -2454,14 +2453,16 @@
     }
   }
 
-  /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12" */
+  /** Chuyển ký hiệu toán sang lời để đọc: "17 − 5 = 12" -> "17 trừ 5 bằng 12", "42 : 7" -> "42 chia 7".
+      Dấu chia chỉ nhận khi kẹp giữa hai số, để "Cặp đúng: 42 : 7" không thành "Cặp đúng chia 42". */
   function speakMath(s) {
     return String(s).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/≠/g, ' không bằng ')
+      .replace(/(\d) : (\d)/g, '$1 chia $2')
       .replace(/=/g, ' bằng ').replace(/✓/g, '').replace(/💡/g, '').replace(/ ?· ?/g, ', ')
       .replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim();
   }
 
-  function opWord(op) { return op === '+' ? ' cộng ' : op === '-' ? ' trừ ' : ' nhân '; }
+  function opWord(op) { return op === '+' ? ' cộng ' : op === '-' ? ' trừ ' : op === '/' ? ' chia ' : ' nhân '; }
 
   function questionSpeech() {
     const q = G.question;
@@ -2469,6 +2470,7 @@
     if (G.mode === 'answer') return q.a + opWord(q.op) + q.b + ' bằng mấy?';
     if (q.op === '+') return 'Hai số nào cộng lại bằng ' + q.target + '?';
     if (q.op === '*') return 'Hai số nào nhân với nhau bằng ' + q.target + '?';
+    if (q.op === '/') return 'Số nào chia cho số nào bằng ' + q.target + '?';
     return 'Hai số nào trừ nhau bằng ' + q.target + '?';
   }
 

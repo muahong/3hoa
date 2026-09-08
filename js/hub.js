@@ -23,8 +23,8 @@
     { id: 'math-ninja', key: 'ninja-toan-v1', name: 'Ninja Toán Học', kind: 'records', unit: 'màn',
       // records['answer:a1:90'] → gộp theo 'answer:a1' (mọi thời lượng), lấy sao cao nhất
       parse: function (k) { const p = String(k).split(':'); return (p[0] === 'answer' || p[0] === 'pair') && p[1] ? p[0] + ':' + p[1] : null; },
-      units: ['answer:a1', 'answer:a2', 'answer:a3', 'answer:a4', 'answer:m1', 'answer:m2', 'answer:a5', 'answer:m3', 'answer:m4', 'answer:a6',
-        'pair:p1', 'pair:p2', 'pair:p3', 'pair:p4', 'pair:p5', 'pair:p6'] },
+      units: ['answer:a1', 'answer:a2', 'answer:a3', 'answer:a4', 'answer:m1', 'answer:d1', 'answer:a5', 'answer:m2', 'answer:d2', 'answer:m3', 'answer:d3', 'answer:m4', 'answer:d4', 'answer:a6',
+        'pair:p1', 'pair:p2', 'pair:p3', 'pair:p4', 'pair:p5', 'pair:p6', 'pair:p7'] },
     { id: 'cuu-chuong', key: 'cuu-chuong-v1', name: 'Vệ Binh Cửu Chương', kind: 'records', unit: 'màn',
       // records['t2:mul:90'] / ['c1:x:90'] → gộp theo bảng / thử thách
       parse: function (k) { return String(k).split(':')[0] || null; },

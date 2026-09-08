@@ -1,5 +1,5 @@
 /* ============================================================
-   math.js – Sinh phép tính cộng/trừ theo chương trình lớp 1–3
+   math.js – Sinh phép tính cộng/trừ/nhân/chia theo chương trình lớp 1–3
    và các "đáp án nhiễu" giống lỗi sai thường gặp của trẻ.
    ============================================================ */
 (function () {
@@ -18,12 +18,13 @@
   const MINUS = '−';
 
   const TIMES = '×';
-  function opSymbol(op) { return op === '+' ? '+' : op === '-' ? MINUS : TIMES; }
+  const DIV = ':';                          // SGK Việt Nam viết phép chia bằng dấu hai chấm: 42 : 7
+  function opSymbol(op) { return op === '+' ? '+' : op === '-' ? MINUS : op === '/' ? DIV : TIMES; }
 
   function mk(a, b, op, max) {
     return {
       a, b, op, max,
-      answer: op === '+' ? a + b : op === '-' ? a - b : a * b,
+      answer: op === '+' ? a + b : op === '-' ? a - b : op === '/' ? a / b : a * b,
       text: a + ' ' + opSymbol(op) + ' ' + b
     };
   }
@@ -51,6 +52,37 @@
     }
     const b = rnd(2, 4);                    // 3 chữ số × 1 chữ số
     return mk(rnd(100, Math.floor(999 / b)), b, '*', 1200);
+  }
+
+  /* ---------- Phép chia (luôn chia hết; số bị chia sinh từ bảng nhân) ---------- */
+  function genDivTables(set) {
+    const b = pick(set);
+    return mk(b * rnd(1, 10), b, '/', 20);
+  }
+  function genDiv25() { return chance(0.85) ? genDivTables([2, 5]) : genDivTables([2, 5, 10]); }
+  function genDiv34() { return chance(0.75) ? genDivTables([3, 4]) : genDivTables([2, 5]); }
+  function genDiv9() { const b = rnd(2, 9); return mk(b * rnd(2, 10), b, '/', 20); }
+  /** Thương có nhiều chữ số nhưng nhẩm được: từng hàng chia hết, hoặc số tròn chục/tròn trăm. */
+  function genDivBig() {
+    const t = Math.random();
+    if (t < 0.35) {                         // 2 chữ số : 1 chữ số, từng hàng chia hết (84 : 4 = 21)
+      const b = rnd(2, 9), d = Math.floor(9 / b);
+      const quo = 10 * rnd(1, d) + rnd(0, d);
+      return mk(b * quo, b, '/', 500);
+    }
+    if (t < 0.6) {                          // 2 chữ số : 1 chữ số, phải tách (72 : 6 = 12, 91 : 7 = 13)
+      const b = rnd(2, 9);
+      const quo = rnd(11, Math.floor(99 / b));
+      return mk(b * quo, b, '/', 500);
+    }
+    if (t < 0.8) {                          // số tròn chục : 1 chữ số (80 : 4, 120 : 3, 630 : 9)
+      const b = rnd(2, 9);
+      const quo = 10 * rnd(1, Math.floor(99 / b));
+      return mk(b * quo, b, '/', 500);
+    }
+    const b = rnd(2, 4), d = Math.floor(9 / b);   // 3 chữ số : 1 chữ số, từng hàng chia hết (848 : 4 = 212)
+    const quo = 100 * rnd(1, d) + 10 * rnd(0, d) + rnd(0, d);
+    return mk(b * quo, b, '/', 500);
   }
 
   /* ---------- Lớp 1: cộng trừ trong phạm vi 10 ---------- */
@@ -172,9 +204,10 @@
   function genMix() {
     const t = Math.random();
     if (t < 0.15) return gen20();
-    if (t < 0.35) return genCarry20();
-    if (t < 0.6) return gen100();
-    if (t < 0.8) return genMul9();
+    if (t < 0.33) return genCarry20();
+    if (t < 0.55) return gen100();
+    if (t < 0.72) return genMul9();
+    if (t < 0.85) return genDiv9();
     return genRound1000();
   }
 
@@ -189,13 +222,20 @@
     add(ans + 2, 2); add(ans - 2, 2);
     if (max >= 20) { add(ans + 10, 2); add(ans - 10, 2); }
     if (max >= 200) { add(ans + 100, 2); add(ans - 100, 2); }
-    // Làm nhầm phép tính (cộng thay vì trừ và ngược lại)
-    add(q.op === '+' ? Math.abs(q.a - q.b) : q.a + q.b, 3);
+    // Làm nhầm phép tính (cộng thay vì trừ và ngược lại; trừ thay vì chia)
+    if (q.op === '/') add(q.a - q.b, 3);
+    else add(q.op === '+' ? Math.abs(q.a - q.b) : q.a + q.b, 3);
     // Nhân: nhầm sang ô bên cạnh trong bảng cửu chương
     if (q.op === '*') {
       add(q.a * (q.b + 1), 3); add(q.a * (q.b - 1), 3);
       add((q.a + 1) * q.b, 2); add((q.a - 1) * q.b, 2);
       add(q.a * q.b + q.a, 1); add(q.a + q.b, 2);
+    }
+    // Chia: chia nhầm bảng bên cạnh (24 : 4 nhưng lại lấy 24 : 3), thừa hoặc thiếu một chữ số 0
+    if (q.op === '/') {
+      if (q.a % (q.b + 1) === 0) add(q.a / (q.b + 1), 2);
+      if (q.b > 2 && q.a % (q.b - 1) === 0) add(q.a / (q.b - 1), 2);
+      add(ans * 10, 1); add(ans / 10, 2);
     }
     // Quên nhớ / quên mượn
     if (q.op === '+' && (q.a % 10) + (q.b % 10) >= 10) add(ans - 10, 3);
@@ -262,6 +302,23 @@
       return a + ' ' + TIMES + ' ' + b + ' = ' + a + ' ' + TIMES + ' 5 + ' + a + ' ' + TIMES + ' ' + (b - 5) +
         ' = ' + (a * 5) + ' + ' + (a * (b - 5)) + ' = ' + ans;
     }
+    if (q.op === '/') {
+      if (b <= 0 || a % b !== 0) return '';
+      if (b <= 10 && ans <= 10) {                    // chia trong bảng: nhớ lại bảng nhân
+        if (ans <= 1) return '';
+        return a + ' ' + DIV + ' ' + b + ' = ' + ans + ' vì ' + b + ' ' + TIMES + ' ' + ans + ' = ' + a;
+      }
+      if (a % 10 === 0 && (a / 10) % b === 0) {      // số tròn chục: 8 : 4 = 2 nên 80 : 4 = 20
+        return (a / 10) + ' ' + DIV + ' ' + b + ' = ' + (a / 10 / b) + ' nên ' + a + ' ' + DIV + ' ' + b + ' = ' + ans;
+      }
+      const hi = Math.floor(a / (10 * b)) * 10 * b;  // phần tròn chục lớn nhất chia hết, rồi chia nốt phần còn lại
+      const lo = a - hi;
+      if (hi > 0 && lo > 0 && lo % b === 0) {
+        return a + ' ' + DIV + ' ' + b + ' = ' + hi + ' ' + DIV + ' ' + b + ' + ' + lo + ' ' + DIV + ' ' + b +
+          ' = ' + (hi / b) + ' + ' + (lo / b) + ' = ' + ans;
+      }
+      return '';
+    }
     return '';
   }
 
@@ -275,6 +332,11 @@
       return 'Nhầm sang ô bên cạnh trong bảng nhân rồi!';
     }
     if (q.op === '*' && v === a + b) return 'Đây là phép nhân chứ không phải phép cộng nhé!';
+    if (q.op === '/' && b <= 10 && ans <= 10 && ans >= 2 && (v === ans + 1 || v === ans - 1)) {
+      return 'Nhầm sang ô bên cạnh trong bảng chia rồi!';
+    }
+    if (q.op === '/' && v === a - b) return 'Đây là phép chia chứ không phải phép trừ nhé!';
+    if (q.op === '/' && ans >= 10 && v === ans / 10) return 'Thiếu một chữ số 0 rồi!';
     if (q.op === '+' && v === Math.abs(a - b)) return 'Đây là phép cộng nhé!';
     if (q.op === '-' && v === a + b) return 'Đây là phép trừ nhé!';
     return '';
@@ -287,11 +349,15 @@
     { id: 'a3', title: 'Cộng trừ có nhớ', desc: 'Ví dụ: 8 + 7, 15 − 9', icon: '🍋', grade: 2, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genCarry20 },
     { id: 'a4', title: 'Phạm vi 100', desc: 'Ví dụ: 36 + 27, 62 − 38', icon: '🍉', grade: 2, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: gen100 },
     { id: 'm1', title: 'Nhân 2 và 5', desc: 'Ví dụ: 2 × 7, 5 × 4 (đôi khi × 10)', icon: '🍑', grade: 2, speed: 0.9, fruits: 3, bomb: 0.06, big: false, gen: genMul25 },
+    { id: 'd1', title: 'Chia cho 2 và 5', desc: 'Ví dụ: 14 : 2, 35 : 5 (đôi khi : 10)', icon: '🍐', grade: 2, speed: 0.9, fruits: 3, bomb: 0.06, big: false, gen: genDiv25 },
     { id: 'a5', title: 'Phạm vi 1000', desc: 'Ví dụ: 456 + 287, 703 − 458', icon: '🥝', grade: 3, speed: 0.85, fruits: 4, bomb: 0.1, big: true, gen: gen1000 },
     { id: 'm2', title: 'Nhân 3 và 4', desc: 'Ví dụ: 3 × 6, 4 × 8', icon: '🍇', grade: 3, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genMul34 },
+    { id: 'd2', title: 'Chia cho 3 và 4', desc: 'Ví dụ: 18 : 3, 32 : 4', icon: '🍒', grade: 3, speed: 0.92, fruits: 4, bomb: 0.08, big: false, gen: genDiv34 },
     { id: 'm3', title: 'Bảng cửu chương', desc: 'Ví dụ: 6 × 7, 9 × 8', icon: '🍓', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: genMul9 },
+    { id: 'd3', title: 'Bảng chia', desc: 'Ví dụ: 42 : 7, 72 : 9', icon: '🍍', grade: 3, speed: 0.95, fruits: 4, bomb: 0.1, big: false, gen: genDiv9 },
     { id: 'm4', title: 'Nhân số lớn', desc: 'Ví dụ: 23 × 4, 120 × 3', icon: '🥭', grade: 3, speed: 0.85, fruits: 4, bomb: 0.1, big: true, gen: genMulBig },
-    { id: 'a6', title: 'Siêu Ninja', desc: 'Trộn cộng, trừ, nhân, bay nhanh hơn!', icon: '🥷', grade: 0, speed: 1.12, fruits: 5, bomb: 0.16, big: true, gen: genMix }
+    { id: 'd4', title: 'Chia số lớn', desc: 'Ví dụ: 84 : 4, 120 : 3', icon: '🥥', grade: 3, speed: 0.85, fruits: 4, bomb: 0.1, big: true, gen: genDivBig },
+    { id: 'a6', title: 'Siêu Ninja', desc: 'Trộn cộng, trừ, nhân, chia, bay nhanh hơn!', icon: '🥷', grade: 0, speed: 1.12, fruits: 5, bomb: 0.16, big: true, gen: genMix }
   ];
 
   /* ---------- Các màn chơi: Ghép đôi ---------- */
@@ -319,20 +385,29 @@
     {
       id: 'p6', title: 'Nhân bằng…', desc: '2 quả nhân với nhau bằng số cho trước', icon: '✖️', grade: 3, speed: 0.95, fruits: 5, bomb: 0.08, op: '*',
       gen() { const a = rnd(2, 9), b = rnd(2, 9); return { target: a * b, op: '*', pair: [a, b], lo: 1, hi: 10 }; }
+    },
+    {
+      id: 'p7', title: 'Chia bằng…', desc: 'Quả lớn chia quả bé bằng số cho trước', icon: '➗', grade: 3, speed: 0.95, fruits: 5, bomb: 0.08, op: '/',
+      gen() { const t = rnd(2, 9), b = rnd(2, 9); return { target: t, op: '/', pair: [b * t, b], lo: 2, hi: 81 }; }
     }
   ];
 
   function isPair(q, u, v) {
     if (q.op === '+') return u + v === q.target;
     if (q.op === '*') return u * v === q.target;
+    if (q.op === '/') {
+      const big = Math.max(u, v), small = Math.min(u, v);
+      return small > 0 && big % small === 0 && big / small === q.target;
+    }
     return Math.abs(u - v) === q.target;
   }
 
-  /** Chuỗi phép tính của một cặp: "3 + 7 = 10", "8 − 5 = 3" (số lớn luôn đứng trước), "6 × 7 = 42". */
+  /** Chuỗi phép tính của một cặp: "3 + 7 = 10", "8 − 5 = 3" (số lớn luôn đứng trước), "6 × 7 = 42", "42 : 7 = 6". */
   function pairResultText(q, u, v) {
     if (q.op === '+') return u + ' + ' + v + ' = ' + (u + v);
     if (q.op === '*') return u + ' ' + TIMES + ' ' + v + ' = ' + (u * v);
     const big = Math.max(u, v), small = Math.min(u, v);
+    if (q.op === '/') return big + ' ' + DIV + ' ' + small + ' = ' + (small > 0 ? big / small : 0);
     return big + ' ' + MINUS + ' ' + small + ' = ' + (big - small);
   }
 
@@ -371,7 +446,7 @@
   }
 
   window.MathGen = {
-    rnd, chance, pick, shuffle, MINUS, TIMES, opSymbol,
+    rnd, chance, pick, shuffle, MINUS, TIMES, DIV, opSymbol,
     ANSWER_LEVELS, PAIR_LEVELS,
     distractors, isPair, pairWave, pairText, pairResultText, explain, misconception,
     make: mk,

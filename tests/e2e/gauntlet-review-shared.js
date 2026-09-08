@@ -73,7 +73,7 @@ fs.mkdirSync(out,{recursive:true});
    if(!page.url().includes('/'+slug+'/'))throw Error('game menu changed URL '+slug);
    await page.screenshot({path:`${out}/${slug}-menu-closure.png`});
   }
-  await (process.env.REVIEW_CLOSURE?page.locator('a.game-home:not(#pause-home)'):page.locator('#pause-home')).tap();
+  await (process.env.REVIEW_CLOSURE?page.locator('a.hub-home:not(#pause-home)'):page.locator('#pause-home')).tap();
   await page.waitForURL('http://127.0.0.1:8787/');
   if(context.pages().length!==1) throw Error('pause opened tab '+slug);
   await context.close();

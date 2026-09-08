@@ -1488,6 +1488,9 @@
     return G.tigerGfx;
   }
 
+  const tigerArt = new Image();
+  tigerArt.src = 'assets/tiger-rider.png';
+
   function drawTiger(c) {
     const tg = G.tiger, u = G.r * 0.5;
     const x = G.tigerX, y = G.ground + tg.y;
@@ -1504,6 +1507,15 @@
     if (!Motion.lite && tg.land > 0) c.scale(1 + tg.land * 0.035, 1 - tg.land * 0.09);
     if (tg.hurt > 0 && !Motion.lite) c.translate((Math.random() - 0.5) * 0.14 * u, (Math.random() - 0.5) * 0.14 * u);
     if (jumping) { c.translate(0, -1.1 * u); c.rotate(tg.tilt); c.translate(0, 1.1 * u); }
+    if (tigerArt.complete && tigerArt.naturalWidth) {
+      const w = 5.0 * u, h = w * tigerArt.naturalHeight / tigerArt.naturalWidth;
+      const squash = !Motion.lite && running ? Math.sin(ph * 2) * 0.025 : 0;
+      c.scale(1 + squash, 1 - squash);
+      if (tg.hurt > 0 && Math.floor(G.anim * 12) % 2) c.globalAlpha = 0.65;
+      c.drawImage(tigerArt, -2.5 * u, -h + 0.12 * u, w, h);
+      c.restore();
+      return;
+    }
     // Đuôi: ngoáy mạnh hơn trong lúc chờ bé chọn (hổ vẫn "sống", màn hình không đứng im)
     const thinking = G.state === 'playing' && G.phase === 'choose' && !Motion.lite;
     const sway = Math.sin(G.anim * 4 + (running ? ph * 0.5 : 0)) * (thinking ? 0.6 : 0.35);

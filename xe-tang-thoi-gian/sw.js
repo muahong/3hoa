@@ -6,6 +6,7 @@ const CORE = [
   './index.html',
   './style.css',
   './game-shell.css',
+  './assets/tank-body.png',
   './js/audio.js',
   './js/clock.js',
   './js/levels.js',

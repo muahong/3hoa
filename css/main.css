@@ -259,6 +259,7 @@ footer p { color: rgba(255, 255, 255, 0.75); font-weight: 600; text-align: cente
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .game-card .thumb {
+  object-fit: contain;
   width: 120px; height: 120px; aspect-ratio: 1 / 1;
   border-radius: 28px;
   margin-bottom: 8px;

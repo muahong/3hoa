@@ -6,6 +6,7 @@ const CORE = [
   './index.html',
   './style.css',
   './game-shell.css',
+  './assets/tiger-rider.png',
   './js/audio.js',
   './js/lessons.js',
   './js/profile.js',

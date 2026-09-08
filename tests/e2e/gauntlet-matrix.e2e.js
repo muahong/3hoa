@@ -36,9 +36,9 @@ async function enter(page, game) {
       const press = async selector => page.locator(selector)[viewport.width < 1000 ? 'tap' : 'click']();
       const shot = name => page.screenshot({ path: path.join(OUT, `${game}-${viewport.width}-${name}.png`) });
       await shot('menu');
-      assert.equal(await page.locator('#menu .game-home').getAttribute('href'), '../');
+      assert.equal(await page.locator('#menu .hub-home').getAttribute('href'), '../');
       const tabsBefore = context.pages().length;
-      await press('#menu .game-home');
+      await press('#menu .hub-home');
       await page.waitForURL(`http://127.0.0.1:${port}/`);
       assert.equal(context.pages().length, tabsBefore, 'same tab home');
       await page.locator(`.game-card a[href="${game}/"]`).click();

@@ -33,7 +33,7 @@ async function nextDirection(page) {
       page.on('pageerror', e => errors.push(e.message));
       const activate = async selector => mode === 'touch' ? page.locator(selector).tap() : page.locator(selector).press('Enter');
       await page.goto(ORIGIN + '/me-cung-dong-ho/');
-      await activate('#menu .game-home');
+      await activate('#menu .hub-home');
       await page.waitForURL(ORIGIN + '/');
       assert.equal(context.pages().length, 1, 'menu home same tab');
       results.push({mode,check:'menu-home-same-tab',result:'PASS'});
@@ -69,7 +69,7 @@ async function nextDirection(page) {
     assert.match(await page.locator('#btn-player').innerText(),/QA Linh/);
     await page.goto(ORIGIN + '/me-cung-dong-ho/');
     assert.match(await page.locator('#btn-player').innerText(),/QA Linh/);
-    await page.locator('#menu .game-home').tap();
+    await page.locator('#menu .hub-home').tap();
     await page.waitForURL(ORIGIN + '/');
     await page.locator('#btn-player').tap();
     await page.locator('.player-item').filter({hasText:'Bé'}).tap();

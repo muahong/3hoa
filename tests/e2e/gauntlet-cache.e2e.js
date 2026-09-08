@@ -127,7 +127,7 @@ const server = http.createServer((req, res) => {
       }, { target: targetCache, oldKeys: oldCache }, { timeout: 20000 });
       stage('new-online-navigation');
       await deadline(page.reload(), 35000, game + ' online reload');
-      await page.locator('#menu .game-home').waitFor({ state: 'visible' });
+      await page.locator('#menu .hub-home').waitFor({ state: 'visible' });
       assert.deepEqual(await page.evaluate(() => {
         const X = window.__NinjaToan || window.__CuuChuong || window.__MeCung || window.__ThapDongHo || window.__XeTang || window.__CuoiHo;
         return X.Store.data.players;
@@ -154,8 +154,8 @@ const server = http.createServer((req, res) => {
         throw error;
       }
       stage('offline-profile-checks');
-      await page.locator('#menu .game-home').waitFor({ state: 'visible' });
-      assert.equal(await page.locator('#menu .game-home').getAttribute('href'), '../');
+      await page.locator('#menu .hub-home').waitFor({ state: 'visible' });
+      assert.equal(await page.locator('#menu .hub-home').getAttribute('href'), '../');
       for (const id of Object.keys(progressBefore)) {
         await page.locator('#btn-player').tap();
         await page.locator(`.player-item[data-id="${id}"]`).tap();

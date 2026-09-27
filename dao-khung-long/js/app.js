@@ -2,8 +2,11 @@
    app.js – Điều phối các màn của Đảo Khủng Long
    Con là ai → tạo hồ sơ (tên, tuổi, lớp) → chọn trứng → bản đồ + nhiệm vụ hôm nay → trang vùng
    → (bài học 30 giây lần đầu gặp nội dung mới) → một trong 12 thể loại hoặc Đấu Trường
-   → kết thúc màn (sao, quả mọng, cảm xúc) → ăn mừng (trứng nở, lớn lên, trứng vùng nở, thắng đấu trường).
+   → kết thúc màn (sao, quả mọng, cảm xúc, kỹ năng còn thiếu gì để Đã thuộc, bước tiếp theo)
+   → ăn mừng (trứng nở, lớn lên, trứng vùng nở, thắng đấu trường) → bước tiếp theo bé đã chọn.
    Sau mỗi ván: tóm tắt câu, tóm tắt ván, hồ sơ học tập (tính từ nhật ký), thưởng, nhiệm vụ, mức lớn.
+   Trang Cách chơi và thẻ cách chơi của từng trò nằm ở js/huong-dan.js (lần đầu lên đảo mở bản giới thiệu ngắn,
+   lần đầu chơi một thể loại mới hiện thẻ cách chơi).
    Các thể loại tự đăng ký vào window.DaoTroChoi[game] = { ten, khung, san | man, batDau(o) }:
    khung: true dùng khung chơi chung (#man-choi, vùng chơi #<san>); khung: false tự quản một màn riêng (#<man>).
    Góc phụ huynh nằm ở js/goc-phu-huynh.js (window.GocPhuHuynh.mo(ve, ctx)).
@@ -18,7 +21,8 @@
 
   const A = {
     dsBe: [], hoSo: null, hocTap: null, cauDs: [], vanDs: [],
-    anh: {}, man: null, vungDangXem: null, tao: null, hangMung: [], ketThuc: null, manVuaChoi: null
+    anh: {}, man: null, vungDangXem: null, tao: null, hangMung: [], ketThuc: null, manVuaChoi: null,
+    sauMung: null, buocBanDo: null
   };
 
   /* ---------------- Tiện ích ---------------- */
@@ -61,8 +65,14 @@
   function tenKhungLong(p) { return (p && p.khung_long && p.khung_long.ten) || DAO.HINH[(p && p.phong_cach) || 'dung_manh'].ten; }
   /** Ảnh theo tên trong assets/img, hoặc giữ nguyên nếu đã là đường dẫn (biểu tượng của game cũ). */
   function hinhTen(ten) { return /[/.]/.test(ten) ? ten : hinh(ten); }
-  /** Biểu tượng của một màn: hình thể loại, riêng Đua Xe là xe của bé. */
-  function hinhMan(m, p) { return DAO.HINH_GAME[m.game] ? hinhTen(DAO.HINH_GAME[m.game]) : hinh(hinhKhungLong(p, 'xe')); }
+  /** Biểu tượng của một thể loại: hình thể loại, riêng Đua Xe là xe của bé. */
+  function hinhGame(g, p) { return DAO.HINH_GAME[g] ? hinhTen(DAO.HINH_GAME[g]) : hinh(hinhKhungLong(p, 'xe')); }
+  function hinhMan(m, p) { return hinhGame(m.game, p); }
+  /** 'YYYY-MM-DD' → '2/10' */
+  function ngayNgan(n) { const x = String(n || '').split('-'); return x.length === 3 ? +x[2] + '/' + +x[1] : ''; }
+  /** Số phút bé được chơi hôm nay, null là không giới hạn (mặc định; chỉ phụ huynh mới đặt giới hạn). */
+  function gioiHanHomNay() { return A.hoSo ? HS.gioiHanHomNay(A.hoSo, homNay()) : null; }
+  function duPhutHomNay() { const g = gioiHanHomNay(); return g != null && phutHomNay() >= g; }
   function troChoi(g) { return (window.DaoTroChoi || {})[g] || null; }
   /** Số phút đã chơi hôm nay (tính từ tóm tắt ván). */
   function phutHomNay() {
@@ -245,7 +255,12 @@
       NK.datBe(p.id, 'tao_ho_so');
       NK.ghi('ho_so_doi', { truong: 'tao_ho_so', moi: { tuoi_khi_nhap: p.tuoi_khi_nhap, lop: p.lop, lop_nguon: p.lop_nguon, bai_dang_hoc: p.bai_dang_hoc, phong_cach: p.phong_cach } }, { game: 'trang-chu' });
       AT.bat('no_trung');
-      vaoDao('Trứng của con sẽ nở khi con chơi xong ván đầu tiên!');
+      const loiChao = 'Trứng của con sẽ nở khi con chơi xong ván đầu tiên!';
+      if (!window.HuongDan) { vaoDao(loiChao); return; }
+      // Lần đầu lên đảo: bản giới thiệu ngắn của trang Cách chơi, kết thúc bằng nút chơi nhiệm vụ 1
+      p.huong_dan = { da_mo: homNay(), gioi_thieu: homNay(), cach_choi: {} };
+      HS.luu(p);
+      moHuongDan(null, function () { vaoDao(loiChao); }, 'gioi_thieu');
     }).catch(function (e) {
       bao(e && e.message ? e.message : 'Chưa tạo được hồ sơ');
       $('ct-ap').disabled = false;
@@ -340,6 +355,8 @@
     ban.classList.toggle('dai', !!loiChao);
     veNhiemVu(nv);
     $('bd-am').textContent = 'Âm thanh: ' + (AT.co.tieng ? 'Bật' : 'Tắt');
+    // Nút Cách chơi nhấp nháy tới khi bé mở trang lần đầu
+    $('bd-cach-choi').classList.toggle('moi', !(p.huong_dan && p.huong_dan.da_mo));
     // Mẹo thêm vào màn hình chính (iPad, iPhone chưa cài)
     let tat = false;
     try { tat = window.localStorage.getItem('dkl-meo-mh-v1') === '1'; } catch (e) { tat = false; }
@@ -376,9 +393,31 @@
     }).join('');
     const ke = nv.ds.findIndex(function (x) { return !x.xong; });
     const nut = $('nv-choi');
-    nut.classList.toggle('hidden', ke < 0);
-    nut.textContent = 'Chơi nhiệm vụ ' + (ke + 1);
-    nut.setAttribute('data-i', ke);
+    const tiepTheo = $('nv-tiep');
+    A.buocBanDo = null;
+    if (ke >= 0 || !nv.ds.length) {
+      nut.classList.toggle('hidden', ke < 0);
+      nut.textContent = 'Chơi nhiệm vụ ' + (ke + 1);
+      nut.setAttribute('data-i', ke);
+      tiepTheo.classList.add('hidden');
+      return;
+    }
+    // Xong cả nhiệm vụ hôm nay: gợi ý việc chơi thêm (màn chưa chơi, cúp vừa mở, lấy thêm sao…)
+    const vanCuoi = A.vanDs[A.vanDs.length - 1];
+    const b = DAO.buocTiep({ hoSo: A.hoSo, hocTap: A.hocTap, nhiemVu: nv, manVuaChoi: vanCuoi ? vanCuoi.man : null, duPhut: duPhutHomNay() });
+    A.buocBanDo = b;
+    tiepTheo.innerHTML = '<b>Xong nhiệm vụ hôm nay!</b> ' + (b.man ? 'Chơi thêm: ' + esc(b.tieu_de) : esc(b.ly_do));
+    tiepTheo.classList.remove('hidden');
+    nut.classList.toggle('hidden', !b.man);
+    nut.textContent = b.nut;
+    nut.setAttribute('data-i', -1);
+  }
+
+  /** Làm bước tiếp theo đã gợi ý (DAO.buocTiep): chơi nhiệm vụ, chơi một màn, hoặc về đảo. */
+  function chayBuoc(b) {
+    if (!b || !b.man) { vaoDao(); return; }
+    if (b.loai === 'nhiem_vu' && b.nhiem_vu != null) { choiNhiemVu(b.nhiem_vu); return; }
+    batDauMan(b.man, 'tu_chon', null);
   }
 
   function choiNhiemVu(i) {
@@ -396,8 +435,7 @@
     dau_truong_hk1: 'Đấu trường mở khi con đã luyện nhiều vùng hơn (hoặc học tới Bài 30).',
     dau_truong_cuoi_nam: 'Đấu trường cuối năm mở khi con đã luyện gần hết các vùng (hoặc học tới Bài 64).'
   };
-  /** Màu trứng của từng vùng (xoay màu trứng của bé). */
-  const MAU_TRUNG = { 1: 190, 2: 150, 3: 260, 4: 95, 5: 120, 6: 215, 7: 290, 8: 20, 9: 345, 10: 175 };
+  const MAU_TRUNG = DAO.MAU_TRUNG;
 
   function moVung(so) {
     const v = DAO.vung(so);
@@ -426,6 +464,7 @@
     $('vg-vong-mau').style.strokeOpacity = thuoc ? 1 : 0;
     $('vg-trung-so').textContent = thuoc + '/' + kyVung.length + ' kỹ năng đã thuộc';
     $('vg-trung-phu').textContent = daNo ? 'Trứng đã nở! Nhận được: ' + (v.phu_kien || 'bạn mới') : 'Thuộc cả ' + kyVung.length + ' thì trứng nở';
+    $('vg-trung-hoi').classList.toggle('hidden', !!daNo);
     $('vg-chu-giai').innerHTML = HT.MUC.map(function (m) { return '<span><i class="muc-' + m + '"></i>' + HT.TEN_MUC[m] + '</span>'; }).join('') + '<span><i class="muc-can-giup"></i>Cần giúp</span>';
     const kl = p.ky_luc || {};
     const cup = DAO.cupMo(v, p);
@@ -488,15 +527,50 @@
   function batDauMan(manId, nguon, nhiemVu, soCau) {
     const m = DAO.man(manId);
     if (!m || !DAO.choiDuoc(m)) return;
-    const p = A.hoSo;
-    // Giới hạn phút mỗi ngày do phụ huynh đặt: nhắc nhẹ, không cắt ngang ván đang chơi
-    if (p.gioi_han_phut && phutHomNay() >= p.gioi_han_phut) {
-      bao('Hôm nay con đã chơi đủ ' + p.gioi_han_phut + ' phút rồi. Mai mình chơi tiếp nhé!', 4);
-      return;
-    }
+    // Mặc định không giới hạn. Chỉ khi phụ huynh đặt giới hạn phút: hết giờ thì không vào màn mới (ván đang chơi
+    // không bị cắt ngang), bé được nhờ bố mẹ cho chơi thêm ngay trên máy
+    if (duPhutHomNay()) { moHetGio(); return; }
+    // Lần đầu gặp nội dung mới: bài học 30 giây; lần đầu chơi một thể loại mới: thẻ cách chơi
+    const vao = function () { vaoMan(m, nguon, nhiemVu, soCau); };
+    const canCachChoi = canXemCachChoi(m);
+    const choi = canCachChoi ? function () { moCachChoiLanDau(m, vao); } : vao;
     const ma = canXemBaiHoc(m);
-    if (ma) { moBaiHoc(ma, m, 'Bắt đầu chơi', function () { vaoMan(m, nguon, nhiemVu, soCau); }); return; }
-    vaoMan(m, nguon, nhiemVu, soCau);
+    if (ma) { moBaiHoc(ma, m, canCachChoi ? 'Tiếp: cách chơi' : 'Bắt đầu chơi', choi); return; }
+    choi();
+  }
+
+  /** Hộp "Hôm nay con chơi đủ giờ rồi" (chỉ có khi phụ huynh đặt giới hạn), kèm nút để bố mẹ cho chơi thêm. */
+  function moHetGio() {
+    const p = A.hoSo;
+    $('hg-hinh').src = hinh(hinhKhungLong(p, p.khung_long.muc === 'trung' || p.khung_long.muc === 'lay_dong' ? 'trung' : 'an'));
+    $('hg-loi').textContent = 'Hôm nay con đã chơi ' + Math.round(phutHomNay()) + ' phút, đủ ' + gioiHanHomNay() + ' phút bố mẹ cho rồi. ' +
+      tenKhungLong(p) + ' cũng cần nghỉ. Mai mình chơi tiếp nhé!';
+    $('lop-het-gio').classList.remove('hidden');
+    AT.doc('Hôm nay con chơi đủ giờ rồi. Mai mình chơi tiếp nhé!');
+    setTimeout(function () { try { $('hg-dong').focus(); } catch (e) { /* bỏ qua */ } }, 60);
+  }
+  function dongHetGio() { $('lop-het-gio').classList.add('hidden'); AT.dungDoc(); }
+
+  /** Thẻ cách chơi hiện trước lần chơi đầu của một thể loại mới (bé chưa có câu nào ở thể loại đó). */
+  function canXemCachChoi(m) {
+    const HD = window.HuongDan;
+    if (!HD || HD.LAN_DAU.indexOf(m.game) < 0) return false;
+    const hd = A.hoSo.huong_dan;
+    if (hd && hd.cach_choi && hd.cach_choi[m.game]) return false;
+    return !A.cauDs.some(function (c) { return c.game === m.game; });
+  }
+  function moCachChoiLanDau(m, xong) {
+    const p = A.hoSo;
+    window.HuongDan.cachChoi(m.game, m, {
+      ctx: ctxHuongDan(),
+      onDong: function () {
+        p.huong_dan = p.huong_dan || {};
+        p.huong_dan.cach_choi = p.huong_dan.cach_choi || {};
+        p.huong_dan.cach_choi[m.game] = homNay();
+        HS.luu(p);
+        xong();
+      }
+    });
   }
 
   /** Màn đấu trường: danh sách câu lập theo hồ sơ học tập (kỹ năng yếu, tới hạn ôn), chỉ kỹ năng hỏi được ở dạng chọn đáp án. */
@@ -514,6 +588,7 @@
       if (!m.cau.length) { bao('Con chơi thêm các vùng trước rồi quay lại đấu trường nhé!'); return; }
     }
     const manId = m.id;
+    if (window.HuongDan) window.HuongDan.datDangChoi(m, ctxHuongDan());
     const bang = HT.bangMuc(A.hocTap);
     const mucKy = {};
     Object.keys(bang).forEach(function (k) { mucKy[k] = bang[k].muc; });
@@ -596,7 +671,7 @@
         });
       }
       if ((moi === 'da_thuoc' || moi === 'vung_chac') && !(cu === 'da_thuoc' || cu === 'vung_chac')) {
-        thuong.push({ qua_mong: 50, ly_do: 'ky_nang_da_thuoc', ky_nang: k, loi: 'Thuộc ' + NH.KY_NANG[k].ten.toLowerCase() });
+        thuong.push({ qua_mong: HT.THUONG.ky_nang_da_thuoc, ly_do: 'ky_nang_da_thuoc', ky_nang: k, loi: 'Thuộc ' + NH.KY_NANG[k].ten.toLowerCase() });
       }
     });
 
@@ -607,7 +682,7 @@
       if (x) x.xong = true;
       if (!nv.thuong && nv.ds.length >= 3 && nv.ds.every(function (y) { return y.xong; })) {
         nv.thuong = true;
-        thuong.push({ qua_mong: 20, ly_do: 'xong_3_nhiem_vu', loi: 'Xong cả 3 nhiệm vụ hôm nay' });
+        thuong.push({ qua_mong: HT.THUONG.xong_3_nhiem_vu, ly_do: 'xong_3_nhiem_vu', loi: 'Xong cả 3 nhiệm vụ hôm nay' });
       }
     }
     // Thắng đấu trường lần đầu: cúp, phụ kiện, 100 quả mọng; tính vào mức Huyền thoại
@@ -618,7 +693,7 @@
         p.dau_truong_thang[m.vung] = NK.isoDiaPhuong(Date.now());
         p.phu_kien = p.phu_kien || [];
         if (m.dau_truong.phu_kien && p.phu_kien.indexOf(m.dau_truong.phu_kien) < 0) p.phu_kien.push(m.dau_truong.phu_kien);
-        thuong.push({ qua_mong: 100, ly_do: 'thang_dau_truong', loi: 'Thắng ' + m.ten, phu_kien: m.dau_truong.phu_kien || null, vung: m.vung });
+        thuong.push({ qua_mong: HT.THUONG.thang_dau_truong, ly_do: 'thang_dau_truong', loi: 'Thắng ' + m.ten, phu_kien: m.dau_truong.phu_kien || null, vung: m.vung });
         mungDauTruong = { loai: 'dau_truong', vung: m.vung, man: m.id };
       }
     }
@@ -713,9 +788,84 @@
     if (!dong.length) dong.push('Lần sau con làm đúng là có quả mọng nhé!');
     $('kt-chi-tiet').innerHTML = dong.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('');
     veThanhLon();
+    const meoSao = $('kt-sao-meo');
+    meoSao.classList.toggle('hidden', !!k.m.dau_truong || kq.sao >= 3);
+    meoSao.textContent = 'Tự làm đúng ngay ' + Math.round(HT.SAO.ba * 10) + ' trên 10 câu để được 3 sao';
+    veKyNangKetThuc(k.m);
+    // Bước tiếp theo: nhiệm vụ còn lại, cúp vừa mở, màn chưa chơi…; bé bấm thì xem ăn mừng (nếu có) rồi làm luôn
+    A.sauMung = null;
+    k.buoc = DAO.buocTiep({ hoSo: p, hocTap: A.hocTap, nhiemVu: nhiemVuHomNay(), manVuaChoi: k.m.id, sao: kq.sao, duPhut: duPhutHomNay() });
+    veBuocTiep(k.buoc);
     document.querySelectorAll('#kt-mat button').forEach(function (b) { b.classList.remove('chon'); b.disabled = false; });
     hien('man-ket-thuc');
     AT.bat('qua_mong');
+    clearTimeout(A.hengioDocTiep);
+    A.hengioDocTiep = setTimeout(function () {
+      if (A.man === 'man-ket-thuc' && A.ketThuc === k) AT.doc('Tiếp theo: ' + k.buoc.tieu_de + '. ' + k.buoc.ly_do);
+    }, 1400);
+  }
+
+  /** Thẻ Bước tiếp theo ở màn kết thúc. */
+  function veBuocTiep(b) {
+    const p = A.hoSo;
+    const m = b.man ? DAO.man(b.man) : null;
+    $('kt-tt-hinh').src = m ? hinhMan(m, p) : hinh(hinhKhungLong(p, p.khung_long.muc === 'trung' || p.khung_long.muc === 'lay_dong' ? 'trung' : 'co_vu'));
+    $('kt-tt-nhan').textContent = b.loai === 'nghi' ? 'Nghỉ thôi' : 'Bước tiếp theo';
+    $('kt-tt-ten').textContent = b.tieu_de;
+    $('kt-tt-ly-do').textContent = b.ly_do || '';
+    $('kt-tt-nut').textContent = b.nut + ' ›';
+    // Hết giờ bố mẹ đặt: thêm nút để bố mẹ cho chơi thêm (qua cổng phép tính của Góc phụ huynh)
+    $('kt-tt-them').classList.toggle('hidden', b.loai !== 'nghi');
+    // Khi bước tiếp theo đã là về đảo thì bỏ nút Về đảo thứ hai
+    $('kt-tiep').classList.toggle('hidden', !b.man);
+  }
+
+  /** Kỹ năng chính của màn: mức hiện tại và bé còn thiếu gì để Đã thuộc; kèm tiến độ trứng của vùng. */
+  function veKyNangKetThuc(m) {
+    const el = $('kt-kn');
+    const trung = $('kt-trung');
+    const p = A.hoSo;
+    const v = DAO.vung(m.vung);
+    const bang = HT.bangMuc(A.hocTap);
+    const kn = m.dau_truong || !v ? null : m.ky_nang_chinh;
+    // Hàng kỹ năng (trải hết bề ngang): mức hiện tại, và nếu chưa thuộc thì từng điều kiện còn thiếu
+    let h = '';
+    if (kn && bang[kn] && NH.KY_NANG[kn]) {
+      const k = bang[kn];
+      h += '<div class="kt-kn-dau"><p><b>' + esc(NH.KY_NANG[kn].ten) + '</b><span class="chip-muc muc-' + k.muc + '">' + esc(HT.TEN_MUC[k.muc]) + '</span>' +
+        '<button type="button" class="kt-hoi-nho" data-chuong="da_thuoc" aria-label="Khi nào kỹ năng Đã thuộc?">?</button></p>';
+      if (k.muc === 'vung_chac') h += '<small>Vững chắc rồi! Con nhớ bài này rất lâu.</small></div>';
+      else if (k.muc === 'da_thuoc') h += '<small>Đã thuộc rồi!' + (k.on_lai_ke_tiep ? ' Ôn lại từ ngày ' + ngayNgan(k.on_lai_ke_tiep) + ' để thành Vững chắc.' : '') + '</small></div>';
+      else {
+        const t = HT.tienDoThuoc(A.cauDs.filter(function (c) { return c.ky_nang === kn; }), HT.tapDaSua(A.cauDs), homNay());
+        const muoi = Math.round(t.can_ti_le * 10);
+        const ds = [
+          [t.tu_lam >= t.can_tu_lam, 'Tự làm ' + t.can_tu_lam + ' câu', t.tu_lam >= t.can_tu_lam ? '' : 'con đã làm ' + t.tu_lam],
+          [t.ti_le != null && t.ti_le >= t.can_ti_le, 'Đúng ngay ' + muoi + ' trên 10 câu', t.ti_le == null || t.ti_le >= t.can_ti_le ? '' : 'con đang ' + Math.floor(t.ti_le * 10) + ' trên 10'],
+          [t.so_ngay >= t.can_so_ngay, 'Chơi ' + t.can_so_ngay + ' ngày khác nhau', t.so_ngay >= t.can_so_ngay ? '' : 'con mới ' + t.so_ngay + ' ngày']
+        ];
+        if (t.cau_no) ds.push([false, 'Làm lại đúng ' + t.cau_no + ' câu từng sai', '']);
+        h += '<small>Để thành Đã thuộc, con cần:</small></div><ul class="kt-kn-ds">' + ds.map(function (x) {
+          return '<li class="' + (x[0] ? 'du' : '') + '"><i aria-hidden="true">' + (x[0] ? '✓' : '') + '</i><span>' + esc(x[1]) + (x[2] ? ' <small>(' + esc(x[2]) + ')</small>' : '') + '</span></li>';
+        }).join('') + '</ul>';
+      }
+    }
+    el.innerHTML = h;
+    el.classList.toggle('hidden', !h);
+    // Trứng của vùng: bao nhiêu kỹ năng đã thuộc (dưới thanh lớn lên)
+    const ky = v && !m.dau_truong ? DAO.kyNangCuaVung(v) : [];
+    const tv = v && p.trung_vung && p.trung_vung[v.so];
+    let t2 = '';
+    if (ky.length && !(tv && tv.no)) {
+      const thuoc = ky.filter(function (x) { return bang[x] && (bang[x].muc === 'da_thuoc' || bang[x].muc === 'vung_chac'); }).length;
+      t2 = '<img src="' + hinh(hinhKhungLong(p, 'trung')) + '" alt="" style="filter:hue-rotate(' + (MAU_TRUNG[v.so] || 40) + 'deg) saturate(1.1)">' +
+        '<span>Trứng ' + esc(v.ten_loai) + ': <b>' + thuoc + '/' + ky.length + '</b> kỹ năng đã thuộc</span>' +
+        '<button type="button" class="kt-hoi-nho" data-chuong="ban_moi" aria-label="Làm sao để trứng nở?">?</button>';
+    }
+    trung.innerHTML = t2;
+    trung.classList.toggle('hidden', !t2);
+    // Có hàng kỹ năng thì hình khủng long ăn nhỏ lại để cả thẻ vừa màn iPad 1024 × 768
+    el.parentNode.classList.toggle('co-kn', !!h);
   }
 
   function phutGiay(g) { g = Math.max(0, Math.round(g || 0)); return Math.floor(g / 60) + ':' + String(g % 60).padStart(2, '0'); }
@@ -735,7 +885,7 @@
       tiLe = Math.min(1, q / ke.qua_mong);
       phu = soDep(q) + ' / ' + soDep(ke.qua_mong) + ' quả mọng';
       const soThuoc = (A.hocTap.ky_nang || []).filter(function (k) { return k.muc === 'da_thuoc' || k.muc === 'vung_chac'; }).length;
-      if (ke.da_thuoc && soThuoc < ke.da_thuoc) phu += ' · cần thêm ' + (ke.da_thuoc - soThuoc) + ' nội dung đã thuộc';
+      if (ke.da_thuoc && soThuoc < ke.da_thuoc) phu += ' · cần thêm ' + (ke.da_thuoc - soThuoc) + ' kỹ năng đã thuộc';
       if (ke.dau_truong) phu += ' · cần thắng một đấu trường';
     }
     $('kt-lon-thanh').style.width = Math.round(tiLe * 100) + '%';
@@ -759,9 +909,13 @@
     }
   }
 
+  /** Rời màn kết thúc: xem hết các màn ăn mừng, rồi làm việc bé đã chọn (A.sauMung) hoặc về đảo. */
   function tiepSauKetThuc() {
+    clearTimeout(A.hengioDocTiep);
     if (A.hangMung.length) { moMung(A.hangMung.shift()); return; }
-    vaoDao();
+    const f = A.sauMung;
+    A.sauMung = null;
+    if (f) f(); else vaoDao();
   }
 
   /* ---------------- 8. Ăn mừng ---------------- */
@@ -863,9 +1017,12 @@
       tinhLai: tinhLai,
       /** Quay về: bản đồ nếu vào từ bản đồ và còn bé đang chơi, không thì màn Con là ai. */
       thoat: function () { if (ve === 'ban-do' && A.hoSo) vaoDao(); else moChonBe(); },
-      /** Gọi sau khi phụ huynh đổi hồ sơ một bé (tuổi, lớp, bài, giới hạn phút, mở khóa vùng): lưu và lập lại nhiệm vụ. */
-      hoSoDoi: function (p) {
-        p.nhiem_vu = null;
+      /**
+       * Gọi sau khi phụ huynh đổi hồ sơ một bé (tuổi, lớp, bài, thời gian chơi, mở khóa vùng): lưu và lập lại nhiệm vụ.
+       * giuNhiemVu: đổi thời gian chơi thì giữ nhiệm vụ hôm nay (không xóa các nhiệm vụ bé đã xong).
+       */
+      hoSoDoi: function (p, giuNhiemVu) {
+        if (!giuNhiemVu) p.nhiem_vu = null;
         const i = A.dsBe.findIndex(function (x) { return x.id === p.id; });
         if (i >= 0) A.dsBe[i] = p;
         if (A.hoSo && A.hoSo.id === p.id) A.hoSo = p;
@@ -878,7 +1035,41 @@
       }
     };
   }
-  function moPhuHuynh(ve) { window.GocPhuHuynh.mo(ve, ctxPhuHuynh(ve)); }
+  /** tab (tùy chọn): mục mở ngay sau cổng phép tính, ví dụ 'cai_dat' khi bé hết giờ và nhờ bố mẹ cho chơi thêm. */
+  function moPhuHuynh(ve, tab) { window.GocPhuHuynh.mo(ve, ctxPhuHuynh(ve), tab); }
+
+  /* ---------------- Trang Cách chơi (js/huong-dan.js) ---------------- */
+
+  /** Dữ liệu của bé đang chơi và các lối đi tiếp cho trang Cách chơi, thẻ cách chơi. */
+  function ctxHuongDan() {
+    return {
+      hoSo: A.hoSo, hocTap: A.hocTap, cauDs: A.cauDs, vanDs: A.vanDs, nhiemVu: nhiemVuHomNay(), homNay: homNay(),
+      hinh: hinh, hinhKhungLong: hinhKhungLong, tenKhungLong: tenKhungLong,
+      hinhMan: function (m) { return hinhMan(m, A.hoSo); },
+      hinhGame: function (g) { return hinhGame(g, A.hoSo); },
+      choiNhiemVu: choiNhiemVu,
+      moVung: moVung
+    };
+  }
+
+  /**
+   * Mở trang Cách chơi ở chương `chuong` (null: chương đầu). ve(): quay lại khi bé bấm ‹ (mặc định hiện lại màn đang xem).
+   * cheDo: 'day_du' (mặc định) hoặc 'gioi_thieu' (bản ngắn lần đầu lên đảo).
+   */
+  function moHuongDan(chuong, ve, cheDo) {
+    const p = A.hoSo;
+    if (!p || !window.HuongDan) return;
+    const truoc = A.man;
+    p.huong_dan = p.huong_dan || {};
+    if (!p.huong_dan.da_mo) { p.huong_dan.da_mo = homNay(); HS.luu(p); }
+    clearTimeout(A.hengioDocTiep);
+    AT.dungDoc();
+    hien('man-huong-dan');
+    window.HuongDan.mo({
+      ctx: ctxHuongDan(), chuong: chuong, cheDo: cheDo || 'day_du',
+      onDong: ve || function () { if (truoc === 'man-ban-do') vaoDao(); else hien(truoc); }
+    });
+  }
 
   /* ---------------- Gắn sự kiện ---------------- */
 
@@ -946,7 +1137,12 @@
       AT.bat('cham');
       if (x && x.xong) { const m = DAO.man(x.man); if (m) moVung(m.vung); } else choiNhiemVu(i);
     });
-    $('nv-choi').addEventListener('click', function () { AT.bat('cham'); choiNhiemVu(+this.getAttribute('data-i')); });
+    $('nv-choi').addEventListener('click', function () {
+      AT.bat('cham');
+      const i = +this.getAttribute('data-i');
+      if (i >= 0) choiNhiemVu(i); else chayBuoc(A.buocBanDo);
+    });
+    $('bd-cach-choi').addEventListener('click', function () { AT.bat('cham'); moHuongDan(null); });
     $('bd-chip').addEventListener('click', function () { AT.bat('cham'); moChonBe(); });
     $('bd-bo-me').addEventListener('click', function () { moPhuHuynh('ban-do'); });
     $('bd-am').addEventListener('click', function () { AT.datTieng(!AT.co.tieng); this.textContent = 'Âm thanh: ' + (AT.co.tieng ? 'Bật' : 'Tắt'); });
@@ -957,6 +1153,8 @@
 
     // Vùng
     $('vg-quay').addEventListener('click', function () { vaoDao(); });
+    $('vg-cach-choi').addEventListener('click', function () { AT.bat('cham'); moHuongDan('vung'); });
+    $('vg-trung-hoi').addEventListener('click', function () { AT.bat('cham'); moHuongDan('ban_moi'); });
     $('vg-ds').addEventListener('click', function (e) {
       const b = e.target.closest('.vg-man');
       if (!b) return;
@@ -975,10 +1173,28 @@
     });
     $('kt-lai').addEventListener('click', function () {
       const x = A.manVuaChoi;
-      if (A.hangMung.length) { moMung(A.hangMung.shift()); return; }
-      if (x) batDauMan(x.id, 'tu_chon', null);
+      A.sauMung = x ? function () { batDauMan(x.id, 'tu_chon', null); } : null;
+      tiepSauKetThuc();
     });
-    $('kt-tiep').addEventListener('click', tiepSauKetThuc);
+    $('kt-tiep').addEventListener('click', function () { A.sauMung = null; tiepSauKetThuc(); });
+    $('kt-tt-nut').addEventListener('click', function () {
+      const b = A.ketThuc && A.ketThuc.buoc;
+      AT.bat('cham');
+      A.sauMung = function () { chayBuoc(b); };
+      tiepSauKetThuc();
+    });
+    $('kt-tt-them').addEventListener('click', function () {
+      AT.bat('cham');
+      A.sauMung = function () { moPhuHuynh('ban-do', 'cai_dat'); };
+      tiepSauKetThuc();
+    });
+    // Hộp hết giờ
+    $('hg-dong').addEventListener('click', function () { AT.bat('cham'); dongHetGio(); });
+    $('hg-bo-me').addEventListener('click', function () { AT.bat('cham'); dongHetGio(); moPhuHuynh('ban-do', 'cai_dat'); });
+    $('man-ket-thuc').addEventListener('click', function (e) {
+      const b = e.target.closest('.kt-hoi-nho');
+      if (b) { AT.bat('cham'); moHuongDan(b.getAttribute('data-chuong')); }
+    });
 
     // Ăn mừng
     $('mg-tiep').addEventListener('click', dongMung);
@@ -992,7 +1208,7 @@
   }
 
   /** Dùng cho kiểm thử tự động và gỡ lỗi. */
-  window.__DKL = { A: A, batDauMan: batDauMan, vaoMan: vaoMan, moVung: moVung, vaoDao: vaoDao, chonBe: chonBe, tinhLai: tinhLai, moPhuHuynh: moPhuHuynh, taiDuLieuBe: taiDuLieuBe };
+  window.__DKL = { A: A, batDauMan: batDauMan, vaoMan: vaoMan, moVung: moVung, vaoDao: vaoDao, chonBe: chonBe, tinhLai: tinhLai, moPhuHuynh: moPhuHuynh, taiDuLieuBe: taiDuLieuBe, moHuongDan: moHuongDan };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', khoiDong);
   else khoiDong();

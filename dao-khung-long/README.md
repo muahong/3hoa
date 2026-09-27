@@ -121,7 +121,7 @@ Sau cổng phép nhân của người lớn (hai chữ số nhân một chữ s�
 | Xem lại một câu | Dòng thời gian mọi sự kiện của câu với mốc giây, mỗi kiểu thao tác có một câu tiếng Việt riêng; hình của đề, các lựa chọn và số lần con dừng ở mỗi lựa chọn; lần câu quay lại ("2 câu sau: làm lại đúng trong 5,1 giây"); Nhận xét giải thích lỗi theo cách SGK và nút "Xem N câu cùng lỗi" |
 | Bản đồ kỹ năng | Đủ 43 nội dung theo 10 vùng, tô theo mức thấp nhất của các kỹ năng đã luyện, chấm đỏ là Cần giúp; chạm ô xem % tự làm đúng 14 ngày, số câu, giây trung vị, lỗi hay gặp, câu sai gần đây, các màn và game luyện nội dung đó, gợi ý Làm cùng con |
 | Kế hoạch tuần tới | Luyện lại (kỹ năng yếu, luôn đổi sang thể loại khác lần trước), Ôn nền (nội dung tiên quyết), Học mới (theo bài đang học); Làm cùng con cho cả 43 mã; "Dùng kế hoạch này" lưu `ke_hoach_tuan` và nhiệm vụ hằng ngày đi theo kế hoạch trong những ngày đó |
-| Cài đặt | Tuổi, lớp, bài đang học, giới hạn phút mỗi ngày (`gioi_han_phut`: 10 đến 45, bé được nhắc nhẹ khi đủ phút), mở khóa mọi vùng (`mo_khoa_vung`), tải nhật ký JSONL, tính lại tóm tắt, xóa dữ liệu (hỏi lại trong trang) |
+| Cài đặt | Tuổi, lớp, bài đang học, thời gian chơi mỗi ngày (mặc định không giới hạn; phụ huynh chọn nhanh 15, 30, 45, 60, 90, 120 phút hoặc chỉnh từng 5 phút trong khoảng 5 đến 240, `gioi_han_phut`; khi có giới hạn thì "Riêng hôm nay": cho thêm 15 hoặc 30 phút tính từ bây giờ, không giới hạn hôm nay, hoặc như mọi ngày, `them_hom_nay` tự hết khi qua ngày, đổi thời gian không làm mất nhiệm vụ hôm nay), mở khóa mọi vùng (`mo_khoa_vung`), tải nhật ký JSONL, tính lại tóm tắt, xóa dữ liệu (hỏi lại trong trang) |
 | Xuất cho trợ lý AI | Gói `dao-khung-long-xuat-v1.json` theo spec 06 mục 5.9: bí danh thay tên, từ điển mã chỉ gồm mã đã dùng, hồ sơ học tập, 20 ván gần nhất, tối đa 30 câu sai tiêu biểu (ưu tiên lỗi lặp lại, chưa sửa) kèm câu tả thao tác, hướng dẫn và hợp đồng đầu ra cho LLM; ước lượng token (byte UTF-8 chia 3, làm tròn lên), mặc định dưới 30 000 token; tùy chọn kèm nhật ký 7 ngày; nút Sao chép và Tải tệp |
 
 Định nghĩa dùng chung (`js/bao-cao.js`): câu đã làm là mọi câu trừ `bo_qua`; câu tự làm là câu đã làm không dùng gợi ý; % tự làm đúng = `dung_ngay` chia câu tự làm (cùng quy tắc với mức thành thạo); tuần tính từ thứ Hai. Mọi con số tính lại được từ ba lớp tóm tắt hoặc nhật ký gốc, không lưu số riêng. Góc phụ huynh chỉ ghi `phu_huynh_mo` và `phu_huynh_cai_dat`, và chỉ khi bé đang xem là bé đang chơi (YC-09).
@@ -165,6 +165,22 @@ Chế độ đảo chỉ bật khi có `?dao=1`, trang nằm trong iframe và tr
 
 Màn của game cũ hỏi kỹ năng đo lường, hình học, thời gian ở dạng chọn đáp án (`dang: 'chon_dap_an'` trong `dao.js`, cầu nối cũng tự đổi khi game cũ xin lựa chọn). Service worker của từng game cũ đã tăng phiên bản và lưu thêm `js/dao.js`, `dao.css`.
 
+## Hướng dẫn chơi và bước tiếp theo
+
+Để bé tự hiểu luật chơi, cách ấp trứng, chơi theo thứ tự nào, làm sao lớn lên và có thêm bạn khủng long. Chữ to, có giọng đọc (nút Nghe), dùng số liệu thật của bé. Mọi con số đọc từ luật trong code (`HocTap.THUONG`, `SAO`, `DK_THUOC`, `MUC_LON`, `Dao.DAU_TRUONG_MO`, `BAI_HOC_KY_2`) nên không lệch khi chỉnh luật.
+
+| Chỗ | Có gì |
+|---|---|
+| Trang Cách chơi (`js/huong-dan.js`) | 10 chương: Đảo, Nhiệm vụ (3 nhiệm vụ chơi lần lượt, nút chơi nhiệm vụ kế tiếp), Vùng đất (chơi từ Màn 1 xuống, 3 sao, cúp mở khi xong các màn chính, nhãn màu, màn học kì 2; hình là vùng bé vừa chơi với sao thật), Khi chơi (loa, bóng đèn gợi ý, sai thì câu quay lại sau 2 câu, bài học 30 giây, tạm dừng; hình nút giống hệt trong game), Quả mọng (bảng thưởng, không bao giờ bị trừ), Lớn lên (6 mức của khủng long của bé, mức chưa tới là bóng đen, còn thiếu gì để lên mức sau), Bạn mới (10 trứng vùng có bóng bạn khủng long nấp sau, số kỹ năng đã thuộc, chạm để sang vùng), Đã thuộc (bậc thang 5 mức, điều kiện thuộc, 3 kỹ năng sắp thuộc và còn thiếu gì), Đấu trường (trạng thái hai trùm, điều kiện mở), Trò chơi (16 trò, chạm để xem cách chơi) |
+| Lần đầu lên đảo | Sau khi ấp trứng, bản ngắn 4 chương (Đảo, Nhiệm vụ, Khi chơi, Lớn lên) kết thúc bằng nút "Chơi nhiệm vụ 1" hoặc "Xem bản đồ" |
+| Nút mở trang | Bản đồ: nút vàng "Cách chơi" (nhấp nháy, nhãn "Mới" tới khi bé mở lần đầu); trang vùng: nút ? (chương Vùng đất) và "Làm sao để trứng nở?" (chương Bạn mới); màn kết thúc: nút ? cạnh thanh lớn lên, kỹ năng, trứng vùng. Đóng trang là về đúng màn đang xem |
+| Thẻ cách chơi của một trò | 3 bước có hình, theo thể loại và chế độ của màn (Xưởng Đo Lường cân, rót, thước, đơn vị; Chợ nhận biết, trả tiền, đổi tiền, người bán; Câu Cá; Lật Lịch), Đua Xe có trạm dừng thêm một bước. Hiện trước lần chơi đầu của 9 thể loại mới (sau bài học 30 giây nếu có; 6 game cũ và Đấu Trường đã có thẻ Bắt đầu kèm cách chơi); xem lại trong menu Tạm dừng (nút "Cách chơi" ở khung chơi chung và Đua Xe, phím Esc chỉ đóng thẻ, game vẫn tạm dừng) |
+| Màn kết thúc | Gợi ý sao ("Tự làm đúng ngay 9 trên 10 câu để được 3 sao"); hàng kỹ năng chính của màn: mức hiện tại và từng điều kiện Đã thuộc đã đủ hay còn thiếu (tự làm 20 câu, đúng ngay 9 trên 10, chơi 2 ngày khác nhau, làm lại câu từng sai), đã thuộc thì ngày ôn để thành Vững chắc (`HocTap.tienDoThuoc`); trứng của vùng x/y kỹ năng đã thuộc; thẻ "Bước tiếp theo" có nút đi thẳng (đọc to sau 1,4 giây) |
+| Bước tiếp theo (`Dao.buocTiep`) | Nếu phụ huynh có đặt giới hạn và hôm nay đã đủ thì nghỉ (thẻ có nút "Bố mẹ cho chơi thêm") → nhiệm vụ hôm nay còn lại (theo thứ tự) → màn vừa chơi chỉ 1 sao thì chơi lại → cúp của vùng vừa mở → màn chưa chơi cùng vùng → màn chưa chơi ở vùng khác theo thứ tự bài SGK, không vượt bài đang học quá 3 bài (bé lớp 2) → cúp đã mở chưa chơi → đấu trường đã mở chưa thắng → màn chưa đủ 3 sao → về đảo. Bé bấm thì xem hết màn ăn mừng (trứng nở, lớn lên…) rồi làm luôn; "Chơi lại" cũng chờ ăn mừng xong |
+| Bản đồ khi đã xong 3 nhiệm vụ | "Xong nhiệm vụ hôm nay! Chơi thêm: …" và nút đi thẳng tới bước tiếp theo |
+
+Hồ sơ bé thêm `huong_dan: { da_mo, gioi_thieu, cach_choi: { <thể loại>: ngày } }`. Trang Cách chơi không ghi nhật ký (không phải thao tác học). Kiểm thử: `tests/dao-khung-long-huong-dan.test.js`.
+
 ## Cấu trúc tệp
 
 | Tệp | Vai trò |
@@ -176,7 +192,7 @@ Màn của game cũ hỏi kỹ năng đo lường, hình học, thời gian ở 
 | `js/cau-do-luong.js`, `js/cau-tien.js`, `js/cau-thong-ke.js`, `js/cau-hinh-hoc.js`, `js/cau-thoi-gian.js` | Loại câu, kỹ năng, mã lỗi và hình SVG của đo lường, tiền, thống kê, hình học, thời gian (`window.DongHo` vẽ đồng hồ, lịch, dải 24 giờ) |
 | `js/hoc-tap.js` | Hàm thuần: tóm tắt câu, tóm tắt ván (kèm câu mô tả tiếng Việt), hồ sơ học tập, 5 mức thành thạo, cờ Cần giúp, quả mọng, sao, mức lớn |
 | `js/van-choi.js` | Vòng đời một ván dùng chung cho mọi thể loại: xếp câu, câu sai (và hết giờ) quay lại, ghi đủ chuỗi sự kiện mỗi câu; dạng chọn đáp án, nhập số, ghép đôi, kéo thả, thao tác trên hình, xếp thứ tự, hai bước |
-| `js/dao.js` | 10 vùng, 2 đấu trường, 80 màn, loài khủng long, luật mở vùng và mở màn học kì 2, trộn câu đấu trường, lập nhiệm vụ hôm nay (theo kế hoạch tuần nếu phụ huynh chọn) |
+| `js/dao.js` | 10 vùng, 2 đấu trường, 80 màn, loài khủng long, luật mở vùng và mở màn học kì 2, trộn câu đấu trường, lập nhiệm vụ hôm nay (theo kế hoạch tuần nếu phụ huynh chọn), bước tiếp theo sau mỗi màn (`buocTiep`) |
 | `js/ho-so.js` | Hồ sơ bé, gợi ý lớp từ tuổi, bé đang chơi, tên gợi ý từ hồ sơ chung `3hoa-players-v1` (chỉ đọc) |
 | `js/khung-choi.js` | Khung chơi chung của các game mới: thanh câu hỏi, điểm, tiến độ, gợi ý (tự ẩn sau vài giây), màn “Gần đúng rồi”, tạm dừng, pháo giấy |
 | `js/dua-xe.js`, `js/lat-the.js`, `js/xep-hinh-so.js`, `js/truyen-tranh.js` | Game của giai đoạn 1, 2 |
@@ -184,9 +200,10 @@ Màn của game cũ hỏi kỹ năng đo lường, hình học, thời gian ở 
 | `js/cau-noi.js` | Cầu nối cho sáu game cũ chạy trong iframe (giai đoạn 5) |
 | `js/bao-cao.js`, `js/goc-phu-huynh.js` | Góc phụ huynh: hàm tính báo cáo thuần (kiểm thử được bằng Node) và giao diện |
 | `js/bai-hoc.js` | Bài học 30 giây (`BaiHoc.dangKy`) và sự kiện `bai_hoc_xem` |
+| `js/huong-dan.js`, `css/huong-dan.css` | Trang Cách chơi (10 chương), thẻ cách chơi của từng trò, và giao diện các chỗ chỉ đường (nút Cách chơi, bước tiếp theo, kỹ năng còn thiếu ở màn kết thúc) |
 | `js/phan-hoi.js` | Nội dung màn “Gần đúng rồi!”: đặt tính cột dọc, que tính, mô hình khối, hình lời giải do ngân hàng câu dựng |
 | `js/am-thanh.js` | Tiếng động tổng hợp bằng Web Audio, giọng đọc tiếng Việt |
-| `js/app.js` | Điều phối các màn; sổ đăng ký thể loại `window.DaoTroChoi[game] = { ten, khung, san hoặc man, batDau }`; cập nhật tóm tắt, thưởng, nhiệm vụ, mức lớn, đấu trường sau mỗi ván; giới hạn phút mỗi ngày |
+| `js/app.js` | Điều phối các màn; sổ đăng ký thể loại `window.DaoTroChoi[game] = { ten, khung, san hoặc man, batDau }`; cập nhật tóm tắt, thưởng, nhiệm vụ, mức lớn, đấu trường sau mỗi ván; thời gian chơi do phụ huynh đặt (mặc định không giới hạn; hết giờ thì hộp "Hôm nay con chơi đủ giờ rồi" có nút Bố mẹ cho chơi thêm, qua cổng phép tính vào thẳng mục thời gian của Cài đặt) |
 | `assets/img/` | Hình WebP xuất từ `assets/art/` bằng `python scripts/dkl-images.py` |
 | `assets/art/` | Prompt và MANIFEST của hình do Codex vẽ (lượt `gd4`: 6 biểu tượng thể loại, 2 trùm đấu trường); bản gốc PNG chỉ giữ cục bộ, không đưa lên git |
 | `sw.js`, `manifest.json`, `icons/` | PWA, chơi ngoại tuyến sau lần tải đầu |
@@ -197,7 +214,7 @@ IndexedDB `dao-khung-long`:
 
 | Kho | Khóa | Nội dung |
 |---|---|---|
-| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, cài đặt của phụ huynh `gioi_han_phut`, `mo_khoa_vung`, `ke_hoach_tuan`) |
+| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, cài đặt của phụ huynh `gioi_han_phut` (null là không giới hạn), `them_hom_nay`, `mo_khoa_vung`, `ke_hoach_tuan`, trang Cách chơi và thẻ cách chơi đã xem `huong_dan`) |
 | `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện (cả của sáu game cũ khi chơi trong đảo); giữ 120 ngày |
 | `tom_tat_cau` | `cau` | Tóm tắt từng câu |
 | `tom_tat_van` | `van` | Tóm tắt từng ván, có câu mô tả tiếng Việt |
@@ -217,7 +234,7 @@ Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu,
 node tests/run.js
 ```
 
-432 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`).
+442 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/dao-khung-long-huong-dan.test.js` (bước tiếp theo, còn thiếu gì để Đã thuộc, cách chơi đủ mọi thể loại và chế độ, 10 chương dựng được), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`).
 
 Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở gốc repo (máy chủ tĩnh có hàng đợi lớn), rồi `node scripts/dkl-cdp.js --kich-ban <tệp.js>` (Chrome headless, không cần Playwright; đọc phần đầu tệp). Trong bảng điều khiển có `window.__DKL` (`batDauMan(id)`, `moPhuHuynh`, `tinhLai`), `window.DaoTroChoi`, `CauNoi._trangThai()`, và `_trangThai()` của từng game.
 

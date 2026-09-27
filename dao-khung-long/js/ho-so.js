@@ -3,6 +3,8 @@
    - Tên (1 đến 16 ký tự), tuổi (5 đến 11), lớp gợi ý từ tuổi và năm học rồi xác nhận.
    - Phong cách khủng long: dung_manh (Rex) hoặc de_thuong (Mây).
    - Lưu ở kho ho_so của IndexedDB (qua NhatKy.kho). Bé đang chơi nhớ ở localStorage.
+   - Thời gian chơi: mặc định không giới hạn. Chỉ khi phụ huynh đặt gioi_han_phut thì mới có giới hạn mỗi ngày;
+     them_hom_nay ({ ngay, phut } hoặc { ngay, khong_gioi_han: true }) là giờ cho thêm riêng hôm đó, qua ngày tự hết.
    API: window.HoSo
    ============================================================ */
 (function () {
@@ -12,6 +14,27 @@
   const TOI_DA_BE = 8;
   const KHOA_BE = 'dkl-be-dang-choi-v1';
   const HOI_LAI_SAU_MS = 12 * 3600 * 1000;
+  /** Phụ huynh chọn số phút mỗi ngày trong khoảng này, bước 5 phút (null là không giới hạn, mặc định). */
+  const GIOI_HAN = { toi_thieu: 5, toi_da: 240, buoc: 5 };
+
+  /** Làm tròn số phút phụ huynh chọn về bước 5 phút trong khoảng cho phép; không phải số dương thì là không giới hạn (null). */
+  function sachGioiHan(v) {
+    const n = Number(v);
+    if (v == null || v === '' || !isFinite(n) || n <= 0) return null;
+    return Math.max(GIOI_HAN.toi_thieu, Math.min(GIOI_HAN.toi_da, Math.round(n / GIOI_HAN.buoc) * GIOI_HAN.buoc));
+  }
+
+  /**
+   * Số phút bé được chơi trong ngày `ngay` ('YYYY-MM-DD'), hoặc null nếu không giới hạn.
+   * Không giới hạn khi phụ huynh chưa đặt gioi_han_phut (mặc định) hoặc đã cho "không giới hạn hôm nay".
+   */
+  function gioiHanHomNay(p, ngay) {
+    const goc = p && sachGioiHan(p.gioi_han_phut);
+    if (!goc) return null;
+    const them = p.them_hom_nay && p.them_hom_nay.ngay === ngay ? p.them_hom_nay : null;
+    if (them && them.khong_gioi_han) return null;
+    return goc + (them && them.phut > 0 ? them.phut : 0);
+  }
 
   function sachTen(s) {
     s = String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim();
@@ -137,6 +160,9 @@
   window.HoSo = {
     TEN_TOI_DA: TEN_TOI_DA,
     TOI_DA_BE: TOI_DA_BE,
+    GIOI_HAN: GIOI_HAN,
+    sachGioiHan: sachGioiHan,
+    gioiHanHomNay: gioiHanHomNay,
     sachTen: sachTen,
     namHocBatDau: namHocBatDau,
     goiYLop: goiYLop,

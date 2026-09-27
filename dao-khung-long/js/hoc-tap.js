@@ -12,6 +12,12 @@
   const TEN_MUC = { chua_hoc: 'Chưa học', lam_quen: 'Làm quen', dang_luyen: 'Đang luyện', da_thuoc: 'Đã thuộc', vung_chac: 'Vững chắc' };
   const KET_QUA_DUNG = { dung_ngay: 1, dung_sau_goi_y: 1, dung_lan_2: 1 };
   const MOC_ON = [1, 3, 7, 14, 30];
+  /** Điều kiện Đã thuộc trong cửa sổ 14 ngày: tự làm (không gợi ý) từ 20 câu, đúng ngay từ 90%, ở ít nhất 2 ngày, không còn câu sai chưa sửa. */
+  const DK_THUOC = { tu_lam: 20, ti_le: 0.9, so_ngay: 2 };
+  /** Tỉ lệ câu mới làm đúng ngay để được 3 sao, 2 sao (dưới nữa là 1 sao). */
+  const SAO = { ba: 0.9, hai: 0.7 };
+  /** Quả mọng thưởng ngoài từng câu (app.js trao, trang Cách chơi đọc đúng các số này). */
+  const THUONG = { ky_nang_da_thuoc: 50, xong_3_nhiem_vu: 20, thang_dau_truong: 100 };
 
   /** Các mức lớn của khủng long chính (quả mọng cần có, số nội dung đã thuộc, số đấu trường thắng). */
   const MUC_LON = [
@@ -207,12 +213,36 @@
 
   function dieuKienThuoc(cuaSo, coNo) {
     const tuLam = cuaSo.filter(function (c) { return c.goi_y_cap === 0 && c.ket_qua !== 'bo_qua'; });
-    if (tuLam.length < 20 || coNo) return false;
+    if (tuLam.length < DK_THUOC.tu_lam || coNo) return false;
     const dung = tuLam.filter(function (c) { return c.ket_qua === 'dung_ngay'; }).length;
-    if (dung / tuLam.length < 0.9) return false;
+    if (dung / tuLam.length < DK_THUOC.ti_le) return false;
     const ngay = {};
     tuLam.forEach(function (c) { ngay[c.ngay] = 1; });
-    return Object.keys(ngay).length >= 2;
+    return Object.keys(ngay).length >= DK_THUOC.so_ngay;
+  }
+
+  /**
+   * Bé còn thiếu gì để một kỹ năng thành Đã thuộc (cùng điều kiện với dieuKienThuoc, cửa sổ 14 ngày tới hôm nay).
+   * cauDs: tóm tắt câu của kỹ năng đó; daSua: tapDaSua của mọi câu của bé.
+   * Trả về { tu_lam, can_tu_lam, dung_ngay, ti_le, can_ti_le, so_ngay, can_so_ngay, cau_no, du }.
+   */
+  function tienDoThuoc(cauDs, daSua, homNay) {
+    const tu = congNgay(homNay, -13);
+    const cs = (cauDs || []).filter(function (c) { return c.ket_qua !== 'bo_qua' && c.ngay >= tu && c.ngay <= homNay; });
+    const tuLam = cs.filter(function (c) { return c.goi_y_cap === 0; });
+    const dung = tuLam.filter(function (c) { return c.ket_qua === 'dung_ngay'; }).length;
+    const ngay = {};
+    tuLam.forEach(function (c) { ngay[c.ngay] = 1; });
+    const soNgayChoi = Object.keys(ngay).length;
+    const no = cs.filter(function (c) { return c.ket_qua === 'sai' && !(daSua || {})[c.cau]; }).length;
+    const tiLe = tuLam.length ? lam2(dung / tuLam.length) : null;
+    return {
+      tu_lam: tuLam.length, can_tu_lam: DK_THUOC.tu_lam,
+      dung_ngay: dung, ti_le: tiLe, can_ti_le: DK_THUOC.ti_le,
+      so_ngay: soNgayChoi, can_so_ngay: DK_THUOC.so_ngay,
+      cau_no: no,
+      du: tuLam.length >= DK_THUOC.tu_lam && dung / tuLam.length >= DK_THUOC.ti_le && soNgayChoi >= DK_THUOC.so_ngay && no === 0
+    };
   }
 
   /**
@@ -403,7 +433,7 @@
   function saoCuaVan(soCauMoi, dungNgayMoi, boDo) {
     if (boDo || !soCauMoi) return 0;
     const r = dungNgayMoi / soCauMoi;
-    return r >= 0.9 ? 3 : r >= 0.7 ? 2 : 1;
+    return r >= SAO.ba ? 3 : r >= SAO.hai ? 2 : 1;
   }
 
   /** Mức lớn hiện tại của khủng long chính. tt: { qua_mong, so_da_thuoc, so_dau_truong, van_xong, co_cau_dung } */
@@ -429,6 +459,10 @@
     MUC: MUC,
     TEN_MUC: TEN_MUC,
     MUC_LON: MUC_LON,
+    MOC_ON: MOC_ON,
+    DK_THUOC: DK_THUOC,
+    SAO: SAO,
+    THUONG: THUONG,
     ngayCua: ngayCua,
     congNgay: congNgay,
     soNgay: soNgay,
@@ -439,6 +473,7 @@
     tomTatVan: tomTatVan,
     moTaVan: moTaVan,
     mucKyNang: mucKyNang,
+    tienDoThuoc: tienDoThuoc,
     hoSoHocTap: hoSoHocTap,
     bangMuc: bangMuc,
     quaMongCau: quaMongCau,

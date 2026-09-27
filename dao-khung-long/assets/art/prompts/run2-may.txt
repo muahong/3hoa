@@ -1,0 +1,11 @@
+RUN = may
+
+MAIN CHARACTER "May" (style line "Sweet"): a sweet gentle long-neck dinosaur (brachiosaurus). Pastel pink body with lighter pink spots on the back, cream belly, long graceful neck, small head, big sparkly violet eyes with long lashes, rosy cheeks, soft smile, a small crown of yellow and white flowers on her head. Same design in every image, only the age changes.
+
+Images:
+1. may-adult.png : May grown-up, full body, three-quarter view facing right, happy pose, head slightly tilted.
+2. may-egg.png : May's egg alone: pastel pink pearly egg decorated with little white hearts and tiny stars, standing upright with a slight tilt.
+3. may-hatchling.png : newborn baby May peeking out of that cracked pink egg, bottom half of the shell still around her, a tiny flower on her head, huge eyes, delighted face.
+4. may-kid.png : toddler May, round and chubby, short neck for now, sitting and smiling.
+5. may-teen.png : young May prancing happily, neck longer.
+6. may-legend.png : legendary May: grown-up May with shimmering lavender and gold ribbon wings, a small golden tiara among the flowers, gentle sparkles, graceful pose.

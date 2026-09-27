@@ -1,0 +1,10 @@
+RUN = species-a
+
+Five collectible dinosaur friends, one for each region of the island. Each is a different species with its own signature color, full body, three-quarter view facing right, transparent background, same adorable style (big eyes, chubby, friendly).
+
+Images:
+1. sp-rong-bien.png : "Sea Dragon", a baby plesiosaur, ocean blue with seafoam spots, four flippers, a tiny pink seashell on its head, playful swimming pose in the air (no water).
+2. sp-khung-long-lua.png : "Fire Dino", a small dilophosaurus with a double head crest shaped like friendly flames, warm red orange body, yellow belly, cheerful, holding a warm glowing pebble.
+3. sp-giap-long.png : "Armor Dino", a chubby ankylosaurus with sandy tan and brown rounded armor studs and a round club tail, wearing a tiny blue workshop apron with a measuring tape in the pocket.
+4. sp-toc-long.png : "Speed Dino", a small velociraptor-like dino, teal with white racing stripes, racing goggles pushed up on its head, fast happy running pose.
+5. sp-kiem-long.png : "Shape Dino", a stegosaurus whose back plates are colorful geometric shapes (a triangle, a square, a circle, a rectangle, a diamond), leafy green body, curious smile.

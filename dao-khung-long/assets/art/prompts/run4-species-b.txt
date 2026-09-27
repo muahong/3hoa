@@ -1,0 +1,10 @@
+RUN = species-b
+
+Five more collectible dinosaur friends, one for each region of the island. Each is a different species with its own signature color, full body, three-quarter view facing right, transparent background, same adorable style (big eyes, chubby, friendly).
+
+Images:
+1. sp-duc-long.png : "Sky Dino", a small pterodactyl, lavender with light violet wings, a tiny round golden pocket watch hanging from its neck, happy flying pose.
+2. sp-tam-giac-long.png : "Three Horn Dino", a triceratops with coral pink body and a purple frill, three short rounded horns, big smile.
+3. sp-long-co-dai.png : "Tall Neck Dino", a tall brachiosaurus, sunny yellow with orange spots, very long neck, wearing a small explorer hat, looking up.
+4. sp-mo-vit-long.png : "Trumpet Dino", a parasaurolophus with a trumpet-shaped head crest, mint green, wearing a little striped shopkeeper apron with a coin pocket.
+5. sp-gai-long.png : "Fisher Dino", a spinosaurus, blue teal with a rounded sail on its back, holding a tiny bamboo fishing rod with a little fish on the line.

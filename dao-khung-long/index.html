@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Đảo Khủng Long – Học Toán lớp 2 | 3hoa.com</title>
+<meta name="description" content="Đảo Khủng Long: game học Toán lớp 2 theo SGK Kết nối tri thức. Bé đua xe giải toán, nuôi khủng long của riêng mình; bố mẹ xem được con sai ở đâu.">
+<meta name="theme-color" content="#2ec4b6">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Đảo Khủng Long">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- Đang tải -->
+  <section id="man-tai" class="man man-tai">
+    <img src="assets/img/rex-egg.webp" alt="" class="tai-trung lac">
+    <p>Đang mở Đảo Khủng Long…</p>
+  </section>
+
+  <!-- 1. Con là ai? -->
+  <section id="man-chon-be" class="man man-troi hidden" aria-labelledby="cb-tieu-de">
+    <a class="nut-trang-chu" href="../">← 3hoa.com</a>
+    <h1 id="cb-tieu-de" class="tieu-de-lon">Con là ai?</h1>
+    <p class="phu-de" id="cb-phu-de">Chạm vào tên của con để lên đảo</p>
+    <div class="the-be-luoi" id="cb-luoi"></div>
+    <button class="nut-bo-me" id="cb-bo-me" type="button" aria-label="Góc phụ huynh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg>Bố mẹ</button>
+  </section>
+
+  <!-- 2. Tạo hồ sơ -->
+  <section id="man-tao-ho-so" class="man man-troi hidden" aria-label="Tạo hồ sơ">
+    <button class="nut-quay" id="th-quay" type="button" aria-label="Quay lại">‹</button>
+    <div class="th-ben-trai">
+      <div class="bong-thoai" id="th-loi">Chào con! Con tên là gì nhỉ?</div>
+      <img src="assets/img/rex-kid.webp" alt="" class="th-khung-long" id="th-hinh">
+    </div>
+    <div class="th-bang">
+      <ol class="buoc-hang" id="th-buoc">
+        <li data-b="1"><i>1</i>Tên</li>
+        <li data-b="2"><i>2</i>Tuổi</li>
+        <li data-b="3"><i>3</i>Lớp</li>
+      </ol>
+      <div class="th-phan" id="th-phan-ten">
+        <label class="nhan" for="th-ten">Tên của con</label>
+        <input id="th-ten" class="o-nhap" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Gõ tên của con">
+        <div class="goi-y-ten" id="th-goi-y-ten"></div>
+      </div>
+      <div class="th-phan hidden" id="th-phan-tuoi">
+        <p class="nhan">Con mấy tuổi?</p>
+        <div class="nut-tuoi-hang" id="th-tuoi"></div>
+      </div>
+      <div class="th-phan hidden" id="th-phan-lop">
+        <div class="hop-lop">
+          <p class="hop-lop-hoi" id="th-hoi-lop">Con đang học lớp 2 phải không?</p>
+          <p class="hop-lop-phu" id="th-lop-phu">Tính từ 7 tuổi và năm học 2026 đến 2027</p>
+          <div class="nut-lop-hang" id="th-lop"></div>
+        </div>
+        <p class="ghi-chu">Bố mẹ sửa được tuổi và lớp trong Góc phụ huynh</p>
+      </div>
+      <button class="nut nut-cam th-tiep" id="th-tiep" type="button" disabled>Tiếp</button>
+    </div>
+  </section>
+
+  <!-- 3. Chọn quả trứng -->
+  <section id="man-chon-trung" class="man man-dong-co hidden" aria-label="Chọn quả trứng">
+    <button class="nut-quay" id="ct-quay" type="button" aria-label="Quay lại">‹</button>
+    <div class="ct-tieu-de">
+      <h1 id="ct-tieu-de">Chọn quả trứng của con</h1>
+      <p>Trứng nở khi con đua xong ván đầu tiên</p>
+    </div>
+    <div class="ct-hai">
+      <button class="ct-trung" type="button" data-pc="dung_manh" aria-pressed="false">
+        <span class="ct-hao-quang"></span>
+        <img src="assets/img/rex-egg.webp" alt="Trứng Dũng Mãnh" class="ct-hinh-trung">
+        <img src="assets/img/rex-adult.webp" alt="" class="ct-lon ct-lon-trai">
+        <span class="ct-nhan"><b class="xanh">Dũng Mãnh</b><small>Rex: gan dạ, chạy nhanh</small></span>
+        <span class="ct-chon" aria-hidden="true">✓</span>
+      </button>
+      <button class="ct-trung" type="button" data-pc="de_thuong" aria-pressed="false">
+        <span class="ct-hao-quang"></span>
+        <img src="assets/img/may-egg.webp" alt="Trứng Dễ Thương" class="ct-hinh-trung">
+        <img src="assets/img/may-adult.webp" alt="" class="ct-lon ct-lon-phai">
+        <span class="ct-nhan"><b class="hong">Dễ Thương</b><small>Mây: hiền lành, thích hoa</small></span>
+        <span class="ct-chon" aria-hidden="true">✓</span>
+      </button>
+    </div>
+    <button class="nut nut-cam nut-to" id="ct-ap" type="button" disabled>Ấp quả trứng này</button>
+  </section>
+
+  <!-- 4. Bản đồ đảo -->
+  <section id="man-ban-do" class="man man-bien hidden" aria-label="Bản đồ Đảo Khủng Long">
+    <div class="bd-khung" id="bd-khung">
+      <img src="assets/img/bg-island-map.webp" alt="" class="bd-anh" draggable="false">
+      <div class="bd-diem" id="bd-diem"></div>
+      <div class="bd-ban" id="bd-ban"><img id="bd-ban-hinh" alt=""><span class="bd-ban-noi" id="bd-ban-noi">Đi nào!</span></div>
+    </div>
+    <button class="chip-be" id="bd-chip" type="button" aria-label="Đổi bạn chơi">
+      <span class="chip-be-anh"><img id="bd-chip-hinh" alt=""></span>
+      <b id="bd-chip-ten">An</b>
+      <span class="chip-qua"><img src="assets/img/berry.webp" alt="Quả mọng"><b id="bd-chip-qua">0</b></span>
+    </button>
+    <aside class="nv-bang" aria-labelledby="nv-tieu-de">
+      <h2 id="nv-tieu-de">Nhiệm vụ hôm nay</h2>
+      <p class="nv-phu" id="nv-phu">Xong 0/3 · khoảng 15 phút</p>
+      <div class="nv-thanh"><i id="nv-thanh"></i></div>
+      <div class="nv-ds" id="nv-ds"></div>
+      <button class="nut nut-cam nv-choi" id="nv-choi" type="button">Chơi nhiệm vụ 1</button>
+    </aside>
+    <div class="bd-duoi">
+      <button class="nut-nho" id="bd-bo-me" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg>Bố mẹ</button>
+      <button class="nut-nho" id="bd-am" type="button">Âm thanh: Bật</button>
+    </div>
+    <div class="meo-mh hidden" id="bd-meo">
+      <p><b>Mẹo cho bố mẹ:</b> trên iPad, bấm <b>Chia sẻ</b> rồi <b>Thêm vào MH chính</b> để Safari không xóa dữ liệu của bé sau 7 ngày không mở.</p>
+      <button type="button" id="bd-meo-dong" aria-label="Đóng mẹo">✕</button>
+    </div>
+  </section>
+
+  <!-- 5. Trang một vùng -->
+  <section id="man-vung" class="man man-vung hidden" aria-labelledby="vg-ten">
+    <div class="vg-nen" id="vg-nen"></div>
+    <header class="vg-dau">
+      <button class="nut-quay trang" id="vg-quay" type="button" aria-label="Về bản đồ">‹</button>
+      <div><h1 id="vg-ten">Vùng 4 · Đường Đua Có Nhớ</h1><p id="vg-phu">SGK Chủ đề 4 · Bài 19 đến 24 · Học kì 1</p></div>
+    </header>
+    <div class="vg-than">
+      <div class="vg-trung-the">
+        <h2 id="vg-trung-ten">Trứng Tốc Long</h2>
+        <div class="vg-vong">
+          <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="96" class="vg-vong-nen"/><circle cx="110" cy="110" r="96" class="vg-vong-mau" id="vg-vong-mau"/></svg>
+          <img id="vg-trung-hinh" alt="" class="vg-trung-hinh">
+          <img id="vg-loai-hinh" alt="" class="vg-loai-hinh">
+        </div>
+        <p class="vg-trung-so" id="vg-trung-so">0/5 kỹ năng đã thuộc</p>
+        <p class="vg-trung-phu" id="vg-trung-phu">Thuộc cả 5 thì trứng nở</p>
+        <div class="chu-giai" id="vg-chu-giai"></div>
+      </div>
+      <div class="vg-ds" id="vg-ds"></div>
+    </div>
+  </section>
+
+  <!-- 6. Đua Xe -->
+  <section id="man-dua-xe" class="man man-dua hidden" aria-label="Đua Xe">
+    <canvas id="dx-canvas" aria-label="Đường đua ba làn. Chạm bên trái hoặc bên phải để đổi làn." role="img"></canvas>
+    <div class="dx-trai">
+      <div class="dx-o"><small>ĐIỂM</small><b id="dx-diem">0</b></div>
+      <div class="dx-o dx-o-nho"><b id="dx-vong">Vòng 1/3</b><span id="dx-gio">0:00</span><small id="dx-ky-luc">Chưa có kỷ lục</small></div>
+    </div>
+    <div class="dx-cau hidden" id="dx-cau" aria-live="polite">
+      <span id="dx-de">36 + 27 = ?</span>
+      <button class="dx-loa" id="dx-nghe" type="button" aria-label="Nghe đề"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="dx-phai">
+      <button class="dx-nut" id="dx-goi-y" type="button" aria-label="Gợi ý"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V17h6v-1.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="#ffd166"/><rect x="9" y="18" width="6" height="2.2" rx="1" fill="#fff"/><rect x="10" y="20.8" width="4" height="1.6" rx=".8" fill="#fff"/></svg></button>
+      <button class="dx-nut" id="dx-tam-dung" type="button" aria-label="Tạm dừng"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/></svg></button>
+    </div>
+    <div class="dx-tien-do" aria-hidden="true"><i id="dx-tien-do-thanh"></i><span class="dx-co">🏁</span></div>
+    <div class="dx-tang-toc hidden" id="dx-tang-toc">TĂNG TỐC <small>3 câu đúng liền</small></div>
+    <div class="dx-bong-nhan hidden" id="dx-bong-nhan">Bóng kỷ lục</div>
+    <button class="dx-lao hidden" id="dx-lao" type="button">Lao tới! <span aria-hidden="true">⏩</span></button>
+    <div class="dx-huong-dan hidden" id="dx-huong-dan"><span>◀</span> Chạm trái, phải để đổi làn <span>▶</span></div>
+    <div class="dx-goi-y-bong hidden" id="dx-goi-y-bong" role="status"><img id="dx-goi-y-hinh" alt=""><p id="dx-goi-y-chu"></p></div>
+    <div class="dx-dem hidden" id="dx-dem-nguoc"><b id="dx-dem-so">3</b></div>
+    <div class="dx-ve-dich hidden" id="dx-ve-dich">VỀ ĐÍCH!</div>
+
+    <div class="lop-phu hidden" id="dx-tram" role="dialog" aria-label="Trạm dừng">
+      <div class="the tram-the">
+        <p class="tram-nhan">TRẠM DỪNG · tự gõ đáp án</p>
+        <div class="tram-de" id="dx-tram-de"></div>
+        <div class="tram-o" id="dx-tram-o" aria-live="polite"></div>
+        <p class="tram-bao" id="dx-tram-bao">Con tự gõ đáp án nhé</p>
+        <button class="tram-goi-y" id="dx-tram-goi-y" type="button">💡 Gợi ý</button>
+        <div class="ban-phim" id="dx-ban-phim">
+          <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+          <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+          <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+          <button type="button" data-k="xoa" class="phim-xoa" aria-label="Xóa">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="xong" class="phim-xong">Xong</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lop-phu hidden" id="dx-phan-hoi" role="dialog" aria-label="Lời giải">
+      <div class="the ph-the">
+        <img id="dx-ph-hinh" alt="" class="ph-hinh">
+        <div id="dx-ph-noi-dung"></div>
+        <div id="dx-ph-que" class="hidden"></div>
+        <p class="ph-note" id="dx-ph-note">Câu này sẽ quay lại sau 2 câu nữa để con tự làm</p>
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="dx-ph-que-nut" type="button">Xem bằng que tính</button>
+          <button class="nut nut-cam" id="dx-ph-tiep" type="button">Chơi tiếp</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lop-phu hidden" id="dx-tam" role="dialog" aria-label="Tạm dừng">
+      <div class="the tam-the">
+        <h2>Tạm dừng</h2>
+        <button class="nut nut-cam nut-to" id="dx-tiep" type="button">Chơi tiếp</button>
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="dx-am" type="button">Âm thanh: Bật</button>
+          <button class="nut nut-trang" id="dx-giong" type="button">Giọng đọc: Bật</button>
+        </div>
+        <button class="nut nut-trang" id="dx-ve-dao" type="button">Về đảo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Kết thúc màn -->
+  <section id="man-ket-thuc" class="man man-dong-co hidden" aria-labelledby="kt-tieu-de">
+    <div class="kt-the">
+      <div class="kt-trai">
+        <h1 id="kt-tieu-de">Hoàn thành!</h1>
+        <p class="kt-man" id="kt-man"></p>
+        <div class="kt-sao" id="kt-sao" aria-label="Số sao"></div>
+        <div class="kt-so">
+          <div><b id="kt-dung">0/0</b><span>câu đúng</span></div>
+          <div><b id="kt-tu-lam">0</b><span>câu tự làm, không gợi ý</span></div>
+          <div><b id="kt-sua">0</b><span>câu từng sai, nay đã sửa</span></div>
+        </div>
+        <p class="kt-ky-luc hidden" id="kt-ky-luc"></p>
+      </div>
+      <div class="kt-phai">
+        <img id="kt-an" alt="" class="kt-an">
+        <p class="kt-qua"><img src="assets/img/berry.webp" alt=""><b id="kt-qua">+0 quả mọng</b></p>
+        <ul class="kt-chi-tiet" id="kt-chi-tiet"></ul>
+        <div class="kt-lon">
+          <p id="kt-lon-ten">Rex: Trứng → Sơ sinh</p>
+          <div class="thanh"><i id="kt-lon-thanh"></i></div>
+          <p class="kt-lon-phu" id="kt-lon-phu"></p>
+        </div>
+      </div>
+      <div class="kt-duoi">
+        <p class="kt-hoi">Con thấy màn này thế nào?</p>
+        <div class="kt-mat" id="kt-mat">
+          <button type="button" data-muc="vui" aria-label="Vui"><span>😄</span>Vui</button>
+          <button type="button" data-muc="binh_thuong" aria-label="Bình thường"><span>🙂</span>Bình thường</button>
+          <button type="button" data-muc="chan" aria-label="Chán"><span>😕</span>Chán</button>
+        </div>
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="kt-lai" type="button">Chơi lại</button>
+          <button class="nut nut-cam" id="kt-tiep" type="button">Tiếp tục</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Ăn mừng: trứng nở, khủng long lớn, trứng vùng nở -->
+  <section id="man-mung" class="man man-mung hidden" aria-labelledby="mg-tieu-de">
+    <div class="mg-the">
+      <h1 id="mg-tieu-de">Trứng đã nở!</h1>
+      <p id="mg-phu"></p>
+      <div class="mg-sao-khung"><span class="mg-hao-quang"></span><img id="mg-hinh" alt="" class="mg-hinh"></div>
+      <p class="mg-qua hidden" id="mg-qua"></p>
+      <div class="mg-dat-ten hidden" id="mg-dat-ten">
+        <label class="nhan" for="mg-ten">Đặt tên cho bạn mới</label>
+        <input id="mg-ten" class="o-nhap" type="text" maxlength="16" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="nut nut-cam nut-to" id="mg-tiep" type="button">Tuyệt quá!</button>
+    </div>
+  </section>
+
+  <!-- 9. Góc phụ huynh (bản đầu) -->
+  <section id="man-phu-huynh" class="man man-ph hidden" aria-labelledby="ph-tieu-de">
+    <button class="nut-quay" id="ph-quay" type="button" aria-label="Quay lại">‹</button>
+    <div class="ph-cong" id="ph-cong">
+      <div class="ph-khoa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg></div>
+      <h1 id="ph-tieu-de">Dành cho bố mẹ</h1>
+      <p>Nhập kết quả phép tính để vào</p>
+      <p class="ph-hoi" id="ph-hoi">7 × 8 = ?</p>
+      <div class="ph-o" id="ph-o"></div>
+      <div class="ban-phim ban-phim-nho" id="ph-ban-phim">
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+        <button type="button" data-k="xoa" class="phim-xoa" aria-label="Xóa">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="xong" class="phim-xong">Vào</button>
+      </div>
+    </div>
+    <div class="ph-bang hidden" id="ph-bang">
+      <h1>Góc phụ huynh <small>bản đầu</small></h1>
+      <p class="ph-note-dau">Báo cáo tuần, nhật ký chi tiết từng câu và bản đồ kỹ năng sẽ có ở giai đoạn sau. Nhật ký từng thao tác của bé đã được ghi đầy đủ từ bây giờ.</p>
+      <div class="ph-o-be" id="ph-be"></div>
+      <div class="ph-nhom">
+        <h2>Tuổi và lớp</h2>
+        <div class="ph-dong"><span>Tuổi</span><div class="nut-chon-hang" id="ph-tuoi"></div></div>
+        <div class="ph-dong"><span>Lớp</span><div class="nut-chon-hang" id="ph-lop"></div></div>
+        <div class="ph-dong"><span>Bài đang học (Toán 2)</span><div class="ph-buoc-so"><button type="button" id="ph-bai-tru" aria-label="Bớt">−</button><b id="ph-bai">1</b><button type="button" id="ph-bai-cong" aria-label="Thêm">+</button></div></div>
+      </div>
+      <div class="ph-nhom">
+        <h2>Dữ liệu trên máy này</h2>
+        <p id="ph-thong-ke">…</p>
+        <div class="nut-hang trai">
+          <button class="nut nut-trang" id="ph-tai" type="button">Tải nhật ký (JSONL)</button>
+          <button class="nut nut-trang" id="ph-tinh-lai" type="button">Tính lại tóm tắt từ nhật ký</button>
+          <button class="nut nut-do" id="ph-xoa" type="button">Xóa dữ liệu của bé</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Hỏi lên lớp mỗi năm học -->
+  <section id="man-len-lop" class="man man-troi hidden" aria-labelledby="ll-hoi">
+    <div class="ll-the">
+      <img id="ll-hinh" alt="" class="ll-hinh">
+      <h1 id="ll-hoi">Năm nay con lên lớp 3 rồi phải không?</h1>
+      <div class="nut-lop-hang" id="ll-lop"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="thong-bao" class="thong-bao hidden" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px;font-family:sans-serif">Đảo Khủng Long cần bật JavaScript để chơi.</p></noscript>
+
+<script src="js/nhat-ky.js"></script>
+<script src="js/ngan-hang.js"></script>
+<script src="js/hoc-tap.js"></script>
+<script src="js/dao.js"></script>
+<script src="js/ho-so.js"></script>
+<script src="js/van-choi.js"></script>
+<script src="js/am-thanh.js"></script>
+<script src="js/phan-hoi.js"></script>
+<script src="js/dua-xe.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

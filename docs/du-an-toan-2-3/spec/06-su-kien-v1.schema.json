@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://3hoa.com/dao-khung-long/su-kien-v1.schema.json",
+  "title": "Đảo Khủng Long: một sự kiện nhật ký (phiên bản 1)",
+  "description": "Mỗi dòng JSONL trong kho su_kien là một đối tượng khớp lược đồ này. Xem spec/06-theo-doi-hoc-tap.md.",
+  "type": "object",
+  "required": ["v", "id", "luc", "ms", "be", "loai", "du_lieu"],
+  "properties": {
+    "v": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$", "description": "ULID" },
+    "luc": { "type": "string", "format": "date-time" },
+    "ms": { "type": "integer", "minimum": 0, "description": "Mili giây từ lúc câu hiện (trong câu) hoặc từ lúc ván bắt đầu" },
+    "be": { "type": "string", "pattern": "^be_[A-Za-z0-9]{4,32}$" },
+    "phien": { "type": "string" },
+    "van": { "type": "string" },
+    "cau": { "type": "string" },
+    "game": {
+      "enum": ["chem-trai-cay", "ban-thien-thach", "me-cung", "thap-xep-hinh", "xe-tang", "cuoi-ho", "dua-xe", "truyen-tranh", "xuong-do-luong", "cho-khung-long", "cau-ca", "lat-the", "dau-truong", "trang-chu", "goc-phu-huynh"]
+    },
+    "vung": { "type": "integer", "minimum": 0, "maximum": 12 },
+    "man": { "type": "string" },
+    "loai": {
+      "enum": ["phien_bat_dau", "phien_ket_thuc", "van_bat_dau", "van_ket_thuc", "bai_hoc_xem", "cau_hien", "thao_tac", "goi_y", "tra_loi", "phan_hoi_xem", "cau_ket_thuc", "tam_dung", "tiep_tuc", "cam_xuc", "thuong", "thanh_thao_doi", "ho_so_doi", "phu_huynh_mo", "phu_huynh_cai_dat", "luu_tru_canh_bao"]
+    },
+    "du_lieu": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "loai": { "const": "cau_hien" } } },
+      "then": {
+        "required": ["van", "cau", "game"],
+        "properties": {
+          "du_lieu": {
+            "type": "object",
+            "required": ["ma_cau", "noi_dung", "ky_nang", "dang", "de", "dap_an"],
+            "properties": {
+              "ma_cau": { "type": "string", "description": "<mã nội dung>|<mã kỹ năng>|<đề chuẩn hóa>" },
+              "noi_dung": { "type": "string", "pattern": "^([BC]?2\\.\\d+|L1\\.\\d+)$" },
+              "ky_nang": { "type": "string" },
+              "dang": { "enum": ["chon_dap_an", "nhap_so", "ghep_doi", "sap_xep", "keo_tha", "thao_tac_hinh", "doc_va_chon", "hai_buoc"] },
+              "de": { "type": "string" },
+              "cau_truc": { "type": "object" },
+              "dap_an": {},
+              "lua_chon": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["gia_tri"],
+                  "properties": {
+                    "gia_tri": {},
+                    "vi_tri": { "type": "string" },
+                    "loi": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "on_lai": { "type": "boolean" },
+              "on_lai_cua": { "type": "string" },
+              "lan_gap_thu": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "thao_tac" } } },
+      "then": {
+        "required": ["cau"],
+        "properties": {
+          "du_lieu": {
+            "type": "object",
+            "required": ["kieu"],
+            "properties": {
+              "kieu": { "enum": ["cham", "vuot", "keo", "tha", "go_so", "xoa", "doi_lan", "doi_cot", "chon", "bo_chon", "nghe_lai", "lat", "xoay_nong", "ban", "rot", "keo_thuoc", "cau", "dem"] },
+              "doi_tuong": { "type": "string" },
+              "gia_tri": {},
+              "tu": { "type": "string" },
+              "den": { "type": "string" },
+              "x": { "type": "number", "minimum": 0, "maximum": 1 },
+              "y": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "tra_loi" } } },
+      "then": {
+        "required": ["cau"],
+        "properties": {
+          "du_lieu": {
+            "type": "object",
+            "required": ["gia_tri", "dung", "lan_thu"],
+            "properties": {
+              "gia_tri": {},
+              "dung": { "type": "boolean" },
+              "loi": { "type": "array", "items": { "type": "string" } },
+              "lan_thu": { "type": "integer", "minimum": 1 },
+              "so_lan_doi_y": { "type": "integer", "minimum": 0 },
+              "goi_y_cap": { "type": "integer", "minimum": 0, "maximum": 3 },
+              "buoc": { "type": "integer", "minimum": 1, "maximum": 2 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "cau_ket_thuc" } } },
+      "then": {
+        "properties": {
+          "du_lieu": {
+            "type": "object",
+            "required": ["ket_qua", "tong_giay"],
+            "properties": {
+              "ket_qua": { "enum": ["dung_ngay", "dung_sau_goi_y", "dung_lan_2", "sai", "het_gio", "bo_qua"] },
+              "tong_giay": { "type": "number", "minimum": 0 },
+              "sua_duoc_cau": { "type": "string" },
+              "se_on_lai_sau_cau": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "van_ket_thuc" } } },
+      "then": {
+        "properties": {
+          "du_lieu": {
+            "type": "object",
+            "required": ["so_cau", "dung_ngay", "sai", "bo_do"],
+            "properties": {
+              "so_cau": { "type": "integer", "minimum": 0 },
+              "dung_ngay": { "type": "integer", "minimum": 0 },
+              "dung_sau_goi_y": { "type": "integer", "minimum": 0 },
+              "sai": { "type": "integer", "minimum": 0 },
+              "sua_duoc": { "type": "integer", "minimum": 0 },
+              "sao": { "type": "integer", "minimum": 0, "maximum": 3 },
+              "qua_mong": { "type": "integer", "minimum": 0 },
+              "bo_do": { "type": "boolean" },
+              "giay": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "cam_xuc" } } },
+      "then": { "properties": { "du_lieu": { "required": ["muc"], "properties": { "muc": { "enum": ["vui", "binh_thuong", "chan"] } } } } }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "thanh_thao_doi" } } },
+      "then": {
+        "properties": {
+          "du_lieu": {
+            "required": ["ky_nang", "tu", "den"],
+            "properties": {
+              "noi_dung": { "type": "string" },
+              "ky_nang": { "type": "string" },
+              "tu": { "enum": ["chua_hoc", "lam_quen", "dang_luyen", "da_thuoc", "vung_chac"] },
+              "den": { "enum": ["chua_hoc", "lam_quen", "dang_luyen", "da_thuoc", "vung_chac"] },
+              "can_giup": { "type": "boolean" },
+              "bang_chung": { "type": "object" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

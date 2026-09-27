@@ -1,0 +1,9 @@
+RUN = may-extra
+
+The attached reference image is "May", the second main character (a sweet gentle long-neck dinosaur, brachiosaurus: pastel pink body with lighter pink spots on the back, cream belly, long graceful neck, small head, big sparkly violet eyes with long lashes, rosy cheeks, soft smile, a small crown of yellow and white flowers on her head). Keep May exactly on-model in every image that shows her.
+
+Images:
+1. car-may.png : a cute chunky toy-like race car seen straight from BEHIND (rear view, we see the back of the car), glossy lavender purple with a small white spoiler shaped like a flower petal and two big rear tires, pink heart-shaped tail lights; May sits in the driver seat, her long pink neck rises above the car and we see the back of her head wearing a small pastel yellow racing helmet with her flower crown peeking out, her pink tail with light pink spots curls playfully over the back of the car. Same size and framing as a rear-view toy race car filling about 80 percent of the width. Transparent background, 1024 x 1024.
+2. may-eating.png : May sitting happily and munching a bunch of round purple berries, eyes closed with joy, a few berries held near her mouth. Transparent background.
+3. may-cheer.png : May bouncing with joy, neck stretched up proudly, big happy smile, small confetti and flower petals around her. Transparent background.
+4. may-think.png : May kindly encouraging, head tilted, one front foot raised like giving a tip, gentle smile, a small glowing lightbulb above her head. Transparent background.

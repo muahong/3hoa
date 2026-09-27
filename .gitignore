@@ -7,3 +7,9 @@ Thumbs.db
 tests/e2e/out/
 scripts/__pycache__/
 out/gauntlet/
+
+# Tài liệu tham khảo có bản quyền (SGK), file lớn: giữ cục bộ, không đẩy lên GitHub Pages
+docs/tai-lieu-tham-khao/
+
+# Hình gốc PNG do Codex vẽ (khoảng 48 MB): chỉ giữ cục bộ; game dùng bản WebP trong dao-khung-long/assets/img
+dao-khung-long/assets/art/*.png

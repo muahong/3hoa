@@ -1,0 +1,7 @@
+RUN = bg-a
+
+Backgrounds (opaque, 1536 x 1024, no characters, no text):
+1. bg-island-map.png : a bird's-eye three-quarter illustrated map of a tropical "Dinosaur Island" in a turquoise sea. The island holds 10 small, clearly separated regions linked by one winding sandy dotted path: a sunny beach with big seashells, a friendly rounded volcano, a cozy measuring workshop with a giant balance scale, a racetrack loop, a forest of colorful geometric-shaped trees, a small town with a clock tower, a sandy colosseum arena, a flower valley, a golden pyramid, a market street with striped awnings, a fishing lake, and a second small arena on a hill. Keep the island in the left two thirds; the right third is mostly calm sea (a UI panel will cover it). Each region has an open flat spot where a round label badge can sit.
+2. bg-race-track.png : rear chase-camera view of a three-lane race road running straight to the horizon, vanishing point at the center, white dashed lane lines, grassy rolling hills, round trees, colorful bunting flags on both sides, blue sky with fluffy clouds. Empty road: no cars, no gates. The road fills the lower 60 percent.
+3. bg-meadow.png : a soft sunny meadow with gentle hills, tiny flowers and a pale blue sky; the whole center is calm and uncluttered for a large white lesson card.
+4. bg-garden.png : a magical dinosaur garden: soft grass, a small pond, ferns, big leaves, flowers, cozy nests, warm afternoon light; a wide open grassy area on the left half.

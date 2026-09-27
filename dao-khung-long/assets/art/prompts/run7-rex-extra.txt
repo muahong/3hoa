@@ -1,0 +1,10 @@
+RUN = rex-extra
+
+The attached reference image is "Rex", the main character (cute brave green tyrannosaurus with orange back plates, cream belly, amber eyes, teal bandana). Keep Rex exactly on-model in every image that shows him.
+
+Images:
+1. car-rex.png : a cute chunky toy-like race car seen straight from BEHIND (rear view, we see the back of the car), glossy red with a small black spoiler and two big rear tires, yellow tail lights; Rex sits in the driver seat wearing a yellow racing helmet, we see the back of his helmet and a little of his green shoulders, his green tail with orange plates sticks out playfully over the back of the car. Transparent background, 1024 x 1024.
+2. rex-eating.png : Rex sitting happily and munching a bunch of round purple berries, eyes closed with joy, a few berries in his tiny hands. Transparent background.
+3. rex-cheer.png : Rex jumping with joy, both tiny arms up, big open happy smile, small confetti around him. Transparent background.
+4. rex-think.png : Rex kindly encouraging, one tiny hand raised like giving a tip, gentle smile, a small glowing lightbulb above his head. Transparent background.
+5. berry.png : icon of a bunch of three glossy round purple berries with a small green leaf, game currency icon style. Transparent background, 512 x 512.

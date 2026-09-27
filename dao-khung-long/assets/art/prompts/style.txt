@@ -1,0 +1,13 @@
+PROJECT: "Dao Khung Long" (Dinosaur Island), a math learning game on iPad for Vietnamese children aged 6 to 9 (grade 2). Kids must LOVE these pictures.
+
+HOW TO WORK:
+- Use your built-in image generation tool for every picture. Do not draw with code, SVG, canvas or Python.
+- After each image is generated, copy the resulting PNG file (the image tool saves it under the .codex/generated_images folder in the user's home directory) into the current working directory using EXACTLY the filename given. Overwrite if it exists.
+- Generate the images in the order listed. Keep one consistent art style across all of them.
+- When all images are done, write a file named MANIFEST-<RUN>.md (RUN is given below) listing each filename, its size in pixels, and the exact prompt you used. Do not create any other files.
+
+ART STYLE (apply to every image):
+Polished premium children's mobile game art, the quality of a top kids' app. Soft 3D clay-like volume with gentle hand-painted texture, warm soft lighting with a subtle rim light, rounded chunky friendly shapes, big glossy expressive eyes with bright highlights, bright saturated but harmonious candy palette, crisp clean silhouette that still reads well at 160 pixels wide. Joyful, adorable, cozy; never scary: no sharp teeth, no claws showing, no angry faces. No text, no letters, no numbers, no watermark, no signature, no border, no frame.
+
+CHARACTER SPRITES (unless a background is requested): true transparent alpha background (PNG with alpha), one subject, whole body visible, centered, about 5 percent transparent margin, no ground, no cast shadow, no scenery, 1024 x 1024.
+BACKGROUNDS: opaque, 1536 x 1024 landscape, no characters, no text, calm open areas where the game will place UI cards.

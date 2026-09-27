@@ -13,6 +13,7 @@ không phụ thuộc npm khi chạy, không CDN (chỉ tải font "Baloo 2" từ
 - `/thap-dong-ho/` – **Tháp Đồng Hồ**: game xếp đồng hồ kiểu Tetris học xem giờ cho bé lớp 2–3, có bài học và hỏi đáp sau mỗi màn (xem `thap-dong-ho/README.md`)
 - `/xe-tang-thoi-gian/` – **Xe Tăng Thời Gian**: game xe tăng bắn robot học xem đồng hồ cho bé lớp 2–3, mỗi màn có bài học và phần hỏi đáp để mở khóa màn sau (xem `xe-tang-thoi-gian/README.md`)
 - `/cuoi-ho/` – **Cưỡi Hổ Vượt Lửa**: game cưỡi hổ nhảy qua vòng lửa học xem đồng hồ, tính thời gian cho bé lớp 2–3; mỗi màn có bài học, vượt vòng lửa và hỏi đáp để mở khóa màn tiếp (xem `cuoi-ho/README.md`)
+- `/dao-khung-long/` – **Đảo Khủng Long** (đang làm, giai đoạn 1): game Toán lớp 2 có hồ sơ bé (tên, tuổi, lớp), trứng khủng long lớn dần theo việc học, bản đồ 10 vùng, nhiệm vụ hôm nay và game Đua Xe; ghi nhật ký từng thao tác theo lược đồ sự kiện v1 (xem `dao-khung-long/README.md`)
 
 ## Cấu trúc thư mục
 
@@ -44,6 +45,8 @@ Nhiều bé dùng chung một máy: mỗi bé có tên, hình đại diện và 
 | `thap-dong-ho` | `thap-dong-ho-v1` |
 | `xe-tang-thoi-gian` | `xe-tang-thoi-gian-v1` |
 | `cuoi-ho` | `cuoi-ho-v1` |
+
+`dao-khung-long` không dùng các khóa trên: hồ sơ bé và nhật ký nằm trong IndexedDB `dao-khung-long` (các kho `ho_so`, `su_kien`, `tom_tat_cau`, `tom_tat_van`, `ho_so_hoc_tap`), cộng vài khóa localStorage nhỏ `dkl-*` (xem `dao-khung-long/README.md`). Game chỉ đọc tên bé từ `3hoa-players-v1` để gợi ý khi tạo hồ sơ.
 
 Trong mỗi khóa: thiết lập thiết bị (`sound`, `music`, `voice`, `fx`, …) ở gốc; tiến trình (màn, sao, kỷ lục, `missed`, `stats`) dưới `players[<id>]`.
 Dữ liệu cũ (tiến trình ở gốc) được game tự di trú vào `players.p1` (bé mặc định) khi mở game lần đầu sau cập nhật – không mất tiến trình.

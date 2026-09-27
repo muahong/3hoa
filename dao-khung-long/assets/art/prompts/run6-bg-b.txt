@@ -1,0 +1,8 @@
+RUN = bg-b
+
+Backgrounds (opaque, 1536 x 1024, no characters, no text):
+1. bg-desert-pyramid.png : warm sandy desert with golden pyramids at the far left and right edges, soft pastel sky, sun; the center is clear and calm (a tall puzzle panel will sit there).
+2. bg-market.png : a cheerful Vietnamese street market stall seen from the front: a red and white striped scalloped awning across the top, empty wooden shelves on the left half, a wooden counter across the bottom third, empty space on the right for a shopkeeper, potted plants and lanterns, bright and warm.
+3. bg-workshop.png : a bright playful measuring workshop: a pegboard wall with rulers, measuring cups and a clock, a wooden workbench across the bottom, sunlight from a window, calm open center.
+4. bg-circus-night.png : a festive night circus: purple starry sky, a big moon, striped red and white tents at the left and right edges, bunting, warm lights, a sandy ring floor across the bottom; the center stays open.
+5. bg-dusk-sky.png : a dreamy dusk sky over a calm sea with tiny floating islands and soft stars, deep violet to peach gradient, very calm and uncluttered (used behind a profile picker).

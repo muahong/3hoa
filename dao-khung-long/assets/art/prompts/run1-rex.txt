@@ -1,0 +1,11 @@
+RUN = rex
+
+MAIN CHARACTER "Rex" (style line "Brave"): a cute brave little tyrannosaurus. Emerald green body, cream belly, a row of rounded soft orange back plates from head to tail, big round sparkly amber eyes, tiny arms, chubby legs, short thick tail, small orange cheek blush, confident happy grin (mouth closed or open without visible teeth), wears a small teal bandana around the neck. Same design in every image, only the age changes.
+
+Images:
+1. rex-adult.png : Rex as a grown-up (largest stage), full body, three-quarter view facing right, proud heroic pose with one foot forward, fists up cheerfully.
+2. rex-egg.png : Rex's egg alone: glossy mint green egg with an orange zigzag band and darker green spots, standing upright with a slight tilt, pearly highlight.
+3. rex-hatchling.png : newborn baby Rex popping out of that cracked green egg, the bottom half of the shell still around its body and a small shell piece on its head, tiny, huge eyes, delighted surprised face.
+4. rex-kid.png : toddler Rex, very round and chubby, big head, waving one tiny arm, standing.
+5. rex-teen.png : young Rex in an energetic running pose, a bit taller, bandana flowing.
+6. rex-legend.png : legendary Rex: grown-up Rex wearing shiny golden-trimmed shoulder armor and a small golden crown, gentle magical sparkles around him, noble proud pose, still adorable.

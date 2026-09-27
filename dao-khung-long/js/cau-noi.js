@@ -12,8 +12,8 @@
                                  be: { ten, ten_khung_long, phong_cach, hinh, hinh_co_vu, hinh_goi_y }, am_thanh: { tieng, giong } }
      batDau(doKho)             bắt đầu ván (ghi van_bat_dau), trả về mã ván
      cauTiep(tuyChon)          câu kế tiếp hoặc null khi hết; tuyChon: { so_lua_chon (2 đến 4), vi_tri: ['tren', 'giua', 'duoi'] }
-                               câu: { stt, tong, ma_cau, ky_nang, noi_dung, loai, dang, de, de_doc, hinh, dap_an,
-                                      lua_chon: [{ gia_tri, nhan, hinh, dong_ho, dung, vi_tri }], giay, lan_thu_toi_da, cau_truc }
+                               câu: { stt, tong, ma_cau, ky_nang, noi_dung, loai, dang, de, de_doc, hinh, the (chữ ngắn), dap_an,
+                                      lua_chon: [{ gia_tri, nhan, hinh, dong_ho, hien, dung, vi_tri }], giay, lan_thu_toi_da, cau_truc }
      thaoTac(kieu, duLieu)     ghi một thao tác (kieu theo lược đồ v1)
      goiY(them)                tăng một cấp gợi ý: { cap, loi } hoặc null
      traLoi(giaTri, them)      chấm: { dung, loi, loi_noi, thu_lai, can_phan_hoi, ket_qua, qua_mong, dap_an }
@@ -138,12 +138,12 @@
       const v = NH().veLuaChon(ct, x.gia_tri) || {};
       return {
         gia_tri: x.gia_tri, nhan: v.nhan != null ? String(v.nhan) : NH().hienGiaTriCau(ct, x.gia_tri),
-        hinh: v.hinh || '', dong_ho: v.dong_ho || null, dung: !(x.loi && x.loi.length), vi_tri: x.vi_tri || null
+        hinh: v.hinh || '', dong_ho: v.dong_ho || null, hien: v.hien || null, dung: !(x.loi && x.loi.length), vi_tri: x.vi_tri || null
       };
     });
     return {
       stt: q.stt, tong: s.van.soCauDuKien(), ma_cau: q.ma_cau, ky_nang: q.ky_nang, noi_dung: q.noi_dung, loai: NH().loaiKyNang(q.ky_nang),
-      dang: q.dang, de: q.de, de_doc: q.de_doc || q.de, hinh: q.hinh || '', dap_an: q.dap_an,
+      dang: q.dang, de: q.de, de_doc: q.de_doc || q.de, hinh: q.hinh || '', the: q.the || '', dap_an: q.dap_an,
       dap_an_nhan: NH().hienGiaTriCau(ct, q.dap_an), lua_chon: lc, giay: kn.giay || 10, lan_thu_toi_da: q.toiDaLanThu || 1,
       on_lai: !!q.on_lai, goi_y_so_cap: 3, cau_truc: json(ct)
     };

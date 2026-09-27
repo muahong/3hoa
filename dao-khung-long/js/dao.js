@@ -99,9 +99,9 @@
     { id: 'v5-m4', so: 4, ten: 'Hình tứ giác', bai: 'Bài 26', bai_dau: 26, game: 'rung-hinh-khoi', ky_nang_chinh: 'hinh-tu-giac', cau: [{ ky_nang: 'hinh-tu-giac' }], so_cau: 8 },
     { id: 'v5-m5', so: 5, ten: 'Gấp, cắt, ghép hình', bai: 'Bài 27', bai_dau: 27, game: 'rung-hinh-khoi', ky_nang_chinh: 'ghep-hinh', cau: [{ ky_nang: 'ghep-hinh' }], so_cau: 6 },
     { id: 'v5-m6', so: 6, ten: 'Khối trụ, khối cầu', bai: 'Bài 46', bai_dau: 46, game: 'rung-hinh-khoi', ky_nang_chinh: 'khoi-tru-cau', cau: [{ ky_nang: 'khoi-tru-cau' }], so_cau: 8 },
-    { id: 'v5-m7', so: 7, ten: 'Tháp xếp hình: tứ giác', bai: 'Bài 26', bai_dau: 26, game: 'thap-xep-hinh', luyen_tap: true, cau: [{ ky_nang: 'hinh-tu-giac' }], so_cau: 10 },
-    { id: 'v5-m8', so: 8, ten: 'Mê cung đường gấp khúc', bai: 'Bài 26', bai_dau: 26, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'duong-gap-khuc' }], so_cau: 6 },
-    { id: 'v5-m9', so: 9, ten: 'Xe tăng: ba điểm thẳng hàng', bai: 'Bài 25', bai_dau: 25, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'ba-diem-thang-hang' }], so_cau: 8 },
+    { id: 'v5-m7', so: 7, ten: 'Tháp xếp hình: tứ giác', bai: 'Bài 26', bai_dau: 26, game: 'thap-xep-hinh', luyen_tap: true, cau: [{ ky_nang: 'hinh-tu-giac', dang: 'chon_dap_an' }], so_cau: 10 },
+    { id: 'v5-m8', so: 8, ten: 'Mê cung đường gấp khúc', bai: 'Bài 26', bai_dau: 26, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'duong-gap-khuc', dang: 'chon_dap_an' }], so_cau: 6 },
+    { id: 'v5-m9', so: 9, ten: 'Xe tăng: ba điểm thẳng hàng', bai: 'Bài 25', bai_dau: 25, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'ba-diem-thang-hang', dang: 'chon_dap_an' }], so_cau: 8 },
     { id: 'v5-cup', so: 10, ten: 'Cúp Rừng · Luyện tập chung', bai: 'Bài 28', bai_dau: 28, game: 'rung-hinh-khoi', cup: true, so_cau: 10, cup_can: ['v5-m1', 'v5-m2', 'v5-m3', 'v5-m4'],
       cau: [{ ky_nang: 'nhan-dang-duong', ty_le: 0.6 }, { ky_nang: 'ba-diem-thang-hang', ty_le: 0.6 }, { ky_nang: 'duong-gap-khuc', ty_le: 1 }, { ky_nang: 'hinh-tu-giac', ty_le: 1 }] }
   ];
@@ -109,10 +109,10 @@
     { id: 'v6-m1', so: 1, ten: 'Ngày và giờ, các buổi trong ngày', bai: 'Bài 29', bai_dau: 29, game: 'lat-lich', che_do: 'buoi', ky_nang_chinh: 'ngay-gio', cau: [{ ky_nang: 'ngay-gio' }], so_cau: 8 },
     { id: 'v6-m2', so: 2, ten: 'Xem đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'lat-lich', che_do: 'dong_ho', ky_nang_chinh: 'xem-gio', cau: [{ ky_nang: 'xem-gio' }], so_cau: 10 },
     { id: 'v6-m3', so: 3, ten: 'Ngày, tháng: xem lịch', bai: 'Bài 30', bai_dau: 30, game: 'lat-lich', che_do: 'lich', ky_nang_chinh: 'xem-lich', cau: [{ ky_nang: 'xem-lich' }], so_cau: 8 },
-    { id: 'v6-m4', so: 4, ten: 'Mê cung đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'xem-gio' }], so_cau: 8 },
-    { id: 'v6-m5', so: 5, ten: 'Tháp đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'thap-xep-hinh', luyen_tap: true, cau: [{ ky_nang: 'xem-gio' }], so_cau: 10 },
-    { id: 'v6-m6', so: 6, ten: 'Xe tăng thời gian', bai: 'Bài 29, 31', bai_dau: 31, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', ty_le: 1 }, { ky_nang: 'ngay-gio', ty_le: 1 }], so_cau: 10 },
-    { id: 'v6-m7', so: 7, ten: 'Cưỡi hổ qua giờ', bai: 'Bài 31', bai_dau: 31, game: 'cuoi-ho', luyen_tap: true, cau: [{ ky_nang: 'xem-gio' }], so_cau: 12 },
+    { id: 'v6-m4', so: 4, ten: 'Mê cung đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 8 },
+    { id: 'v6-m5', so: 5, ten: 'Tháp đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'thap-xep-hinh', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 10 },
+    { id: 'v6-m6', so: 6, ten: 'Xe tăng thời gian', bai: 'Bài 29, 31', bai_dau: 31, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', ty_le: 1, dang: 'chon_dap_an' }, { ky_nang: 'ngay-gio', ty_le: 1, dang: 'chon_dap_an' }], so_cau: 10 },
+    { id: 'v6-m7', so: 7, ten: 'Cưỡi hổ qua giờ', bai: 'Bài 31', bai_dau: 31, game: 'cuoi-ho', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 12 },
     { id: 'v6-cup', so: 8, ten: 'Cúp Phố Đồng Hồ · Luyện tập chung', bai: 'Bài 32', bai_dau: 32, game: 'lat-lich', che_do: 'tron', cup: true, so_cau: 10, cup_can: ['v6-m1', 'v6-m2', 'v6-m3'],
       cau: [{ ky_nang: 'ngay-gio', ty_le: 0.8 }, { ky_nang: 'xem-gio', ty_le: 1 }, { ky_nang: 'xem-lich', ty_le: 1 }] }
   ];

@@ -11,6 +11,7 @@
      thongTin()                { phien_ban, game, ten_game, man: { id, ten, ten_day_du, so_cau, che_do, dang, bai, vung },
                                  be: { ten, ten_khung_long, phong_cach, hinh, hinh_co_vu, hinh_goi_y }, am_thanh: { tieng, giong } }
      batDau(doKho)             bắt đầu ván (ghi van_bat_dau), trả về mã ván
+     conCau()                  còn câu nào nữa không (kể cả câu sai chờ quay lại)
      cauTiep(tuyChon)          câu kế tiếp hoặc null khi hết; tuyChon: { so_lua_chon (2 đến 4), vi_tri: ['tren', 'giua', 'duoi'] }
                                câu: { stt, tong, ma_cau, ky_nang, noi_dung, loai, dang, de, de_doc, hinh, the (chữ ngắn), dap_an,
                                       lua_chon: [{ gia_tri, nhan, hinh, dong_ho, hien, dung, vi_tri }], giay, lan_thu_toi_da, cau_truc }
@@ -193,6 +194,8 @@
       if (van.q && !van.q.xong) throw new Error('Câu trước chưa kết thúc');
       const muc = van._layMuc();
       if (!muc) return null;
+      // Game cũ xin lựa chọn mà câu đang ở dạng thao tác riêng của game mới (kéo kim, kéo thả…): hỏi dạng chọn đáp án
+      if (tuyChon.so_lua_chon && ['chon_dap_an', 'nhap_so', 'sap_xep', 'doc_va_chon'].indexOf(muc.dang) < 0) muc.dang = 'chon_dap_an';
       const q = van._taoQ(muc);
       let lc = null;
       if (q.lua_chon && q.lua_chon.length) {
@@ -204,6 +207,9 @@
       van.hienCau(q, lc);
       return goiCau(q);
     },
+
+    /** Còn câu nào nữa không (kể cả câu sai đang chờ quay lại). */
+    conCau: function () { const st = batBuoc(); return st.van.conCau(); },
 
     thaoTac: function (kieu, duLieu) { const st = batBuoc(); st.van.thaoTac(String(kieu), json(duLieu) || {}); return true; },
 

@@ -327,5 +327,5 @@
     reg[g] = { ten: DAO.TEN_GAME[g], khung: false, man: 'man-game-cu', game_cu: true, batDau: function (o) { batDau(g, o); } };
   });
 
-  window.CauNoi = { PHIEN_BAN: PHIEN_BAN, _trangThai: function () { return s; }, _api: api };
+  window.CauNoi = { PHIEN_BAN: PHIEN_BAN, _trangThai: function () { return s; }, _api: api, _dongPhanHoi: dongPhanHoi };
 })();

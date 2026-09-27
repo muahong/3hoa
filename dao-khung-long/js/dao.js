@@ -374,6 +374,19 @@
       return true;
     };
     const mucCua = function (m) { return muc[m.ky_nang_chinh] || { muc: 'chua_hoc', so_cau: 0 }; };
+    const coLoai = function (loai) { return ra.some(function (x) { return x.loai === loai; }); };
+
+    // 0. Kế hoạch tuần phụ huynh đã chọn (Góc phụ huynh): mỗi loại lấy một mục, xoay vòng theo ngày
+    const kh = hoSo && hoSo.ke_hoach_tuan;
+    if (kh && kh.tu && kh.den && kh.tu <= homNay && homNay <= kh.den && Array.isArray(kh.muc)) {
+      const ngay = Math.max(0, window.HocTap ? window.HocTap.soNgay(homNay) - window.HocTap.soNgay(kh.tu) : 0);
+      [['on_nen', 'on_cach_quang'], ['luyen_lai', 'luyen_lai'], ['hoc_moi', 'hoc_moi']].forEach(function (cap) {
+        const ds = kh.muc.filter(function (x) { const m = man(x.man); return x.loai === cap[0] && m && manLuyen.indexOf(m) >= 0; });
+        if (!ds.length) return;
+        const x = ds[ngay % ds.length];
+        them(cap[1], man(x.man), x.ly_do || 'Theo kế hoạch của bố mẹ', 12, false);
+      });
+    }
 
     // 1. Ôn nhanh: kỹ năng đã thuộc tới hạn ôn, nếu không có thì kỹ năng đã luyện lâu chưa chơi lại
     const on = manMoDs.filter(function (m) {
@@ -384,7 +397,7 @@
       const k = mucCua(m);
       return (k.muc === 'dang_luyen' || k.muc === 'da_thuoc' || k.muc === 'vung_chac') && k.lan_cuoi && k.lan_cuoi < homNay && !k.can_giup;
     }).sort(function (a, b) { return mucCua(a).lan_cuoi < mucCua(b).lan_cuoi ? -1 : 1; });
-    them('on_cach_quang', on[0] || lau[0], null, 8, true);
+    if (!coLoai('on_cach_quang')) them('on_cach_quang', on[0] || lau[0], null, 8, true);
 
     // 2. Luyện lại chỗ yếu: cờ Cần giúp, câu còn nợ, tỉ lệ tự làm đúng thấp
     const yeu = manMoDs.filter(function (m) {
@@ -394,7 +407,7 @@
       const ka = mucCua(a), kb = mucCua(b);
       return (kb.can_giup ? 1 : 0) - (ka.can_giup ? 1 : 0) || (kb.cau_no || 0) - (ka.cau_no || 0) || (ka.tu_lam_dung_14_ngay || 0) - (kb.tu_lam_dung_14_ngay || 0);
     });
-    if (yeu[0]) {
+    if (yeu[0] && !coLoai('luyen_lai')) {
       const k = mucCua(yeu[0]);
       const loi = k.loi_hay_gap && k.loi_hay_gap[0] ? k.loi_hay_gap[0].ma : null;
       them('luyen_lai', yeu[0], loi && LOI[loi] ? LOI[loi].ngan : 'Luyện thêm cho chắc', 12, true);

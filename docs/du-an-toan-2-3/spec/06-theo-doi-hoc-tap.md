@@ -254,7 +254,7 @@ Kiểm tra trước khi áp dụng: `noi_dung`, `ky_nang`, `game`, `che_do`, `ba
 - IndexedDB, cơ sở dữ liệu `dao-khung-long`, các kho: `ho_so` (khóa `id`), `su_kien` (khóa `id`, chỉ mục `be+luc`, `be+cau`), `tom_tat_cau`, `tom_tat_van`, `ho_so_hoc_tap`, `thiet_lap`.
 - Ghi theo lô; nếu ghi lỗi (hết dung lượng), giữ tóm tắt, bỏ bớt nhật ký gốc cũ nhất và ghi một sự kiện `luu_tru_canh_bao`.
 - Di trú: mỗi thay đổi lược đồ tăng `v`; bộ đọc hiểu mọi phiên bản cũ; không sửa sự kiện đã ghi.
-- 6 game cũ ghi qua cùng một mô-đun `nhat-ky.js` (sao chép vào từng game như `profile.js`), giữ nguyên `stats` cũ để trang chủ hiện tại không vỡ.
+- 6 game cũ chơi trong đảo qua cầu nối `dao-khung-long/js/cau-noi.js` (giai đoạn 5): đảo mở game cũ trong một iframe cùng tên miền (`../<thư mục>/?dao=1&man=<mã màn>`), game cũ lấy câu hỏi và ghi mọi thao tác qua `window.parent.DaoCauNoi`. Mọi sự kiện đi qua đúng một `NhatKy` và một `VanChoi` của đảo, nên không có hai nơi cùng ghi một phiên, và báo cáo gộp mọi game theo mã chương trình. Khi chơi riêng ngoài đảo, game cũ giữ nguyên `stats` và `missed` như trước để trang chủ không vỡ. (Bản đầu của spec định chép `nhat-ky.js` vào từng game; đổi sang cầu nối vì tránh được phiên lệch khi chuyển trang và giữ một bộ sinh câu duy nhất.)
 
 ## 6. Dữ liệu ghi nhận cho Góc phụ huynh
 
@@ -289,3 +289,4 @@ Kiểm tra trước khi áp dụng: `noi_dung`, `ky_nang`, `game`, `che_do`, `ba
 |---|---|---|
 | 2026-09-27 | Bản đầu: hồ sơ có tuổi và lớp, nhật ký từng thao tác, ba lớp tóm tắt, gói xuất và hợp đồng đầu ra cho LLM | 3hoa |
 | 2026-09-27 | Giai đoạn 2 của Đảo Khủng Long: thêm mã game `xep-hinh-so` vào lược đồ v1 (thêm, không đổi phiên bản); `tra_loi` của bài hai bước có `buoc`; tóm tắt câu có `buoc1` (bước chọn phép) và `tra_loi_sai`; `chon` chỉ tính là đổi ý từ lần chọn thứ hai trong câu; sự kiện `bai_hoc_xem` có mã bài học, số bước, nghe lại, giây, bỏ qua, câu thử | 3hoa |
+| 2026-09-27 | Giai đoạn 3 đến 5 của Đảo Khủng Long: thêm mã game `rung-hinh-khoi`, `lat-lich` và các kiểu thao tác `ve`, `noi`, `xoay`, `boc`, `lat_trang`, `dat`, `bo_ra`, `di_chuyen`, `nhay`, `ngam`, `tro` vào lược đồ v1 (thêm, không đổi phiên bản); `cau_ket_thuc` dùng `het_gio` cho game có giờ (câu quay lại sau 2 câu như câu sai); ngân hàng câu có đủ 43 mã nội dung lớp 2 (B2.x, C2.x) và cơ chế cắm thêm loại câu; sáu game cũ ghi qua cầu nối iframe thay vì chép `nhat-ky.js`; Góc phụ huynh đủ các màn ở mục 6 và gói xuất cho LLM ở mục 5.9 | 3hoa |

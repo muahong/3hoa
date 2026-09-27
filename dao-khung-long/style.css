@@ -713,3 +713,5 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 4px solid 
   .xh-chua .kh-tram { --kh: .72; }
   .bh-san { min-height: 30vh; }
 }
+.ph-hinh-giai { display: flex; justify-content: center; margin: 4px 0; }
+.ph-hinh-giai svg { max-width: 100%; height: auto; max-height: 260px; }

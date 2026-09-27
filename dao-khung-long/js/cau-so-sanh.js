@@ -315,7 +315,7 @@
     const b = Math.abs(ct.buoc);
     const truoc = ct.an > 0 ? soCua(ct, ct.an - 1) : null;
     // qua chục: 37, 38, 39, ? mà nói 30 hay 310; đếm lùi 30, 29 rồi nói 20 (v = đ − 9)
-    if (truoc != null && Math.floor(truoc / 10) !== Math.floor(d / 10)) {
+    if (truoc != null && Math.abs(ct.buoc) < 10 && Math.floor(truoc / 10) !== Math.floor(d / 10)) {
       if (ct.buoc > 0 && (v === d - 10 || v === Number(String(Math.floor(truoc / 10)) + String(d % 10 === 0 ? 10 : d % 10)))) ma.push('qua-chuc');
       if (ct.buoc < 0 && v === d - 9) ma.push('qua-chuc');
     }
@@ -380,7 +380,7 @@
     if (Math.abs(ct.buoc) > 1) { ds.push({ v: d + 1, w: 1.5 }); ds.push({ v: d - 1, w: 1 }); }
     if (Math.abs(ct.buoc) === 10 && d % 10 === 0) ds.push({ v: d / 10, w: 2 });
     const truoc = ct.an > 0 ? soCua(ct, ct.an - 1) : null;
-    if (truoc != null && Math.floor(truoc / 10) !== Math.floor(d / 10)) {
+    if (truoc != null && Math.abs(ct.buoc) < 10 && Math.floor(truoc / 10) !== Math.floor(d / 10)) {
       if (ct.buoc > 0) { ds.push({ v: d - 10, w: 3 }); ds.push({ v: Number(String(Math.floor(truoc / 10)) + String(d % 10 === 0 ? 10 : d % 10)), w: 1 }); }
       else ds.push({ v: d - 9, w: 3 });
     }

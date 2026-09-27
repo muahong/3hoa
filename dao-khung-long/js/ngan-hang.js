@@ -193,7 +193,10 @@
     'doc-so-1000': { noi_dung: '2.4', ten: 'Đọc, viết số có ba chữ số', kieu: 'K3', giay: 12, gioi_han: 1000, nhieu_toi_da: 99999, loai: 'so', bai_hoc: 'tram-chuc-don-vi' },
     'cong-tru-1000': { noi_dung: '2.12', ten: 'Cộng, trừ trong phạm vi 1000 (nhớ không quá một lượt)', kieu: 'K2', giay: 18, gioi_han: 1000 },
     // Giai đoạn 5 (Cưỡi Hổ, vùng 8)
-    'lien-truoc-sau-1000': { noi_dung: '2.5', ten: 'Số liền trước, số liền sau trong phạm vi 1000', kieu: 'K1', giay: 7, gioi_han: 1000, nhieu_toi_da: 9999, loai: 'so' }
+    'lien-truoc-sau-1000': { noi_dung: '2.5', ten: 'Số liền trước, số liền sau trong phạm vi 1000', kieu: 'K1', giay: 7, gioi_han: 1000, nhieu_toi_da: 9999, loai: 'so' },
+    // Giai đoạn 4: bài toán có lời văn với đơn vị đo (Truyện Tranh vùng 3) và với tiền (vùng 9)
+    'toan-kg-lit': { noi_dung: '2.18', ten: 'Bài toán có lời văn với ki-lô-gam, lít', kieu: 'K4', giay: 30, gioi_han: 100, loai: 'loi_van', bai_hoc: 'giai-toan' },
+    'toan-tien': { noi_dung: 'B2.14', ten: 'Bài toán mua bán với tiền Việt Nam', kieu: 'K4', giay: 35, gioi_han: 1000, loai: 'loi_van', bai_hoc: 'giai-toan' }
   };
   const THU_TU_KY_NANG = Object.keys(KY_NANG);
   function loaiKyNang(kn) { return (KY_NANG[kn] && KY_NANG[kn].loai) || 'phep_tinh'; }
@@ -1132,8 +1135,8 @@
     { id: 'ca-ao', dang: 'bot', ky: KY_CONG_TRU, vat: '🐟', dv: 'con', ten: 'con cá', khung: ['Trong ao có {x} con cá.', '{A} câu được {y} con cá.', 'Hỏi trong ao còn lại bao nhiêu con cá?'], giai: 'Số cá còn lại trong ao là:' },
     // Còn lại (có bán, cắt đi, dùng đơn vị đo)
     { id: 'lon-ban', dang: 'con_lai', ky: ['toan-them-bot', 'toan-loi-van-100'], vat: '🐷', dv: 'con', ten: 'con lợn', khung: ['Đàn lợn nhà {A} có {x} con.', 'Mẹ đã bán {y} con lợn.', 'Hỏi đàn lợn nhà {A} còn lại bao nhiêu con?'], giai: 'Số con lợn còn lại là:' },
-    { id: 'day-cat', dang: 'con_lai', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🧶', dv: 'cm', ten: 'cm', khung: ['Sợi dây dài {x} xăng-ti-mét.', '{A} cắt đi {y} xăng-ti-mét.', 'Hỏi sợi dây còn lại dài bao nhiêu xăng-ti-mét?'], giai: 'Sợi dây còn lại dài là:' },
-    { id: 'gao-ban', dang: 'con_lai', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng có {x} ki-lô-gam gạo.', 'Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo cửa hàng còn lại là:' },
+    { id: 'day-cat', do_luong: true, dang: 'con_lai', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🧶', dv: 'cm', ten: 'cm', khung: ['Sợi dây dài {x} xăng-ti-mét.', '{A} cắt đi {y} xăng-ti-mét.', 'Hỏi sợi dây còn lại dài bao nhiêu xăng-ti-mét?'], giai: 'Sợi dây còn lại dài là:' },
+    { id: 'gao-ban', do_luong: true, dang: 'con_lai', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng có {x} ki-lô-gam gạo.', 'Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo cửa hàng còn lại là:' },
     // Nhiều hơn
     { id: 'hoa-do-vang', dang: 'nhieu_hon', ky: KY_NHIEU_IT, vat: '🌼', dv: 'bông', ten: 'bông hoa', khung: ['Có {x} bông hoa màu đỏ.', 'Số hoa màu vàng nhiều hơn số hoa màu đỏ là {y} bông.', 'Hỏi có bao nhiêu bông hoa màu vàng?'], giai: 'Số bông hoa màu vàng là:' },
     { id: 'ga-vit', dang: 'nhieu_hon', ky: KY_NHIEU_IT, vat: '🦆', dv: 'con', ten: 'con vịt', khung: ['Trên sân có {x} con gà.', 'Số vịt nhiều hơn số gà là {y} con.', 'Hỏi trên sân có bao nhiêu con vịt?'], giai: 'Số con vịt trên sân là:' },
@@ -1151,14 +1154,14 @@
     { id: 'sach-ke', dang: 'hon_kem', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '📘', dv: 'quyển', ten: 'quyển sách', khung: ['Kệ trên có {x} quyển sách.', 'Kệ dưới có {y} quyển sách.', 'Hỏi kệ trên nhiều hơn kệ dưới bao nhiêu quyển sách?'], giai: 'Kệ trên nhiều hơn kệ dưới số sách là:' },
     // Lúc đầu (có chữ "còn lại", "bán" nhưng phải cộng: bẫy từ khóa như 03a mục 2.18)
     { id: 'bi-cho', dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🔵', dv: 'viên', ten: 'viên bi', khung: ['{A} cho {B} {y} viên bi.', 'Sau khi cho, {A} còn lại {x} viên bi.', 'Hỏi lúc đầu {A} có bao nhiêu viên bi?'], giai: 'Lúc đầu {A} có số viên bi là:' },
-    { id: 'gao-luc-dau', dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Cửa hàng còn lại {x} ki-lô-gam gạo.', 'Hỏi lúc đầu cửa hàng có bao nhiêu ki-lô-gam gạo?'], giai: 'Lúc đầu cửa hàng có số gạo là:' },
+    { id: 'gao-luc-dau', do_luong: true, dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Cửa hàng còn lại {x} ki-lô-gam gạo.', 'Hỏi lúc đầu cửa hàng có bao nhiêu ki-lô-gam gạo?'], giai: 'Lúc đầu cửa hàng có số gạo là:' },
     { id: 'chim-luc-dau', dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🐦', dv: 'con', ten: 'con chim', khung: ['Có {y} con chim đã bay đi.', 'Trên cành còn lại {x} con chim.', 'Hỏi lúc đầu trên cành có bao nhiêu con chim?'], giai: 'Lúc đầu trên cành có số con chim là:' },
     // Nhân: {x} trong mỗi nhóm, có {y} nhóm
     { id: 'dia-cam', dang: 'nhan', ky: ['toan-nhan-chia'], vat: '🍊', dv: 'quả', ten: 'quả cam', khung: ['Mỗi đĩa có {x} quả cam.', 'Có {y} đĩa như thế.', 'Hỏi có tất cả bao nhiêu quả cam?'], giai: 'Số quả cam có tất cả là:' },
     { id: 'xe-dap', dang: 'nhan', ky: ['toan-nhan-chia'], x_co_dinh: [2], vat: '🚲', dv: 'bánh', ten: 'bánh xe', khung: ['Mỗi xe đạp có {x} bánh xe.', 'Có {y} chiếc xe đạp.', 'Hỏi {y} chiếc xe đạp có bao nhiêu bánh xe?'], giai: 'Số bánh xe có tất cả là:' },
     { id: 'ban-hoc', dang: 'nhan', ky: ['toan-nhan-chia'], x_co_dinh: [2], vat: '🦕', dv: 'bạn', ten: 'bạn', khung: ['Mỗi bàn có {x} bạn ngồi.', 'Có {y} bàn như thế.', 'Hỏi có tất cả bao nhiêu bạn?'], giai: 'Số bạn có tất cả là:' },
     { id: 'o-an-quan', dang: 'nhan', ky: ['toan-nhan-chia'], x_co_dinh: [5], vat: '⚪', dv: 'viên', ten: 'viên sỏi', khung: ['Mỗi ô có {x} viên sỏi.', 'Có {y} ô như vậy.', 'Hỏi có tất cả bao nhiêu viên sỏi?'], giai: 'Số viên sỏi có tất cả là:' },
-    { id: 'tui-gao', dang: 'nhan', ky: ['toan-nhan-chia'], x_co_dinh: [5], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Mỗi túi có {x} ki-lô-gam gạo.', 'Có {y} túi gạo như thế.', 'Hỏi có tất cả bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo có tất cả là:' },
+    { id: 'tui-gao', do_luong: true, dang: 'nhan', ky: ['toan-nhan-chia'], x_co_dinh: [5], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Mỗi túi có {x} ki-lô-gam gạo.', 'Có {y} túi gạo như thế.', 'Hỏi có tất cả bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo có tất cả là:' },
     { id: 'lo-hoa-nhan', dang: 'nhan', ky: ['toan-nhan-chia'], vat: '🌸', dv: 'bông', ten: 'bông hoa', khung: ['Mỗi lọ có {x} bông hoa.', 'Có {y} lọ hoa như thế.', 'Hỏi có tất cả bao nhiêu bông hoa?'], giai: 'Số bông hoa có tất cả là:' },
     // Chia đều: {x} tất cả, chia đều thành {y} phần
     { id: 'keo-chia-deu', dang: 'chia_deu', ky: KY_CHIA, vat: '🍬', dv: 'cái', ten: 'cái kẹo', khung: ['Có {x} cái kẹo.', 'Chia đều cho {y} bạn.', 'Hỏi mỗi bạn được mấy cái kẹo?'], giai: 'Số kẹo mỗi bạn được là:' },
@@ -1169,7 +1172,24 @@
     { id: 'keo-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🍬', dv: 'bạn', ten: 'bạn', khung: ['Có {x} cái kẹo.', 'Chia cho mỗi bạn {y} cái.', 'Hỏi chia được cho mấy bạn?'], giai: 'Số bạn được chia kẹo là:' },
     { id: 'hang-ban', dang: 'chia_nhom', ky: KY_CHIA, vat: '🦕', dv: 'hàng', ten: 'hàng', khung: ['Có {x} bạn khủng long.', 'Xếp thành các hàng, mỗi hàng {y} bạn.', 'Hỏi xếp được mấy hàng?'], giai: 'Số hàng xếp được là:' },
     { id: 'cam-dia-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🍊', dv: 'đĩa', ten: 'đĩa cam', khung: ['Có {x} quả cam.', 'Xếp vào các đĩa, mỗi đĩa {y} quả.', 'Hỏi được mấy đĩa cam như thế?'], giai: 'Số đĩa cam là:' },
-    { id: 'hoa-lo-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🌸', dv: 'lọ', ten: 'lọ hoa', khung: ['Có {x} bông hoa.', 'Cắm vào các lọ, mỗi lọ {y} bông.', 'Hỏi cắm được mấy lọ hoa?'], giai: 'Số lọ hoa cắm được là:' }
+    { id: 'hoa-lo-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🌸', dv: 'lọ', ten: 'lọ hoa', khung: ['Có {x} bông hoa.', 'Cắm vào các lọ, mỗi lọ {y} bông.', 'Hỏi cắm được mấy lọ hoa?'], giai: 'Số lọ hoa cắm được là:' },
+    // Ki-lô-gam, lít (SGK Bài 15 đến 18): do_luong = số đo, vẽ một hình kèm số đo thay vì đếm từng vật
+    { id: 'bao-thoc', dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '🌾', dv: 'kg', ten: 'kg thóc', khung: ['Bao thứ nhất có {x} kg thóc.', 'Bao thứ hai có {y} kg thóc.', 'Hỏi cả hai bao có bao nhiêu ki-lô-gam thóc?'], giai: 'Cả hai bao có số ki-lô-gam thóc là:' },
+    { id: 'robot-can', dang: 'nhieu_hon', ky: ['toan-kg-lit'], do_luong: true, vat: '🤖', dv: 'kg', ten: 'kg', khung: ['Rô-bốt A cân nặng {x} kg.', 'Rô-bốt B nặng hơn rô-bốt A {y} kg.', 'Hỏi rô-bốt B cân nặng bao nhiêu ki-lô-gam?'], giai: 'Rô-bốt B cân nặng là:' },
+    { id: 'khung-long-can', dang: 'it_hon', ky: ['toan-kg-lit'], do_luong: true, vat: '⚖️', dv: 'kg', ten: 'kg', khung: ['{A} cân nặng {x} kg.', '{B} nhẹ hơn {A} {y} kg.', 'Hỏi {B} cân nặng bao nhiêu ki-lô-gam?'], giai: '{B} cân nặng là:' },
+    { id: 'duong-ban', dang: 'con_lai', ky: ['toan-kg-lit'], do_luong: true, vat: '🍬', dv: 'kg', ten: 'kg đường', khung: ['Cửa hàng có {x} kg đường.', 'Cửa hàng đã bán {y} kg đường.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam đường?'], giai: 'Số ki-lô-gam đường còn lại là:' },
+    { id: 'gao-hai-tui', dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🍚', dv: 'kg', ten: 'kg', khung: ['Túi gạo tẻ nặng {x} kg.', 'Túi gạo nếp nặng {y} kg.', 'Hỏi túi gạo tẻ nặng hơn túi gạo nếp bao nhiêu ki-lô-gam?'], giai: 'Túi gạo tẻ nặng hơn túi gạo nếp là:' },
+    { id: 'nuoc-can', dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '💧', dv: 'l', ten: 'l nước', khung: ['Can thứ nhất đựng {x} l nước.', 'Can thứ hai đựng {y} l nước.', 'Hỏi cả hai can đựng bao nhiêu lít nước?'], giai: 'Cả hai can đựng số lít nước là:' },
+    { id: 'sua-thung', dang: 'bot', ky: ['toan-kg-lit'], do_luong: true, vat: '🥛', dv: 'l', ten: 'l sữa', khung: ['Thùng có {x} l sữa.', 'Mẹ rót ra {y} l sữa.', 'Hỏi thùng còn lại bao nhiêu lít sữa?'], giai: 'Thùng còn lại số lít sữa là:' },
+    { id: 'dau-can', dang: 'them', ky: ['toan-kg-lit'], do_luong: true, vat: '🫙', dv: 'l', ten: 'l dầu', khung: ['Trong can có {x} l dầu.', 'Bố đổ thêm {y} l dầu vào can.', 'Hỏi trong can có tất cả bao nhiêu lít dầu?'], giai: 'Trong can có tất cả số lít dầu là:' },
+    { id: 'xo-nuoc', dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🪣', dv: 'l', ten: 'l', khung: ['Xô to đựng {x} l nước.', 'Xô bé đựng {y} l nước.', 'Hỏi xô to đựng nhiều hơn xô bé bao nhiêu lít nước?'], giai: 'Xô to đựng nhiều hơn xô bé là:' },
+    // Tiền Việt Nam (SGK Bài 56, 58): tờ 100, 200, 500, 1 000 đồng, số tiền là số tròn trăm đến 1 000
+    { id: 'mua-keo', dang: 'con_lai', ky: ['toan-tien'], do_luong: true, vat: '👛', dv: 'đồng', ten: 'đồng', khung: ['{A} có {x} đồng.', '{A} mua một gói kẹo hết {y} đồng.', 'Hỏi {A} còn lại bao nhiêu tiền?'], giai: 'Số tiền {A} còn lại là:' },
+    { id: 'but-vo', dang: 'gop', ky: ['toan-tien'], do_luong: true, vat: '✏️', dv: 'đồng', ten: 'đồng', khung: ['Một chiếc bút chì giá {x} đồng.', 'Một quyển vở giá {y} đồng.', 'Hỏi mua cả bút chì và vở hết bao nhiêu tiền?'], giai: 'Mua cả bút chì và vở hết số tiền là:' },
+    { id: 'me-cho', dang: 'them', ky: ['toan-tien'], do_luong: true, vat: '👛', dv: 'đồng', ten: 'đồng', khung: ['{A} có {x} đồng.', 'Mẹ cho {A} thêm {y} đồng.', 'Hỏi {A} có tất cả bao nhiêu tiền?'], giai: 'Số tiền {A} có tất cả là:' },
+    { id: 'dieu-bong', dang: 'nhieu_hon', ky: ['toan-tien'], do_luong: true, vat: '🪁', dv: 'đồng', ten: 'đồng', khung: ['Một quả bóng giá {x} đồng.', 'Một con diều đắt hơn quả bóng {y} đồng.', 'Hỏi con diều giá bao nhiêu tiền?'], giai: 'Con diều có giá là:' },
+    { id: 'kem-banh', dang: 'it_hon', ky: ['toan-tien'], do_luong: true, vat: '🍦', dv: 'đồng', ten: 'đồng', khung: ['Một cái bánh giá {x} đồng.', 'Một que kem rẻ hơn cái bánh {y} đồng.', 'Hỏi que kem giá bao nhiêu tiền?'], giai: 'Que kem có giá là:' },
+    { id: 'hai-ban-tien', dang: 'hon_kem', ky: ['toan-tien'], do_luong: true, vat: '👛', dv: 'đồng', ten: 'đồng', khung: ['{A} có {x} đồng.', '{B} có {y} đồng.', 'Hỏi {A} có nhiều hơn {B} bao nhiêu tiền?'], giai: '{A} có nhiều hơn {B} số tiền là:' }
   ];
   const MAU_THEO_ID = {};
   MAU.forEach(function (m) { m.phep = PHEP_DANG[m.dang]; MAU_THEO_ID[m.id] = m; });
@@ -1181,7 +1201,9 @@
     'toan-nhieu-it': { nhieu_hon: 1, it_hon: 1 },
     'toan-loi-van-100': { them: 1, gop: 1, bot: 1, con_lai: 1, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.8, luc_dau: 0.9 },
     'chia-y-nghia': { chia_deu: 1, chia_nhom: 1 },
-    'toan-nhan-chia': { nhan: 1, chia_deu: 1, chia_nhom: 1 }
+    'toan-nhan-chia': { nhan: 1, chia_deu: 1, chia_nhom: 1 },
+    'toan-kg-lit': { gop: 1, them: 0.8, bot: 0.8, con_lai: 1, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.6 },
+    'toan-tien': { gop: 1, them: 0.7, con_lai: 1.2, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.7 }
   };
 
   const TEN_NV = ['Rex', 'Mây', 'Tốc Long', 'Khủng Long Lửa', 'Giáp Long', 'Rồng Biển', 'Mỏ Vịt Long', 'Tam Giác Long', 'Long Cổ Dài', 'Kiếm Long', 'Gai Long', 'Dực Long'];
@@ -1209,6 +1231,19 @@
           const a2 = nn(rng, 25, 99), b2 = nn(rng, 10, a2 - 5);
           if (dv(b2) <= dv(a2)) return [a2, b2];
         }
+      }
+    }
+    if (kn === 'toan-kg-lit') {
+      // Bài 15 đến 18 học trước cộng, trừ có nhớ trong 100: số trong 20 qua 10, hoặc số có hai chữ số không nhớ (như SGK)
+      if (rng() < 0.45) return soLoiVan('toan-them-bot', mau, rng);
+      return soLoiVan('toan-hon-kem', mau, rng);
+    }
+    if (kn === 'toan-tien') {
+      for (;;) {
+        const a = nn(rng, 2, 9), b = nn(rng, 1, 8);
+        if (p === '+' && a + b <= 10) return [a * 100, b * 100];
+        if (p === '-' && rng() < 0.15) return [1000, b * 100];
+        if (p === '-' && a > b) return [a * 100, b * 100];
       }
     }
     if (kn === 'toan-loi-van-100') {

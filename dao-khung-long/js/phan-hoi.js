@@ -99,12 +99,13 @@
   function noiDung(q, giaTri, kq) {
     const coTen = kq.loi && kq.loi.length && kq.loi[0] !== 'khac';
     const lg = q.loi_giai || {};
-    const chon = kq.chonHien != null ? kq.chonHien : hienGiaTri(giaTri);
+    const chon = kq.chonHien != null ? kq.chonHien : q.cau_truc && window.NganHang && window.NganHang.hienGiaTriCau ? window.NganHang.hienGiaTriCau(q.cau_truc, giaTri) : hienGiaTri(giaTri);
     let h = '<h2>' + (coTen ? 'Gần đúng rồi!' : 'Mình cùng xem nhé!') + '</h2>';
     h += '<p class="ph-loi">' + esc(kq.moDau || 'Con chọn') + ' <b>' + esc(chon) + '</b>. ' + esc(kq.loiNoi || '') + (coTen ? ', mình cùng xem nhé.' : '.') + '</p>';
     h += '<div class="ph-giai">';
     if (lg.cot) h += cotDoc(lg.cot);
     if (lg.khoi) h += khoiSo(lg.khoi, true);
+    if (lg.html) h += '<div class="ph-hinh-giai">' + lg.html + '</div>'; // hình minh họa do ngân hàng câu dựng (không chứa dữ liệu người dùng)
     h += '<ol class="ph-buoc">' + (lg.buoc || []).map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ol>';
     h += '</div>';
     h += '<p class="ph-ket">' + esc(q.ket_luan || ('Vậy ' + q.de.replace('?', String(q.dap_an)))) + '</p>';

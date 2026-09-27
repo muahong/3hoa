@@ -329,4 +329,5 @@
   }
 
   window.TruyenTranh = { batDau: batDau, _trangThai: function () { return s; } };
+  (window.DaoTroChoi = window.DaoTroChoi || {})['truyen-tranh'] = { ten: 'Truyện Tranh', khung: true, san: 'tt-san', batDau: batDau, _trangThai: window.TruyenTranh._trangThai };
 })();

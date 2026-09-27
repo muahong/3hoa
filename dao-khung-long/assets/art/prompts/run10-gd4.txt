@@ -1,0 +1,11 @@
+RUN = gd4
+
+Images (character-sprite rules: transparent background, one subject, centered, 1024 x 1024):
+1. ic-xuong-do-luong.png : a chunky cute toy balance scale with two round pans, one pan holds a small green striped watermelon, the other holds two shiny round iron weights with a little handle on top, the scale beam is level. Candy purple and gold toy materials. No letters, no numbers. Transparent background.
+2. ic-cho.png : a cute little market stall basket made of woven straw, filled with a banh mi baguette, two red apples and a small bunch of bananas, a tiny striped awning corner above it. No money, no letters, no numbers. Transparent background.
+3. ic-cau-ca.png : a chunky toy fishing rod bending with a happy round orange fish on the hook jumping out of a small splash of blue water with droplets. No letters, no numbers. Transparent background.
+4. ic-rung-hinh.png : a small tidy group of glossy toy geometric solids standing on nothing: a green cylinder, a yellow ball (sphere), a blue cube, and a flat orange four-sided tile leaning on them, a tiny leaf sprig beside them. No letters, no numbers. Transparent background.
+5. ic-lat-lich.png : a chunky cute tear-off desk calendar block with the top blank page curling as it flips, a red binding ring on top, and a small round toy alarm clock beside it whose face has only two hands and small dots, no digits. No letters, no numbers anywhere. Transparent background.
+6. ic-dau-truong.png : a shiny chunky golden trophy cup with two round handles and a small star on the front, a few sparkles around it. No letters, no numbers. Transparent background.
+7. boss-hk1.png : a big chubby friendly "boss" dinosaur for a kids' math quiz battle, purple with lavender belly, three small rounded horns like a triceratops, a playful confident grin with closed mouth, arms crossed, wearing a tiny golden champion belt. Cute and huggable, never scary, no teeth, no claws. Whole body visible. Transparent background.
+8. boss-cuoi-nam.png : a big friendly golden and orange dragon-like dinosaur with small rounded wings and a soft spiky crest, sitting proudly with a playful confident smile, a small shiny crown slightly tilted on its head. Cute and huggable, never scary, no teeth, no claws. Whole body visible. Transparent background.

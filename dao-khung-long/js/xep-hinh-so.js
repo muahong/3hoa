@@ -218,4 +218,5 @@
   }
 
   window.XepHinhSo = { batDau: batDau, _trangThai: function () { return s; } };
+  (window.DaoTroChoi = window.DaoTroChoi || {})['xep-hinh-so'] = { ten: 'Xếp Hình Số', khung: true, san: 'xh-san', batDau: batDau, _trangThai: window.XepHinhSo._trangThai };
 })();

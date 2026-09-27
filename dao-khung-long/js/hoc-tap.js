@@ -42,6 +42,7 @@
   function lam2(x) { return Math.round(x * 100) / 100; }
   function theoId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
   function tenGame(g) {
+    if (window.Dao && window.Dao.TEN_GAME && window.Dao.TEN_GAME[g]) return window.Dao.TEN_GAME[g];
     return { 'dua-xe': 'Đua Xe', 'chem-trai-cay': 'Chém Trái Cây', 'ban-thien-thach': 'Bắn Thiên Thạch', 'truyen-tranh': 'Truyện Tranh', 'lat-the': 'Lật Thẻ Anh Em', 'xep-hinh-so': 'Xếp Hình Số' }[g] || g;
   }
 

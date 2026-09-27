@@ -13,7 +13,7 @@ const path = require('path');
 const { loadGame, makeStorage, ROOT } = require('./lib/load.js');
 const { validate } = require('./lib/schema-lite.js');
 
-const FILES = ['js/nhat-ky.js', 'js/ngan-hang.js', 'js/hoc-tap.js', 'js/dao.js', 'js/ho-so.js', 'js/van-choi.js'];
+const FILES = ['js/nhat-ky.js', 'js/ngan-hang.js', 'js/cau-so-sanh.js', 'js/cau-do-luong.js', 'js/cau-tien.js', 'js/cau-thong-ke.js', 'js/cau-hinh-hoc.js', 'js/cau-thoi-gian.js', 'js/hoc-tap.js', 'js/dao.js', 'js/ho-so.js', 'js/van-choi.js'];
 // Đối tượng tạo trong vm có prototype của realm khác: so sánh sau khi chuyển về JSON
 const J = (x) => (x === undefined ? x : JSON.parse(JSON.stringify(x)));
 const deq = (a, b, m) => assert.deepEqual(J(a), J(b), m);
@@ -408,7 +408,7 @@ test('đảo: 10 vùng và 2 đấu trường; lớp 2 học kì 1 mở vùng 1 
   assert.ok(DAO.trangThaiVung(DAO.vung(4), lop2).mo);
   assert.ok(!DAO.trangThaiVung(DAO.vung(4), lop2).sap_co, 'vùng 4 có Đua Xe');
   assert.ok(!DAO.trangThaiVung(DAO.vung(1), lop2).sap_co, 'vùng 1 có Xếp Hình Số, Lật Thẻ, Truyện Tranh từ giai đoạn 2');
-  assert.ok(DAO.trangThaiVung(DAO.vung(3), lop2).sap_co, 'vùng 3 chưa có game');
+  assert.ok(!DAO.trangThaiVung(DAO.vung(3), lop2).sap_co, 'vùng 3 có Xưởng Đo Lường từ giai đoạn 4');
   assert.equal(DAO.trangThaiVung(DAO.vung(7), lop2).ly_do, 'hoc_ky_2');
   assert.ok(DAO.trangThaiVung(DAO.vung(7), { lop: 2, bai_dang_hoc: 40 }).mo);
   assert.ok(DAO.trangThaiVung(DAO.vung(10), { lop: 3, bai_dang_hoc: 1 }).mo);
@@ -500,7 +500,7 @@ test('tệp: service worker liệt kê tệp có thật; index.html có CSP, kh�
 test('ngân hàng GĐ 2: câu số, phép nhân từ tổng, bài toán có lời văn đều đúng đáp án, đúng phạm vi, nhiễu mang mã lỗi', () => {
   const { NH } = moi();
   const rng = NH.taoRng(11);
-  const moiLoai = NH.THU_TU_KY_NANG.filter((k) => NH.loaiKyNang(k) !== 'phep_tinh');
+  const moiLoai = NH.THU_TU_KY_NANG.filter((k) => ['so', 'nhan_tong', 'loi_van'].includes(NH.loaiKyNang(k)));
   assert.ok(moiLoai.length >= 11);
   for (const kn of moiLoai) {
     const loai = NH.loaiKyNang(kn);

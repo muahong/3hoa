@@ -863,4 +863,5 @@
     /** Dùng cho kiểm thử tự động: trạng thái hiện tại. */
     _trangThai: function () { return s; }
   };
+  (window.DaoTroChoi = window.DaoTroChoi || {})['dua-xe'] = { ten: 'Đua Xe', khung: false, man: 'man-dua-xe', batDau: window.DuaXe.batDau };
 })();

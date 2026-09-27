@@ -209,7 +209,12 @@
     const reg = typeof window !== 'undefined' ? window.DaoTroChoi : null;
     return reg ? !!reg[g] : true;
   }
-  function choiDuoc(m) { return !!(m && coGame(m.game) && ((m.cau && m.cau.length) || m.dau_truong)); }
+  /** Mọi kỹ năng của màn đã có trong ngân hàng câu (phòng khi một tệp cau-*.js chưa nạp được). */
+  function coKyNang(m) {
+    const KY = window.NganHang && window.NganHang.KY_NANG;
+    return !KY || (m.cau || []).every(function (x) { return !!KY[x.ky_nang]; });
+  }
+  function choiDuoc(m) { return !!(m && coGame(m.game) && ((m.cau && m.cau.length) || m.dau_truong) && coKyNang(m)); }
   function manTheoKyNang(kn) {
     for (let i = 0; i < VUNG.length; i++) for (let j = 0; j < VUNG[i].man.length; j++) {
       const m = VUNG[i].man[j];

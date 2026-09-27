@@ -412,7 +412,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 4px solid 
 .ll-the h1 { font-size: 32px; line-height: 1.2; }
 
 /* ---------- Thông báo ---------- */
-.thong-bao { position: fixed; z-index: 50; left: 50%; bottom: calc(24px + var(--an-toan-duoi)); transform: translateX(-50%); background: rgba(34,26,59,.92); color: #fff; font-size: 19px; font-weight: 700; padding: 12px 22px; border-radius: 18px; max-width: min(640px, 92vw); text-align: center; box-shadow: var(--bong); }
+.thong-bao { position: fixed; z-index: 50; left: 50%; bottom: calc(24px + var(--an-toan-duoi)); transform: translateX(-50%); background: rgba(34,26,59,.92); color: #fff; font-size: 19px; font-weight: 700; padding: 12px 22px; border-radius: 18px; max-width: min(640px, 92vw); text-align: center; box-shadow: var(--bong); pointer-events: none; }
 
 /* ---------- Màn hình hẹp, xoay dọc ---------- */
 @media (max-width: 900px) {

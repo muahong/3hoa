@@ -155,8 +155,8 @@
     }).join('');
   }
 
-  /** In đậm các con số trong lời kể. */
-  function boiSo(t) { return esc(t).replace(/(\d+)/g, '<b>$1</b>'); }
+  /** In đậm các con số trong lời kể (không đụng tên lớp như "2A"). */
+  function boiSo(t) { return esc(t).replace(/\b(\d+)\b/g, '<b>$1</b>'); }
 
   function veBuoc1(q) {
     dom.buoc1.classList.remove('hidden');

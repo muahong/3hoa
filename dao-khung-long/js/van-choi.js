@@ -11,7 +11,7 @@
   'use strict';
 
   /** Thao tác tính là đổi ý; "chon" chỉ tính từ lần chọn thứ hai trong câu (lần đầu là chính câu trả lời). */
-  const DOI_Y = { doi_lan: 1, bo_chon: 1, doi_cot: 1, xoa: 1 };
+  const DOI_Y = { doi_lan: 1, bo_chon: 1, doi_cot: 1, xoa: 1, bo_ra: 1 };
   const SAU_CAU = 2; // câu sai quay lại sau 2 câu
   const TOI_DA_ON_LAI = 2; // một câu quay lại tối đa 2 lần trong ván
   /** Số lần thử của một câu theo dạng (bài hai bước: mỗi bước tính riêng). */

@@ -64,7 +64,7 @@
       if (e.loai !== 'thao_tac' || !e.du_lieu) return;
       const k = e.du_lieu.kieu;
       if (k === 'chon') { soChon++; if (soChon > 1) doiY++; }
-      else if (k === 'doi_lan' || k === 'bo_chon' || k === 'doi_cot' || k === 'xoa') doiY++;
+      else if (k === 'doi_lan' || k === 'bo_chon' || k === 'doi_cot' || k === 'xoa' || k === 'bo_ra') doiY++;
     });
     traLoi.forEach(function (e) {
       ((e.du_lieu && e.du_lieu.loi) || []).forEach(function (m) { if (loi.indexOf(m) < 0) loi.push(m); });

@@ -149,9 +149,9 @@
     { id: 'v9-m1', so: 1, ten: 'Nhận biết tờ tiền', bai: 'Bài 56', bai_dau: 56, game: 'cho-khung-long', che_do: 'nhan_biet', ky_nang_chinh: 'nhan-biet-tien', cau: [{ ky_nang: 'nhan-biet-tien' }], so_cau: 8 },
     { id: 'v9-m2', so: 2, ten: 'Trả tiền mua hàng', bai: 'Bài 56', bai_dau: 56, game: 'cho-khung-long', che_do: 'tra_tien', ky_nang_chinh: 'tra-tien', cau: [{ ky_nang: 'tra-tien' }], so_cau: 8 },
     { id: 'v9-m3', so: 3, ten: 'Đổi tiền', bai: 'Bài 56', bai_dau: 56, game: 'cho-khung-long', che_do: 'doi_tien', ky_nang_chinh: 'doi-tien', cau: [{ ky_nang: 'doi-tien' }], so_cau: 8 },
-    { id: 'v9-m4', so: 4, ten: 'Làm người bán: trả lại tiền thừa', bai: 'Bài 56, 58', bai_dau: 58, game: 'cho-khung-long', che_do: 'nguoi_ban', ky_nang_chinh: 'tien-thua', cau: [{ ky_nang: 'tien-thua' }], so_cau: 8 },
-    { id: 'v9-m5', so: 5, ten: 'Bài toán mua bán', bai: 'Bài 58', bai_dau: 58, game: 'truyen-tranh', ky_nang_chinh: 'toan-tien', cau: [{ ky_nang: 'toan-tien' }], so_cau: 8 },
-    { id: 'v9-cup', so: 6, ten: 'Cúp Chợ · Luyện tập chung', bai: 'Bài 58', bai_dau: 58, game: 'cho-khung-long', che_do: 'tron', cup: true, so_cau: 10, cup_can: ['v9-m1', 'v9-m2', 'v9-m3'],
+    { id: 'v9-m4', so: 4, ten: 'Làm người bán: trả lại tiền thừa', bai: 'Bài 56 (mở rộng)', bai_dau: 56, game: 'cho-khung-long', che_do: 'nguoi_ban', ky_nang_chinh: 'tien-thua', cau: [{ ky_nang: 'tien-thua' }], so_cau: 8 },
+    { id: 'v9-m5', so: 5, ten: 'Bài toán mua bán', bai: 'Bài 56 (mở rộng)', bai_dau: 56, game: 'truyen-tranh', ky_nang_chinh: 'toan-tien', cau: [{ ky_nang: 'toan-tien' }], so_cau: 8 },
+    { id: 'v9-cup', so: 6, ten: 'Cúp Chợ · Luyện tập chung', bai: 'Bài 56', bai_dau: 56, game: 'cho-khung-long', che_do: 'tron', cup: true, so_cau: 10, cup_can: ['v9-m1', 'v9-m2', 'v9-m3', 'v9-m4'],
       cau: [{ ky_nang: 'tra-tien', ty_le: 1 }, { ky_nang: 'doi-tien', ty_le: 0.8 }, { ky_nang: 'tien-thua', ty_le: 0.8 }] }
   ];
   const MAN_V10 = [
@@ -177,7 +177,7 @@
     { so: 11, ten: 'Đấu Trường Học Kì 1', chu_de: 'Chủ đề 7', bai: [33, 36], hoc_ky: 1, dau_truong: true, loai: null, mau: '#c7a24a', vi_tri: [0.16, 0.55], nen: 'bg-circus-night', phu: 'rgba(40,20,70,.45)', noi_dung: [], man: MAN_DT1 },
     { so: 7, ten: 'Thung Lũng Nhân Chia', chu_de: 'Chủ đề 8', bai: [37, 45], hoc_ky: 2, loai: 'sp-tam-giac-long', ten_loai: 'Tam Giác Long', phu_kien: 'Giáp Nhân Chia', mau: '#d35a9c', vi_tri: [0.36, 0.555], nen: 'bg-garden', phu: 'rgba(170,60,130,.6)', noi_dung: ['2.19', '2.20', '2.21', '2.22', '2.23', '2.24', '2.25', '2.26'], man: MAN_V7 },
     { so: 8, ten: 'Kim Tự Tháp 1000', chu_de: 'Chủ đề 10 và 12', bai: [48, 63], hoc_ky: 2, loai: 'sp-long-co-dai', ten_loai: 'Long Cổ Dài', phu_kien: 'Vòng Cổ Nghìn', mau: '#c9a227', vi_tri: [0.548, 0.59], nen: 'bg-desert-pyramid', phu: 'rgba(150,100,20,.55)', noi_dung: ['2.3', '2.4', '2.6', '2.7', '2.12'], man: MAN_V8 },
-    { so: 9, ten: 'Chợ Khủng Long', chu_de: 'Chủ đề 11', bai: [56, 58], hoc_ky: 2, loai: 'sp-mo-vit-long', ten_loai: 'Mỏ Vịt Long', phu_kien: 'Túi Tiền Nhỏ', mau: '#e0703a', vi_tri: [0.178, 0.733], nen: 'bg-market', phu: 'rgba(170,80,30,.5)', noi_dung: ['B2.14'], man: MAN_V9 },
+    { so: 9, ten: 'Chợ Khủng Long', chu_de: 'Chủ đề 11', bai: [56, 56], hoc_ky: 2, loai: 'sp-mo-vit-long', ten_loai: 'Mỏ Vịt Long', phu_kien: 'Túi Tiền Nhỏ', mau: '#e0703a', vi_tri: [0.178, 0.733], nen: 'bg-market', phu: 'rgba(170,80,30,.5)', noi_dung: ['B2.14'], man: MAN_V9 },
     { so: 10, ten: 'Hồ Thống Kê', chu_de: 'Chủ đề 13', bai: [64, 67], hoc_ky: 2, loai: 'sp-gai-long', ten_loai: 'Gai Long', phu_kien: 'Cần Câu Bạc', mau: '#1d9bd1', vi_tri: [0.41, 0.808], nen: 'bg-meadow', phu: 'rgba(20,110,170,.55)', noi_dung: ['C2.1', 'C2.2', 'C2.3'], man: MAN_V10 },
     { so: 12, ten: 'Đấu Trường Cuối Năm', chu_de: 'Chủ đề 14', bai: [68, 75], hoc_ky: 2, dau_truong: true, loai: null, mau: '#c7a24a', vi_tri: [0.598, 0.69], nen: 'bg-circus-night', phu: 'rgba(40,20,70,.45)', noi_dung: [], man: MAN_DT2 }
   ];

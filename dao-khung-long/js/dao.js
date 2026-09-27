@@ -117,7 +117,7 @@
       cau: [{ ky_nang: 'ngay-gio', ty_le: 0.8 }, { ky_nang: 'xem-gio', ty_le: 1 }, { ky_nang: 'xem-lich', ty_le: 1 }] }
   ];
   const MAN_DT1 = [
-    { id: 'dt1', so: 1, ten: 'Đấu Trường Học Kì 1', bai: 'Bài 33 đến 36', bai_dau: 33, game: 'dau-truong', cup: true, so_cau: 15, cau: [],
+    { id: 'dt1', so: 1, ten: 'Đấu Trường Học Kì 1', bai: 'Bài 33 đến 36', bai_dau: 33, game: 'dau-truong', cup: true, so_cau: 10, cau: [],
       dau_truong: { vung: [1, 2, 3, 4, 5, 6], boss: 'boss-hk1', ten_boss: 'Tam Giác Vương', phu_kien: 'Bộ Giáp Học Kì 1', mau_boss: 12 } }
   ];
   const MAN_V7 = [
@@ -162,7 +162,7 @@
       cau: [{ ky_nang: 'kiem-dem', ty_le: 0.6 }, { ky_nang: 'bieu-do-tranh', ty_le: 1 }, { ky_nang: 'kha-nang', ty_le: 0.8 }] }
   ];
   const MAN_DT2 = [
-    { id: 'dt2', so: 1, ten: 'Đấu Trường Cuối Năm', bai: 'Bài 68 đến 75', bai_dau: 68, game: 'dau-truong', cup: true, so_cau: 20, cau: [],
+    { id: 'dt2', so: 1, ten: 'Đấu Trường Cuối Năm', bai: 'Bài 68 đến 75', bai_dau: 68, game: 'dau-truong', cup: true, so_cau: 14, cau: [],
       dau_truong: { vung: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], boss: 'boss-cuoi-nam', ten_boss: 'Rồng Vàng Cuối Năm', phu_kien: 'Vương Miện Cuối Năm', mau_boss: 16 } }
   ];
 

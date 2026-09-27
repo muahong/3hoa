@@ -1627,7 +1627,35 @@
       q.de_buoc2 = dePT(ctPhep(ct));
     }
     if (im && im.moRong) im.moRong(q, ct, rng);
+    // Câu cấu tạo số hỏi ở dạng chọn đáp án (Đấu Trường, game cũ): đổi lời "Xếp số" thành câu hỏi chọn số
+    if (loaiCt(ct) === 'so' && ct.kieu === 'cau_tao' && (q.dang === 'chon_dap_an' || q.dang === 'doc_va_chon')) {
+      q.de = deChonSo(ct);
+      q.de_doc = deDocChonSo(ct);
+      q.goi_y = goiYChonSo(ct);
+    }
     return q;
+  }
+
+  function deChonSo(ct) {
+    if (ct.cach === 'chu') return 'Số "' + docSo(ct.so) + '" viết là số nào?';
+    if (ct.cach === 'tong') return noiTheoTong(ct.so) + ' là số nào?';
+    if (ct.cach === 'hang') return 'Số gồm ' + noiTheoHang(ct.so) + ' là số nào?';
+    return 'Số ' + docSo(ct.so) + ' là số nào?';
+  }
+  function deDocChonSo(ct) {
+    if (ct.cach === 'chu') return 'Số ' + docSo(ct.so) + ' viết là số nào?';
+    if (ct.cach === 'tong') return noiTheoTong(ct.so).replace(/\+/g, 'cộng') + ' là số nào?';
+    return deChonSo(ct);
+  }
+  function goiYChonSo(ct) {
+    const d = ct.so, t = tram(d), c = chuc(d), u = dv(d);
+    const baHang = d >= 100;
+    const gom = 'Số này gồm ' + (baHang ? t + ' trăm, ' : '') + c + ' chục và ' + u + ' đơn vị.';
+    return [
+      baHang ? 'Viết lần lượt chữ số hàng trăm, hàng chục, hàng đơn vị.' : 'Viết chữ số hàng chục trước, hàng đơn vị sau.',
+      baHang && c === 0 ? 'Hàng chục bằng 0 thì viết chữ số 0 ở giữa.' : u === 0 ? 'Hàng đơn vị bằng 0 thì viết chữ số 0 ở cuối.' : 'Mỗi hàng chỉ viết một chữ số.',
+      gom
+    ];
   }
 
   /** Dạng câu mặc định của một cấu trúc: bài toán có lời văn là hai bước, loại cắm thêm tự khai, còn lại chọn đáp án. */

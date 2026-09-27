@@ -267,6 +267,20 @@
     doc: function (chu) { if (chu) AT().doc(String(chu)); return true; }
   };
 
+  /*
+   * Game cũ có thể còn gọi cầu nối trong lúc iframe đang bị đóng (pagehide gửi tạm dừng, hẹn giờ còn chạy):
+   * khi không còn ván nào mở, mọi lời gọi trả về null (hoặc Promise null) thay vì ném lỗi.
+   */
+  Object.keys(api).forEach(function (k) {
+    const f = api[k];
+    if (typeof f !== 'function') return;
+    const hua = k === 'phanHoi' || k === 'ketThuc' || k === 'veDao';
+    api[k] = function () {
+      if (!s) return hua ? Promise.resolve(null) : null;
+      return f.apply(api, arguments);
+    };
+  });
+
   function veDao(them) {
     if (!s) return Promise.resolve(null);
     const st = s;

@@ -657,7 +657,9 @@ test('đảo GĐ 2: vùng 1, 2, 4, 7, 8 mỗi vùng có ít nhất 2 thể loạ
 
 /** Nạp thêm bài học (chỉ phần dữ liệu, không cần DOM). */
 test('bài học 30 giây: đủ bài cho mọi kỹ năng có bài học; câu thử có đáp án; ghi bai_hoc_xem hợp lệ', async () => {
-  const w = loadGame('dao-khung-long', FILES.concat(['js/phan-hoi.js', 'js/bai-hoc.js']));
+  // Bài học của các game giai đoạn 4 đăng ký trong tệp game (sau bai-hoc.js): nạp đủ như index.html
+  const w = loadGame('dao-khung-long', FILES.concat(['js/am-thanh.js', 'js/phan-hoi.js', 'js/bai-hoc.js', 'js/khung-choi.js', 'js/xuong-do-luong.js',
+    'js/cho-khung-long.js', 'js/cau-ca.js', 'js/rung-hinh-khoi.js', 'js/lat-lich.js', 'js/dau-truong.js']));
   const NH = w.NganHang, BH = w.BaiHoc, NK = w.NhatKy;
   const can = new Set(Object.values(NH.KY_NANG).map((k) => k.bai_hoc).filter(Boolean));
   for (const ma of can) assert.ok(BH.coBai(ma), 'thiếu bài học ' + ma);

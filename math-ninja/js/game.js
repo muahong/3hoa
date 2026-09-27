@@ -9,6 +9,9 @@
 
   const MG = window.MathGen, SP = window.Sprites, Sfx = window.Sfx, Music = window.Music, Voice = window.Voice;
   const rnd = MG.rnd, chance = MG.chance, pick = MG.pick, shuffle = MG.shuffle;
+  /* [Đảo] Chế độ Đảo Khủng Long (js/dao.js, nạp trước tệp này): chỉ bật khi trang chạy trong iframe của đảo với ?dao=1.
+     Mọi chỗ rẽ nhánh cho đảo trong tệp này đều đánh dấu "[Đảo]"; Dao = null thì game chạy y như cũ. */
+  const Dao = window.NinjaDao || null;
   const TAU = Math.PI * 2;
   const FONT = '"Baloo 2", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
   const $ = function (id) { return document.getElementById(id); };
@@ -153,6 +156,7 @@
       for (let i = 0; i < keys.length - 60; i++) delete m[keys[i]];
     },
     save() {
+      if (Dao) return;                  // [Đảo] đảo là nơi ghi chép duy nhất: không ghi tiến trình riêng của game
       try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* bỏ qua */ }
     },
     activeId() {
@@ -332,7 +336,7 @@
     initClouds(oldW > 0 && oldH > 0 ? { fx: w / oldW, fy: h / oldH } : null);
     measureHud();
     // Xoay màn hình giữa ván: tạm dừng để bé không bị mất quả vì quỹ đạo đổi
-    if (wasPlaying) { pauseGame(); toast('Đã xoay màn hình, bấm ▶ để chơi tiếp'); }
+    if (wasPlaying) { pauseGame('xoay_man'); toast('Đã xoay màn hình, bấm ▶ để chơi tiếp'); }
   }
 
   /** Giữ nguyên bố cục tương đối khi đổi hướng màn hình (quả không bị văng ra ngoài). */
@@ -357,7 +361,8 @@
     try { G.hudBottom = Math.max(0, ui.hudTop.getBoundingClientRect().bottom); } catch (e) { G.hudBottom = 0; }
   }
 
-  function inGame() { return G.state === 'countdown' || G.state === 'playing' || G.state === 'paused' || G.state === 'over'; }
+  /** 'cho_dao' [Đảo]: đang chờ màn "Gần đúng rồi" của đảo hoặc đang kết thúc ván trên đảo (không chém, không tính giờ). */
+  function inGame() { return G.state === 'countdown' || G.state === 'playing' || G.state === 'paused' || G.state === 'over' || G.state === 'cho_dao'; }
 
   function applyFruitSize() {
     const big = inGame() && G.level && G.level.big;
@@ -656,21 +661,24 @@
 
   /**
    * values: mảng số (null = quả trơn không có số). opts: { bomb, heart, lead, track }
+   * [Đảo] opts.xs: hoành độ cố định của từng quả (giữ đúng thứ tự, không xáo); opts.lc: lựa chọn của đảo gắn vào từng quả;
+   * opts.calm: quả bay thẳng hơn, ít xoay và lên gần như cùng lúc (bé lớp 2 thấy đủ các lựa chọn một lượt).
+   * opts.apexPad: đỉnh đường bay thấp thêm bấy nhiêu px (đảo chừa chỗ cho dải gợi ý dưới thẻ câu hỏi).
    */
   function launchWave(values, opts) {
     opts = opts || {};
-    const items = values.map(function (v) { return { kind: 'fruit', value: v }; });
+    const items = values.map(function (v, i) { return { kind: 'fruit', value: v, lc: opts.lc ? opts.lc[i] : null }; });
     if (opts.bomb) items.push({ kind: 'bomb' });
     if (opts.heart) items.push({ kind: 'heart' });
-    shuffle(items);
+    if (!opts.xs) shuffle(items);
     const ln = lanes(items.length);
-    const xs = ln.xs;
+    const xs = opts.xs ? opts.xs.slice() : ln.xs;
     if (opts.x != null && xs.length === 1) xs[0] = opts.x;
     const tight = ln.slotW < ln.minGap;
     const wave = opts.track ? { fruits: [], resolved: false, startTime: G.qStart, hint: false, bombed: false, visibleAt: -1 } : null;
     const H = G.H, W = G.W, g = G.gravity;
     // Đỉnh đường bay phải nằm dưới thanh HUD, nếu không quả bị thẻ phép tính che (màn hình ngang của điện thoại)
-    const minApex = (inGame() ? G.hudBottom : 0) + G.R * 1.3;
+    const minApex = (inGame() ? G.hudBottom : 0) + G.R * 1.3 + (opts.apexPad || 0);   // [Đảo] apexPad: chừa chỗ cho dải gợi ý
     items.forEach(function (it, i) {
       const x = xs[i];
       const apexY = Math.min(H * 0.6, Math.max(minApex, H * 0.14) + Math.random() * H * 0.18);
@@ -678,12 +686,14 @@
       const f = new Fruit({
         kind: it.kind,
         value: it.value == null ? null : it.value,
+        lc: it.lc || null,
         x: x, y: y0,
         vy: -Math.sqrt(2 * g * (y0 - apexY)),
-        vx: (W / 2 - x) * (items.length >= 4 ? 0.06 : 0.12) + (Math.random() - 0.5) * W * 0.06,
-        vr: (Math.random() - 0.5) * 3,
+        vx: opts.calm ? (W / 2 - x) * 0.025 + (Math.random() - 0.5) * W * 0.012
+          : (W / 2 - x) * (items.length >= 4 ? 0.06 : 0.12) + (Math.random() - 0.5) * W * 0.06,
+        vr: (Math.random() - 0.5) * (opts.calm ? 1.2 : 3),
         rot: Math.random() * TAU,
-        delay: (opts.lead || 0) + i * (tight ? 0.28 : 0.17) + Math.random() * 0.1,
+        delay: (opts.lead || 0) + (opts.calm ? Math.random() * 0.3 : i * (tight ? 0.28 : 0.17) + Math.random() * 0.1),
         wave: wave
       });
       if (wave) wave.fruits.push(f);
@@ -733,6 +743,7 @@
   }
 
   function newQuestion() {
+    if (Dao) { Dao.cauMoi(); return; }     // [Đảo] câu hỏi lấy từ ngân hàng của đảo
     G.misses = 0;
     G.held = null;
     ui.hint.hidden = true;
@@ -782,13 +793,14 @@
   /** Nút 💡 chỉ bật khi đợt quả hiện tại chưa được giải và chưa dùng gợi ý. */
   function syncHintBtn(force) {
     if (!ui.btnHint) return;
-    const on = G.state === 'playing' && !!G.wave && !G.wave.resolved && !G.wave.hint;
+    const on = Dao ? Dao.coGoiY() : G.state === 'playing' && !!G.wave && !G.wave.resolved && !G.wave.hint;   // [Đảo] 3 cấp gợi ý
     if (!force && G.hud.hintOn === on) return;
     G.hud.hintOn = on;
     ui.btnHint.disabled = !on;
   }
 
   function launchForQuestion(lead) {
+    if (Dao) { Dao.nemLai(lead); return; }  // [Đảo] ném lại đúng các lựa chọn của câu, không bom, không tim
     const lvl = G.level;
     const maxByWidth = Math.max(3, Math.floor((G.W - G.W * 0.2) / (G.R * 2.6)));
     let count = Math.min(6, maxByWidth, lvl.fruits + (G.stage >= 4 ? 1 : 0) + (G.stage >= 7 ? 1 : 0));
@@ -917,7 +929,7 @@
     if (!Motion.lite) G.flash = { c: '120,255,180', a: 0.18 };
     if (G.wave && !G.wave.hint && G.question && G.question.key) Store.noteOk(G.question.key);
     const newStage = 1 + Math.floor(G.correct / 5);
-    if (newStage > G.stage) {
+    if (newStage > G.stage && !Dao) {       // [Đảo] không tăng tốc: bé lớp 2 chơi theo nhịp của câu hỏi
       G.stage = newStage;
       updateGravity();
       // Hoãn nửa giây để bảng "Màn N!" không đè lên lời khen và điểm cộng
@@ -997,6 +1009,7 @@
   }
 
   function onAnswerSlice(f) {
+    if (Dao) return Dao.chem(f);             // [Đảo] đảo chấm, ghi nhật ký và hiện màn "Gần đúng rồi"
     const q = G.question;
     if (f.value === q.answer) { onCorrect(f); return true; }
     // Sai thì vừa cho đáp án, vừa dạy cách làm ("vì sao") và gọi tên lỗi quen thuộc nếu nhận ra
@@ -1146,6 +1159,13 @@
     if (!fr.length) return;
     if (!playing) { fr.forEach(function (h) { splitVisual(h.f, angle, at(h).x, at(h).y); }); return; }
 
+    // [Đảo] Quả chạm lưỡi dao trước là câu trả lời (vuốt quét cả hàng quả không tự thành đúng); quả khác để nguyên
+    if (Dao) {
+      if (blade && blade.daoKhoa) return;      // sau một lần thử lại phải nhấc tay vuốt nhát mới
+      sliceFruit(fr[0].f, angle, at(fr[0]).x, at(fr[0]).y);
+      return;
+    }
+
     const wrongOk = function () {
       // Cùng một đường vuốt không được lấy 2 tim (ngón tay quét ngang qua cả hàng quả)
       if (!blade) return true;
@@ -1222,6 +1242,7 @@
 
   /* ================= CẬP NHẬT ================= */
   function onFruitFell(f) {
+    if (Dao) return;                          // [Đảo] không báo "Lỡ rồi" từng quả (lộ đáp án); cả đợt rơi hết thì ném lại
     if (G.state !== 'playing' || f.kind !== 'fruit' || f.value == null || !f.wave || f.wave.resolved) return;
     const q = G.question;
     if (G.mode === 'answer') {
@@ -1361,7 +1382,7 @@
       return;
     }
     G.time += dt;
-    G.timeLeft -= dt;
+    if (!Dao) G.timeLeft -= dt;              // [Đảo] không có đồng hồ ván: ván hết khi hết câu
     if (G.timeLeft <= 0) { G.timeLeft = 0; endGame('timeup'); return; }
     if (G.timeLeft <= 10) {
       const s = Math.ceil(G.timeLeft);
@@ -1390,7 +1411,7 @@
 
   /** Quả trang trí nên bay ở hai bên bảng menu, không chui sau bảng (đo 1 lần mỗi lần phóng, không mỗi khung hình). */
   function attractX() {
-    const scr = G.state === 'levels' ? ui.levels : ui.menu;
+    const scr = Dao ? Dao.manHinhMo() : G.state === 'levels' ? ui.levels : ui.menu;   // [Đảo] thẻ "Bắt đầu"
     const panel = scr && scr.querySelector('.panel');
     if (!panel) return null;
     let r;
@@ -1422,7 +1443,7 @@
 
     if (G.state === 'playing') updatePlaying(dt);
     else if (G.state === 'menu' || G.state === 'levels') updateAttract(dt);
-    else if (G.state === 'over' || G.state === 'countdown') updateFruits(dt);
+    else if (G.state === 'over' || G.state === 'countdown' || G.state === 'cho_dao') updateFruits(dt);
 
     if (G.state !== 'paused') {
       updateHalves(dt);
@@ -1563,6 +1584,7 @@
   }
 
   function drawFruitNumber(c, f) {
+    if (Dao && f.lc) { Dao.veNhan(c, f); return; }   // [Đảo] dấu, số, chữ dài, đồng hồ, hình nhỏ của lựa chọn
     if (!f.launched || f.kind !== 'fruit' || f.value == null || f.scale <= 0.5) return;
     drawNumber(c, f.value, f.x, f.y, f.r * f.scale);
   }
@@ -1795,7 +1817,8 @@
     let n = 3;
     // Gọi tên bé ngay đầu ván cho thân thiện (C6)
     try {
-      if (window.Players) Voice.say('Sẵn sàng nhé, ' + Players.active().name + '!', { queue: true });
+      const ten = Dao ? Dao.tenBe() : window.Players ? Players.active().name : '';   // [Đảo] tên bé trên đảo
+      if (ten) Voice.say('Sẵn sàng nhé, ' + ten + '!', { queue: true });
     } catch (e) { /* bỏ qua */ }
     const step = function () {
       if (G.state !== 'countdown') return;
@@ -1822,7 +1845,8 @@
     step();
   }
 
-  function pauseGame() {
+  /** nguon [Đảo]: 'nut' | 'phim' | 'an_tab' | 'xoay_man' (ghi vào sự kiện tam_dung của đảo). */
+  function pauseGame(nguon) {
     if (G.state === 'countdown') {
       // Ẩn tab giữa lúc đếm ngược: dừng lại, không để ván bắt đầu khi bé không nhìn màn hình
       clearTimeout(G.cdTimer);
@@ -1833,6 +1857,7 @@
       Music.setDuck('pause', 0.25);
       $('pause-info').textContent = 'Sẵn sàng chưa?';
       showScreen('pause');
+      if (Dao) Dao.khiTamDung(nguon);         // [Đảo]
       return;
     }
     if (G.state !== 'playing') return;
@@ -1842,10 +1867,12 @@
     Music.setDuck('pause', 0.25);
     $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · Còn ' + formatTime(G.timeLeft);
     showScreen('pause');
+    if (Dao) Dao.khiTamDung(nguon);           // [Đảo] ghi tam_dung, đổi dòng thông tin (không có đồng hồ ván)
   }
 
   function resumeGame() {
     if (G.state !== 'paused') return;
+    if (Dao) Dao.khiTiepTuc();                // [Đảo]
     // Thông báo xoay máy đã hoàn thành nhiệm vụ; không che câu hỏi khi chơi lại.
     clearTimeout(toast._t);
     ui.toast.classList.remove('show', 'top');
@@ -2324,6 +2351,7 @@
       try { console.error('[ninja-toan]', msg); } catch (e) { /* bỏ qua */ }
       try { toast('Có lỗi nhỏ, con thử lại nhé! 🙏', 2600); } catch (e) { /* bỏ qua */ }
     }
+    if (Dao) { try { Dao.khiLoi(msg); } catch (e) { /* bỏ qua */ } return; }   // [Đảo] không có menu: đảo tự gỡ và chơi tiếp
     try { if (inGame()) goMenu(); } catch (e) { /* bỏ qua */ }   // thoát ván an toàn thay vì đứng hình
   }
 
@@ -2385,7 +2413,7 @@
     document.addEventListener('dblclick', function (e) { e.preventDefault(); });
     document.addEventListener('contextmenu', function (e) { if (e.target === canvas) e.preventDefault(); });
     // Mở khóa âm thanh ở mọi thao tác (iOS chỉ chấp nhận touchend/click, nên bắt cả ba)
-    document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu') welcome(); }, { passive: true, capture: true });
+    document.addEventListener('pointerdown', function () { Sfx.unlock(); if (G.state === 'menu' && !Dao) welcome(); }, { passive: true, capture: true });
     document.addEventListener('touchend', function () { Sfx.unlock(); checkAudioBlocked(); }, { passive: true, capture: true });
     document.addEventListener('click', function () { Sfx.unlock(); checkAudioBlocked(); }, { passive: true, capture: true });
     window.addEventListener('pageshow', function () { Sfx.resume(); });
@@ -2406,7 +2434,7 @@
     if (G.state === 'over' && e.key === 'Enter') { if (G.level) startGame(G.level); e.preventDefault(); return; }
     if (G.state === 'paused' && e.key === 'Enter') { resumeGame(); e.preventDefault(); return; }
     if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-      if (G.state === 'playing' || G.state === 'countdown') pauseGame();
+      if (G.state === 'playing' || G.state === 'countdown') pauseGame('phim');
       else if (G.state === 'paused') resumeGame();
       else if (G.state === 'levels') goMenu();
     }
@@ -2501,7 +2529,7 @@
       }
     });
     click('btn-levels-back', function () { goMenu(); });
-    click('btn-pause', function () { pauseGame(); });
+    click('btn-pause', function () { pauseGame('nut'); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { const l = G.level; if (l) startGame(l); });
     click('btn-quit', function () { goMenu(); });
@@ -2510,6 +2538,7 @@
     click('btn-easier', function () { if (G.easierLevel) startGame(G.easierLevel); });
     // 💡 Gợi ý theo yêu cầu: đánh dấu quả đúng, đọc đáp án — đổi lại câu này chỉ được 50 điểm
     click('btn-hint', function () {
+      if (Dao) { Dao.goiY(); return; }        // [Đảo] gợi ý 3 cấp của đảo (cấp 3 bỏ bớt một quả sai)
       if (G.state !== 'playing' || !G.wave || G.wave.resolved || G.wave.hint) return;
       markHint(G.wave, true);
     });
@@ -2628,7 +2657,7 @@
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) {
-        if (G.state === 'playing' || G.state === 'countdown') pauseGame();
+        if (G.state === 'playing' || G.state === 'countdown') pauseGame('an_tab');
         Music._halt();                                  // ngừng lịch phát nốt khi tab ẩn
         try { if (Sfx.ctx && Sfx.ctx.suspend) Sfx.ctx.suspend(); } catch (e) { /* bỏ qua */ }
       } else {
@@ -2636,7 +2665,7 @@
         if (inGame() && G.state !== 'over') requestWake();   // hệ thống thu hồi wake lock khi ẩn → xin lại
       }
     });
-    window.addEventListener('blur', function () { if (G.state === 'playing' || G.state === 'countdown') pauseGame(); });
+    window.addEventListener('blur', function () { if (G.state === 'playing' || G.state === 'countdown') pauseGame('an_tab'); });
   }
 
   /** Sau thao tác hợp lệ mà audio vẫn chưa chạy thì nhắc người chơi (chỉ nhắc 1 lần). */
@@ -2765,8 +2794,19 @@
     registerSw();
     try { if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"'); } catch (e) { /* bỏ qua */ }
     showHud(false);
-    showScreen('menu');
+    if (Dao) { showScreen(null); Dao.khoiDong(noiBo()); }   // [Đảo] thẻ "Bắt đầu" thay cho menu
+    else showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
+  }
+
+  /** [Đảo] Những phần bên trong game mà js/dao.js được dùng (không mở ra ngoài khi chơi riêng). */
+  function noiBo() {
+    return {
+      G: G, ui: ui, Store: Store, Sfx: Sfx, Music: Music, Voice: Voice,
+      startGame: startGame, launchWave: launchWave, updateGravity: updateGravity, measureHud: measureHud, syncHintBtn: syncHintBtn,
+      onCorrect: onCorrect, popFruit: popFruit, addText: addText, showHint: showHint, cardFx: cardFx, spawnConfetti: spawnConfetti,
+      esc: esc, fmt: fmt, numFont: numFont
+    };
   }
 
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
@@ -2777,7 +2817,7 @@
     goMenu: goMenu, goLevels: goLevels, newQuestion: newQuestion, pickQuestion: pickQuestion, markHint: markHint,
     renderLevels: renderLevels, renderReport: renderReport, renderPlayers: renderPlayers, openReport: openReport,
     adultGate: adultGate, onFatal: onFatal, render: render, update: update,
-    showHint: showHint, showResultFx: showResultFx, renderNextStep: renderNextStep
+    showHint: showHint, showResultFx: showResultFx, renderNextStep: renderNextStep, pauseGame: pauseGame, resumeGame: resumeGame, Dao: Dao
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

@@ -1,0 +1,65 @@
+/* ============================================================
+   dao.css – Chế độ Đảo Khủng Long (html.dao-mode, bật bởi js/dao.js)
+   Chỉ có tác dụng khi game chạy trong iframe của đảo; chơi riêng thì không có lớp dao-mode.
+   ============================================================ */
+
+/* Đảo không có tim, và đảo lo việc về nhà: ẩn tim, trang chủ, chơi lại, bài học, menu, công tắc âm thanh */
+html.dao-mode .lives,
+html.dao-mode #pause .hub-return,
+html.dao-mode #pause [data-audio-toggles],
+html.dao-mode #btn-restart,
+html.dao-mode #btn-lesson-again,
+html.dao-mode #btn-quit { display: none !important; }
+
+/* ---------- Thẻ "Bắt đầu" ---------- */
+.dao-bat-dau .dao-the { max-width: 560px; width: min(100%, 560px); padding: 22px 30px 26px; }
+.dao-hinh-game svg { display: block; width: 150px; height: 150px; margin: 0 auto 2px; animation: dao-nhun 2.6s ease-in-out infinite; }
+@keyframes dao-nhun { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.panel p.dao-vung { margin: 2px 0 0; font-size: 15px; font-weight: 800; letter-spacing: 1px; color: var(--purple); }
+.dao-ten-man { margin: 2px 0 10px !important; font-size: 34px !important; }
+.dao-luat { list-style: none; margin: 0 auto 18px; padding: 0; max-width: 440px; display: grid; gap: 8px; text-align: left; }
+.dao-luat li { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 16px; background: var(--paper-soft); color: var(--ink); font-size: 19px; font-weight: 700; line-height: 1.25; }
+.dao-luat li > span:first-child { font-size: 24px; flex-shrink: 0; }
+.dao-luat li > span + span { flex: 1 1 auto; min-width: 0; }
+.dao-luat b { color: var(--orange-ink); }
+.dao-nut-bat-dau { min-width: 240px; }
+.dao-hang-ve { margin-top: 12px; }
+.dao-nut-ve { min-height: 56px; font-size: 22px; }
+
+/* ---------- Thẻ câu hỏi (thay thẻ "Mục tiêu") ---------- */
+html.dao-mode .target-card { max-width: min(96vw, 940px); }
+html.dao-mode .target-card > div:not(.target-clock) { flex: 1 1 220px; min-width: 180px; }
+html.dao-mode .target-clock { order: 2; }                 /* đề trước, hình sau */
+html.dao-mode .target-clock.dao-hinh { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 16px; background: #f5f7ff; box-shadow: inset 0 0 0 2px #e3e8f7; }
+/* Màn hình dọc: điểm và nút tạm dừng một hàng, thẻ câu hỏi hàng dưới rộng gần hết màn;
+   hình nằm dưới đề (chiều dọc dư chỗ hơn chiều ngang); bỏ dòng nhắc để mê cung còn ô to */
+@media (orientation: portrait) {
+  html.dao-mode .hud-top { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "left right" "center center"; gap: 6px 10px; }
+  html.dao-mode .hud-center { justify-self: center; width: 100%; }
+  html.dao-mode .move-status { display: none; }
+  html.dao-mode .target-card { width: 100%; }
+  html.dao-mode .target-card.dao-co-hinh { flex-direction: column; gap: 6px; }
+  html.dao-mode .target-card.dao-co-hinh > div:not(.target-clock) { flex: 0 0 auto; width: 100%; }
+}
+html.dao-mode .target-clock.dao-hinh[hidden] { display: none; }
+html.dao-mode .target-clock.dao-hinh svg { display: block; max-width: 100%; }
+.dao-de { display: inline-block; font-size: clamp(20px, 2.6vw, 28px); line-height: 1.2; }
+.dao-de-ngan { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: 0.5px; white-space: nowrap; }
+.dao-lien { white-space: nowrap; }
+.target-text b.dao-hoi {
+  display: inline-block; min-width: 1.25em; padding: 0 0.18em; border-radius: 0.3em;
+  background: #ff8a1f; color: #fff; font-size: 1em; line-height: 1.2; text-align: center; box-shadow: 0 3px 0 #c9620a;
+}
+
+@media (max-width: 700px) {
+  .dao-ten-man { font-size: 28px !important; }
+  .dao-luat li { font-size: 17px; }
+  .dao-de-ngan { white-space: normal; }
+}
+@media (max-height: 560px) {
+  .dao-hinh-game svg { width: 96px; height: 96px; }
+  .dao-luat { margin-bottom: 10px; gap: 4px; }
+  .dao-luat li { padding: 5px 12px; font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .dao-hinh-game svg { animation: none; } }
+.lite-fx .dao-hinh-game svg { animation: none; }

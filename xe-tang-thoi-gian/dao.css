@@ -1,0 +1,84 @@
+/* ============================================================
+   dao.css – Xe Tăng trong Đảo Khủng Long (html.dao-mode, bật bởi js/dao.js)
+   Thẻ bắt đầu thay menu, bảng tạm dừng chỉ còn "Chơi tiếp" và "Về đảo", HUD có quả mọng thay tim.
+   Hình SVG của đề (.svg-visual) dùng cả khi chơi độc lập nếu câu có hình.
+   ============================================================ */
+
+/* ---------- Hình SVG của đề: thẻ câu hỏi và bảng phóng to ---------- */
+.svg-visual { flex: none; display: block; line-height: 0; }
+.svg-visual svg { width: 100%; height: 100%; display: block; overflow: visible; }
+#clock-zoom.has-svg { width: min(94vw, 640px); }
+#clock-zoom-visual .svg-visual { margin: 4px auto; }
+
+/* ---------- Thẻ bắt đầu (menu) ---------- */
+.dao-mode #menu .hub-home,
+.dao-mode #menu .player-row,
+.dao-mode #menu .btn-row.mt-12,
+.dao-mode #menu .toggle-row { display: none !important; }
+.dao-mode #menu .panel { padding-top: 26px; }
+.dao-mode #menu .subtitle { color: #3d3f5c; font-size: clamp(19px, 2.4vw, 24px); font-weight: 800; margin: 8px 0 4px; }
+.dao-mode #menu .game-benefits span { font-size: 16px; padding: 7px 14px; }
+.dao-mode #menu .footer-note { font-size: 17px; color: #3d3f5c; }
+.dao-be {
+  width: clamp(96px, 14vw, 150px); height: auto; aspect-ratio: 1; object-fit: contain; flex-shrink: 0;
+  filter: drop-shadow(0 10px 10px rgba(34, 48, 62, 0.2));
+  animation: dao-be-nhun 2.6s ease-in-out infinite;
+}
+@keyframes dao-be-nhun { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+
+/* ---------- Bảng tạm dừng: chỉ "Chơi tiếp" và "Về đảo" ---------- */
+.dao-mode #pause .hub-return,
+.dao-mode #pause .toggle-row,
+.dao-mode #btn-pause-lesson,
+.dao-mode #btn-restart,
+.dao-mode #btn-quit { display: none !important; }
+#btn-dao-ve { min-height: 62px; font-size: 24px; }
+
+/* ---------- HUD: thẻ câu hỏi rộng hơn (câu của đảo dài, có hình), quả mọng thay tim (không có tim, không thua) ---------- */
+@media (min-width: 901px) {
+  .dao-mode .hud-top { grid-template-columns: minmax(120px, 0.8fr) minmax(0, 3.4fr) minmax(150px, 0.8fr); }
+}
+/* Thẻ câu hỏi dạng lưới: [hình] [đề] [🔊 trên, 💡 dưới]; nút ⤢ nằm đè góc trên bên phải của hình, chỗ trống của mặt
+   đồng hồ tròn (chạm hình cũng phóng to) */
+.dao-mode .prompt-card {
+  max-width: min(96vw, 760px);
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: 1fr 1fr;
+  grid-template-areas: "hinh de doc" "hinh de goi"; column-gap: 12px; row-gap: 8px; align-items: center;
+}
+.dao-mode #prompt-visual { grid-area: hinh; }
+.dao-mode #prompt-visual[hidden] + .zoom-btn + .prompt-text { padding-left: 4px; }
+.dao-mode .prompt-card .prompt-text { grid-area: de; }
+.dao-mode #btn-say { grid-area: doc; align-self: end; }
+.dao-mode #btn-hint { grid-area: goi; align-self: start; }
+.dao-mode #btn-clock-zoom {
+  grid-area: hinh; justify-self: end; align-self: start; position: relative; z-index: 1; margin: -8px -10px 0 0;
+  width: 44px; height: 44px; font-size: 21px; background: #ffffff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+/* Thẻ xếp dọc (iPad dựng đứng, màn hẹp): [💡] [hình] [🔊] rồi đề bài ở dưới */
+.dao-mode .prompt-card.stack {
+  grid-template-columns: minmax(46px, 1fr) auto minmax(46px, 1fr); grid-template-rows: auto auto;
+  grid-template-areas: "goi hinh doc" "de de de"; padding-top: 8px;
+}
+.dao-mode .prompt-card.stack .say-btn { position: static; align-self: start; }
+.dao-mode .prompt-card.stack #btn-hint { justify-self: start; }
+.dao-mode .prompt-card.stack #btn-say { justify-self: end; align-self: start; }
+.dao-mode .prompt-card.stack #btn-clock-zoom { bottom: auto; right: auto; align-self: start; }
+.dao-mode #hud-hearts { display: none !important; }
+.dao-berry {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.94); border-radius: 999px; padding: 4px 16px 4px 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-weight: 800; font-size: 26px; line-height: 1; color: #5a2a82; font-variant-numeric: tabular-nums;
+}
+.dao-berry img { width: 38px; height: 38px; object-fit: contain; display: block; }
+.dao-berry.nhun { animation: dao-berry-nhun 0.45s ease; }
+@keyframes dao-berry-nhun { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+@media (max-width: 700px) {
+  .dao-berry { font-size: 20px; padding: 3px 12px 3px 4px; }
+  .dao-berry img { width: 30px; height: 30px; }
+}
+
+.lite-fx .dao-be, .lite-fx .dao-berry.nhun { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .dao-be, .dao-berry.nhun { animation: none !important; }
+}

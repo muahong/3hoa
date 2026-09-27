@@ -1,4 +1,4 @@
-# Dao Khung Long Art Manifest — gd4
+# Dao Khung Long Art Manifest: gd4
 
 All final assets are PNG sprites with transparent alpha backgrounds.
 

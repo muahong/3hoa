@@ -38,7 +38,20 @@ Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao v�
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các trò chơi 3hoa.com (tên, hình đại diện, người đang chơi) – giống hệt nhau ở mọi game |
 | `js/game.js` | Bộ máy trò chơi: bảng 4 cột × 6 hàng, đồng hồ rơi, tháp đá, điểm, combo, bài học, hỏi đáp, mở khóa màn |
+| `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (thể loại "Tháp Xếp Hình" trong đảo), xem mục bên dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+
+## Chơi trong Đảo Khủng Long
+
+Đảo (`dao-khung-long/`) mở game trong iframe với `?dao=1&man=<mã màn>` (hợp đồng ở `dao-khung-long/js/cau-noi.js`). Chỉ khi có `?dao=1`, trang nằm trong iframe và trang cha có `window.DaoCauNoi` thì `js/dao.js` mới bật; mở trực tiếp thì game chạy y như cũ. Các chỗ nối trong `js/game.js` đều ghi chú `[Đảo]`.
+
+- **Mỗi khối rơi là một câu hỏi** của ngân hàng đảo (`cauTiep({ so_lua_chon: 4, vi_tri: ['cot_1'…] })`). Khối mang hình của đề (mặt đồng hồ), chữ ngắn ("1 giờ 15 phút") hoặc dấu hỏi; thẻ bên phải ghi đủ đề và hình to (tia số, các hình đánh số). Mỗi cột là một lựa chọn: chữ/số, hình nhỏ, hoặc mặt đồng hồ vẽ bằng canvas (khi đề chỉ có chữ, như "Đồng hồ nào chỉ 8 giờ?"). Câu có 2 hoặc 3 lựa chọn thì bảng có 2 hoặc 3 cột.
+- Bé đưa khối sang cột (◀ ▶, chạm cột, kéo, phím ← → hoặc 1–4) rồi thả (⬇ THẢ, chạm cột lần nữa, Space/Enter/↓). Khối chạm đáy cột nào thì trả lời bằng giá trị của cột đó. Nhật ký: `doi_cot` (gộp các bước liền nhau, có `tu`, `den`, `buoc`, `cach`), `tha`, rồi `tra_loi` kèm `vi_tri`, `cot_dau`, `so_cot`.
+- **Không hết giờ, không thua**: khối dừng lơ lửng một hàng trên chỗ đáp chờ bé; cột đá cao gần đỉnh thì tự dọn. Bảng 5 hàng, đĩa đáp án cao hơn để vẽ hình và đồng hồ.
+- Sai: khối hóa đá, cột đúng sáng lên ("Đây!"), rồi đảo hiện màn "Gần đúng rồi" (`phanHoi`), câu sai quay lại sau 2 câu. Câu được thử 2 lần (`thu_lai`): khối bật lên, cột vừa chọn bị gạch.
+- 💡 (hoặc phím H): ba cấp gợi ý của ngân hàng (`goiY`), cấp 3 gạch một cột sai (`loai_bo`). 🔊 đọc lại đề (`nghe_lai`). ⏸ / Esc: `tamDung`, màn tạm dừng chỉ có "Chơi tiếp" và "Về đảo" (`veDao`).
+- Không menu, bài học, hỏi đáp, bảng kết quả, và không ghi `localStorage`: hết câu thì hiệu ứng "HOÀN THÀNH!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc riêng. Âm thanh và giọng đọc theo cài đặt của đảo (`thongTin().am_thanh`); khủng long của bé (ảnh của đảo) đứng cạnh tháp thay bạn cú.
+- Câu không có lựa chọn (màn để dạng mặc định "quay kim" của kỹ năng): game xin đáp án nhiễu từ `NganHang` của đảo và ghi các lựa chọn đã hiện bằng thao tác `tro`.
 
 ## Các màn chơi
 
@@ -63,7 +76,7 @@ Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất đị
 - **Bài học và câu hỏi**: sửa `LESSONS` và `CONCEPT` trong `js/clock.js`.
 - **Kích thước bảng**: `COLS`, `ROWS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (hiện là `thap-dong-ho-v4`, lần sau đổi thành `thap-dong-ho-v5`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (hiện là `thap-dong-ho-v9`, lần sau đổi thành `thap-dong-ho-v10`) để thiết bị đã cài nhận bản mới.
 - **Ít hiệu ứng**: nút ✨ Hiệu ứng: Nhiều/Ít trên trang chính (và tự động khi hệ thống bật "giảm chuyển động") giảm hạt, tắt rung/chớp màn hình, tắt pháo giấy.
 - **Điện thoại dựng đứng**: cụm ◀ ⬇ ▶ được thu gọn còn mỗi nút 💡 đặt bên lề trái (chạm thẳng vào cột để đưa đồng hồ tới, chạm lần nữa để thả) – nhờ vậy ô bảng rộng thêm khoảng 30 % và chữ trên đĩa đáp án đọc được. Máy tính bảng và máy tính vẫn có đủ bốn nút.
 
@@ -77,5 +90,6 @@ Chạy từ thư mục gốc của kho:
 
 ```
 node --test tests/thap-dong-ho.test.js
+node --test tests/thap-dong-ho-dao.test.js
 NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/thap-dong-ho.e2e.js
 ```

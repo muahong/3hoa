@@ -96,7 +96,7 @@
     const m = q.mau;
     const mot = m.anh ? '<img src="' + anh(m.anh) + '" alt="">' : '<i>' + esc(m.vat) + '</i>';
     // Số đo (kg, l, cm, đồng): một hình kèm số đo, không vẽ từng "ki-lô-gam"
-    if (m.do_luong) return '<span class="tt-vat ' + (kieu || '') + '"><span class="tt-vat-so">' + mot + '<b>' + esc(n + ' ' + m.dv) + '</b></span></span>';
+    if (m.do_luong) return '<span class="tt-vat ' + (kieu || '') + '"><span class="tt-vat-so">' + mot + '<b>' + esc((m.dv === 'đồng' && n >= 1000 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : n) + ' ' + m.dv) + '</b></span></span>';
     if (n > 20) return '<span class="tt-vat ' + (kieu || '') + '"><span class="tt-vat-so">' + mot + '<b>× ' + n + '</b></span></span>';
     let h = '';
     for (let i = 0; i < n; i++) h += mot;

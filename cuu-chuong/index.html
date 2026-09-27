@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="game-shell.css">
+  <link rel="stylesheet" href="dao.css">
 </head>
 <body>
 <div id="app">
@@ -35,6 +36,7 @@
           <span class="label">ĐIỂM</span>
           <span class="value" id="hud-score">0</span>
         </div>
+        <div class="dao-qua-mong dao-chi" id="dao-qua-mong" aria-label="Quả mọng"><img id="dao-qua-mong-hinh" alt=""><b id="dao-qua-mong-so">0</b></div>
         <div class="stage-chip" id="hud-stage">Đợt 1</div>
         <div class="combo-chip" id="hud-combo" hidden>Combo x2</div>
       </div>
@@ -46,6 +48,7 @@
           <span class="time" id="hud-time">1:30</span>
         </div>
         <div class="hint gone" id="hud-hint" aria-live="polite"></div>
+        <div class="dao-hinh dao-chi" id="dao-hinh" hidden></div>
       </div>
       <div class="hud-right">
         <div class="shields" id="hud-shields"><span>🛡️</span><span>🛡️</span><span>🛡️</span></div>
@@ -282,6 +285,26 @@
     </div>
   </div>
 
+  <!-- ================= THẺ BẮT ĐẦU (chế độ Đảo Khủng Long, js/dao.js) ================= -->
+  <div id="dao-start" class="screen hidden dim dao-chi" role="dialog" aria-labelledby="dao-start-ten">
+    <div class="panel dao-panel">
+      <div class="dao-hero">
+        <div class="dao-logo" id="dao-start-logo" aria-hidden="true"></div>
+        <img class="dao-be" id="dao-start-be" alt="" hidden>
+      </div>
+      <p class="dao-game">VỆ BINH CỬU CHƯƠNG · BẮN THIÊN THẠCH</p>
+      <h2 id="dao-start-ten">Bắn thiên thạch</h2>
+      <p class="dao-mo-ta" id="dao-start-mo-ta">Gõ số trên bàn phím rồi bấm 🚀 BẮN để phá thiên thạch.</p>
+      <div class="dao-chip-hang">
+        <span class="dao-chip" id="dao-start-so-cau">☄️ 10 câu</span>
+        <span class="dao-chip">🐢 Không tính giờ</span>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn big green" id="btn-dao-bat-dau">▶ Bắt đầu</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= ĐẾM NGƯỢC ================= -->
   <div id="countdown" class="screen hidden">
     <div class="count" id="count-num">3</div>
@@ -297,7 +320,10 @@
       <div class="btn-row">
         <button class="btn big green" id="btn-resume">▶ Chơi tiếp</button>
       </div>
-      <div class="btn-row">
+      <div class="btn-row dao-chi">
+        <button type="button" class="btn teal" id="btn-dao-ve">🏝️ Về đảo</button>
+      </div>
+      <div class="btn-row dao-an">
         <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
         <button class="btn ghost small" id="btn-quit">☰ Menu trò chơi</button>
       </div>
@@ -342,6 +368,7 @@
 <script src="js/audio.js"></script>
 <script src="js/tables.js"></script>
 <script src="js/profile.js"></script>
+<script src="js/dao.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

@@ -1273,8 +1273,13 @@
     return { loai: 'loi_van', mau: mau.id, dang: mau.dang, phep: mau.phep, so: so, nv: [a, b] };
   }
 
+  /** Số trong bài toán: số tiền từ 1 000 viết cách nhóm ba chữ số như SGK ("1 000 đồng"). */
+  function soLV(ct, n) {
+    const mau = MAU_THEO_ID[ct.mau];
+    return mau && mau.dv === 'đồng' && n >= 1000 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : String(n);
+  }
   function dien(s, ct) {
-    return s.replace(/\{x\}/g, ct.so[0]).replace(/\{y\}/g, ct.so[1]).replace(/\{A\}/g, ct.nv[0]).replace(/\{B\}/g, ct.nv[1]);
+    return s.replace(/\{x\}/g, soLV(ct, ct.so[0])).replace(/\{y\}/g, soLV(ct, ct.so[1])).replace(/\{A\}/g, ct.nv[0]).replace(/\{B\}/g, ct.nv[1]);
   }
   function khungLV(ct) { return MAU_THEO_ID[ct.mau].khung.map(function (k) { return dien(k, ct); }); }
   function ctPhep(ct) { return { phep: ct.phep, so: [ct.so[0], ct.so[1]], an: 'ket_qua' }; }
@@ -1352,7 +1357,7 @@
     const d = tinhLV(ct);
     return {
       ma: 'bai-giai',
-      buoc: [dien(mau.giai, ct), ct.so[0] + ' ' + kyHieu(ct.phep) + ' ' + ct.so[1] + ' = ' + d + ' (' + mau.dv + ')', 'Đáp số: ' + d + ' ' + mau.ten + '.'],
+      buoc: [dien(mau.giai, ct), soLV(ct, ct.so[0]) + ' ' + kyHieu(ct.phep) + ' ' + soLV(ct, ct.so[1]) + ' = ' + soLV(ct, d) + ' (' + mau.dv + ')', 'Đáp số: ' + soLV(ct, d) + ' ' + mau.ten + '.'],
       kq: d
     };
   }
@@ -1499,7 +1504,7 @@
     const l = loaiCt(ct);
     if (l === 'so') return ketLuanSo(ct);
     if (l === 'nhan_tong') return 'Vậy ' + hienGiaTri(chuoiTong(ct.a, ct.b)) + ' = ' + ct.a + ' × ' + ct.b;
-    if (l === 'loi_van') { const mau = MAU_THEO_ID[ct.mau]; return 'Đáp số: ' + tinhLV(ct) + ' ' + mau.ten + '.'; }
+    if (l === 'loi_van') { const mau = MAU_THEO_ID[ct.mau]; return 'Đáp số: ' + soLV(ct, tinhLV(ct)) + ' ' + mau.ten + '.'; }
     return 'Vậy ' + dePT(ct).replace('?', String(tinhPT(ct)));
   }
 

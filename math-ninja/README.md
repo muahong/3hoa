@@ -43,6 +43,7 @@ Mở trang bằng Safari → bấm nút **Chia sẻ** → **Thêm vào Màn hìn
 | `js/audio.js` | Âm thanh tổng hợp bằng Web Audio (không cần file mp3) |
 | `js/game.js` | Bộ máy trò chơi: vật lý, chém đa chạm, điểm, combo, bảng vàng |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) |
+| `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chỉ bật khi đảo mở game trong khung với `?dao=1`), xem mục bên dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi
@@ -102,11 +103,25 @@ Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Gi�
 - **Thời gian mỗi ván**: nhóm nút trong `index.html` (`data-sec`).
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `ninja-toan-v2`) để thiết bị đã cài nhận bản mới.
 
+## Chạy trong Đảo Khủng Long
+
+Đảo Khủng Long (`dao-khung-long/`) mở game này trong một khung cùng tên miền: `../math-ninja/?dao=1&man=<mã màn>`, thể loại "Chém Trái Cây" (màn So sánh số, Cộng trừ qua 10, Nhân chia). Hợp đồng nằm ở `dao-khung-long/js/cau-noi.js` (`window.parent.DaoCauNoi`). Chế độ này chỉ bật khi đủ ba điều kiện: có `?dao=1`, trang nằm trong khung, khung cha có `DaoCauNoi`; thiếu một điều kiện thì game chạy y như trên.
+
+- `js/dao.js` nạp trước `js/game.js`; mọi chỗ rẽ nhánh cho đảo trong `game.js` đều đánh dấu `[Đảo]`.
+- Không menu, không chọn màn, không tim, không đồng hồ ván, không bảng kết quả, không ghi `localStorage` của game: đảo giữ câu hỏi, ván chơi và nhật ký.
+- Thẻ "Bắt đầu" (tên màn, ninja quả táo, khủng long của bé) rồi đếm ngược 3, 2, 1 như cũ. Âm thanh và giọng đọc theo thiết lập của đảo.
+- Mỗi câu hỏi `cauTiep({ so_lua_chon: 4, vi_tri: ['cot_1', …] })`; mỗi lựa chọn là một quả, luôn ở cùng một cột (tính từ trái), không bom, không tim. Dấu `<`, `>`, `=` vẽ thật to; nhãn dài thu nhỏ hoặc xuống 2 dòng; lựa chọn là đồng hồ hay hình SVG cũng vẽ được.
+- Quả chạm lưỡi dao trước là câu trả lời: ghi `thao_tac` `vuot` (giá trị, cột, vị trí x, y, đợt ném) rồi `traLoi`. Đúng: điểm, combo, quả mọng, khủng long cổ vũ. Sai hẳn: quả dừng, đảo hiện thẻ "Gần đúng rồi", đóng thẻ thì sang câu.
+- Quả rơi hết mà bé chưa chém: quả bay lại chậm hơn, không phạt, không hết giờ; rơi 2 lần thì nút 💡 nhấp nháy mời xem gợi ý.
+- Nút 💡: 3 cấp gợi ý của đảo, cấp 3 bỏ bớt một quả sai (ghi `loai_bo`). Câu đã xem gợi ý được 50 điểm như luật cũ.
+- Tạm dừng ghi `tam_dung`/`tiep_tuc`; bảng tạm dừng có nút "Về đảo". Hết câu: "Giỏi quá!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc.
+
 ## Kiểm thử
 
 Chạy từ thư mục gốc của kho:
 
 ```
 node --test tests/math-ninja.test.js
+node --test tests/math-ninja-dao.test.js
 NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/math-ninja.e2e.js
 ```

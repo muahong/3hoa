@@ -158,7 +158,9 @@
     { id: 'v10-m1', so: 1, ten: 'Thu thập, phân loại, kiểm đếm', bai: 'Bài 64', bai_dau: 64, game: 'cau-ca', che_do: 'kiem_dem', ky_nang_chinh: 'kiem-dem', cau: [{ ky_nang: 'kiem-dem' }], so_cau: 6 },
     { id: 'v10-m2', so: 2, ten: 'Biểu đồ tranh', bai: 'Bài 65', bai_dau: 65, game: 'cau-ca', che_do: 'bieu_do', ky_nang_chinh: 'bieu-do-tranh', cau: [{ ky_nang: 'bieu-do-tranh' }], so_cau: 8 },
     { id: 'v10-m3', so: 3, ten: 'Chắc chắn, có thể, không thể', bai: 'Bài 66', bai_dau: 66, game: 'cau-ca', che_do: 'hop_bong', ky_nang_chinh: 'kha-nang', cau: [{ ky_nang: 'kha-nang' }], so_cau: 8 },
-    { id: 'v10-cup', so: 4, ten: 'Cúp Hồ Thống Kê · Luyện tập chung', bai: 'Bài 67', bai_dau: 67, game: 'cau-ca', che_do: 'tron', cup: true, so_cau: 8, cup_can: ['v10-m1', 'v10-m2', 'v10-m3'],
+    { id: 'v10-m4', so: 4, ten: 'Cưỡi hổ đọc biểu đồ tranh', bai: 'Bài 65', bai_dau: 65, game: 'cuoi-ho', luyen_tap: true, cau: [{ ky_nang: 'bieu-do-tranh', dang: 'chon_dap_an' }], so_cau: 8 },
+    { id: 'v10-m5', so: 5, ten: 'Chém trái cây: chắc chắn, có thể, không thể', bai: 'Bài 66', bai_dau: 66, game: 'chem-trai-cay', luyen_tap: true, cau: [{ ky_nang: 'kha-nang', dang: 'chon_dap_an' }], so_cau: 8 },
+    { id: 'v10-cup', so: 6, ten: 'Cúp Hồ Thống Kê · Luyện tập chung', bai: 'Bài 67', bai_dau: 67, game: 'cau-ca', che_do: 'tron', cup: true, so_cau: 8, cup_can: ['v10-m1', 'v10-m2', 'v10-m3'],
       cau: [{ ky_nang: 'kiem-dem', ty_le: 0.6 }, { ky_nang: 'bieu-do-tranh', ty_le: 1 }, { ky_nang: 'kha-nang', ty_le: 0.8 }] }
   ];
   const MAN_DT2 = [

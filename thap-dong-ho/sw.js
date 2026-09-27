@@ -1,14 +1,16 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'thap-dong-ho-v8';
+const CACHE = 'thap-dong-ho-v9';
 const CORE = [
   './',
   './index.html',
   './style.css',
   './game-shell.css',
+  './dao.css',
   './js/audio.js',
   './js/clock.js',
   './js/profile.js',
+  './js/dao.js',
   './js/game.js',
   './manifest.json',
   './icons/icon-192.png',

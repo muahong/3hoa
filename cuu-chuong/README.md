@@ -30,6 +30,7 @@ Không cần cơ sở dữ liệu. Điểm cao và bảng vàng được lưu ng
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho mọi game 3hoa (tên, hình đại diện, tiến trình riêng) – **giống hệt nhau ở mọi game** |
 | `js/game.js` | Bộ máy trò chơi: thiên thạch, pháo laser, khiên, điểm, combo, bảng vàng, ôn lại thông minh, báo cáo cho phụ huynh |
+| `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (`?dao=1` trong iframe của đảo): lấy câu từ ngân hàng của đảo, ghi mọi thao tác vào nhật ký của đảo |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi
@@ -105,11 +106,31 @@ Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân d�
 - **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuu-chuong-v2` → `cuu-chuong-v3`) để thiết bị đã cài nhận bản mới.
 - **`js/profile.js` là tệp dùng chung**: khi sửa, phải sao chép y nguyên sang tất cả các game (kiểm thử `tests/consistency.test.js` sẽ báo lỗi nếu khác nhau).
 
+## Chế độ Đảo Khủng Long 🏝️
+
+Đảo Khủng Long (`dao-khung-long/`) mở game trong một iframe cùng tên miền: `../cuu-chuong/?dao=1&man=<mã màn>`.
+Chế độ này chỉ bật khi có đủ ba điều: `?dao=1`, trang nằm trong iframe và khung cha có `window.DaoCauNoi`
+(hợp đồng ở `dao-khung-long/js/cau-noi.js`). Thiếu một điều thì game chạy riêng y như cũ.
+
+- Không menu, không chọn màn, không bảng vàng, không báo cáo, không khiên, không đồng hồ, không thua; không ghi localStorage của game (đảo là nơi ghi).
+- Thẻ bắt đầu: tên màn, hình hành tinh Ba Hoa và khủng long của bé, nút **▶ Bắt đầu** (cũng là lần chạm mở khóa âm thanh trên iPad). Âm thanh, giọng đọc theo cài đặt của đảo.
+- Mỗi lúc chỉ một câu. Thiên thạch rơi chậm tới giữa trời rồi lơ lửng chờ bé.
+  - **Gõ số** (`nhap_so`, ví dụ màn cộng trừ có nhớ, bảng nhân chia): một thiên thạch mang phép tính, bé gõ kết quả rồi bắn, được thử 2 lần.
+  - **Chọn số** (số lớn nhất, bé nhất): mỗi thiên thạch mang một số, bé gõ số mình chọn rồi bắn. Gõ đúng một số trên thiên thạch thì pháo ngắm vào thiên thạch đó.
+  - **Xếp thứ tự** (`sap_xep`): 4 thiên thạch mang 4 số, bé gõ và bắn lần lượt theo thứ tự đề hỏi. Mỗi phát trúng làm thiên thạch nổ nhưng không khen chê; bắn đủ mới chấm cả dãy. Thử lại thì các thiên thạch quay về.
+- Sai hết lượt: đảo hiện màn "Gần đúng rồi" đè lên game, bé đóng màn thì chơi tiếp (câu đó quay lại sau 2 câu).
+- 💡 Gợi ý ba cấp của đảo; ở câu chọn số, cấp 3 bỏ bớt một thiên thạch sai.
+- Nhật ký: `go_so` (mỗi chữ số, kèm số đang gõ), `xoa`, `ban` (số đã bắn, vị trí, thứ tự), `cham` (chạm thiên thạch), rồi `traLoi` mỗi lần chốt; tạm dừng ghi nguồn `nut`, `phim`, `an_tab`.
+- Bảng tạm dừng có nút **🏝️ Về đảo** (ván ghi là bỏ dở, quả mọng đã có vẫn giữ).
+
+Móc trong `js/game.js` là các dòng có chú thích "Móc đảo".
+
 ## Kiểm thử
 
 Chạy từ thư mục gốc của kho:
 
 ```bash
 node --test tests/cuu-chuong.test.js
+node --test tests/cuu-chuong-dao.test.js
 NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/cuu-chuong.e2e.js
 ```

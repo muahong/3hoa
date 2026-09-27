@@ -36,6 +36,7 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) – sao chép nguyên văn, nạp trước `game.js` |
 | `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ theo từng bé, ôn lại thông minh, báo cáo |
+| `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chỉ bật khi game mở trong iframe của đảo, xem mục bên dưới); các móc trong `game.js` ghi chú `[ĐẢO]` |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi (mở khóa lần lượt)
@@ -68,6 +69,16 @@ Game **chào bé theo tên** (chữ và giọng đọc) ở lần chạm đầu 
 ## Dành cho phụ huynh
 
 Ở màn **Chọn màn chơi** có nút **📊 Kết quả** (số ván, tỉ lệ đúng, phút luyện tập, sao và tỉ lệ đúng từng màn, màn cần luyện thêm, danh sách cần ôn lại của bé đang chơi), nút *mở khóa tất cả các màn* (khi bé lớp 3 muốn học ngay giờ kém) và *học lại từ đầu* (xóa tiến độ của bé đang chơi). Các thao tác này hỏi một phép nhân (ví dụ *7 × 8 = ?*) để bé không tự bấm. Trên menu chính có nút **✨ Hiệu ứng: Nhiều/Ít** cho máy yếu hoặc bé nhạy với chuyển động (game cũng tự giảm hiệu ứng khi hệ thống bật *Reduce Motion*).
+
+## Chơi trong Đảo Khủng Long
+
+Đảo Khủng Long (`../dao-khung-long/`) mở game trong iframe: `me-cung-dong-ho/?dao=1&man=<mã màn>`. Khi có `?dao=1`, trang nằm trong iframe và `window.parent.DaoCauNoi` tồn tại, `js/dao.js` bật chế độ đảo; mọi trường hợp khác game chạy y như trên.
+
+- Không menu, chọn màn, tim, bài học, hỏi đáp, bảng kết quả; không ghi localStorage của game. Thẻ "Bắt đầu" (tên màn, Cú Tí) mở âm thanh trên iPad; âm thanh và giọng đọc theo cài đặt của đảo.
+- Mỗi câu của đảo là một lượt trong mê cung gọn 9 × 13: ba ô đích mang ba lựa chọn (`cauTiep({ so_lua_chon: 3, vi_tri })`, vị trí đặt tên theo vùng màn hình như `tren_trai`, `giua`, `duoi_phai`). Cú Tí tới ô nào là trả lời ô đó. Lựa chọn là biển chữ (số, độ dài, giờ; chữ dài tự thu nhỏ và xuống dòng), đồng hồ vẽ bằng bộ vẽ của game (`dong_ho`), hoặc hình nhỏ. Thẻ câu hỏi hiện đề (dấu `?` chỗ cần điền tô cam) và hình của đề (cắt lề trống cho to, đọc rõ số đo).
+- Ma chỉ đuổi khi bé di chuyển; ma chạm vào thì Cú Tí "vèo" về chỗ xuất phát, không mất gì, không tính là trả lời. Sai hẳn: game đứng yên, đảo hiện màn "Gần đúng rồi", đóng lại thì sang câu mới. Nút 💡 là ba cấp gợi ý của đảo (cấp 3 làm một đích sai tan thành khói). Tạm dừng có nút "Về đảo".
+- Nhật ký (qua đảo): `chon` khi chạm một ô đích mới (chạm đích khác là đổi ý), `cham` ô đường đi, chạm lại đích cũ, chạm Cú Tí để dừng, ma chạm; `di_chuyen` mỗi đoạn thẳng (`tu`, `den`, `huong`, `so_o`, `cach`: cham, vuot, phim, nut; `gan`: đích đi ngang sát bên), tối đa 40 đoạn mỗi câu; `nghe_lai`; `tra_loi` kèm `vi_tri`, ô, số đoạn, số ô đã đi, số lần ma chạm, các đích đã ghé qua.
+- Kiểm thử: `node --test tests/me-cung-dong-ho-dao.test.js` (cầu nối giả theo kịch bản và cầu nối, ván chơi, nhật ký thật của đảo).
 
 ## Tùy chỉnh nhanh
 

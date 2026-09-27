@@ -5,7 +5,7 @@
    (NhatKy.docVan), gói xuất đọc nhật ký gốc của bé khi phụ huynh bấm tạo gói.
    Tự dựng giao diện trong <section id="man-phu-huynh"> (section tự cuộn dọc). Chỉ ghi phu_huynh_mo, phu_huynh_cai_dat (YC-09),
    và chỉ khi bé đang xem chính là bé đang chơi (nhật ký luôn gắn với một bé; không ghi mã của bé này vào nhật ký bé khác).
-   API: window.GocPhuHuynh = { mo(ve, ctx) }
+   API: window.GocPhuHuynh = { mo(ve, ctx, tab) } (tab: mục mở ngay sau cổng, ví dụ cai_dat)
    ctx (app.js, ctxPhuHuynh): A, hinh, hinhTen, hinhKhungLong, tenKhungLong, soDep, homNay, bao, hien, tenManNgan,
    taiDuLieuBe(id), tinhLai(id), thoat(), hoSoDoi(p), beBiXoa(id).
    ============================================================ */
@@ -25,7 +25,10 @@
     { ma: 'ky_nang', ten: 'Kỹ năng', ic: '<rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/>' },
     { ma: 'ke_hoach', ten: 'Kế hoạch', ic: '<path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/>' }
   ];
-  const GIOI_HAN = [null, 10, 15, 20, 30, 45];
+  /** Các mức chọn nhanh cho thời gian chơi mỗi ngày (null: không giới hạn, mặc định); ngoài ra chỉnh từng 5 phút. */
+  const GIOI_HAN = [null, 15, 30, 45, 60, 90, 120];
+  /** Giờ cho thêm riêng hôm nay (cộng dồn), hoặc không giới hạn hôm nay. */
+  const THEM_HOM_NAY = [15, 30];
   const THU_NGAN = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
   /** Trạng thái màn hình (không lưu gì của báo cáo: đổi bé, đổi dữ liệu thì tính lại). */
@@ -33,6 +36,7 @@
     beId: null,
     be: null, // { hoSo, cauDs, vanDs, hocTap }
     tab: 'tong_quan',
+    tabDau: 'tong_quan', // mục mở ngay sau cổng (mo(ve, ctx, tab))
     con: null, // màn con: { loai: 'xem_lai', cau, van, tuTab } | { loai: 'xuat_ai', tuTab }
     tuan: null, // thứ Hai của tuần đang xem
     nk: { ngay: null, caTuan: false, loc: { loai: 'tat_ca' } },
@@ -110,8 +114,10 @@
     return dom;
   }
 
-  function mo(ve, c) {
+  /** tab (tùy chọn): mục mở ngay sau cổng, ví dụ 'cai_dat' khi bé hết giờ và nhờ bố mẹ cho chơi thêm. */
+  function mo(ve, c, tab) {
     ctx = c;
+    S.tabDau = tab === 'cai_dat' || TAB.some(function (t) { return t.ma === tab; }) ? tab : 'tong_quan';
     khoiDom();
     // Phép nhân của người lớn: số có hai chữ số nhân số có một chữ số (bé lớp 2 mới học bảng 2 và 5)
     let a, b;
@@ -162,7 +168,7 @@
     $('gp-goc').classList.remove('hidden');
     const ds = ctx.A.dsBe || [];
     const dau = ctx.A.hoSo ? ctx.A.hoSo.id : ds[0] && ds[0].id;
-    S.tab = 'tong_quan';
+    S.tab = S.tabDau || 'tong_quan';
     S.con = null;
     S.tuan = BC.dauTuan(homNay());
     S.nk = { ngay: null, caTuan: false, loc: { loai: 'tat_ca' } };
@@ -180,7 +186,12 @@
     }
     $('gp-tab').classList.remove('hidden');
     $('gp-nut-cai').classList.remove('hidden');
-    taiBe(dau).then(function () { ghi('phu_huynh_mo', { man: 'tong_quan' }); });
+    taiBe(dau).then(function () {
+      ghi('phu_huynh_mo', { man: S.tab });
+      // Mở từ hộp "hết giờ" của bé: đưa ngay tới mục thời gian chơi
+      const tg = S.tab === 'cai_dat' && $('gp-thoi-gian');
+      if (tg && tg.scrollIntoView) tg.scrollIntoView({ block: 'start' });
+    });
   }
 
   /** Đọc dữ liệu một bé (không đổi bé đang chơi) rồi vẽ lại. */
@@ -641,14 +652,44 @@
     const nay = homNay();
     return S.be.vanDs.reduce(function (s, v) { return s + (v.ngay === nay ? v.giay || 0 : 0); }, 0) / 60;
   }
+  /**
+   * Thời gian chơi: mặc định không giới hạn. Phụ huynh chọn nhanh hoặc chỉnh từng 5 phút; khi có giới hạn thì cho thêm
+   * được giờ riêng hôm nay (cộng dồn) hoặc không giới hạn hôm nay, qua ngày tự về như cũ.
+   */
   function veGioiHan() {
     const p = S.be.hoSo;
-    const gh = p.gioi_han_phut || null;
-    return '<div class="gp-dong-cai gp-dong-cai-cot"><span>Mỗi ngày tối đa<small>Hôm nay con đã chơi ' + Math.round(phutHomNay()) + ' phút. Hết giờ, con được chơi nốt ván đang dở rồi nghỉ.</small></span>' +
-      '<div class="gp-chips" role="group" aria-label="Giới hạn phút mỗi ngày">' + GIOI_HAN.map(function (g) {
-        const on = g === gh;
-        return '<button type="button" class="gp-chip' + (on ? ' gp-chon' : '') + '" aria-pressed="' + on + '" data-hd="cai" data-truong="gioi_han_phut" data-gt="' + (g == null ? '' : g) + '">' + (g == null ? 'Không giới hạn' : g + ' phút') + '</button>';
-      }).join('') + '</div></div>';
+    const gh = HS.sachGioiHan(p.gioi_han_phut);
+    const G = HS.GIOI_HAN;
+    const daChoi = Math.round(phutHomNay());
+    const chip = function (on, hd, attrs, chu) {
+      return '<button type="button" class="gp-chip' + (on ? ' gp-chon' : '') + '" aria-pressed="' + on + '" data-hd="' + hd + '" ' + attrs + '>' + chu + '</button>';
+    };
+    let h = '<div class="gp-dong-cai gp-dong-cai-cot" id="gp-thoi-gian"><span>Thời gian chơi mỗi ngày<small>' +
+      (gh == null ? 'Đang để không giới hạn (mặc định). Con chơi bao lâu tùy bố mẹ.' : 'Hết giờ, con được chơi nốt ván đang dở rồi nghỉ. Bố mẹ cho thêm giờ bất cứ lúc nào ở dưới.') +
+      ' Hôm nay con đã chơi ' + daChoi + ' phút.</small></span>' +
+      '<div class="gp-chips" role="group" aria-label="Thời gian chơi mỗi ngày">' + GIOI_HAN.map(function (g) {
+        return chip(g === gh, 'cai', 'data-truong="gioi_han_phut" data-gt="' + (g == null ? '' : g) + '"', g == null ? 'Không giới hạn' : g + ' phút');
+      }).join('') + '</div>' +
+      '<div class="gp-buoc-so" role="group" aria-label="Chỉnh từng ' + G.buoc + ' phút">' +
+        '<button type="button" data-hd="cai" data-truong="gioi_han_phut" data-gt="' + (gh == null ? 30 : Math.max(G.toi_thieu, gh - G.buoc)) + '" aria-label="Bớt ' + G.buoc + ' phút"' + (gh != null && gh <= G.toi_thieu ? ' disabled' : '') + '>−</button>' +
+        '<b aria-live="polite">' + (gh == null ? 'Không giới hạn' : gh + ' phút') + '</b>' +
+        '<button type="button" data-hd="cai" data-truong="gioi_han_phut" data-gt="' + (gh == null ? 30 : Math.min(G.toi_da, gh + G.buoc)) + '" aria-label="Thêm ' + G.buoc + ' phút"' + (gh != null && gh >= G.toi_da ? ' disabled' : '') + '>+</button>' +
+      '</div></div>';
+    if (gh == null) return h;
+    // Riêng hôm nay
+    const nay = homNay();
+    const them = p.them_hom_nay && p.them_hom_nay.ngay === nay ? p.them_hom_nay : null;
+    const hieuLuc = HS.gioiHanHomNay(p, nay);
+    const trangThai = hieuLuc == null ? 'Hôm nay: không giới hạn.'
+      : 'Hôm nay con được chơi ' + hieuLuc + ' phút' + (them && them.phut ? ' (' + gh + ' + ' + them.phut + ' phút cho thêm)' : '') + ', ' +
+        (daChoi >= hieuLuc ? 'đã hết giờ.' : 'còn khoảng ' + (hieuLuc - daChoi) + ' phút.');
+    h += '<div class="gp-dong-cai gp-dong-cai-cot"><span>Riêng hôm nay<small>' + trangThai + ' Ngày mai tự về ' + gh + ' phút.</small></span>' +
+      '<div class="gp-chips" role="group" aria-label="Cho thêm giờ hôm nay">' +
+        THEM_HOM_NAY.map(function (m) { return chip(false, 'them-hom-nay', 'data-gt="' + m + '"', 'Cho thêm ' + m + ' phút từ bây giờ'); }).join('') +
+        chip(!!(them && them.khong_gioi_han), 'them-hom-nay', 'data-gt="vo_han"', 'Không giới hạn hôm nay') +
+        (them ? chip(false, 'them-hom-nay', 'data-gt=""', 'Như mọi ngày') : '') +
+      '</div></div>';
+    return h;
   }
 
   /* ---------------- Cài đặt ---------------- */
@@ -785,8 +826,36 @@
       p.bai_dang_hoc = moi; p.bai_nguon = 'phu_huynh';
     } else if (truong === 'gioi_han_phut') {
       cu = p.gioi_han_phut == null ? null : p.gioi_han_phut;
+      moi = HS.sachGioiHan(moi);
       if (cu === moi) return;
       p.gioi_han_phut = moi;
+      // Bỏ giới hạn thì giờ cho thêm hôm nay cũng không còn ý nghĩa
+      if (moi == null) p.them_hom_nay = null;
+      ghi('phu_huynh_cai_dat', { truong: truong, cu: cu, moi: moi });
+      ctx.hoSoDoi(p, true);
+      S.cache = {};
+      ve(false);
+      return;
+    } else if (truong === 'them_hom_nay') {
+      // moi: số phút cho thêm tính từ bây giờ (bé chơi quá giờ vì được chơi nốt ván dở thì vẫn đủ số phút đó),
+      // 'vo_han' (không giới hạn hôm nay), hoặc null (như mọi ngày)
+      const nay = homNay();
+      const truoc = p.them_hom_nay && p.them_hom_nay.ngay === nay ? p.them_hom_nay : null;
+      cu = truoc ? (truoc.khong_gioi_han ? 'vo_han' : truoc.phut) : null;
+      const goc = HS.sachGioiHan(p.gioi_han_phut);
+      if (moi === 'vo_han') p.them_hom_nay = { ngay: nay, khong_gioi_han: true };
+      else if (moi > 0 && goc) {
+        const hieuLuc = goc + (truoc && !truoc.khong_gioi_han ? truoc.phut || 0 : 0);
+        p.them_hom_nay = { ngay: nay, phut: Math.min(24 * 60, Math.max(hieuLuc, Math.ceil(phutHomNay())) + moi - goc) };
+      } else p.them_hom_nay = null;
+      const sau = p.them_hom_nay ? (p.them_hom_nay.khong_gioi_han ? 'vo_han' : p.them_hom_nay.phut) : null;
+      if (cu === sau) return;
+      ghi('phu_huynh_cai_dat', { truong: truong, cu: cu, moi: sau, ngay: nay });
+      ctx.hoSoDoi(p, true);
+      S.cache = {};
+      ve(false);
+      if (ctx.bao) ctx.bao(sau === 'vo_han' ? 'Hôm nay con chơi không giới hạn' : sau ? 'Con được chơi thêm ' + moi + ' phút từ bây giờ' : 'Hôm nay như mọi ngày');
+      return;
     } else if (truong === 'mo_khoa_vung') {
       cu = !!p.mo_khoa_vung;
       if (cu === moi) return;
@@ -904,6 +973,11 @@
       case 'cai': {
         const t = A('truong'), v = A('gt');
         doiCaiDat(t, v === '' ? null : Number(v));
+        break;
+      }
+      case 'them-hom-nay': {
+        const v = A('gt');
+        doiCaiDat('them_hom_nay', v === '' ? null : v === 'vo_han' ? 'vo_han' : Number(v));
         break;
       }
       case 'dung-ke-hoach': dungKeHoach(); break;

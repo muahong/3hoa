@@ -1,6 +1,6 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Khi cập nhật game, đổi số phiên bản CACHE để máy nhận bản mới. */
-const CACHE = 'dao-khung-long-v3';
+const CACHE = 'dao-khung-long-v4';
 const CORE = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const CORE = [
   './css/cho-khung-long.css',
   './css/dau-truong.css',
   './css/goc-phu-huynh.css',
+  './css/huong-dan.css',
   './css/lat-lich.css',
   './css/rung-hinh-khoi.css',
   './css/xuong-do-luong.css',
@@ -42,6 +43,7 @@ const CORE = [
   './js/cau-noi.js',
   './js/bao-cao.js',
   './js/goc-phu-huynh.js',
+  './js/huong-dan.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-180.png',

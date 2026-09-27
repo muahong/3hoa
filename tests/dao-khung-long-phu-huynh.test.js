@@ -743,7 +743,21 @@ test('giao diện: cổng phép tính, mọi màn vẽ được không có "unde
   D.moTab('ke_hoach'); sach('kế hoạch');
   assert.match(than(), /Kế hoạch tuần tới/);
   D.moTab('cai_dat'); sach('cài đặt');
+  // Thời gian chơi: mặc định không giới hạn; có giới hạn thì cho thêm giờ riêng hôm nay (cộng dồn) hoặc không giới hạn hôm nay
+  assert.match(than(), /Đang để không giới hạn \(mặc định\)/);
+  assert.ok(!/Riêng hôm nay/.test(than()), 'chưa có giới hạn thì không có mục Riêng hôm nay');
   D.doiCaiDat('gioi_han_phut', 20);
+  assert.match(than(), /Riêng hôm nay/);
+  D.doiCaiDat('them_hom_nay', 15);
+  D.doiCaiDat('them_hom_nay', 15);
+  deq(J(p.them_hom_nay), { ngay: ngay, phut: 30 });
+  assert.match(than(), /Hôm nay con được chơi 50 phút \(20 \+ 30 phút cho thêm\)/);
+  D.doiCaiDat('them_hom_nay', 'vo_han');
+  assert.equal(p.them_hom_nay.khong_gioi_han, true);
+  assert.match(than(), /Hôm nay: không giới hạn/);
+  D.doiCaiDat('them_hom_nay', null);
+  assert.equal(p.them_hom_nay, null);
+  sach('cài đặt có giới hạn');
   D.doiCaiDat('mo_khoa_vung', true);
   D.doiCaiDat('bai_dang_hoc', 30);
   D.doiCaiDat('lop', 3);
@@ -779,6 +793,24 @@ test('giao diện: cổng phép tính, mọi màn vẽ được không có "unde
   const tomSau = HT.tomTatCacCau((await NK.docCuaBe(p.id)).filter((e) => e.van));
   assert.equal(tomSau.length, cauDs.length, 'mở báo cáo không thêm câu nào');
   assert.equal(BC.dauTuan(ngay), S.tuan);
+  // Bé hết giờ nhờ bố mẹ cho chơi thêm: qua cổng là vào thẳng Cài đặt
+  G.mo('ban-do', c, 'cai_dat');
+  G._quaCong();
+  await cho(); await cho();
+  assert.equal(S.tab, 'cai_dat');
+  assert.match(than(), /Thời gian chơi mỗi ngày/);
+  assert.match(than(), /Riêng hôm nay/);
+  // "Cho thêm 15 phút" tính từ bây giờ, kể cả khi bé đã chơi quá giờ (bé được chơi nốt ván dở)
+  vanDs.push({ van: 'van_gia', ngay: ngay, giay: 25 * 60, luc: ngay + 'T20:00:00' });
+  D.doiCaiDat('gioi_han_phut', 5);
+  D.doiCaiDat('them_hom_nay', 15);
+  const daChoi = vanDs.reduce((s, v) => s + (v.ngay === ngay ? v.giay || 0 : 0), 0) / 60;
+  assert.equal(w.HoSo.gioiHanHomNay(p, ngay), Math.ceil(daChoi) + 15);
+  assert.match(than(), /còn khoảng 1[56] phút/);
+  // Bỏ giới hạn thì giờ cho thêm cũng bỏ
+  D.doiCaiDat('gioi_han_phut', null);
+  assert.equal(p.them_hom_nay, null);
+  assert.equal(w.HoSo.gioiHanHomNay(p, ngay), null);
 });
 
 test('mã nguồn Góc phụ huynh: chỉ ghi phu_huynh_*, không gọi hàm ghi ván, câu, thao tác; không có gạch dài', () => {

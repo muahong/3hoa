@@ -192,6 +192,9 @@
 
   const NHIEM_VU_TEN = { on_cach_quang: 'Ôn nhanh', luyen_lai: 'Luyện lại chỗ yếu', hoc_moi: 'Học mới' };
 
+  /** Màu trứng của từng vùng: độ xoay màu (hue-rotate) trên quả trứng của bé. */
+  const MAU_TRUNG = { 1: 190, 2: 150, 3: 260, 4: 95, 5: 120, 6: 215, 7: 290, 8: 20, 9: 345, 10: 175 };
+
   /* ---------------- Tra cứu ---------------- */
 
   const theoMan = {};
@@ -259,6 +262,11 @@
     return kn;
   }
 
+  /** Học kì 2 bắt đầu từ bài này (vùng, màn học kì 2 chờ bé lớp 2 học tới). */
+  const BAI_HOC_KY_2 = 37;
+  /** Đấu trường mở khi học tới bài này, hoặc đã luyện (Đang luyện trở lên) từ chừng này kỹ năng của các vùng của nó. */
+  const DAU_TRUONG_MO = { 11: { bai: 30, ky_nang: 6 }, 12: { bai: 64, ky_nang: 14 } };
+
   /**
    * Vùng có mở cho bé không. Trả về { mo, sap_co, ly_do }.
    * hoSo.mo_khoa_vung (phụ huynh mở khóa) mở mọi vùng. Đấu trường học kì 1 mở khi đã học tới Bài 30 hoặc đã luyện
@@ -272,11 +280,10 @@
     if (lop >= 3 || (hoSo && hoSo.mo_khoa_vung)) mo = true;
     else if (lop <= 1) { mo = v.so === 1 || v.so === 2; if (!mo) lyDo = 'lop_2'; }
     else if (v.dau_truong) {
-      const cuoiNam = v.so === 12;
-      mo = cuoiNam ? bai >= 64 || daLuyen(hocTap, kyNangCacVung([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])) >= 14
-        : bai >= 30 || daLuyen(hocTap, kyNangCacVung([1, 2, 3, 4, 5, 6])) >= 6;
-      if (!mo) lyDo = cuoiNam ? 'dau_truong_cuoi_nam' : 'dau_truong_hk1';
-    } else if (v.hoc_ky === 2) { mo = bai >= 37; if (!mo) lyDo = 'hoc_ky_2'; }
+      const dk = DAU_TRUONG_MO[v.so];
+      mo = bai >= dk.bai || daLuyen(hocTap, kyNangCacVung(v.man[0].dau_truong.vung)) >= dk.ky_nang;
+      if (!mo) lyDo = v.so === 12 ? 'dau_truong_cuoi_nam' : 'dau_truong_hk1';
+    } else if (v.hoc_ky === 2) { mo = bai >= BAI_HOC_KY_2; if (!mo) lyDo = 'hoc_ky_2'; }
     else mo = true;
     const coMan = v.man.some(choiDuoc);
     return { mo: mo, sap_co: !coMan, ly_do: lyDo };
@@ -286,7 +293,7 @@
   function manMo(m, hoSo) {
     const lop = (hoSo && hoSo.lop) || 2;
     if (lop >= 3 || (hoSo && hoSo.mo_khoa_vung)) return true;
-    if (m.bai_dau >= 37 && lop === 2) return ((hoSo && hoSo.bai_dang_hoc) || 1) >= 37;
+    if (m.bai_dau >= BAI_HOC_KY_2 && lop === 2) return ((hoSo && hoSo.bai_dang_hoc) || 1) >= BAI_HOC_KY_2;
     return true;
   }
 
@@ -461,6 +468,91 @@
     return v ? v.so : null;
   }
 
+  /* ---------------- Bước tiếp theo ---------------- */
+
+  /** Tên ngắn của một màn cho bé đọc: "Màn 3 · Nhẩm số tròn chục", cúp và đấu trường giữ tên riêng. */
+  function tenManNgan(m) { return m.cup || m.dau_truong ? m.ten : 'Màn ' + m.so + ' · ' + m.ten; }
+
+  /**
+   * Việc bé nên làm tiếp (màn kết thúc ván, bản đồ khi đã xong nhiệm vụ). Thứ tự ưu tiên:
+   * đã đủ số phút bố mẹ cho (chỉ khi phụ huynh đặt giới hạn) → nhiệm vụ hôm nay còn lại → màn vừa chơi chỉ được 1 sao thì chơi lại → cúp của vùng vừa mở
+   * → màn chưa chơi cùng vùng → màn chưa chơi ở vùng khác (theo thứ tự bài SGK, không vượt bài đang học quá 3 bài)
+   * → cúp đã mở mà chưa chơi → đấu trường đã mở mà chưa thắng → màn chưa đủ 3 sao → về đảo.
+   * o: { hoSo, hocTap, nhiemVu: { ds, thuong }, manVuaChoi (mã màn hoặc null), sao (số sao ván vừa chơi), duPhut (đã chơi đủ số phút phụ huynh đặt) }
+   * Trả về { loai, man, vung, nhiem_vu, tieu_de, ly_do, nut };
+   * loai: nghi | nhiem_vu | choi_lai | cup | man_tiep | dau_truong | them_sao | ve_dao.
+   */
+  function buocTiep(o) {
+    const p = o.hoSo || {};
+    const kl = p.ky_luc || {};
+    const ra = function (loai, m, tieuDe, lyDo, nut, them) {
+      return Object.assign({ loai: loai, man: m ? m.id : null, vung: m ? m.vung : null, nhiem_vu: null, tieu_de: tieuDe, ly_do: lyDo, nut: nut }, them || {});
+    };
+    // Chỉ khi phụ huynh đặt giới hạn phút (mặc định không giới hạn) và hôm nay đã đủ
+    if (o.duPhut) return ra('nghi', null, 'Hôm nay con chơi đủ giờ bố mẹ cho rồi', 'Mai mình chơi tiếp nhé! Bố mẹ cho thêm giờ thì con chơi tiếp được.', 'Về đảo');
+
+    // 1. Nhiệm vụ hôm nay còn lại, chơi lần lượt 1, 2, 3
+    const ds = (o.nhiemVu && o.nhiemVu.ds) || [];
+    const i = ds.findIndex(function (x) { return !x.xong && choiDuoc(man(x.man)); });
+    if (i >= 0) {
+      const m = man(ds[i].man);
+      const con = ds.filter(function (x) { return !x.xong; }).length;
+      const thuong = window.HocTap ? window.HocTap.THUONG.xong_3_nhiem_vu : 20;
+      const lyDo = con === 1 ? 'Nhiệm vụ cuối của hôm nay' : 'Còn ' + con + ' nhiệm vụ hôm nay';
+      return ra('nhiem_vu', m, 'Nhiệm vụ ' + (i + 1) + ': ' + m.ten,
+        lyDo + (ds.length >= 3 && !o.nhiemVu.thuong ? ', xong cả ' + ds.length + ' được thêm ' + thuong + ' quả mọng' : ''),
+        'Chơi nhiệm vụ ' + (i + 1), { nhiem_vu: i });
+    }
+
+    const moHet = (p.lop || 2) >= 3 || !!p.mo_khoa_vung;
+    const gioiHan = moHet ? 999 : (p.bai_dang_hoc || 1) + 3;
+    const tatCa = [];
+    VUNG.forEach(function (v) {
+      if (!trangThaiVung(v, p, o.hocTap).mo) return;
+      v.man.forEach(function (m) { if (choiDuoc(m) && manMo(m, p)) tatCa.push(m); });
+    });
+    const moDuoc = function (m) { return tatCa.indexOf(m) >= 0; };
+
+    // 2. Theo vùng vừa chơi: chơi lại khi mới 1 sao, cúp vừa mở, màn chưa chơi cùng vùng
+    const mv = man(o.manVuaChoi);
+    if (mv && !mv.dau_truong) {
+      const v = vung(mv.vung);
+      if (o.sao === 1 && !mv.cup) return ra('choi_lai', mv, 'Chơi lại ' + tenManNgan(mv), 'Con làm lại cho chắc để được thêm sao nhé', 'Chơi lại');
+      const cup = v.man.find(function (m) { return m.cup; });
+      if (cup && cup.id !== mv.id && moDuoc(cup) && cupMo(v, p) && !kl[cup.id]) {
+        return ra('cup', cup, cup.ten, 'Cúp đã mở vì con chơi xong các màn chính của ' + v.ten, 'Chơi cúp');
+      }
+      const cungVung = tatCa.filter(function (m) { return m.vung === v.so && !m.cup && m.bai_dau <= gioiHan; });
+      const sau = cungVung.filter(function (m) { return m.so > mv.so; }).concat(cungVung.filter(function (m) { return m.so < mv.so; }));
+      const chua = sau.find(function (m) { return !kl[m.id]; });
+      if (chua) return ra('man_tiep', chua, tenManNgan(chua), 'Màn con chưa chơi ở ' + v.ten, 'Chơi màn ' + chua.so);
+    }
+
+    // 3. Màn chưa chơi ở vùng khác, theo thứ tự bài trong SGK
+    const chuaChoi = tatCa.filter(function (m) { return !m.cup && !m.dau_truong && !kl[m.id] && m.bai_dau <= gioiHan; })
+      .sort(function (a, b) { return a.bai_dau - b.bai_dau || a.vung - b.vung || a.so - b.so; });
+    if (chuaChoi.length) {
+      const m = chuaChoi[0];
+      const v = vung(m.vung);
+      return ra('man_tiep', m, tenManNgan(m), 'Màn mới ở Vùng ' + v.so + ' · ' + v.ten, 'Chơi màn này');
+    }
+
+    // 4. Cúp đã mở mà chưa chơi, đấu trường đã mở mà chưa thắng
+    const cupChua = tatCa.find(function (m) { return m.cup && !m.dau_truong && !kl[m.id] && cupMo(vung(m.vung), p); });
+    if (cupChua) return ra('cup', cupChua, cupChua.ten, 'Cúp của ' + vung(cupChua.vung).ten + ' đang chờ con', 'Chơi cúp');
+    const dt = tatCa.find(function (m) { return m.dau_truong && !(p.dau_truong_thang && p.dau_truong_thang[m.vung]); });
+    if (dt) return ra('dau_truong', dt, dt.ten, 'Cùng khủng long của con đấu với ' + dt.dau_truong.ten_boss, 'Vào đấu trường');
+
+    // 5. Màn đã chơi mà chưa đủ 3 sao (ít sao nhất trước)
+    const thieuSao = tatCa.filter(function (m) { return !m.dau_truong && kl[m.id] && (kl[m.id].sao || 0) < 3 && m.bai_dau <= gioiHan; })
+      .sort(function (a, b) { return (kl[a.id].sao || 0) - (kl[b.id].sao || 0) || a.bai_dau - b.bai_dau; });
+    if (thieuSao.length) {
+      const m = thieuSao[0];
+      return ra('them_sao', m, tenManNgan(m), 'Con đang có ' + (kl[m.id].sao || 0) + ' sao, thử lấy đủ 3 sao nhé', 'Lấy thêm sao');
+    }
+    return ra('ve_dao', null, 'Về đảo chọn trò con thích', 'Con đã chơi hết các màn đang mở rồi. Giỏi quá!', 'Về đảo');
+  }
+
   window.Dao = {
     VUNG: VUNG,
     HINH: HINH,
@@ -470,6 +562,9 @@
     DANG_GAME: DANG_GAME,
     THU_MUC_GAME_CU: THU_MUC_GAME_CU,
     NHIEM_VU_TEN: NHIEM_VU_TEN,
+    MAU_TRUNG: MAU_TRUNG,
+    BAI_HOC_KY_2: BAI_HOC_KY_2,
+    DAU_TRUONG_MO: DAU_TRUONG_MO,
     vung: vung,
     man: man,
     coGame: coGame,
@@ -485,6 +580,8 @@
     cupMo: cupMo,
     cauDauTruong: cauDauTruong,
     vungCuaNoiDung: vungCuaNoiDung,
-    lapNhiemVu: lapNhiemVu
+    lapNhiemVu: lapNhiemVu,
+    tenManNgan: tenManNgan,
+    buocTiep: buocTiep
   };
 })();

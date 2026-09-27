@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="css/dau-truong.css">
 <link rel="stylesheet" href="css/cau-noi.css">
 <link rel="stylesheet" href="css/goc-phu-huynh.css">
+<link rel="stylesheet" href="css/huong-dan.css">
 </head>
 <body>
 <main id="app">
@@ -123,9 +124,11 @@
       <p class="nv-phu" id="nv-phu">Xong 0/3 · khoảng 15 phút</p>
       <div class="nv-thanh"><i id="nv-thanh"></i></div>
       <div class="nv-ds" id="nv-ds"></div>
+      <p class="nv-tiep hidden" id="nv-tiep"></p>
       <button class="nut nut-cam nv-choi" id="nv-choi" type="button">Chơi nhiệm vụ 1</button>
     </aside>
     <div class="bd-duoi">
+      <button class="nut-nho nut-cach-choi" id="bd-cach-choi" type="button"><span class="hoi" aria-hidden="true">?</span>Cách chơi</button>
       <button class="nut-nho" id="bd-bo-me" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg>Bố mẹ</button>
       <button class="nut-nho" id="bd-am" type="button">Âm thanh: Bật</button>
     </div>
@@ -140,7 +143,8 @@
     <div class="vg-nen" id="vg-nen"></div>
     <header class="vg-dau">
       <button class="nut-quay trang" id="vg-quay" type="button" aria-label="Về bản đồ">‹</button>
-      <div><h1 id="vg-ten">Vùng 4 · Đường Đua Có Nhớ</h1><p id="vg-phu">SGK Chủ đề 4 · Bài 19 đến 24 · Học kì 1</p></div>
+      <div class="vg-dau-chu"><h1 id="vg-ten">Vùng 4 · Đường Đua Có Nhớ</h1><p id="vg-phu">SGK Chủ đề 4 · Bài 19 đến 24 · Học kì 1</p></div>
+      <button class="nut-hoi" id="vg-cach-choi" type="button" aria-label="Cách chơi"><span aria-hidden="true">?</span></button>
     </header>
     <div class="vg-than">
       <div class="vg-trung-the">
@@ -152,6 +156,7 @@
         </div>
         <p class="vg-trung-so" id="vg-trung-so">0/5 kỹ năng đã thuộc</p>
         <p class="vg-trung-phu" id="vg-trung-phu">Thuộc cả 5 thì trứng nở</p>
+        <button class="vg-trung-hoi" id="vg-trung-hoi" type="button">Làm sao để trứng nở?</button>
         <div class="chu-giai" id="vg-chu-giai"></div>
       </div>
       <div class="vg-ds" id="vg-ds"></div>
@@ -215,6 +220,7 @@
       <div class="the tam-the">
         <h2>Tạm dừng</h2>
         <button class="nut nut-cam nut-to" id="dx-tiep" type="button">Chơi tiếp</button>
+        <button class="nut nut-trang" id="dx-cach-choi" type="button">Cách chơi</button>
         <div class="nut-hang">
           <button class="nut nut-trang" id="dx-am" type="button">Âm thanh: Bật</button>
           <button class="nut nut-trang" id="dx-giong" type="button">Giọng đọc: Bật</button>
@@ -331,6 +337,7 @@
       <div class="the tam-the">
         <h2>Tạm dừng</h2>
         <button class="nut nut-cam nut-to" id="kc-tiep" type="button">Chơi tiếp</button>
+        <button class="nut nut-trang" id="kc-cach-choi" type="button">Cách chơi</button>
         <button class="nut nut-trang" id="kc-bai-hoc" type="button">Xem lại bài học</button>
         <div class="nut-hang">
           <button class="nut nut-trang" id="kc-am" type="button">Âm thanh: Bật</button>
@@ -370,6 +377,7 @@
         <h1 id="kt-tieu-de">Hoàn thành!</h1>
         <p class="kt-man" id="kt-man"></p>
         <div class="kt-sao" id="kt-sao" aria-label="Số sao"></div>
+        <p class="kt-sao-meo hidden" id="kt-sao-meo"></p>
         <div class="kt-so">
           <div><b id="kt-dung">0/0</b><span>câu đúng</span></div>
           <div><b id="kt-tu-lam">0</b><span>câu tự làm, không gợi ý</span></div>
@@ -382,10 +390,18 @@
         <p class="kt-qua"><img src="assets/img/berry.webp" alt=""><b id="kt-qua">+0 quả mọng</b></p>
         <ul class="kt-chi-tiet" id="kt-chi-tiet"></ul>
         <div class="kt-lon">
-          <p id="kt-lon-ten">Rex: Trứng → Sơ sinh</p>
+          <p class="kt-lon-dau"><span id="kt-lon-ten">Rex: Trứng → Sơ sinh</span><button type="button" class="kt-hoi-nho" data-chuong="lon_len" aria-label="Làm sao để khủng long lớn lên?">?</button></p>
           <div class="thanh"><i id="kt-lon-thanh"></i></div>
           <p class="kt-lon-phu" id="kt-lon-phu"></p>
         </div>
+        <p class="kt-kn-trung hidden" id="kt-trung"></p>
+      </div>
+      <div class="kt-kn hidden" id="kt-kn"></div>
+      <div class="kt-tiep-theo" id="kt-tiep-theo">
+        <img id="kt-tt-hinh" alt="" class="kt-tt-hinh">
+        <div class="kt-tt-chu"><small id="kt-tt-nhan">Bước tiếp theo</small><b id="kt-tt-ten"></b><span id="kt-tt-ly-do"></span></div>
+        <button class="nut nut-trang kt-tt-them hidden" id="kt-tt-them" type="button">Bố mẹ cho chơi thêm</button>
+        <button class="nut nut-cam kt-tt-nut" id="kt-tt-nut" type="button">Về đảo</button>
       </div>
       <div class="kt-duoi">
         <p class="kt-hoi">Con thấy màn này thế nào?</p>
@@ -396,7 +412,7 @@
         </div>
         <div class="nut-hang">
           <button class="nut nut-trang" id="kt-lai" type="button">Chơi lại</button>
-          <button class="nut nut-cam" id="kt-tiep" type="button">Tiếp tục</button>
+          <button class="nut nut-trang" id="kt-tiep" type="button">Về đảo</button>
         </div>
       </div>
     </div>
@@ -417,6 +433,9 @@
     </div>
   </section>
 
+  <!-- 14. Cách chơi: js/huong-dan.js tự dựng giao diện (thẻ cách chơi của từng trò là lớp phủ #hd-lop gắn vào body) -->
+  <section id="man-huong-dan" class="man man-hd hidden" aria-label="Cách chơi"></section>
+
   <!-- 9. Góc phụ huynh: js/goc-phu-huynh.js tự dựng giao diện -->
   <section id="man-phu-huynh" class="man man-ph hidden" aria-label="Góc phụ huynh"></section>
 
@@ -435,6 +454,18 @@
 </main>
 
 <div id="thong-bao" class="thong-bao hidden" role="status" aria-live="polite"></div>
+<!-- Hết giờ chơi trong ngày: chỉ có khi phụ huynh đặt giới hạn (mặc định không giới hạn) -->
+<div class="lop-phu lop-het-gio hidden" id="lop-het-gio" role="dialog" aria-modal="true" aria-labelledby="hg-tieu-de">
+  <div class="the hg-the">
+    <img id="hg-hinh" alt="" class="hg-hinh">
+    <h2 id="hg-tieu-de">Hôm nay con chơi đủ giờ rồi!</h2>
+    <p id="hg-loi"></p>
+    <div class="nut-hang">
+      <button class="nut nut-trang" id="hg-bo-me" type="button">Bố mẹ cho chơi thêm</button>
+      <button class="nut nut-cam" id="hg-dong" type="button">Được rồi</button>
+    </div>
+  </div>
+</div>
 <noscript><p style="padding:24px;font-family:sans-serif">Đảo Khủng Long cần bật JavaScript để chơi.</p></noscript>
 
 <script src="js/nhat-ky.js"></script>
@@ -466,6 +497,7 @@
 <script src="js/cau-noi.js"></script>
 <script src="js/bao-cao.js"></script>
 <script src="js/goc-phu-huynh.js"></script>
+<script src="js/huong-dan.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

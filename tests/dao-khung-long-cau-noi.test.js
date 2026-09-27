@@ -133,3 +133,19 @@ test('cầu nối: dạng nhập số không có lựa chọn, thử lại lần
   const kt = evs.find((e) => e.loai === 'van_ket_thuc');
   assert.equal(kt.du_lieu.bo_do, true);
 });
+
+test('cầu nối: game xin ít lựa chọn hơn vẫn luôn giữ đáp án đúng', async () => {
+  const ctx = await moi();
+  moGame(ctx, 'v1-m5');
+  const api = ctx.w.DaoCauNoi;
+  api.sanSang();
+  let c;
+  let n = 0;
+  while ((c = J(api.cauTiep({ so_lua_chon: 2 })))) {
+    n++;
+    assert.equal(c.lua_chon.length, 2);
+    assert.equal(c.lua_chon.filter((x) => x.dung).length, 1, c.de);
+    api.traLoi(c.lua_chon.find((x) => x.dung).gia_tri, {});
+  }
+  assert.ok(n >= 4);
+});

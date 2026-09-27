@@ -151,7 +151,8 @@
 
   /** Thêm đáp án nhiễu cho đủ n lựa chọn (không trùng, không trùng đáp án đúng). */
   function duLuaChon(q, n, rng) {
-    const ds = (q.lua_chon || []).slice();
+    // Đáp án đúng luôn đứng đầu trước khi cắt bớt, để không bao giờ mất khi game xin ít lựa chọn hơn
+    const ds = (q.lua_chon || []).slice().sort(function (a, b) { return (a.loi && a.loi.length ? 1 : 0) - (b.loi && b.loi.length ? 1 : 0); });
     const co = {};
     ds.forEach(function (x) { co[String(x.gia_tri)] = 1; });
     for (let lan = 0; ds.length < n && lan < 12; lan++) {

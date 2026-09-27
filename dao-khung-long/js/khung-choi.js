@@ -175,14 +175,17 @@
     hengioBao = setTimeout(function () { an(dom.bao, true); }, (giay || 2.4) * 1000);
   }
 
-  /** Hiện bóng gợi ý (chữ) và đọc to. */
+  let hengioGoiY = null;
+  /** Hiện bóng gợi ý (chữ) và đọc to; tự ẩn sau vài giây để không che vùng chơi (bấm gợi ý lần nữa là hiện lại). */
   function hienGoiY(t) {
     chu(dom.goiYChu, t);
     an(dom.goiYBong, false);
     AT().bat('cham');
     AT().doc(t);
+    clearTimeout(hengioGoiY);
+    hengioGoiY = setTimeout(anGoiY, Math.max(8000, String(t || '').length * 110));
   }
-  function anGoiY() { if (dom) an(dom.goiYBong, true); }
+  function anGoiY() { clearTimeout(hengioGoiY); if (dom) an(dom.goiYBong, true); }
   /** Gợi ý mặc định: tăng một cấp qua VanChoi rồi hiện. them: trường riêng của game. */
   function goiY(them) {
     if (!s || dangKhoa()) return null;

@@ -117,7 +117,7 @@ async function main() {
     },
     async taoBe(o) {
       o = Object.assign({ ten: 'An', tuoi: 7, lop: 2, phong_cach: 'dung_manh', bai_dang_hoc: 75 }, o || {});
-      await t.choDen('window.HoSo && window.__DKL && window.NhatKy && window.NhatKy.kho');
+      await t.choDen('window.HoSo && window.__DKL && window.NhatKy && window.NhatKy.kho && __DKL.A.man');
       return t.eval('(async function(){var p=await HoSo.taoMoi(' + JSON.stringify({ ten: o.ten, tuoi: o.tuoi, lop: o.lop, lop_nguon: 'tu_chon', phong_cach: o.phong_cach }) + ');' +
         'p.bai_dang_hoc=' + o.bai_dang_hoc + ';p.khung_long.muc="nhi";p.van_xong=1;await HoSo.luu(p);__DKL.A.dsBe.push(p);await __DKL.chonBe(p.id);return p.id;})()');
     }

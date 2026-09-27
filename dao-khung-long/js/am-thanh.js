@@ -107,7 +107,7 @@
     try {
       const ss = window.speechSynthesis;
       if (!(tuyChon && tuyChon.noiTiep)) ss.cancel();
-      const u = new window.SpeechSynthesisUtterance(String(chu).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/=/g, ' bằng '));
+      const u = new window.SpeechSynthesisUtterance(String(chu).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/(\d)\s*:\s*(\d)/g, '$1 chia $2').replace(/=/g, ' bằng '));
       u.voice = giong.giong;
       u.lang = giong.giong.lang || 'vi-VN';
       u.rate = 0.95;

@@ -1,6 +1,6 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Khi cập nhật game, đổi số phiên bản CACHE để máy nhận bản mới. */
-const CACHE = 'dao-khung-long-v1';
+const CACHE = 'dao-khung-long-v2';
 const CORE = [
   './',
   './index.html',
@@ -14,6 +14,11 @@ const CORE = [
   './js/am-thanh.js',
   './js/phan-hoi.js',
   './js/dua-xe.js',
+  './js/khung-choi.js',
+  './js/lat-the.js',
+  './js/xep-hinh-so.js',
+  './js/truyen-tranh.js',
+  './js/bai-hoc.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-180.png',
@@ -32,6 +37,9 @@ const CORE = [
   './assets/img/bg-workshop.webp',
   './assets/img/car-may.webp',
   './assets/img/car-rex.webp',
+  './assets/img/ic-lat-the.webp',
+  './assets/img/ic-truyen-tranh.webp',
+  './assets/img/ic-xep-hinh.webp',
   './assets/img/may-adult.webp',
   './assets/img/may-cheer.webp',
   './assets/img/may-eating.webp',
@@ -59,7 +67,8 @@ const CORE = [
   './assets/img/sp-mo-vit-long.webp',
   './assets/img/sp-rong-bien.webp',
   './assets/img/sp-tam-giac-long.webp',
-  './assets/img/sp-toc-long.webp'
+  './assets/img/sp-toc-long.webp',
+  './assets/img/the-lung.webp'
 ];
 
 self.addEventListener('install', (event) => {

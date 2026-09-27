@@ -34,7 +34,7 @@ Kế hoạch và mockup: artifact “Đảo Khủng Long” bản 2. Spec: `docs
 - Khác với kế hoạch: trứng đầu tiên nở khi bé đua xong ván đầu tiên (thay vì mốc 100 quả mọng) để bé thấy trứng nở ngay buổi đầu. Các con số nằm ở `HocTap.MUC_LON`, chỉnh sau khi thử với bé thật.
 - Trứng của vùng nở khi mọi kỹ năng của các màn đang chơi được trong vùng đạt Đã thuộc (ở giai đoạn này chưa tính màn Truyện Tranh của vùng 2).
 
-## Giai đoạn 2 (bản này): game mới đợt 1, số và phép tính
+## Giai đoạn 2: game mới đợt 1, số và phép tính
 
 Ba thể loại mới, bài học 30 giây, ngân hàng câu cho số, nhân chia và bài toán có lời văn. Vùng 1, 2, 4, 7, 8 mỗi vùng có ít nhất 2 thể loại.
 
@@ -110,28 +110,85 @@ Ghi `bai_hoc_xem`: mã bài học, số bước đã xem, tổng bước, số l
 
 Codex vẽ biểu tượng 3 thể loại (`ic-truyen-tranh`, `ic-lat-the`, `ic-xep-hinh`) và mặt sau thẻ (`the-lung`): `assets/art/prompts/run9-gd2.txt`, `MANIFEST-gd2.md`. Khối trăm, chục, đơn vị vẽ bằng CSS để đúng 10 ô, 10 × 10 ô. Đồ vật trong truyện tranh là emoji và quả mọng của game.
 
+## Giai đoạn 3: Góc phụ huynh
+
+Sau cổng phép nhân của người lớn (hai chữ số nhân một chữ số, đổi mỗi lần mở, sai 3 lần thì thoát), góc phụ huynh có thanh chọn bé và bốn mục ở thanh dưới, thêm nút Cài đặt. Xem được trên iPad xoay ngang, xoay dọc và điện thoại 375 px. Phụ huynh đi từ tổng quan tới từng thao tác của một câu sai trong 1 đến 2 chạm: Tổng quan → thẻ Cần giúp → xem lại câu (1 chạm), Nhật ký → câu → xem lại (2 chạm).
+
+| Màn | Có gì |
+|---|---|
+| Tổng quan tuần | Phút chơi, số ngày có chơi, số câu, % tự làm đúng (lùi, tới từng tuần); Con đã giỏi, Đang luyện, Cần giúp (mỗi thẻ kèm một câu sai thật của con, chạm là mở dòng thời gian của đúng câu đó), Con thích nhất, biểu đồ 4 tuần |
+| Nhật ký chi tiết | Theo ngày hoặc cả tuần: từng ván (giờ, game, màn, số câu, phút, cảm xúc), từng câu (con chọn gì, lỗi gì, mấy giây, đã sửa chưa); lọc Tất cả, Chỉ câu sai, theo mã nội dung, theo mã lỗi |
+| Xem lại một câu | Dòng thời gian mọi sự kiện của câu với mốc giây, mỗi kiểu thao tác có một câu tiếng Việt riêng; hình của đề, các lựa chọn và số lần con dừng ở mỗi lựa chọn; lần câu quay lại ("2 câu sau: làm lại đúng trong 5,1 giây"); Nhận xét giải thích lỗi theo cách SGK và nút "Xem N câu cùng lỗi" |
+| Bản đồ kỹ năng | Đủ 43 nội dung theo 10 vùng, tô theo mức thấp nhất của các kỹ năng đã luyện, chấm đỏ là Cần giúp; chạm ô xem % tự làm đúng 14 ngày, số câu, giây trung vị, lỗi hay gặp, câu sai gần đây, các màn và game luyện nội dung đó, gợi ý Làm cùng con |
+| Kế hoạch tuần tới | Luyện lại (kỹ năng yếu, luôn đổi sang thể loại khác lần trước), Ôn nền (nội dung tiên quyết), Học mới (theo bài đang học); Làm cùng con cho cả 43 mã; "Dùng kế hoạch này" lưu `ke_hoach_tuan` và nhiệm vụ hằng ngày đi theo kế hoạch trong những ngày đó |
+| Cài đặt | Tuổi, lớp, bài đang học, giới hạn phút mỗi ngày (`gioi_han_phut`: 10 đến 45, bé được nhắc nhẹ khi đủ phút), mở khóa mọi vùng (`mo_khoa_vung`), tải nhật ký JSONL, tính lại tóm tắt, xóa dữ liệu (hỏi lại trong trang) |
+| Xuất cho trợ lý AI | Gói `dao-khung-long-xuat-v1.json` theo spec 06 mục 5.9: bí danh thay tên, từ điển mã chỉ gồm mã đã dùng, hồ sơ học tập, 20 ván gần nhất, tối đa 30 câu sai tiêu biểu (ưu tiên lỗi lặp lại, chưa sửa) kèm câu tả thao tác, hướng dẫn và hợp đồng đầu ra cho LLM; ước lượng token (byte UTF-8 chia 3, làm tròn lên), mặc định dưới 30 000 token; tùy chọn kèm nhật ký 7 ngày; nút Sao chép và Tải tệp |
+
+Định nghĩa dùng chung (`js/bao-cao.js`): câu đã làm là mọi câu trừ `bo_qua`; câu tự làm là câu đã làm không dùng gợi ý; % tự làm đúng = `dung_ngay` chia câu tự làm (cùng quy tắc với mức thành thạo); tuần tính từ thứ Hai. Mọi con số tính lại được từ ba lớp tóm tắt hoặc nhật ký gốc, không lưu số riêng. Góc phụ huynh chỉ ghi `phu_huynh_mo` và `phu_huynh_cai_dat`, và chỉ khi bé đang xem là bé đang chơi (YC-09).
+
+## Giai đoạn 4: game mới đợt 2, đo lường, tiền, thống kê, hình học, thời gian và hai đấu trường
+
+Mỗi thể loại mới có tệp câu hỏi riêng (`js/cau-*.js`, cắm vào ngân hàng bằng `NganHang.dangKyLoai` và `themKyNang`), tệp game riêng dùng khung chơi chung, CSS riêng và bài học 30 giây. Mọi kỹ năng hỏi được cả ở dạng tương tác của game lẫn dạng chọn đáp án có hình (`veHinh`, `veLuaChon`) để Đấu Trường và game cũ dùng lại.
+
+| Vùng | Thể loại | Kỹ năng (mã nội dung) | Bài học |
+|---|---|---|---|
+| 3 Xưởng Đo Lường | Xưởng Đo Lường: cân đĩa kéo quả cân 1, 2, 5 kg cho thăng bằng, cân đồng hồ, trạm rót nước theo lít, bàn thước kéo thước cm, xếp vật vào ô cm, dm, m, km | `nang-nhe`, `can-kg` (B2.9), `rot-lit` (B2.10), `don-vi-do-dai` (B2.6), `do-do-dai` (B2.7) | `ki-lo-gam`, `lit`, `do-dai` |
+| 3 | Truyện Tranh với kg, lít (Bài 17, 18) | `toan-kg-lit` (2.18) | `giai-toan` |
+| 5 Rừng Hình Khối | Rừng Hình Khối: bảng SVG lớn, chạm điểm, kéo nối đoạn thẳng, chạm đoạn để cộng độ dài, chọn hình, kéo vật vào rổ khối trụ, khối cầu, ghép hai mảnh thành hình mẫu | `nhan-dang-duong` (B2.1), `ba-diem-thang-hang` (B2.2), `duong-gap-khuc` (B2.8), `hinh-tu-giac` (B2.3), `ghep-hinh` (B2.5), `khoi-tru-cau` (B2.4) | `diem-doan-thang`, `duong-gap-khuc`, `hinh-tu-giac`, `khoi-tru-cau` |
+| 6 Phố Đồng Hồ | Lật Lịch: tháp đồng hồ kéo kim (kim phút bắt vào 12 số, kim giờ đi theo như đồng hồ thật), lịch treo tường lật từng trang, dải 24 giờ với năm buổi | `xem-gio` (B2.11), `ngay-gio` (B2.12), `xem-lich` (B2.13) | `xem-dong-ho`, `ngay-gio`, `xem-lich` |
+| 9 Chợ Khủng Long | Chợ Khủng Long: Mỏ Vịt Long bán hàng, kéo tờ tiền từ ví vào khay ("Đã trả: 700 đồng"), hộp tiền lẻ để đổi tiền, bé làm người bán trả lại tiền thừa | `nhan-biet-tien`, `tra-tien`, `doi-tien`, `tien-thua` (B2.14) | `tien-viet-nam`, `tien-thua` |
+| 9 | Truyện Tranh mua bán | `toan-tien` (B2.14) | `giai-toan` |
+| 10 Hồ Thống Kê | Câu Cá Thống Kê: chạm câu cá, thả vào giỏ đúng loại rồi đếm, biểu đồ tranh dựng từ số cá con câu được, hộp bóng để chọn chắc chắn, có thể, không thể rồi bốc thử | `kiem-dem` (C2.1), `bieu-do-tranh` (C2.2), `kha-nang` (C2.3) | `kiem-dem`, `bieu-do-tranh`, `kha-nang` |
+| 8 Kim Tự Tháp 1000 | Câu Cá Thống Kê chế độ ước lượng: đàn cá hiện theo nhóm 10 trong 3 giây rồi lặn | `uoc-luong-chuc` (2.7) | `uoc-luong` |
+| Đấu Trường HK1, Cuối Năm | Đấu Trường: khủng long của bé đấu trùm (`boss-hk1`, `boss-cuoi-nam`), mỗi câu đúng một đòn, 3 câu đúng liền là tuyệt chiêu 2 đòn, câu đúng nhờ gợi ý nửa đòn; câu sai trùm làm trò vui, không mất gì | Trộn kỹ năng của vùng 1 đến 6 (HK1) hoặc 1 đến 10 (Cuối Năm) theo hồ sơ học tập: kỹ năng Cần giúp, còn câu nợ, tự làm đúng thấp, tới hạn ôn được ưu tiên (`Dao.cauDauTruong`); bỏ bài hai bước | |
+
+Đấu trường: trùm 12 máu với 10 câu (HK1), 16 máu với 14 câu (Cuối Năm); bé đúng khoảng 70% thắng trong 1 đến 2 lần (mô phỏng 400 ván mỗi đấu trường). Thắng lần đầu: cúp, phụ kiện (Bộ Giáp Học Kì 1, Vương Miện Cuối Năm), 100 quả mọng, và tính vào mức Huyền thoại. Đấu trường HK1 mở khi học tới Bài 30 hoặc đã luyện từ 6 kỹ năng của vùng 1 đến 6; Cuối Năm mở khi tới Bài 64 hoặc đã luyện từ 14 kỹ năng.
+
+Theo SGK, không bịa thêm: lớp 2 chỉ xem giờ đúng, 15 phút, 30 phút (không có "kém"); tiền chỉ có Bài 56 với tờ 100, 200, 500, 1 000 đồng, nên đổi tiền và trả lại tiền thừa là phần mở rộng nhẹ (màn ghi "Bài 56 (mở rộng)"); biểu đồ tranh mỗi hình là 1 con. Màn học kì 2 trong vùng học kì 1 (độ dài Bài 55, 57, khối trụ khối cầu Bài 46) chờ tới Bài 37 với bé lớp 2.
+
+Mã lỗi mới (80 mã trong từ điển, mỗi mã có lời nói với bé, giải nghĩa cho phụ huynh và nhãn ngắn): ví dụ `ben-thap-nhe` (nghĩ đĩa thấp là nhẹ), `dem-qua-can` (đếm số quả cân thay vì cộng khối lượng), `doc-sai-vach`, `nham-don-vi`, `doi-don-vi`, `do-tu-1` (đo từ vạch 1), `dem-so-to` (đếm số tờ thay vì cộng mệnh giá), `tra-thieu`, `tra-thua`, `nham-to-tien`, `dem-sot`, `doc-nham-hang` (đọc nhầm hàng biểu đồ), `nham-hon-kem`, `nham-kha-nang`, `nham-doan-duong`, `dem-thieu-doan`, `nham-thang-hang`, `nham-tu-giac`, `nham-khoi`, `nham-kim` (đổi vai kim giờ, kim phút), `lech-gio`, `doc-so-phut`, `nham-buoi`, `nham-thu`, `dem-ngay-lech`. Mỗi mã nhận ra bằng một công thức trên đáp án của bé, và đáp án nhiễu sinh từ chính công thức đó.
+
+## Giai đoạn 5: sáu game cũ trong đảo
+
+Chém Trái Cây (`math-ninja`), Bắn Thiên Thạch (`cuu-chuong`), Mê Cung (`me-cung-dong-ho`), Tháp Xếp Hình (`thap-dong-ho`), Xe Tăng (`xe-tang-thoi-gian`), Cưỡi Hổ (`cuoi-ho`) chạy trong đảo bằng một iframe cùng tên miền: `../<thư mục>/?dao=1&man=<mã màn>`. Cầu nối `js/cau-noi.js` đưa cho game cũ `window.parent.DaoCauNoi` (hợp đồng phiên bản 1, xem đầu tệp): game cũ lấy câu từ ngân hàng chung (`cauTiep`), báo từng thao tác (`thaoTac`), chấm qua đảo (`traLoi`), và khi bé sai hẳn thì chờ màn "Gần đúng rồi" chung của đảo hiện đè lên (`phanHoi`). Mọi sự kiện đi qua đúng một `NhatKy` và một `VanChoi` của đảo, nên không có hai nơi ghi một phiên và báo cáo gộp mọi game theo mã chương trình (ví dụ mã 2.11 gồm câu của Đua Xe, Bắn Thiên Thạch, Lật Thẻ). Spec 06 ban đầu định chép `nhat-ky.js` vào từng game; cầu nối thay cho cách đó (ghi trong lịch sử thay đổi của spec 06).
+
+Chế độ đảo chỉ bật khi có `?dao=1`, trang nằm trong iframe và trang cha có `DaoCauNoi`; mở game trực tiếp thì game giữ nguyên như cũ (menu, tim, bài học, hỏi đáp, lưu tiến trình riêng). Trong đảo: thẻ Bắt đầu (chạm này mở âm thanh trên iPad), không menu, không tim, không thua, không hết giờ bắt buộc, không ghi localStorage của game, âm thanh theo cài đặt của đảo, tạm dừng có nút Về đảo.
+
+| Game | Màn trong đảo | Cách chơi và thao tác ghi |
+|---|---|---|
+| Cưỡi Hổ | v1-m4 tia số, v8-m6 liền trước, liền sau đến 1000, v6-m7 đồng hồ, v10-m4 đọc biểu đồ tranh | Mỗi cụm 3 vòng lửa là một câu (`tren`, `giua`, `duoi`), thẻ câu hỏi hiện tia số, biểu đồ, đồng hồ; `cham` vòng lửa |
+| Chém Trái Cây | v1-m5 so sánh (quả mang dấu >, <, =), v2-m7 cộng trừ qua 10, v7-m7 nhân chia, v10-m5 chắc chắn, có thể, không thể | Mỗi đợt quả là một câu, không bom; quả rơi thì bay lại chậm hơn; `vuot` quả đầu tiên lưỡi dao chạm |
+| Bắn Thiên Thạch | v4-m8 cộng trừ có nhớ, v7-m6 bảng nhân chia (gõ kết quả, 2 lần thử), v1-m6 xếp thứ tự, v8-m5 so sánh số có ba chữ số | Một câu một lúc, thiên thạch trôi chậm rồi chờ; `go_so`, `xoa`, `ban`; xếp thứ tự chấm cả dãy một lần |
+| Mê Cung | v1-m7 dãy đếm thêm, v5-m8 đường gấp khúc, v6-m4 đồng hồ | Mỗi vòng mê cung 3 đích mang lựa chọn, ma chạm thì về chỗ xuất phát (không mất gì); `di_chuyen` theo từng đoạn thẳng, `chon` đích |
+| Tháp Xếp Hình | v5-m7 hình tứ giác, v6-m5 đồng hồ | Mỗi khối rơi là một câu, các cột mang lựa chọn, khối lơ lửng chờ bé thả; `doi_cot`, `tha` |
+| Xe Tăng | v5-m9 ba điểm thẳng hàng, v6-m6 đồng hồ và các buổi | Robot mang lựa chọn đi chậm, không bao giờ tới xe tăng; `xoay_nong` khi nhắm xong, `ban` |
+
+Màn của game cũ hỏi kỹ năng đo lường, hình học, thời gian ở dạng chọn đáp án (`dang: 'chon_dap_an'` trong `dao.js`, cầu nối cũng tự đổi khi game cũ xin lựa chọn). Service worker của từng game cũ đã tăng phiên bản và lưu thêm `js/dao.js`, `dao.css`.
+
 ## Cấu trúc tệp
 
 | Tệp | Vai trò |
 |---|---|
-| `index.html`, `style.css` | Mọi màn hình (một trang), CSP như các game khác |
-| `js/nhat-ky.js` | Nhật ký sự kiện v1: ULID, phong bì chung, 4 tầng phiên/ván/câu/thao tác, bộ đệm ghi mỗi 2 giây, đóng phiên và ván dở khi app bị tắt ngang, xóa dữ liệu một bé. Kèm lớp lưu trữ IndexedDB (dự phòng bộ nhớ). Tự chứa để sao chép vào game khác |
-| `js/ngan-hang.js` | Ngân hàng câu theo mã nội dung và mã kỹ năng (phép tính, số, phép nhân từ tổng, bài toán có lời văn), mã câu ổn định, đáp án nhiễu mang mã lỗi theo công thức 03a mục 3.3, gợi ý 3 cấp, lời giải, đọc số bằng chữ, 47 đề truyện tranh, sinh theo hạt giống |
+| `index.html`, `style.css` | Mọi màn hình (một trang), CSP như các game khác; `css/*.css` là giao diện riêng của từng game mới, Góc phụ huynh và cầu nối |
+| `js/nhat-ky.js` | Nhật ký sự kiện v1: ULID, phong bì chung, 4 tầng phiên/ván/câu/thao tác, bộ đệm ghi mỗi 2 giây, đóng phiên và ván dở khi app bị tắt ngang, xóa dữ liệu một bé. Kèm lớp lưu trữ IndexedDB (dự phòng bộ nhớ) |
+| `js/ngan-hang.js` | Ngân hàng câu theo mã nội dung và mã kỹ năng: đủ 43 mã nội dung lớp 2, 4 loại câu gốc (phép tính, số, phép nhân từ tổng, bài toán có lời văn), cơ chế cắm thêm loại câu (`dangKyLoai`, `themKyNang`, `themLoi`), mã câu ổn định, đáp án nhiễu mang mã lỗi theo công thức 03a mục 3.3, gợi ý 3 cấp, lời giải, đọc số bằng chữ, đề truyện tranh (thêm kg, lít, tiền), sinh theo hạt giống |
+| `js/cau-so-sanh.js` | Câu so sánh, xếp thứ tự (2.2, 2.6), tia số và dãy đếm thêm (2.1) |
+| `js/cau-do-luong.js`, `js/cau-tien.js`, `js/cau-thong-ke.js`, `js/cau-hinh-hoc.js`, `js/cau-thoi-gian.js` | Loại câu, kỹ năng, mã lỗi và hình SVG của đo lường, tiền, thống kê, hình học, thời gian (`window.DongHo` vẽ đồng hồ, lịch, dải 24 giờ) |
 | `js/hoc-tap.js` | Hàm thuần: tóm tắt câu, tóm tắt ván (kèm câu mô tả tiếng Việt), hồ sơ học tập, 5 mức thành thạo, cờ Cần giúp, quả mọng, sao, mức lớn |
-| `js/van-choi.js` | Vòng đời một ván dùng chung cho mọi thể loại: xếp câu, câu sai quay lại, ghi đủ chuỗi sự kiện mỗi câu; dạng chọn đáp án, nhập số, ghép đôi (dựng bàn Lật Thẻ), kéo thả, hai bước |
-| `js/dao.js` | 10 vùng, 2 đấu trường, các màn, loài khủng long, luật mở vùng, lập nhiệm vụ hôm nay |
+| `js/van-choi.js` | Vòng đời một ván dùng chung cho mọi thể loại: xếp câu, câu sai (và hết giờ) quay lại, ghi đủ chuỗi sự kiện mỗi câu; dạng chọn đáp án, nhập số, ghép đôi, kéo thả, thao tác trên hình, xếp thứ tự, hai bước |
+| `js/dao.js` | 10 vùng, 2 đấu trường, 80 màn, loài khủng long, luật mở vùng và mở màn học kì 2, trộn câu đấu trường, lập nhiệm vụ hôm nay (theo kế hoạch tuần nếu phụ huynh chọn) |
 | `js/ho-so.js` | Hồ sơ bé, gợi ý lớp từ tuổi, bé đang chơi, tên gợi ý từ hồ sơ chung `3hoa-players-v1` (chỉ đọc) |
-| `js/dua-xe.js` | Game Đua Xe: đường giả 3D trên canvas, cổng, trạm dừng, bóng kỷ lục, màn phản hồi |
-| `js/khung-choi.js` | Khung chơi chung của các game mới: thanh câu hỏi, điểm, tiến độ, gợi ý, màn “Gần đúng rồi”, tạm dừng, pháo giấy |
-| `js/lat-the.js` | Game Lật Thẻ Anh Em |
-| `js/xep-hinh-so.js` | Game Xếp Hình Số |
-| `js/truyen-tranh.js` | Game Truyện Tranh |
-| `js/bai-hoc.js` | Bài học 30 giây và sự kiện `bai_hoc_xem` |
-| `js/phan-hoi.js` | Nội dung màn “Gần đúng rồi!”: đặt tính cột dọc (cả nhớ ở hàng chục), que tính, mô hình khối trăm, chục, đơn vị |
+| `js/khung-choi.js` | Khung chơi chung của các game mới: thanh câu hỏi, điểm, tiến độ, gợi ý (tự ẩn sau vài giây), màn “Gần đúng rồi”, tạm dừng, pháo giấy |
+| `js/dua-xe.js`, `js/lat-the.js`, `js/xep-hinh-so.js`, `js/truyen-tranh.js` | Game của giai đoạn 1, 2 |
+| `js/xuong-do-luong.js`, `js/cho-khung-long.js`, `js/cau-ca.js`, `js/rung-hinh-khoi.js`, `js/lat-lich.js`, `js/dau-truong.js` | Game của giai đoạn 4 (mỗi game đăng ký bài học 30 giây của mình) |
+| `js/cau-noi.js` | Cầu nối cho sáu game cũ chạy trong iframe (giai đoạn 5) |
+| `js/bao-cao.js`, `js/goc-phu-huynh.js` | Góc phụ huynh: hàm tính báo cáo thuần (kiểm thử được bằng Node) và giao diện |
+| `js/bai-hoc.js` | Bài học 30 giây (`BaiHoc.dangKy`) và sự kiện `bai_hoc_xem` |
+| `js/phan-hoi.js` | Nội dung màn “Gần đúng rồi!”: đặt tính cột dọc, que tính, mô hình khối, hình lời giải do ngân hàng câu dựng |
 | `js/am-thanh.js` | Tiếng động tổng hợp bằng Web Audio, giọng đọc tiếng Việt |
-| `js/app.js` | Điều phối các màn, cập nhật tóm tắt, thưởng, nhiệm vụ, mức lớn sau mỗi ván |
+| `js/app.js` | Điều phối các màn; sổ đăng ký thể loại `window.DaoTroChoi[game] = { ten, khung, san hoặc man, batDau }`; cập nhật tóm tắt, thưởng, nhiệm vụ, mức lớn, đấu trường sau mỗi ván; giới hạn phút mỗi ngày |
 | `assets/img/` | Hình WebP xuất từ `assets/art/` bằng `python scripts/dkl-images.py` |
-| `assets/art/` | Prompt và MANIFEST của hình do Codex vẽ; bản gốc PNG chỉ giữ cục bộ, không đưa lên git |
+| `assets/art/` | Prompt và MANIFEST của hình do Codex vẽ (lượt `gd4`: 6 biểu tượng thể loại, 2 trùm đấu trường); bản gốc PNG chỉ giữ cục bộ, không đưa lên git |
 | `sw.js`, `manifest.json`, `icons/` | PWA, chơi ngoại tuyến sau lần tải đầu |
 
 ## Dữ liệu trên máy
@@ -140,35 +197,32 @@ IndexedDB `dao-khung-long`:
 
 | Kho | Khóa | Nội dung |
 |---|---|---|
-| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem) |
-| `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện; giữ 120 ngày |
+| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, cài đặt của phụ huynh `gioi_han_phut`, `mo_khoa_vung`, `ke_hoach_tuan`) |
+| `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện (cả của sáu game cũ khi chơi trong đảo); giữ 120 ngày |
 | `tom_tat_cau` | `cau` | Tóm tắt từng câu |
 | `tom_tat_van` | `van` | Tóm tắt từng ván, có câu mô tả tiếng Việt |
 | `ho_so_hoc_tap` | `be` | Hồ sơ học tập tính từ hai kho trên |
 
 localStorage: `dkl-be-dang-choi-v1` (bé đang chơi, lúc chơi gần nhất), `dkl-phien-mo-v1` (phiên, ván, câu đang mở để đóng lại nếu app bị tắt ngang), `dkl-am-thanh-v1`, `dkl-meo-mh-v1`.
 
-Tên bé không đi vào nhật ký (chỉ có mã `be_…`). Không gửi gì ra ngoài; phụ huynh tự tải tệp JSONL.
+Tên bé không đi vào nhật ký (chỉ có mã `be_…`), không vào gói xuất cho trợ lý AI. Không gửi gì ra ngoài; phụ huynh tự tải tệp.
 
-## Sự kiện Đua Xe ghi
+## Sự kiện ghi
 
-`phien_bat_dau`, `ho_so_doi` (tạo hồ sơ, lên lớp, khủng long lớn), `van_bat_dau` (nguồn nhiệm vụ, hệ số thời gian, hạt giống), rồi với mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, 3 lựa chọn kèm làn và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), `thao_tac` (`doi_lan` kèm giá trị trước mũi xe, `cham` nút Lao tới hoặc nút que tính, `nghe_lai`, `go_so`, `xoa`), `goi_y` (cấp, nội dung, cổng bị gạch), `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, làn, bé có chủ động chọn không), `phan_hoi_xem`, `cau_ket_thuc` (kết quả, giây, câu đã sửa). Cuối ván: `van_ket_thuc`, `thanh_thao_doi`, `thuong`, `cam_xuc`. Tạm dừng: `tam_dung`, `tiep_tuc`. Góc phụ huynh chỉ ghi `phu_huynh_*`.
-
-Mã lỗi dùng bảng 03a mục 3.3. Đáp án lệch 1 chục không có tên riêng được ghi là `dem-lech` (ví dụ trong spec 06 dùng `lech-chuc`, mã này chưa có trong bảng 03a).
+Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, các lựa chọn kèm vị trí và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), các `thao_tac` của thể loại đó (`doi_lan`, `lat`, `chon`, `bo_chon`, `go_so`, `xoa`, `tha`, `keo`, `dat`, `bo_ra`, `rot`, `keo_thuoc`, `cau`, `dem`, `boc`, `ve`, `noi`, `xoay`, `lat_trang`, `di_chuyen`, `doi_cot`, `xoay_nong`, `ban`, `vuot`, `cham`, `nghe_lai`), `goi_y`, `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, trường riêng của game như `to_tien`, `tong`), `phan_hoi_xem`, `cau_ket_thuc` (`dung_ngay`, `dung_sau_goi_y`, `dung_lan_2`, `sai`, `het_gio`, `bo_qua`). Quanh ván: `phien_bat_dau`, `van_bat_dau`, `van_ket_thuc` (đấu trường thêm `thang`, `mau_con_lai`), `thanh_thao_doi`, `thuong` (thêm `thang_dau_truong`), `cam_xuc`, `tam_dung`, `tiep_tuc`, `bai_hoc_xem`, `ho_so_doi`. Góc phụ huynh chỉ ghi `phu_huynh_*`. Đổi ý tính các thao tác `doi_lan`, `bo_chon`, `doi_cot`, `xoa`, `bo_ra` và lần `chon` thứ hai trở đi.
 
 ## Kiểm thử
 
 ```bash
-node --test tests/dao-khung-long.test.js
+node tests/run.js
 ```
 
-Kiểm tra lược đồ sự kiện, ULID, phiên nghỉ 10 phút, đóng phiên dở, gợi ý lớp, ngân hàng câu và mã lỗi, phát lại một ván theo kịch bản (YC-03), tính lại tóm tắt từ nhật ký khớp từng byte (YC-05), mức thành thạo, nhiệm vụ, luật mở vùng, xóa dữ liệu bé (YC-08), danh sách tệp của service worker. Giai đoạn 2 thêm: câu số, nhân chia, bài toán (đúng đáp án, đúng phạm vi, nhiễu mang mã lỗi), bảng lỗi 03a cho các mã mới, đọc số theo SGK, phát lại ván Lật Thẻ, Truyện Tranh (chấm riêng hai bước, đảo thứ tự không tính sai), Xếp Hình Số, sự kiện bài học, vùng 1, 2, 4, 7, 8 có ít nhất 2 thể loại, nhiệm vụ đổi thể loại.
+432 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`).
 
-Chơi thử: mở `dao-khung-long/` qua một máy chủ tĩnh (ví dụ `python -m http.server` ở gốc repo). Trong bảng điều khiển trình duyệt có `window.__DKL` (trạng thái app, `batDauMan(id)`), `DuaXe._trangThai()`, `LatThe._trangThai()`, `XepHinhSo._trangThai()`, `TruyenTranh._trangThai()` để gỡ lỗi.
+Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở gốc repo (máy chủ tĩnh có hàng đợi lớn), rồi `node scripts/dkl-cdp.js --kich-ban <tệp.js>` (Chrome headless, không cần Playwright; đọc phần đầu tệp). Trong bảng điều khiển có `window.__DKL` (`batDauMan(id)`, `moPhuHuynh`, `tinhLai`), `window.DaoTroChoi`, `CauNoi._trangThai()`, và `_trangThai()` của từng game.
 
 ## Việc của các giai đoạn sau
 
-- GĐ 3: Góc phụ huynh đầy đủ (tổng quan tuần, nhật ký chi tiết, xem lại một câu, bản đồ kỹ năng, xuất gói cho LLM); báo cáo tách bước chọn phép và bước tính của bài toán (`buoc1`).
-- GĐ 4: Xưởng Đo Lường, Chợ Khủng Long, Câu Cá Thống Kê, Rừng Hình Khối, Lật Lịch, hai đấu trường boss.
-- GĐ 5: đưa 6 game cũ vào đảo qua `nhat-ky.js` (Chém Trái Cây, Bắn Thiên Thạch, Mê Cung, Tháp, Xe Tăng, Cưỡi Hổ).
-- Chưa có: vườn khủng long, phụ kiện hiển thị trên khủng long, thẻ Đảo Khủng Long trên trang chủ 3hoa.com; bài học cho số liền trước, liền sau; đề truyện tranh cần giáo viên rà theo SGK bản đầy đủ.
+- GĐ 6: thử với 5 đến 10 bé trên iPad trong 4 tuần; chỉnh độ khó, tỉ lệ quả mọng, số câu đấu trường, cách viết báo cáo; thử gói xuất với một LLM.
+- Cần người rà: màu tờ tiền vẽ bằng SVG (gần màu tờ thật, không chép tờ thật) so với tranh SGK; đề truyện tranh và lịch mẫu theo SGK bản đầy đủ.
+- Chưa có: vườn khủng long và phụ kiện hiển thị trên khủng long; bài học cho số liền trước, liền sau, so sánh số, tia số, ghép hình; biểu đồ tranh mỗi hình là 10 (Bài 65, 74), xúc xắc (Bài 66), vẽ đoạn thẳng theo độ dài (Bài 27), chọn túi hàng đủ 13 kg (Bài 18).

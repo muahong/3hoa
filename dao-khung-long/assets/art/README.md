@@ -16,7 +16,7 @@ codex exec --skip-git-repo-check -s workspace-write -m gpt-5.6-sol -c model_reas
 | Mây (Dễ Thương) | `may-egg`, `may-hatchling`, `may-kid`, `may-teen`, `may-adult`, `may-legend`, `may-eating`, `may-cheer`, `may-think`, `car-may` |
 | 10 loài theo vùng | `sp-rong-bien`, `sp-khung-long-lua`, `sp-giap-long`, `sp-toc-long`, `sp-kiem-long`, `sp-duc-long`, `sp-tam-giac-long`, `sp-long-co-dai`, `sp-mo-vit-long`, `sp-gai-long` |
 | Cảnh nền | `bg-island-map`, `bg-race-track`, `bg-meadow`, `bg-garden`, `bg-desert-pyramid`, `bg-market`, `bg-workshop`, `bg-circus-night`, `bg-dusk-sky` |
-| Biểu tượng | `berry` (quả mọng) |
+| Biểu tượng | `berry` (quả mọng); giai đoạn 2: `ic-truyen-tranh`, `ic-lat-the`, `ic-xep-hinh` (biểu tượng thể loại), `the-lung` (mặt sau thẻ Lật Thẻ), lượt `gd2` trong `prompts/run9-gd2.txt` |
 
 Bản gốc nặng khoảng 48 MB, không được game dùng trực tiếp và không đưa lên git (xem `.gitignore`); chỉ có prompt, MANIFEST và README ở đây được commit. Game dùng bản WebP trong `../img/` (nhân vật cắt sát viền, tối đa 560 px; quả mọng 160 px; cảnh nền 1280 px; tổng khoảng 2,2 MB) và biểu tượng PWA trong `../../icons/`, xuất lại bằng lệnh sau ở gốc repo:
 

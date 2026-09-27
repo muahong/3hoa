@@ -288,3 +288,4 @@ Kiểm tra trước khi áp dụng: `noi_dung`, `ky_nang`, `game`, `che_do`, `ba
 | Ngày | Thay đổi | Bởi |
 |---|---|---|
 | 2026-09-27 | Bản đầu: hồ sơ có tuổi và lớp, nhật ký từng thao tác, ba lớp tóm tắt, gói xuất và hợp đồng đầu ra cho LLM | 3hoa |
+| 2026-09-27 | Giai đoạn 2 của Đảo Khủng Long: thêm mã game `xep-hinh-so` vào lược đồ v1 (thêm, không đổi phiên bản); `tra_loi` của bài hai bước có `buoc`; tóm tắt câu có `buoc1` (bước chọn phép) và `tra_loi_sai`; `chon` chỉ tính là đổi ý từ lần chọn thứ hai trong câu; sự kiện `bai_hoc_xem` có mã bài học, số bước, nghe lại, giây, bỏ qua, câu thử | 3hoa |

@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Đảo Khủng Long – Học Toán lớp 2 | 3hoa.com</title>
-<meta name="description" content="Đảo Khủng Long: game học Toán lớp 2 theo SGK Kết nối tri thức. Bé đua xe giải toán, nuôi khủng long của riêng mình; bố mẹ xem được con sai ở đâu.">
+<meta name="description" content="Đảo Khủng Long: game học Toán lớp 2 theo SGK Kết nối tri thức. Bé đua xe, lật thẻ, xếp hình số, đọc truyện tranh giải toán và nuôi khủng long của riêng mình; bố mẹ xem được con sai ở đâu.">
 <meta name="theme-color" content="#2ec4b6">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -77,7 +77,7 @@
     <button class="nut-quay" id="ct-quay" type="button" aria-label="Quay lại">‹</button>
     <div class="ct-tieu-de">
       <h1 id="ct-tieu-de">Chọn quả trứng của con</h1>
-      <p>Trứng nở khi con đua xong ván đầu tiên</p>
+      <p>Trứng nở khi con chơi xong ván đầu tiên</p>
     </div>
     <div class="ct-hai">
       <button class="ct-trung" type="button" data-pc="dung_manh" aria-pressed="false">
@@ -216,6 +216,145 @@
     </div>
   </section>
 
+  <!-- 11. Khung chơi chung: Truyện Tranh, Lật Thẻ Anh Em, Xếp Hình Số -->
+  <section id="man-choi" class="man man-choi hidden" aria-label="Màn chơi">
+    <div class="kc-nen" id="kc-nen"></div>
+    <div class="dx-trai kc-trai">
+      <div class="dx-o"><small>ĐIỂM</small><b id="kc-diem">0</b></div>
+      <div class="dx-o dx-o-nho"><b id="kc-cau-so">Câu 1/12</b><small id="kc-phu">Lật Thẻ Anh Em</small></div>
+    </div>
+    <div class="dx-cau kc-cau hidden" id="kc-cau" aria-live="polite">
+      <span id="kc-de"></span>
+      <button class="dx-loa" id="kc-nghe" type="button" aria-label="Nghe đề"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="dx-phai">
+      <button class="dx-nut" id="kc-goi-y" type="button" aria-label="Gợi ý"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V17h6v-1.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="#ffd166"/><rect x="9" y="18" width="6" height="2.2" rx="1" fill="#fff"/><rect x="10" y="20.8" width="4" height="1.6" rx=".8" fill="#fff"/></svg></button>
+      <button class="dx-nut" id="kc-tam-dung" type="button" aria-label="Tạm dừng"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/></svg></button>
+    </div>
+    <div class="kc-tien-do" aria-hidden="true"><i id="kc-tien-do"></i></div>
+
+    <div class="kc-san" id="kc-san">
+      <!-- Lật Thẻ Anh Em -->
+      <div class="kc-game lt-san hidden" id="lt-san">
+        <div class="lt-nhom">
+          <p class="lt-nhan">Thẻ phép tính · lật một thẻ</p>
+          <div class="lt-luoi lt-luoi-phep" id="lt-phep"></div>
+        </div>
+        <div class="lt-nhom">
+          <p class="lt-nhan">Thẻ kết quả · chạm thẻ anh em</p>
+          <div class="lt-luoi lt-luoi-kq" id="lt-kq"></div>
+        </div>
+        <p class="lt-khay" id="lt-khay">Đã ghép <b id="lt-so-cap">0</b> cặp anh em</p>
+        <div class="lt-ban-moi hidden" id="lt-ban-moi">Bàn mới!</div>
+      </div>
+
+      <!-- Xếp Hình Số -->
+      <div class="kc-game xh-san hidden" id="xh-san">
+        <div class="xh-bang" id="xh-bang">
+        <div class="xh-cot" id="xh-cot-tram">
+          <button class="xh-tha" type="button" data-tha="tram" aria-label="Thả một tấm trăm"><i class="kh kh-tram"></i><b>+ 1 trăm</b></button>
+          <div class="xh-chua" id="xh-chua-tram" data-hang="tram" aria-live="polite"></div>
+          <div class="xh-chan"><button class="xh-bot" type="button" data-bot="tram" aria-label="Bớt một tấm trăm">−</button><b id="xh-so-tram">0</b><span>trăm</span></div>
+        </div>
+        <div class="xh-cot" id="xh-cot-chuc">
+          <button class="xh-tha" type="button" data-tha="chuc" aria-label="Thả một thanh chục"><i class="kh kh-chuc"></i><b>+ 1 chục</b></button>
+          <div class="xh-chua" id="xh-chua-chuc" data-hang="chuc" aria-live="polite"></div>
+          <div class="xh-chan"><button class="xh-bot" type="button" data-bot="chuc" aria-label="Bớt một thanh chục">−</button><b id="xh-so-chuc">0</b><span>chục</span></div>
+        </div>
+        <div class="xh-cot" id="xh-cot-dv">
+          <button class="xh-tha" type="button" data-tha="dv" aria-label="Thả một khối đơn vị"><i class="kh kh-dv"></i><b>+ 1 đơn vị</b></button>
+          <div class="xh-chua" id="xh-chua-dv" data-hang="dv" aria-live="polite"></div>
+          <div class="xh-chan"><button class="xh-bot" type="button" data-bot="dv" aria-label="Bớt một khối đơn vị">−</button><b id="xh-so-dv">0</b><span>đơn vị</span></div>
+        </div>
+        </div>
+        <div class="xh-ben">
+          <div class="xh-thap-khung"><div class="xh-thap" id="xh-thap"></div><p>Tháp của con<br><b id="xh-tang">0 tầng</b></p></div>
+          <button class="nut nut-cam nut-to xh-xong" id="xh-xong" type="button" disabled>Xong</button>
+        </div>
+        <div class="xh-dung hidden" id="xh-dung" role="status"><b id="xh-dung-so"></b><span id="xh-dung-doc"></span></div>
+      </div>
+
+      <!-- Truyện Tranh -->
+      <div class="kc-game tt-san hidden" id="tt-san">
+        <div class="tt-khung-hang" id="tt-khung"></div>
+        <div class="tt-duoi">
+          <div class="tt-buoc" id="tt-buoc1">
+            <p class="tt-hoi"><span class="tt-so-buoc">1</span>Con chọn phép tính nào?</p>
+            <div class="tt-the-hang" id="tt-the-phep"></div>
+          </div>
+          <div class="tt-buoc tt-buoc2 hidden" id="tt-buoc2">
+            <div class="tt-trai">
+              <p class="tt-hoi"><span class="tt-so-buoc">2</span><span id="tt-hoi2">Con tính</span></p>
+              <div class="tt-o" id="tt-o" aria-live="polite"></div>
+            </div>
+            <div class="ban-phim ban-phim-ngang" id="tt-ban-phim">
+          <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+          <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+          <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+          <button type="button" data-k="xoa" class="phim-xoa" aria-label="Xóa">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="xong" class="phim-xong">Xong</button>
+            </div>
+          </div>
+          <div class="tt-giai hidden" id="tt-giai" role="status">
+            <div class="tt-giai-nd" id="tt-giai-nd"></div>
+            <button class="nut nut-cam" id="tt-giai-tiep" type="button">Tiếp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dx-goi-y-bong hidden" id="kc-goi-y-bong" role="status"><img id="kc-goi-y-hinh" alt=""><p id="kc-goi-y-chu"></p></div>
+    <div class="kc-bao hidden" id="kc-bao" role="status"></div>
+    <div class="kc-bay" id="kc-bay" aria-hidden="true"></div>
+
+    <div class="lop-phu hidden" id="kc-phan-hoi" role="dialog" aria-label="Lời giải">
+      <div class="the ph-the">
+        <img id="kc-ph-hinh" alt="" class="ph-hinh">
+        <div id="kc-ph-noi-dung"></div>
+        <div id="kc-ph-que" class="hidden"></div>
+        <p class="ph-note" id="kc-ph-note"></p>
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="kc-ph-que-nut" type="button">Xem bằng que tính</button>
+          <button class="nut nut-cam" id="kc-ph-tiep" type="button">Chơi tiếp</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="lop-phu hidden" id="kc-tam" role="dialog" aria-label="Tạm dừng">
+      <div class="the tam-the">
+        <h2>Tạm dừng</h2>
+        <button class="nut nut-cam nut-to" id="kc-tiep" type="button">Chơi tiếp</button>
+        <button class="nut nut-trang" id="kc-bai-hoc" type="button">Xem lại bài học</button>
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="kc-am" type="button">Âm thanh: Bật</button>
+          <button class="nut nut-trang" id="kc-giong" type="button">Giọng đọc: Bật</button>
+        </div>
+        <button class="nut nut-trang" id="kc-ve-dao" type="button">Về đảo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. Bài học 30 giây -->
+  <section id="man-bai-hoc" class="man man-dong-co hidden" aria-labelledby="bh-tieu-de">
+    <div class="bh-khung">
+      <header class="bh-dau">
+        <p class="bh-nhan">Bài học 30 giây</p>
+        <h1 id="bh-tieu-de">Phép nhân</h1>
+        <ol class="bh-cham" id="bh-cham" aria-hidden="true"></ol>
+      </header>
+      <div class="bh-san" id="bh-san"></div>
+      <p class="bh-chu" id="bh-chu" aria-live="polite"></p>
+      <div class="bh-thu hidden" id="bh-thu"></div>
+      <div class="bh-duoi">
+        <img id="bh-hinh" class="bh-hinh" alt="">
+        <div class="nut-hang">
+          <button class="nut nut-trang" id="bh-nghe" type="button">Nghe lại</button>
+          <button class="nut nut-trang" id="bh-bo-qua" type="button">Bỏ qua</button>
+          <button class="nut nut-cam" id="bh-tiep" type="button">Tiếp</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 7. Kết thúc màn -->
   <section id="man-ket-thuc" class="man man-dong-co hidden" aria-labelledby="kt-tieu-de">
     <div class="kt-the">
@@ -331,6 +470,11 @@
 <script src="js/am-thanh.js"></script>
 <script src="js/phan-hoi.js"></script>
 <script src="js/dua-xe.js"></script>
+<script src="js/khung-choi.js"></script>
+<script src="js/lat-the.js"></script>
+<script src="js/xep-hinh-so.js"></script>
+<script src="js/truyen-tranh.js"></script>
+<script src="js/bai-hoc.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

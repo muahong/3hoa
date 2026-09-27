@@ -1,0 +1,7 @@
+RUN = gd2
+
+Images (character-sprite rules: transparent background, one subject, centered, 1024 x 1024):
+1. ic-truyen-tranh.png : a chunky cute open picture storybook seen from the front at a slight angle, the two open pages show three simple colorful comic panels with tiny round shapes (a little green dinosaur silhouette, a few round orange fruits, a small yellow star), a purple ribbon bookmark. Absolutely no letters, no numbers, no speech text. Transparent background.
+2. ic-lat-the.png : two chunky rounded game cards, one lying face down showing a playful teal card back with a cute spotted dinosaur egg emblem, the other card flipping up mid-air with a sparkle, its face is plain white and blank. No letters, no numbers. Transparent background.
+3. ic-xep-hinh.png : a small tidy stack of glossy toy counting blocks in bright candy colors: one flat square slab made of a 10 by 10 grid of small cubes at the bottom, one long rod made of 10 small cubes lying on top, and three single small cubes beside it. Clean shapes, no letters, no numbers. Transparent background.
+4. the-lung.png : the back side of a single chunky rounded playing card standing upright, portrait orientation, filling most of the image, teal with a slightly darker teal border, a soft pattern of tiny white dots, and in the center a cute spotted cream and green dinosaur egg emblem inside a golden circle. Flat front view, no perspective, no letters, no numbers. Transparent background around the card.

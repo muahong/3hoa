@@ -42,7 +42,7 @@
   function lam2(x) { return Math.round(x * 100) / 100; }
   function theoId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
   function tenGame(g) {
-    return { 'dua-xe': 'Đua Xe', 'chem-trai-cay': 'Chém Trái Cây', 'ban-thien-thach': 'Bắn Thiên Thạch', 'truyen-tranh': 'Truyện Tranh', 'lat-the': 'Lật Thẻ' }[g] || g;
+    return { 'dua-xe': 'Đua Xe', 'chem-trai-cay': 'Chém Trái Cây', 'ban-thien-thach': 'Bắn Thiên Thạch', 'truyen-tranh': 'Truyện Tranh', 'lat-the': 'Lật Thẻ Anh Em', 'xep-hinh-so': 'Xếp Hình Số' }[g] || g;
   }
 
   /* ---------------- 1. Tóm tắt câu ---------------- */
@@ -56,16 +56,21 @@
     const d = hien.du_lieu || {};
     let goiYCap = 0;
     let doiY = 0;
+    let soChon = 0;
     const loi = [];
     evs.forEach(function (e) {
       if (e.loai === 'goi_y' && e.du_lieu && e.du_lieu.cap > goiYCap) goiYCap = e.du_lieu.cap;
-      if (e.loai === 'thao_tac' && e.du_lieu && (e.du_lieu.kieu === 'doi_lan' || e.du_lieu.kieu === 'chon' || e.du_lieu.kieu === 'bo_chon' || e.du_lieu.kieu === 'doi_cot' || e.du_lieu.kieu === 'xoa')) doiY++;
+      if (e.loai !== 'thao_tac' || !e.du_lieu) return;
+      const k = e.du_lieu.kieu;
+      if (k === 'chon') { soChon++; if (soChon > 1) doiY++; }
+      else if (k === 'doi_lan' || k === 'bo_chon' || k === 'doi_cot' || k === 'xoa') doiY++;
     });
     traLoi.forEach(function (e) {
       ((e.du_lieu && e.du_lieu.loi) || []).forEach(function (m) { if (loi.indexOf(m) < 0) loi.push(m); });
     });
     const cuoi = traLoi[traLoi.length - 1];
-    return {
+    const b1 = traLoi.find(function (e) { return e.du_lieu && e.du_lieu.buoc === 1; });
+    const t = {
       cau: hien.cau,
       van: hien.van || null,
       be: hien.be,
@@ -90,8 +95,12 @@
       goi_y_cap: goiYCap,
       loi: loi,
       sua_duoc_cau: ket && ket.du_lieu && ket.du_lieu.sua_duoc_cau ? ket.du_lieu.sua_duoc_cau : null,
-      chu_dong: cuoi && cuoi.du_lieu && cuoi.du_lieu.chu_dong === false ? false : true
+      chu_dong: cuoi && cuoi.du_lieu && cuoi.du_lieu.chu_dong === false ? false : true,
+      tra_loi_sai: traLoi.filter(function (e) { return e.du_lieu && e.du_lieu.dung === false; }).map(function (e) { return e.du_lieu.gia_tri; })
     };
+    // Bài hai bước: bước chọn phép tính chấm riêng (bé biết tính nhưng chưa hiểu đề, hay ngược lại)
+    if (b1) t.buoc1 = { gia_tri: b1.du_lieu.gia_tri, dung: !!b1.du_lieu.dung };
+    return t;
   }
 
   /** Tóm tắt mọi câu trong một danh sách sự kiện (ví dụ một ván). */
@@ -227,7 +236,7 @@
       if (c.ket_qua === 'dung_ngay' && !c.loi.length) return;
       c.loi.forEach(function (m) {
         demLoi[m] = (demLoi[m] || 0) + 1;
-        const sai = c.cac_tra_loi.filter(function (v) { return v !== c.dap_an; });
+        const sai = c.tra_loi_sai || c.cac_tra_loi.filter(function (v) { return v !== c.dap_an; });
         const vd = String(c.ma_cau || '').split('|').pop() + '→' + (sai.length ? sai[0] : '?');
         viDu[m] = viDu[m] || [];
         if (viDu[m].indexOf(vd) < 0 && viDu[m].length < 3) viDu[m].push(vd);

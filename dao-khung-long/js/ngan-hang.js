@@ -80,7 +80,7 @@
     'B2.8': 'Tính độ dài đường gấp khúc',
     'B2.9': 'Ki-lô-gam và cân đồ vật',
     'B2.10': 'Lít và đo dung tích',
-    'B2.11': 'Xem đồng hồ: giờ đúng, giờ rưỡi, 15 phút, giờ kém',
+    'B2.11': 'Xem đồng hồ: giờ đúng, giờ 15 phút, giờ 30 phút',
     'B2.12': 'Ngày và giờ, các buổi trong ngày, một ngày 24 giờ',
     'B2.13': 'Ngày, tháng, xem lịch',
     'B2.14': 'Tiền Việt Nam, đổi tiền, mua bán đơn giản',

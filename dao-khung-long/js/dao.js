@@ -111,7 +111,7 @@
     { id: 'v6-m3', so: 3, ten: 'Ngày, tháng: xem lịch', bai: 'Bài 30', bai_dau: 30, game: 'lat-lich', che_do: 'lich', ky_nang_chinh: 'xem-lich', cau: [{ ky_nang: 'xem-lich' }], so_cau: 8 },
     { id: 'v6-m4', so: 4, ten: 'Mê cung đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 8 },
     { id: 'v6-m5', so: 5, ten: 'Tháp đồng hồ', bai: 'Bài 29', bai_dau: 29, game: 'thap-xep-hinh', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 10 },
-    { id: 'v6-m6', so: 6, ten: 'Xe tăng thời gian', bai: 'Bài 29, 31', bai_dau: 31, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', ty_le: 1, dang: 'chon_dap_an' }, { ky_nang: 'ngay-gio', ty_le: 1, dang: 'chon_dap_an' }], so_cau: 10 },
+    { id: 'v6-m6', so: 6, ten: 'Xe tăng thời gian', bai: 'Bài 29, 31', bai_dau: 31, game: 'xe-tang', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', ty_le: 1, dang: 'chon_dap_an' }, { ky_nang: 'ngay-gio', ty_le: 1, dang: 'chon_dap_an', cach: ['buoi', 'doi_24', 'doi_12', 'dong_ho_buoi'] }], so_cau: 10 },
     { id: 'v6-m7', so: 7, ten: 'Cưỡi hổ qua giờ', bai: 'Bài 31', bai_dau: 31, game: 'cuoi-ho', luyen_tap: true, cau: [{ ky_nang: 'xem-gio', dang: 'chon_dap_an' }], so_cau: 12 },
     { id: 'v6-cup', so: 8, ten: 'Cúp Phố Đồng Hồ · Luyện tập chung', bai: 'Bài 32', bai_dau: 32, game: 'lat-lich', che_do: 'tron', cup: true, so_cau: 10, cup_can: ['v6-m1', 'v6-m2', 'v6-m3'],
       cau: [{ ky_nang: 'ngay-gio', ty_le: 0.8 }, { ky_nang: 'xem-gio', ty_le: 1 }, { ky_nang: 'xem-lich', ty_le: 1 }] }

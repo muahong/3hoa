@@ -11,11 +11,11 @@
   'use strict';
 
   /** Thao tác tính là đổi ý; "chon" chỉ tính từ lần chọn thứ hai trong câu (lần đầu là chính câu trả lời). */
-  const DOI_Y = { doi_lan: 1, bo_chon: 1, doi_cot: 1, xoa: 1 };
+  const DOI_Y = { doi_lan: 1, bo_chon: 1, doi_cot: 1, xoa: 1, bo_ra: 1 };
   const SAU_CAU = 2; // câu sai quay lại sau 2 câu
   const TOI_DA_ON_LAI = 2; // một câu quay lại tối đa 2 lần trong ván
   /** Số lần thử của một câu theo dạng (bài hai bước: mỗi bước tính riêng). */
-  const LAN_THU = { chon_dap_an: 1, nhap_so: 2, ghep_doi: 2, keo_tha: 2, hai_buoc: 2 };
+  const LAN_THU = { chon_dap_an: 1, nhap_so: 2, ghep_doi: 2, keo_tha: 2, hai_buoc: 2, sap_xep: 2, thao_tac_hinh: 2, doc_va_chon: 1 };
 
   /**
    * o: { nk, game, vung, man: { id, cau, so_cau, tram_dung, dang }, nguon, nhiemVu, hatGiong,
@@ -283,6 +283,16 @@
     return this.nk.phanHoiXem(Object.assign({ ma_loi_giai: ma, giay_xem: Math.round(giayXem * 10) / 10, nut: nut || 'choi_tiep' }, them || {}));
   };
 
+  /**
+   * Hết giờ mà bé chưa chốt (game hành động: thiên thạch chạm đất, vòng lửa trôi qua).
+   * Ghi cau_ket_thuc 'het_gio'; câu quay lại sau 2 câu như câu sai. Trả về số quả mọng (luôn 0).
+   */
+  VanChoi.prototype.hetGio = function () {
+    const q = this.q;
+    if (!q || q.xong) return null;
+    return this._ketThucCau('het_gio');
+  };
+
   /** Đóng câu sai sau màn phản hồi. */
   VanChoi.prototype.ketThucCauSai = function () {
     const q = this.q;
@@ -298,7 +308,7 @@
     const suaDuoc = dung && q.on_lai_cua;
     if (suaDuoc) du.sua_duoc_cau = q.on_lai_cua;
     let seOnLai = false;
-    if (kq === 'sai' && q.lanOnLai < TOI_DA_ON_LAI) {
+    if ((kq === 'sai' || kq === 'het_gio') && q.lanOnLai < TOI_DA_ON_LAI) {
       seOnLai = true;
       du.se_on_lai_sau_cau = SAU_CAU;
     }
@@ -318,7 +328,7 @@
     if (kq === 'dung_ngay') this.dem.dungNgay++;
     else if (kq === 'dung_sau_goi_y') this.dem.nhoGoiY++;
     else if (kq === 'dung_lan_2') this.dem.lan2++;
-    else if (kq === 'sai') this.dem.sai++;
+    else if (kq === 'sai' || kq === 'het_gio') this.dem.sai++;
     if (suaDuoc) this.dem.suaDuoc++;
     this.chuoiDung = kq === 'dung_ngay' ? this.chuoiDung + 1 : 0;
 

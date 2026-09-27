@@ -36,6 +36,7 @@ rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính có th
 | `js/audio.js` | Hiệu ứng (lửa, nhảy, hổ gầm...), nhạc nền rạp xiếc tổng hợp bằng Web Audio, giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) |
 | `js/game.js` | Bộ máy trò chơi: hổ và bé (vẽ bằng canvas), vòng lửa, cú nhảy, điểm, tim, combo, bài học, hỏi đáp, mở khóa |
+| `js/dao.js`, `dao.css` | Chế độ đảo: chơi trong Đảo Khủng Long (xem mục dưới); chơi riêng thì không có tác dụng |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi (hành trình chinh phục đồng hồ)
@@ -58,6 +59,18 @@ Màn **📖 Ghi nhớ** ở menu chính tóm tắt kiến thức của tất c�
 
 Thiết lập thiết bị (dùng chung cho mọi bé): 🔊 Âm thanh, 🎵 Nhạc nền, 🗣️ Giọng đọc và **✨ Hiệu ứng: Nhiều/Ít** (Ít = bớt tia lửa, không rung/chớp màn hình, tắt hoạt ảnh; tự bật khi hệ thống chọn "giảm chuyển động"). Trang có Content-Security-Policy (không mã nội tuyến), dữ liệu đọc từ localStorage luôn được kiểm tra kiểu/khoảng, và một lỗi bất ngờ trong ván chơi sẽ đưa bé về menu kèm thông báo thay vì treo màn hình.
 
+## Chế độ đảo (Đảo Khủng Long)
+
+Đảo Khủng Long mở game trong iframe `../cuoi-ho/?dao=1&man=<mã màn>`; `js/dao.js` chỉ bật khi có `?dao=1`, trang nằm trong iframe và trang cha có `DaoCauNoi` (hợp đồng: `dao-khung-long/js/cau-noi.js`). Khi đó:
+
+- Thẻ "Bắt đầu" (tên màn, hình bé cưỡi hổ) thay cho menu; chạm "Bắt đầu" cũng mở khóa âm thanh trên iPad. Không có hành trình, bài học, hỏi đáp, bảng kết quả, tim, đồng hồ đếm giờ; game không ghi `localStorage` (đảo ghi nhật ký và kết quả).
+- Mỗi cụm 3 vòng lửa (trên, giữa, dưới) là một câu của ngân hàng câu của đảo. Vòng hiện "?" khi hổ đang chạy tới; hổ dừng thì mới lấy câu. Thẻ câu hỏi hiện đề và hình (tia số, đồng hồ); vòng ghi số (viết to), chữ hai dòng, mặt đồng hồ hoặc hình nhỏ.
+- Chạm vòng: đảo chấm. Đúng: nổ sao, điểm, combo, quả mọng. Sai hẳn: vòng đúng sáng xanh rồi màn "Gần đúng rồi" của đảo; câu quay lại sau 2 câu. Không hết giờ, không mất tim.
+- 💡 ba cấp gợi ý của đảo (cấp 3 tắt một vòng sai). ⏸ chỉ còn "Chơi tiếp" và "Về đảo". Âm thanh và giọng đọc theo thiết lập của đảo.
+- Hết câu: hổ về đích, đảo hiện màn kết thúc của nó.
+
+Mọi chỗ `js/game.js` rẽ nhánh cho đảo là một dòng `if (DAO ...)` có chú thích "Chế độ đảo". Kiểm thử: `node --test tests/cuoi-ho-dao.test.js`.
+
 ## Tùy chỉnh nhanh
 
 - **Thêm hoặc sửa màn, bài học, câu hỏi đáp**: chỉnh mảng `LEVELS` trong `js/lessons.js` (số cụm vòng `gates`, giây chọn mỗi vòng `timer`, tốc độ `speed`, các trang `lesson`, câu hỏi `quiz`, dòng `notes`).
@@ -72,5 +85,6 @@ Chạy từ thư mục gốc của kho:
 
 ```bash
 node --test tests/cuoi-ho.test.js
+node --test tests/cuoi-ho-dao.test.js
 NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/cuoi-ho.e2e.js
 ```

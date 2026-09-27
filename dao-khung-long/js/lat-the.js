@@ -284,4 +284,5 @@
   }
 
   window.LatThe = { batDau: batDau, _trangThai: function () { return s; } };
+  (window.DaoTroChoi = window.DaoTroChoi || {})['lat-the'] = { ten: 'Lật Thẻ Anh Em', khung: true, san: 'lt-san', batDau: batDau, _trangThai: window.LatThe._trangThai };
 })();

@@ -95,6 +95,8 @@
   function vat(q, n, kieu) {
     const m = q.mau;
     const mot = m.anh ? '<img src="' + anh(m.anh) + '" alt="">' : '<i>' + esc(m.vat) + '</i>';
+    // Số đo (kg, l, cm, đồng): một hình kèm số đo, không vẽ từng "ki-lô-gam"
+    if (m.do_luong) return '<span class="tt-vat ' + (kieu || '') + '"><span class="tt-vat-so">' + mot + '<b>' + esc((m.dv === 'đồng' && n >= 1000 ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : n) + ' ' + m.dv) + '</b></span></span>';
     if (n > 20) return '<span class="tt-vat ' + (kieu || '') + '"><span class="tt-vat-so">' + mot + '<b>× ' + n + '</b></span></span>';
     let h = '';
     for (let i = 0; i < n; i++) h += mot;
@@ -103,6 +105,11 @@
   function nhom(q, moi, soNhom) {
     const m = q.mau;
     const mot = m.anh ? '<img src="' + anh(m.anh) + '" alt="">' : '<i>' + esc(m.vat) + '</i>';
+    if (m.do_luong) {
+      let g = '<span class="tt-vat tt-cac-nhom">';
+      for (let i = 0; i < Math.min(soNhom, 10); i++) g += '<span class="tt-dia nho">' + mot + '<b>' + esc(moi + ' ' + m.dv) + '</b></span>';
+      return g + '</span>';
+    }
     if (moi * soNhom > 25) return '<span class="tt-vat"><span class="tt-vat-so"><span class="tt-dia nho">' + mot + '<b>' + moi + '</b></span><b>× ' + soNhom + '</b></span></span>';
     let h = '<span class="tt-vat tt-cac-nhom">';
     for (let i = 0; i < soNhom; i++) {
@@ -329,4 +336,5 @@
   }
 
   window.TruyenTranh = { batDau: batDau, _trangThai: function () { return s; } };
+  (window.DaoTroChoi = window.DaoTroChoi || {})['truyen-tranh'] = { ten: 'Truyện Tranh', khung: true, san: 'tt-san', batDau: batDau, _trangThai: window.TruyenTranh._trangThai };
 })();

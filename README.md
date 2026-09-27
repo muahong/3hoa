@@ -13,7 +13,7 @@ không phụ thuộc npm khi chạy, không CDN (chỉ tải font "Baloo 2" từ
 - `/thap-dong-ho/` – **Tháp Đồng Hồ**: game xếp đồng hồ kiểu Tetris học xem giờ cho bé lớp 2–3, có bài học và hỏi đáp sau mỗi màn (xem `thap-dong-ho/README.md`)
 - `/xe-tang-thoi-gian/` – **Xe Tăng Thời Gian**: game xe tăng bắn robot học xem đồng hồ cho bé lớp 2–3, mỗi màn có bài học và phần hỏi đáp để mở khóa màn sau (xem `xe-tang-thoi-gian/README.md`)
 - `/cuoi-ho/` – **Cưỡi Hổ Vượt Lửa**: game cưỡi hổ nhảy qua vòng lửa học xem đồng hồ, tính thời gian cho bé lớp 2–3; mỗi màn có bài học, vượt vòng lửa và hỏi đáp để mở khóa màn tiếp (xem `cuoi-ho/README.md`)
-- `/dao-khung-long/` – **Đảo Khủng Long** (đang làm, giai đoạn 1): game Toán lớp 2 có hồ sơ bé (tên, tuổi, lớp), trứng khủng long lớn dần theo việc học, bản đồ 10 vùng, nhiệm vụ hôm nay và game Đua Xe; ghi nhật ký từng thao tác theo lược đồ sự kiện v1 (xem `dao-khung-long/README.md`)
+- `/dao-khung-long/` – **Đảo Khủng Long**: game Toán lớp 2 theo SGK Kết nối tri thức. Bé có hồ sơ riêng (tên, tuổi, lớp), nuôi khủng long bằng câu trả lời đúng, đi qua 10 vùng đất và 2 đấu trường với 12 kiểu chơi (có cả 6 game trên chạy trong đảo); ghi nhật ký từng thao tác, Góc phụ huynh xem tới từng câu sai và xuất dữ liệu cho trợ lý AI (xem `dao-khung-long/README.md`)
 
 ## Cấu trúc thư mục
 

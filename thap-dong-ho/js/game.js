@@ -16,7 +16,12 @@
   const $ = function (id) { return document.getElementById(id); };
   const clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
 
-  const COLS = 4, ROWS = 6;
+  /* [Đảo] Chế độ Đảo Khủng Long (js/dao.js): chỉ bật khi trang chạy trong iframe của đảo (?dao=1). Khi đó câu hỏi lấy từ
+     ngân hàng của đảo, số cột bằng số lựa chọn của câu, bảng thấp một hàng, không hết giờ, không thua, không ghi localStorage.
+     Ngoài đảo Dao = null và mọi thứ chạy y như cũ. Các chỗ nối với dao.js đều ghi chú [Đảo]. */
+  const Dao = window.ThapDao && window.ThapDao.bat ? window.ThapDao : null;
+  let COLS = 4;                                  // [Đảo] số cột đổi theo số lựa chọn của câu (2–4)
+  const ROWS = Dao ? Dao.SO_HANG : 6;
   const PRAISE = ['Chính xác!', 'Tuyệt vời!', 'Giỏi quá!', 'Đúng rồi!', 'Xuất sắc!', 'Siêu đỉnh!', 'Hay lắm!', 'Đúng giờ!'];
   const HINT_POINTS = 50;        // điểm khi trò chơi TỰ bật gợi ý cột (bé đang sai liên tiếp, cần được đỡ)
   const ASK_HINT_POINTS = 20;    // điểm khi bé chủ động bấm 💡 (xin gợi ý thì "đắt" hơn được giúp)
@@ -119,6 +124,7 @@
       return out;
     },
     save() {
+      if (Dao) return;                           // [Đảo] đảo là nơi ghi duy nhất: không đụng tới tiến trình của game
       try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* bỏ qua */ }
     },
     activeId() { return Players ? Players.active().id : 'p1'; },
@@ -203,6 +209,7 @@
     nextPieceAt: 0, lastTarget: -1, idSeq: 0, clearAt: -1, failAt: -1, endReason: '', dangerT: 0,
     hud: { score: -1, correct: -1, combo: null, speed: -1, review: null, pause: null },
     cdTimer: 0, wakeLock: null, softDrop: false, drag: null, decoT: 0,
+    cach: '',               // [Đảo] thao tác vừa rồi đến từ đâu: cham | keo | nut | phim (ghi vào nhật ký của đảo)
     demo: { i: 0, next: 0, svg: null, list: [] }, lessonFromPause: false,
     quiz: null, resultSaved: false, greeted: false, reportFrom: 'levels', celebrateBadge: false,
     perf: { n: 0, update: 0, render: 0, frame: 0, avgUpdate: 0, avgRender: 0, avgFrame: 0 }
@@ -312,7 +319,8 @@
     // đẩy hàng đĩa đáp án xuống dưới mép màn hình.
     if (H >= 460) hudH += 70;
     const pad = 10;
-    const landscape = W > H * 1.05;
+    // [Đảo] iPad dựng đứng (768 px) cũng xếp bảng bên trái, thẻ câu hỏi bên phải: ô to gần gấp đôi so với xếp chồng
+    const landscape = W > H * 1.05 || (!!Dao && W >= 640);
     G.landscape = landscape;
     // Điện thoại dựng đứng: cụm ◀ ⬇ ▶ chiếm gần 80 px chiều cao mà chạm thẳng vào cột đã làm được cả hai việc.
     // Thu gọn còn mỗi phím 💡 đặt bên lề trái → ô bảng to hơn ~25 %, chữ trên đĩa đáp án đọc được.
@@ -328,23 +336,35 @@
       Big.cardW = r * cardK;
       Big.cardH = r * cardK;
     };
-    const plateK = function (cell) { return cell < 70 ? 1.05 : 0.9; };
+    // [Đảo] đĩa đáp án cao hơn ô: lựa chọn có thể là hình nhỏ hoặc mặt đồng hồ
+    const plateK = function (cell) { return Dao ? Dao.HE_SO_DIA : cell < 70 ? 1.05 : 0.9; };
+    const plateRows = Dao ? Dao.HE_SO_DIA : 1.05;
+    /** [Đảo] Thẻ câu hỏi (chữ đề + hình) thay cho đồng hồ lớn: rộng w, cao tối đa hMax. */
+    const daoCard = function (w, hMax) {
+      Big.titleH = 0;
+      Big.cardW = Math.round(w);
+      Big.cardH = Math.round(clamp(hMax, 140, w * 1.15));
+      Big.r = Math.min(Big.cardW, Big.cardH) * 0.24;
+    };
     // Cụm nút phải đủ rộng để phím hẹp nhất (💡 = 0,9 phần trên tổng 1 + 1,4 + 1 + 0,9 = 4,3 phần)
     // vẫn ≥ 44 px như yêu cầu vùng chạm. #controls: viền 2 px mỗi bên, đệm và khe 8 px (6 px dưới 700 px).
     const kgap = W <= 700 ? 6 : 8;
     const cwMin = Math.min(Math.ceil(44 / 0.9 * 4.3 + kgap * 5 + 4), W - 8);
     if (landscape) {
-      const panelW = clamp(W * 0.34, 230, 420);
       const availH = H - hudH - pad - sab - 8;
+      let panelW = clamp(W * 0.34, 230, 420);
+      // [Đảo] bảng bị giới hạn bởi chiều cao: phần bề rộng thừa dành cho thẻ câu hỏi (và chỗ khủng long đứng)
+      if (Dao) panelW = clamp(W - COLS * (availH / (ROWS + 1.0 + plateRows)) - 150, Math.min(300, W * 0.38), 460);
       const availW = W - panelW - pad * 3;
-      const cell = clamp(Math.min(availH / (ROWS + 1.0 + 1.05), availW / COLS), 34, 150);
+      const cell = clamp(Math.min(availH / (ROWS + 1.0 + plateRows), availW / COLS), 34, 150);
       B.cell = cell; B.w = cell * COLS; B.h = cell * ROWS; B.plateH = cell * plateK(cell);
       B.x = Math.round((W - panelW - B.w) / 2);
       B.y = Math.round(hudH + pad + cell);
       // Hàng đĩa đáp án luôn phải nằm trên mép dưới (điện thoại nằm ngang: ô đã chạm mức nhỏ nhất)
       const bottom = H - sab - 4;
       if (B.y + B.h + B.plateH > bottom) B.y = Math.round(Math.max(hudH + 4, bottom - B.h - B.plateH));
-      bigGeom(clamp(Math.min(panelW / (cardK + 0.15), availH * 0.24), 48, 160));
+      if (Dao) daoCard(panelW - 16, availH - 104);   // chừa chỗ cho cụm nút ◀ ⬇ ▶ 💡 bên dưới thẻ
+      else bigGeom(clamp(Math.min(panelW / (cardK + 0.15), availH * 0.24), 48, 160));
       Big.x = Math.round(W - panelW / 2 - pad);
       Big.y = Math.round(hudH + pad + Big.titleH + Big.cardH / 2);
       const cw = Math.max(Math.min(panelW - 24, 320), cwMin);
@@ -352,9 +372,10 @@
     } else {
       const ctlH = narrow ? 0 : 78;                  // 💡 gọn nằm bên lề, không lấy chiều cao của bảng
       const availH = H - hudH - ctlH - pad * 3 - sab;
-      bigGeom(clamp(availH * (narrow ? 0.1 : 0.12), 40, 110));
+      if (Dao) daoCard(Math.min(W - 20, 520), availH * 0.3);   // [Đảo] thẻ câu hỏi nằm trên bảng
+      else bigGeom(clamp(availH * (narrow ? 0.1 : 0.12), 40, 110));
       const bigArea = Big.titleH + Big.cardH + 12;
-      const cell = clamp(Math.min((availH - bigArea) / (ROWS + 1.0 + 1.05), (W - pad * 2) / COLS), 30, 150);
+      const cell = clamp(Math.min((availH - bigArea) / (ROWS + 1.0 + plateRows), (W - pad * 2) / COLS), 30, 150);
       B.cell = cell; B.w = cell * COLS; B.h = cell * ROWS; B.plateH = cell * plateK(cell);
       Big.x = Math.round(W / 2);
       Big.y = Math.round(hudH + pad + Big.titleH + Big.cardH / 2);
@@ -374,8 +395,14 @@
     B.top = B.y - B.cell;
     // 🦉 Bạn cú ngồi trong khoảng trống bên phải tháp (không bao giờ đè lên bảng, thẻ đồng hồ hay cụm nút)
     const owlSpace = (landscape ? Big.x - Big.cardW / 2 : W) - (B.x + B.w);
-    const os = Math.min(owlSpace - 14, B.cell * 1.15, 120);
+    const os = Dao ? Math.min(owlSpace - 14, B.cell * 1.7, 170) : Math.min(owlSpace - 14, B.cell * 1.15, 120);   // [Đảo] khủng long của bé thay bạn cú
     G.owl = os >= 34 ? { s: os, x: B.x + B.w + (owlSpace - os) / 2, y: B.y + B.h + B.plateH - os * 1.15 } : null;
+    if (Dao && landscape && (!G.owl || os < 90)) {
+      // [Đảo] iPad dựng đứng: không còn khe cạnh tháp, khủng long đứng dưới cụm nút ở cột bên phải
+      const duoi = B.y + B.h + B.plateH, tren = Big.y + Big.cardH / 2 + 110;
+      const s2 = Math.min((duoi - tren) / 1.15, Big.cardW * 0.62, 200);
+      if (s2 >= 60) G.owl = { s: s2, x: Big.x - s2 / 2, y: duoi - s2 * 1.15 };
+    }
     if (G.piece) G.piece.x = B.x + G.piece.col * B.cell;
     // Kích thước ô đổi → ảnh gạch, cỡ chữ cột và lớp tĩnh (khung bảng, thẻ đồng hồ lớn) phải dựng lại
     G.sprites = {}; G.spriteN = 0;
@@ -681,6 +708,7 @@
       roundRect(c, x + s * 0.06, y + s * 0.06, s * 0.88, s * 0.88, rad * 0.8);
       c.stroke();
     }
+    if (t.dao) { Dao.veKhoi(c, x, y, s, t, rubble); return; }   // [Đảo] khối mang câu hỏi: hình của đề, chữ ngắn hoặc dấu hỏi
     drawClockFace(c, x + s / 2, y + s / 2, s * 0.38, t, { gray: rubble, mini: rubble || s < 70 });
     if (t.period) {
       c.font = Math.round(s * 0.2) + 'px ' + FONT;
@@ -693,7 +721,7 @@
   /** Ảnh viên gạch lưu sẵn theo (loại, mốc giờ, cỡ) – mỗi viên đá không còn vẽ lại 60 vạch + gradient mỗi khung hình. */
   function tileSprite(t, kind, s) {
     const rubble = kind === 'rubble';
-    const key = kind + '|' + K.key(t, '24') + '|' + (t.period || '') + '|' + Math.round(s);
+    const key = kind + '|' + (t.dao ? 'dao:' + t.id + ':' + (t.san ? 1 : 0) : K.key(t, '24') + '|' + (t.period || '')) + '|' + Math.round(s);
     let spr = G.sprites[key];
     if (spr) return spr;
     if (G.spriteN >= MAX_SPRITES) { G.sprites = {}; G.spriteN = 0; }
@@ -843,10 +871,10 @@
     if (!o) return;
     const s = o.s;
     const state = owlState();
-    const spr = owlSprite(state, s);
     const t = G.anim;
     const bob = Motion.lite ? 0 : (state === 'cheer' ? Math.abs(Math.sin(t * 9)) * s * 0.14 : Math.sin(t * 1.6) * s * 0.03);
-    c.drawImage(spr, o.x, o.y - bob, s, s * 1.15);
+    if (Dao && Dao.veBan(c, o, state, bob)) return;   // [Đảo] khủng long của bé (ảnh của đảo) đứng cạnh tháp
+    c.drawImage(owlSprite(state, s), o.x, o.y - bob, s, s * 1.15);
   }
 
   function makeCracks() {
@@ -1041,6 +1069,7 @@
   /* ================= ĐỒNG HỒ RƠI ================= */
   /** Hệ số tăng tốc theo bậc (mỗi 5 câu đúng nhanh thêm 12 %, tối đa ×1,45; Siêu Tháp ×1,3). */
   function speedMul() {
+    if (Dao) return 1;                           // [Đảo] không tăng tốc: khối chờ bé
     const lvl = G.level;
     return Math.min(lvl && lvl.n === 8 ? 1.3 : 1.45, 1 + 0.12 * Math.floor(G.correct / 5));
   }
@@ -1052,6 +1081,7 @@
 
   function spawnPiece() {
     if (!G.level) return;
+    if (Dao) { Dao.khoiMoi(); return; }          // [Đảo] khối mới = câu kế tiếp của đảo (cauTiep), cột = các lựa chọn
     let target = -1, review = false;
     // Hỏi lại ngay đồng hồ vừa đọc nhầm (nhãn vẫn còn trên cột vì chỉ thả đúng mới đổi nhãn)
     if (G.retryT) {
@@ -1096,11 +1126,14 @@
     if (G.state !== 'playing' || !p || p.mode !== 'fall') return false;
     col = clamp(Math.round(col), 0, COLS - 1);
     if (col === p.col) return false;
+    const from = p.col;
     p.col = col;
     p.land = ROWS - 1 - stackH(col);
-    if (p.row > p.land) p.row = p.land;
+    const top = Dao ? p.land - Dao.CAO_LO_LUNG : p.land;   // [Đảo] khối chỉ lơ lửng trên chỗ đáp, bé thả mới rơi xuống
+    if (p.row > top) p.row = top;
     p.touched = true;
     Sfx.play('move');
+    if (Dao) Dao.doiCot(from, col, G.cach);      // [Đảo] ghi doi_cot (gom các bước đi liền nhau)
     return true;
   }
   /** Bước sang cột kề (◀ ▶, phím mũi tên): cũng luôn tới được – nhảy lên nóc tháp cột đó nếu cột cao hơn vị trí hiện tại. */
@@ -1119,6 +1152,7 @@
     p.mode = 'hard';
     p.touched = true;
     Sfx.play('drop');
+    if (Dao) Dao.tha(G.cach);                    // [Đảo] ghi tha
     return true;
   }
 
@@ -1126,6 +1160,7 @@
   function useHint() {
     const p = G.piece;
     if (G.state !== 'playing' || !p || p.mode !== 'fall') return false;
+    if (Dao) return Dao.goiY();                  // [Đảo] ba cấp gợi ý của ngân hàng (cấp 3 bỏ bớt một cột sai)
     if (p.hint) { showHint('Cột đang nhấp nháy ✨ là cột đúng đó con!', 'info', 1600); return true; }
     p.hint = true;
     p.asked = true;
@@ -1155,6 +1190,7 @@
   }
 
   function landPiece(p) {
+    if (Dao) { Dao.khoiCham(p); return; }        // [Đảo] khối chạm đáy cột nào thì trả lời bằng giá trị của cột đó
     const timeout = !p.touched;                 // bé chưa chạm gì: hết giờ, không tính là đọc đúng
     const ok = !timeout && p.col === p.target;
     G.lastPiece = { t: p.t, ok: ok };
@@ -1282,6 +1318,8 @@
     if (p.mode === 'hard') v = HARD_SPEED;
     else if (G.softDrop) v = Math.max(v, SOFT_SPEED);
     p.row += v * dt;
+    // [Đảo] Không hết giờ: khối dừng lơ lửng một hàng trên chỗ đáp, chờ bé thả
+    if (Dao && p.mode === 'fall') p.row = Math.min(p.row, land - Dao.CAO_LO_LUNG);
     const tx = B.x + p.col * B.cell;
     p.x += (tx - p.x) * Math.min(1, dt * 16);
     if (p.row >= land) {
@@ -1311,11 +1349,12 @@
   }
 
   function updateEnding() {
-    if (G.state === 'clear' && G.anim >= G.clearAt) showSummary();
+    if (G.state === 'clear' && G.anim >= G.clearAt) { if (Dao) Dao.hetVan(); else showSummary(); }   // [Đảo] đảo có màn kết thúc riêng
     else if (G.state === 'fail' && G.anim >= G.failAt) showFail();
   }
 
   function updateDeco(dt) {
+    if (Dao) return;                             // [Đảo] thẻ mở đầu không có đồng hồ trang trí rơi (màn có thể không học giờ)
     G.decoT -= dt;
     if (G.decoT <= 0 && G.deco.length < 6) {
       G.decoT = 1.4 + Math.random() * 1.6;
@@ -1457,7 +1496,7 @@
     else buildStaticLayer();
     // Vạch đỉnh nguy hiểm
     let danger = false;
-    for (let i = 0; i < COLS; i++) if (stackH(i) >= ROWS - 2) danger = true;
+    if (!Dao) for (let i = 0; i < COLS; i++) if (stackH(i) >= ROWS - 2) danger = true;   // [Đảo] không thua nên không nhấp nháy đỏ
     const blink = danger ? 0.55 + 0.45 * Math.sin(G.anim * 6) : 0.35;
     c.strokeStyle = 'rgba(255,90,120,' + blink.toFixed(2) + ')';
     c.lineWidth = danger ? 3 : 2;
@@ -1487,6 +1526,7 @@
 
   /** Tính dòng chữ và MỘT cỡ chữ chung cho cả 4 cột (không còn cột "kém" chữ 13 px cạnh cột chữ 21 px). Gọi khi đổi nhãn/bố cục. */
   function layoutPlates() {
+    if (Dao) { Dao.doNhan(); return; }           // [Đảo] ngắt dòng và cỡ chữ chung cho nhãn lựa chọn
     const B = G.board, c = ctx;
     const w = B.cell - 6, h = B.plateH - 6;
     let size = Infinity;
@@ -1534,10 +1574,10 @@
       const x = B.x + i * B.cell + 3, w = B.cell - 6;
       const cx = x + w / 2, cy = y + h / 2;
       let sy = 1;
-      let lines = col.lines || plateLines(col.t, w);
+      let lines = Dao ? null : col.lines || plateLines(col.t, w);
       if (col.flip > 0) {
         sy = Math.abs(Math.cos(col.flip * Math.PI));
-        if (col.flip > 0.5 && col.prevT) lines = col.prevLines || plateLines(col.prevT, w);
+        if (!Dao && col.flip > 0.5 && col.prevT) lines = col.prevLines || plateLines(col.prevT, w);
       }
       c.save();
       c.translate(cx, cy);
@@ -1559,14 +1599,17 @@
       c.lineWidth = Math.max(2, w * 0.04);
       c.strokeStyle = col.glow > 0 ? '#06d6a0' : (col.hint ? '#ffbf1f' : st.edge);
       c.stroke();
-      c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = '800 ' + Math.round(size) + 'px ' + FONT;
-      const n = lines.length;
-      const lh = size * 1.08;
-      for (let k = 0; k < n; k++) {
-        const ly = cy + (k - (n - 1) / 2) * lh + size * 0.04;
-        c.fillStyle = lines[k].indexOf('kém') === 0 ? '#5a3f85' : st.ink;
-        c.fillText(lines[k], cx, ly);
+      if (Dao) Dao.veNhan(c, col, i, x, y, w, h, col.flip > 0.5);   // [Đảo] chữ, hình nhỏ hoặc đồng hồ của lựa chọn
+      else {
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = '800 ' + Math.round(size) + 'px ' + FONT;
+        const n = lines.length;
+        const lh = size * 1.08;
+        for (let k = 0; k < n; k++) {
+          const ly = cy + (k - (n - 1) / 2) * lh + size * 0.04;
+          c.fillStyle = lines[k].indexOf('kém') === 0 ? '#5a3f85' : st.ink;
+          c.fillText(lines[k], cx, ly);
+        }
       }
       c.restore();
       if (col.glow > 0) drawMarker(c, cx, y, '#7bf1a8');
@@ -1635,6 +1678,7 @@
   }
 
   function drawBigClock(c) {
+    if (Dao) { Dao.veThe(c); return; }           // [Đảo] thẻ câu hỏi: đề + hình của câu đang rơi
     const Big = G.big, lvl = G.level;
     const p = G.piece;
     const live = p && p.mode !== 'pop';
@@ -1791,7 +1835,16 @@
       void ui.score.offsetWidth;
       ui.score.classList.add('bump');
     }
-    if (h.correct !== G.correct) {
+    if (Dao) {
+      // [Đảo] tiến độ theo số câu đã xong (câu sai quay lại được cộng thêm vào tổng)
+      const td = Dao.tienDo(), k = td.xong + '/' + td.tong;
+      if (h.correct !== k) {
+        h.correct = k;
+        ui.progText.textContent = '🧱 ' + k;
+        ui.progText.setAttribute('aria-label', 'Đã xong ' + td.xong + ' trên ' + td.tong + ' câu');
+        ui.progFill.style.width = (clamp(td.xong / Math.max(1, td.tong), 0, 1) * 100).toFixed(1) + '%';
+      }
+    } else if (h.correct !== G.correct) {
       h.correct = G.correct;
       const goal = G.level ? G.level.goal : 10;
       ui.progText.textContent = '🕐 ' + G.correct + '/' + goal;
@@ -1828,6 +1881,11 @@
   /** Nhãn màn chơi. Màn hình hẹp (< 960 px) chỉ ghi "Màn n": đủ 5 chip mà vẫn gọn một hàng (C14). */
   function syncLevelChip() {
     if (!G.level) return;
+    if (G.level.dao) {                           // [Đảo] tên màn của đảo ("Tháp đồng hồ"), rút gọn khi màn hình hẹp
+      ui.levelChip.textContent = G.W >= 900 ? G.level.title : G.level.ngan;
+      ui.levelChip.setAttribute('aria-label', G.level.title);
+      return;
+    }
     const full = G.W >= 960;
     ui.levelChip.textContent = 'Màn ' + G.level.n + (full ? ' · ' + G.level.title : '') + (G.slow ? ' 🐢' : '');
     ui.levelChip.setAttribute('aria-label', 'Màn ' + G.level.n + ': ' + G.level.title + (G.slow ? ', chơi chậm' : ''));
@@ -1867,11 +1925,11 @@
     G.time = 0; G.nextPieceAt = 0; G.lastTarget = -1; G.lastPiece = null; G.clearAt = -1; G.failAt = -1; G.endReason = ''; G.resultSaved = false;
     G.quiz = null; G.deco.length = 0; G.retryT = null; G.owlMood = 'idle'; G.owlUntil = 0;
     // Ôn lại thông minh: ~25 % số câu của màn (1–3) lấy từ những đồng hồ bé từng đọc nhầm
-    G.reviewPool = buildReviewPool(level);
+    G.reviewPool = Dao ? [] : buildReviewPool(level);   // [Đảo] câu ôn lại do đảo xếp (câu sai quay lại sau 2 câu)
     G.reviewUsed = 0;
     G.reviewMax = G.reviewPool.length ? Math.min(3, Math.max(1, Math.round(level.goal * 0.25))) : 0;
     clearWorld();
-    initCols();
+    if (Dao) Dao.khoiCot(); else initCols();     // [Đảo] cột trống, nhãn đến cùng câu đầu tiên
     resetHud();
     showHud(true);
     showScreen('countdown');
@@ -1918,7 +1976,8 @@
     step();
   }
 
-  function pauseGame() {
+  /** nguon: nut | phim | an_tab (ghi vào nhật ký của đảo). */
+  function pauseGame(nguon) {
     if (G.state !== 'playing') return;
     G.state = 'paused';
     G.softDrop = false;
@@ -1926,11 +1985,13 @@
     if (G.piece) G.piece.selected = false;
     Voice.stop();
     Music.setDuck('pause', 0.25);
-    $('pause-info').textContent = 'Màn ' + G.level.n + ' · ' + G.level.title + ' · Điểm: ' + fmt(G.score) + ' · Đã đúng ' + G.correct + '/' + G.level.goal;
+    $('pause-info').textContent = Dao ? Dao.dongTamDung()      // [Đảo] tên màn của đảo, điểm, số câu đã xong
+      : 'Màn ' + G.level.n + ' · ' + G.level.title + ' · Điểm: ' + fmt(G.score) + ' · Đã đúng ' + G.correct + '/' + G.level.goal;
     showScreen('pause');
+    if (Dao) Dao.tamDung(nguon || 'nut');        // [Đảo] ghi tam_dung
   }
 
-  function resumeGame() {
+  function resumeGame(nguon) {
     if (G.state !== 'paused') return;
     G.state = 'playing';
     G.lessonFromPause = false;
@@ -1939,6 +2000,7 @@
     Sfx.unlock();
     Music.setDuck('pause', null);
     requestWake();
+    if (Dao) Dao.tiepTuc(nguon || 'nut');        // [Đảo] ghi tiep_tuc
   }
 
   function levelClear() {
@@ -1952,7 +2014,8 @@
     Music.stop();
     Voice.stop();
     Sfx.play('clear');
-    Voice.say('Hoàn thành màn ' + G.level.n + '! Giỏi quá!');
+    if (Dao) Dao.noi('Xong cả tháp rồi! Con giỏi quá!');   // [Đảo] màn của đảo không có số thứ tự
+    else Voice.say('Hoàn thành màn ' + G.level.n + '! Giỏi quá!');
     let d = 0.3;
     G.cols.forEach(function (c, i) { c.stack.forEach(function (r, j) { if (!r.dead && r.popAt == null) { popRubble(i, j, d); d += 0.08; } }); });
     const B = G.board;
@@ -2367,6 +2430,7 @@
     G.drag = { id: e.pointerId, pieceId: p.id, x0: e.clientX, y0: e.clientY, col0: col,
       moved: false, confirm: !!p.selected && col === p.col };
     try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* Safari dự phòng */ }
+    G.cach = 'cham';
     moveTo(col);
     if (e.cancelable) e.preventDefault();
   }
@@ -2377,7 +2441,7 @@
     const col = boardColAt(e.clientX);
     if (Math.hypot(e.clientX - d.x0, e.clientY - d.y0) > 10) d.moved = true;
     // Kéo ngang: chỉ đi qua cột còn chỗ (không "nhảy" và đáp ngay xuống một cột cao chỉ vì kéo lướt qua)
-    if (d.moved && G.piece && col !== G.piece.col && canOccupy(col, G.piece.row)) moveTo(col);
+    if (d.moved && G.piece && col !== G.piece.col && canOccupy(col, G.piece.row)) { G.cach = 'keo'; moveTo(col); }
   }
 
   function onCanvasUp(e) {
@@ -2387,7 +2451,7 @@
     const p = G.piece;
     if (!p || p.id !== d.pieceId || p.mode !== 'fall' || G.state !== 'playing') return;
     if (e.type !== 'pointerup' || !insideBoard(e)) { p.selected = false; return; }
-    if (d.confirm && !d.moved && boardColAt(e.clientX) === p.col) hardDrop();
+    if (d.confirm && !d.moved && boardColAt(e.clientX) === p.col) { G.cach = 'cham'; hardDrop(); }
     else p.selected = true;
   }
 
@@ -2408,6 +2472,7 @@
       b.classList.add('pressed');
       setTimeout(function () { b.classList.remove('pressed'); }, 110);
       const act = b.getAttribute('data-act');
+      G.cach = 'nut';
       if (act === 'left') moveLeft();
       else if (act === 'right') moveRight();
       else if (act === 'drop') hardDrop();
@@ -2437,13 +2502,14 @@
         if (G.state === 'report') { closeReport(); return; }
         if (G.state === 'quiz') { if (e.key === 'Escape') quizExit(); return; }
         if (G.state === 'paused' && G.lessonFromPause) { G.lessonFromPause = false; stopDemo(); Voice.stop(); showScreen('pause'); return; }
-        if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
+        if (G.state === 'playing') pauseGame('phim'); else if (G.state === 'paused') resumeGame('phim');
         return;
       }
       if (G.state !== 'playing') return;
+      G.cach = 'phim';
       if (e.key === 'ArrowLeft') { moveLeft(); e.preventDefault(); }
       else if (e.key === 'ArrowRight') { moveRight(); e.preventDefault(); }
-      else if (e.key === 'ArrowDown') { G.softDrop = true; e.preventDefault(); }
+      else if (e.key === 'ArrowDown') { if (Dao) hardDrop(); else G.softDrop = true; e.preventDefault(); }   // [Đảo] ↓ là thả (khối không tự rơi)
       else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') { hardDrop(); e.preventDefault(); }
       else if (e.key === 'h' || e.key === 'H') { useHint(); e.preventDefault(); }
       else if (/^[1-4]$/.test(e.key)) { moveTo(Number(e.key) - 1); e.preventDefault(); }
@@ -2855,10 +2921,11 @@
     bindReviewList(ui.failReviewList, function () { return G.review; });
 
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden && G.state === 'playing') pauseGame();
+      if (document.hidden && G.state === 'playing') pauseGame('an_tab');
       if (!document.hidden) { Sfx.unlock(); if (inGame()) requestWake(); }
     });
-    window.addEventListener('blur', function () { if (G.state === 'playing') pauseGame(); });
+    // [Đảo] trong iframe, khung "Gần đúng rồi" của đảo lấy tiêu điểm: không coi đó là rời game
+    window.addEventListener('blur', function () { if (!Dao && G.state === 'playing') pauseGame(); });
   }
 
   /* ================= TIỆN ÍCH THIẾT BỊ ================= */
@@ -2899,6 +2966,7 @@
   function onFatal(msg) {
     if (errShown++ > 2) return;               // không lặp thông báo
     try { console.error('[thap-dong-ho]', msg); } catch (e) { /* bỏ qua */ }
+    if (Dao) { Dao.loi(msg); return; }           // [Đảo] không có menu để quay về: ghi lại, chơi tiếp
     try {
       toast('Có lỗi nhỏ, con thử lại nhé! 🙏', 2600);
       clearTimeout(G.cdTimer);
@@ -2942,7 +3010,7 @@
 
   function boot() {
     if (Players) { try { Players.load(); } catch (e) { /* bỏ qua */ } }
-    Store.load();
+    if (!Dao) Store.load();                      // [Đảo] không đọc/ghi tiến trình của game (có thể ghi khi di trú dữ liệu cũ)
     Motion.refresh();
     try {
       const mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -2969,8 +3037,26 @@
     registerSw();
     try { if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"'); } catch (e) { /* bỏ qua */ }
     showHud(false);
-    showScreen('menu');
+    if (Dao) {                                   // [Đảo] không menu: thẻ mở đầu của đảo, câu hỏi do đảo đưa
+      G.state = 'dao-cho';
+      showScreen(null);
+      Dao.ganMay(mayChoDao());
+    } else showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
+  }
+
+  /** [Đảo] Những phần của bộ máy mà js/dao.js dùng để dựng câu, vẽ nội dung và tạo hiệu ứng. */
+  function mayChoDao() {
+    return {
+      G: G, K: K, ui: ui, FONT: FONT, ROWS: ROWS, COL_STYLE: COL_STYLE, POP_T: POP_T, Motion: Motion,
+      soCot: function () { return COLS; },
+      datSoCot: function (n) { COLS = clamp(Math.round(n), 1, COL_STYLE.length); },
+      clamp: clamp, fmt: fmt, roundRect: roundRect, fitFont: fitFont, drawClockFace: drawClockFace,
+      stackH: stackH, tileCenter: tileCenter, popRubble: popRubble, makeCracks: makeCracks, anyRubble: anyRubble, multiplier: multiplier,
+      addText: addText, spawnSparkle: spawnSparkle, spawnDust: spawnDust, showHint: showHint, toast: toast, owlSay: owlSay,
+      layout: layout, startLevel: startLevel, levelClear: levelClear, pauseGame: pauseGame, resumeGame: resumeGame,
+      showHud: showHud, syncHud: syncHud, releaseWake: releaseWake
+    };
   }
 
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
@@ -2984,7 +3070,8 @@
     renderLevels: renderLevels, renderReport: renderReport, openReport: openReport, openPlayers: openPlayers, adultGate: adultGate, closeGate: closeGate,
     submitGate: submitGate, welcome: welcome, showHint: showHint, Motion: Motion, Players: Players,
     domConfetti: domConfetti, weakestLevelN: weakestLevelN, mastered: mastered, syncHud: syncHud, spawnConfetti: spawnConfetti,
-    owlState: owlState, owlSay: owlSay
+    owlState: owlState, owlSay: owlSay,
+    Dao: Dao, soCot: function () { return COLS; }, ROWS: ROWS
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

@@ -9,6 +9,9 @@
   'use strict';
 
   const L = window.Lessons, Sfx = window.Sfx, Music = window.Music, Voice = window.Voice;
+  // Chế độ đảo (Đảo Khủng Long mở game trong iframe, xem js/dao.js): null khi chơi riêng như cũ.
+  // Mọi chỗ game.js rẽ nhánh cho đảo đều có dòng "if (DAO ..." kèm chú thích "Chế độ đảo".
+  const DAO = window.CuoiHoDao && window.CuoiHoDao.bat ? window.CuoiHoDao : null;
   const pick = L.pick, esc = L.esc;
   const TAU = Math.PI * 2;
   const FONT = '"Baloo 2", "Baloo 2 Fallback", "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
@@ -118,6 +121,7 @@
       for (let i = 0; i < keys.length - 60; i++) delete m[keys[i]];
     },
     save() {
+      if (DAO) return;   // Chế độ đảo: đảo là nơi ghi kết quả, game không ghi tiến trình riêng
       try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* bỏ qua */ }
     },
     activeId() {
@@ -263,7 +267,7 @@
     if (ui.btnPause) ui.btnPause.disabled = !!on;
     if (ui.btnHint) {
       const gate = curGate();
-      ui.btnHint.disabled = !!on || !(G.state === 'playing' && G.phase === 'choose' && gate && !gate.hinted);
+      ui.btnHint.disabled = !!on || !(G.state === 'playing' && G.phase === 'choose' && gate && (DAO ? DAO.conGoiY(gate) : !gate.hinted));
     }
   }
   function toast(msg, ms) {
@@ -304,7 +308,8 @@
     G.ground = H - clamp(H * (squat ? 0.11 : 0.13), squat ? 44 : 56, 120);
     let hudBottom = clamp(H * 0.24, 130, 210);
     if (inGame()) {
-      try { hudBottom = Math.max(110, ui.timer.getBoundingClientRect().bottom + 8); } catch (e) { /* bỏ qua */ }
+      // Chế độ đảo: không có đồng hồ đếm giờ, đáy HUD là đáy thẻ câu hỏi
+      try { hudBottom = Math.max(110, (DAO ? ui.question : ui.timer).getBoundingClientRect().bottom + 8); } catch (e) { /* bỏ qua */ }
     }
     G.hudBottom = hudBottom;
     const avail = G.ground - 12 - hudBottom - 10;
@@ -383,7 +388,8 @@
       G.scroll = cur.wx - sx;
     }
     for (let i = G.gateIdx + 1; i < G.gates.length; i++) G.gates[i].wx = cur.wx + (i - G.gateIdx) * G.gap;
-    G.finishX = G.gates[G.gates.length - 1].wx + G.gap * 0.9;
+    // Vạch đích chỉ dời khi đã có (chế độ đảo: chưa biết cụm nào là cuối thì chưa có vạch đích)
+    if (G.finishX) G.finishX = G.gates[G.gates.length - 1].wx + G.gap * 0.9;
   }
 
   /** Canvas phụ (vẽ 1 lần). name: dùng lại canvas cũ cùng tên (không cấp phát mới khi cùng kích thước); dpr: ép tỉ lệ. */
@@ -618,9 +624,19 @@
     });
   }
 
+  /** Một cụm 3 vòng lửa ở tọa độ thế giới wx; q = null: vòng chưa có câu (chế độ đảo: hiện "?" cho tới khi hổ dừng trước cụm). */
+  function makeGate(i, q, wx) {
+    return {
+      i: i, q: q, wx: wx, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0, hinted: false,
+      rings: [0, 1, 2].map(function () { return { burst: -1, flare: 0, reveal: false, lbl: null }; })
+    };
+  }
+
   function buildGates() {
     G.gates = [];
     const first = G.stopX + G.speed * 1.3;
+    // Chế độ đảo: câu đến từng câu một từ đảo, chưa biết trước có bao nhiêu cụm → chỉ dựng cụm đầu (dao.js dựng tiếp)
+    if (DAO) { G.gates.push(makeGate(0, null, first)); G.finishX = 0; return; }
     const used = Object.create(null);
     let qs = [];
     if (G.drill && G.drill.length) {
@@ -662,12 +678,7 @@
         placed++;
       }
     }
-    for (let i = 0; i < n; i++) {
-      G.gates.push({
-        i: i, q: qs[i], wx: first + i * G.gap, chosen: -1, result: null, evaluated: false, active: false, passed: false, answeredAt: 0, hinted: false,
-        rings: [0, 1, 2].map(function () { return { burst: -1, flare: 0, reveal: false, lbl: null }; })
-      });
-    }
+    for (let i = 0; i < n; i++) G.gates.push(makeGate(i, qs[i], first + i * G.gap));
     G.finishX = G.gates[n - 1].wx + G.gap * 0.9;
   }
 
@@ -675,6 +686,8 @@
   function gateX(gate) { return gate.wx - G.scroll; }
 
   function activateGate(gate) {
+    // Chế độ đảo: hổ vừa dừng thì mới lấy câu (thời gian trả lời tính từ lúc bé thấy đề); hết câu thì dao.js lo phần về đích
+    if (DAO && !DAO.moCong(gate)) return;
     gate.active = true;
     G.phase = 'choose';
     G.gateTime = 0;
@@ -698,6 +711,8 @@
     unzoom();
     gate.chosen = lane;
     gate.answeredAt = G.gateTime;
+    // Chế độ đảo: ghi thao tác, chấm qua đảo; "thử lại" thì hổ đứng yên, vòng sai tắt đi
+    if (DAO && !DAO.chon(gate, lane)) { gate.chosen = -1; return; }
     beginJump(gate, lane);
     if (ui.btnHint) ui.btnHint.disabled = true;
     Sfx.play('select');
@@ -738,6 +753,8 @@
 
   /** Số giây được phép chọn ở cụm hiện tại: câu có lời văn (màn 8) được cộng thêm vài giây để đọc đề. */
   function gateLimit(gate) {
+    // Chế độ đảo: không hết giờ; mốc này chỉ để tính điểm thưởng nhanh (gấp đôi số giây dự kiến của kỹ năng)
+    if (DAO && gate && gate.q && gate.q.giay) return gate.q.giay * 2;
     const base = G.level ? G.level.timer : 15;
     return base + ((gate && gate.q && gate.q.extraTime) || 0);
   }
@@ -775,6 +792,7 @@
     if (!Motion.lite) G.flash = { c: '120,255,180', a: 0.14 };
     G.tiger.cheer = 0.9;
     Store.noteOk(q.key);   // trả lời đúng câu từng sai → tiến gần đến "đã thuộc"
+    if (DAO) DAO.dung(gate);   // Chế độ đảo: quả mọng, dựng cụm vòng tiếp theo
   }
 
   /** Lời giải thích (chữ + giọng đọc) khi sai/hết giờ; giữ trên màn hình đến khi hổ chạy tiếp. Bé có thể chạm để chạy tiếp. */
@@ -801,6 +819,7 @@
     // Chữ bay đặt phía trên, bên phải hổ (sau cú nhảy cụm vòng nằm bên trái hổ) để không che vòng đúng đang hé lộ
     addText('Cùng xem lại nhé!', G.tigerX + G.r * 0.2, G.ground - G.r * 2.5, { color: '#fff5da', size: G.r * 0.42, life: 1.0, vy: -20, align: 'left' });
     cardFx('shake');
+    if (DAO) { DAO.sai(gate); return; }   // Chế độ đảo: không mất tim; màn "Gần đúng rồi" của đảo giải thích
     loseHeart();
     explainHint('Đáp án: ', q);
     Voice.say('Chưa đúng. Đáp án là ' + q.answerSpeech + '. ' + q.explain);
@@ -835,7 +854,8 @@
 
   function celebrateFinish() {
     // Về đích: thẻ câu hỏi đổi thành lời chúc mừng + số câu đúng, đồng hồ đếm giờ ẩn đi (không còn gì để bấm)
-    renderQuestion({ prompt: '🏁 Về đích! ⭐ ' + G.correct + '/' + G.gates.length });
+    // Đếm các cụm có câu (chế độ đảo: cụm "?" cuối cùng hóa pháo hoa, không phải câu hỏi)
+    renderQuestion({ prompt: '🏁 Về đích! ⭐ ' + G.correct + '/' + G.gates.filter(function (g) { return !!g.q; }).length });
     ui.timer.classList.add('silent');
     ui.hint.hidden = true;
     ui.tapTip.hidden = true;
@@ -887,7 +907,7 @@
       case 'choose':
         G.gateTime += dt;
         tg.state = 'idle';
-        if (G.gateTime >= gateLimit(gate)) onTimeout(gate);
+        if (!DAO && G.gateTime >= gateLimit(gate)) onTimeout(gate);   // Chế độ đảo: vòng lửa chờ bé, không hết giờ
         break;
       case 'jump': {
         G.jumpT += dt;
@@ -908,6 +928,7 @@
       case 'learn':
         G.learnT += dt;
         tg.state = 'idle';
+        if (DAO) { DAO.hoc(gate); break; }   // Chế độ đảo: mở màn "Gần đúng rồi" của đảo, bé đóng thì chạy tiếp
         // Bé tự quyết khi đã đọc xong; không coi thời gian chờ là hiểu bài.
         if (ui.learnContinue.disabled && G.learnT >= 0.9) ui.learnContinue.disabled = false;
         break;
@@ -1148,7 +1169,9 @@
     const memo = rg.lbl;
     if (memo && memo.r === r && memo.text === text) return memo;
     const lines = splitLabel(text);
-    let size = r * (lines.length > 1 ? 0.3 : (String(text).length <= 4 ? 0.44 : 0.36));
+    // Nhãn chỉ gồm chữ số, dấu so sánh hay "?" (chế độ đảo: tia số, liền trước, liền sau) được viết to hơn; câu đồng hồ cũ không có nhãn kiểu này
+    const digits = /^(\d{1,4}|[?<>=])$/.test(String(text)) ? String(text).length : 0;
+    let size = r * (digits ? (digits <= 2 ? 0.62 : digits === 3 ? 0.56 : 0.48) : lines.length > 1 ? 0.3 : (String(text).length <= 4 ? 0.44 : 0.36));
     const maxW = r * 1.4;
     ctx.font = '800 ' + Math.round(size) + 'px ' + FONT;
     let w = 0;
@@ -1177,6 +1200,15 @@
     }
   }
 
+  /** Lựa chọn là hình nhỏ (SVG của ngân hàng câu, chế độ đảo): vẽ trên đĩa sáng cho rõ nét, vừa trong lòng vòng. */
+  function drawOptImage(c, img, x, y, r) {
+    c.fillStyle = 'rgba(255,253,246,0.94)';
+    c.beginPath(); c.arc(x, y, r * 0.74, 0, TAU); c.fill();
+    const s = r * 1.1, k = Math.min(s / img.naturalWidth, s / img.naturalHeight);
+    const w = img.naturalWidth * k, h = img.naturalHeight * k;
+    c.drawImage(img, x - w / 2, y - h / 2, w, h);
+  }
+
   /** Huy hiệu tròn ở góc vòng lửa: ✓ cho đáp án đúng, ✕ cho vòng bị chọn sai.
       Vẽ bằng nét (không dùng ký tự) để máy nào cũng hiện, không phụ thuộc phông chữ có sẵn. */
   function drawBadge(c, x, y, r, color, ok) {
@@ -1194,8 +1226,9 @@
     c.restore();
   }
 
+  const MYSTERY = { text: '?' };   // cụm vòng chưa có câu (chế độ đảo)
   function drawRing(c, gate, lane, x, y) {
-    const rg = gate.rings[lane], opt = gate.q.options[lane];
+    const rg = gate.rings[lane], opt = gate.q ? gate.q.options[lane] : MYSTERY;
     const r0 = G.r;
     if (rg.burst >= 1) return;
     let scale = 1, alpha = 1;
@@ -1229,7 +1262,8 @@
     // Nhãn: chữ hoặc đồng hồ nhỏ
     if (opt) {
       if (opt.clock) drawClockCached(c, x, y, r0 * 0.7, scale, opt.clock.h, opt.clock.m);
-      else drawLabel(c, rg, opt.text, x, y, r0, rg.reveal ? '#c8ffe0' : '#fff', scale * (rg.reveal ? 1.08 : 1));
+      else if (opt.img && opt.img.complete && opt.img.naturalWidth) drawOptImage(c, opt.img, x, y, r0 * scale);
+      else drawLabel(c, rg, opt.text, x, y, r0, !gate.q ? '#ffe08a' : rg.reveal ? '#c8ffe0' : '#fff', scale * (rg.reveal ? 1.08 : 1));
     }
     // Vòng chọn (đang nhảy tới)
     if (isCur && G.phase === 'jump' && gate.chosen === lane && !gate.evaluated) {
@@ -1689,7 +1723,9 @@
   /* ================= HUD ================= */
   function renderQuestion(q) {
     ui.prompt.innerHTML = q ? (q.review ? '<span class="review-tag">📝 Ôn lại</span> ' : '') + q.prompt : 'Sẵn sàng…';
-    const vis = q ? L.visualHtml(q, 104) : '';
+    // Chế độ đảo: hình của đề (tia số, đồng hồ…) là SVG do ngân hàng câu của đảo dựng sẵn
+    const vis = q ? (q.hinhHtml ? q.hinhHtml : L.visualHtml(q, 104)) : '';
+    if (DAO) DAO.theCau(q);
     ui.visual.innerHTML = vis;
     ui.visual.hidden = !vis;
     ui.question.classList.remove('ok', 'shake', 'pop', 'zoomed');
@@ -1708,6 +1744,8 @@
   /** Chạm vào thẻ câu hỏi để phóng to đồng hồ (kim to, dễ đọc); đo lại bố cục vì HUD cao hơn. */
   function toggleZoom() {
     if (G.state !== 'playing' || !G.level) return;   // sau bảng kết quả/tạm dừng thẻ bị che → chạm vào không được dựng lại bố cục
+    // Chế độ đảo: chỉ thẻ có hình (tia số, đồng hồ) mới phóng to; ghi thao tác xem kỹ đề
+    if (DAO && !DAO.phongTo(!ui.question.classList.contains('zoomed'))) return;
     ui.question.classList.toggle('zoomed');
     syncZoomAria();
     layout();
@@ -1756,8 +1794,8 @@
       for (let i = 0; i < spans.length; i++) spans[i].classList.toggle('lost', i >= G.hearts);
       ui.hearts.setAttribute('aria-label', 'Còn ' + G.hearts + ' tim');
     }
-    const stage = Math.min(G.gates.length, G.gateIdx + 1);
-    if (h.stage !== stage) { h.stage = stage; ui.stage.textContent = 'Vòng ' + stage + '/' + G.gates.length; }
+    const stage = stageText();
+    if (h.stage !== stage) { h.stage = stage; ui.stage.textContent = stage; }
     const mult = G.state === 'playing' || G.state === 'over' ? multiplier() : 1;
     if (h.mult !== mult) {
       h.mult = mult;
@@ -1781,8 +1819,14 @@
       ui.timerFill.classList.toggle('warn', left <= limit * 0.5 && left > 5);
       ui.timerFill.classList.toggle('danger', left <= 5 && G.phase === 'choose');
       ui.timer.classList.toggle('danger', left <= 5 && G.phase === 'choose');
-      if (G.phase === 'choose' && left <= 5 && left > 0) Sfx.play('warn');
+      if (!DAO && G.phase === 'choose' && left <= 5 && left > 0) Sfx.play('warn');   // Chế độ đảo: không giục giờ
     }
+  }
+
+  /** "Vòng 3/10" trên HUD và bảng tạm dừng. Chế độ đảo: số câu mới đã gặp trên số câu dự kiến của màn. */
+  function stageText() {
+    if (DAO) return DAO.vong();
+    return 'Vòng ' + Math.min(G.gates.length, G.gateIdx + 1) + '/' + G.gates.length;
   }
 
   function resetHud() {
@@ -1879,21 +1923,23 @@
           if (G.state !== 'countdown') return;
           showScreen(null);
           cb();
-          if (document.hidden) pauseGame();
+          if (document.hidden) pauseGame('an_tab');
         }, 750);
       }
     };
     step();
   }
 
-  function pauseGame() {
+  /** nguon: 'nut' (nút ⏸, phím Esc/P) hoặc 'an_tab' (tab bị ẩn); chế độ đảo ghi vào nhật ký của đảo. */
+  function pauseGame(nguon) {
     if (G.state !== 'playing') return;
     G.state = 'paused';
     Voice.stop();
     Music.setDuck('pause', 0.25);
-    $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · Vòng ' + Math.min(G.gates.length, G.gateIdx + 1) + '/' + G.gates.length;
+    $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · ' + stageText();
     lockHud(true);
     showScreen('pause');
+    if (DAO) DAO.tamDung(typeof nguon === 'string' ? nguon : 'nut');   // Chế độ đảo
   }
 
   function resumeGame() {
@@ -1903,6 +1949,7 @@
     showScreen(null);
     Sfx.unlock();
     Music.setDuck('pause', null);
+    if (DAO) DAO.tiepTuc('nut');   // Chế độ đảo
   }
 
   function endGame(reason) {
@@ -2021,6 +2068,8 @@
   }
 
   function showResults() {
+    // Chế độ đảo: không có bảng kết quả, hỏi đáp hay lưu kỷ lục; đảo hiện màn kết thúc của nó
+    if (DAO) { G.resultShown = true; releaseWake(); DAO.ketThuc(); return; }
     G.resultShown = true;
     persistResults();
     renderResults();
@@ -2520,6 +2569,7 @@
       try { console.error('[cuoi-ho]', msg); } catch (e) { /* bỏ qua */ }
       try { toast('Có lỗi nhỏ, con thử lại nhé! 🙏', 2600); } catch (e) { /* bỏ qua */ }
     }
+    if (DAO) { DAO.baoLoi(msg); return; }   // Chế độ đảo: không có menu của game; bé vẫn tạm dừng và về đảo được
     try { if (inGame()) goMenu(); } catch (e) { /* bỏ qua */ }   // kết thúc ván an toàn thay vì đứng hình
   }
 
@@ -2528,7 +2578,9 @@
   function useHint() {
     if (G.state !== 'playing' || G.phase !== 'choose') return;
     const gate = curGate();
-    if (!gate || gate.hinted) return;
+    if (!gate) return;
+    if (DAO) { DAO.goiY(gate); return; }   // Chế độ đảo: ba cấp gợi ý của ngân hàng câu, cấp 3 tắt một vòng sai
+    if (gate.hinted) return;
     gate.hinted = true;
     G.hints++;
     if (ui.btnHint) ui.btnHint.disabled = true;
@@ -2551,6 +2603,7 @@
   /** Bé chạm/ấn để chạy tiếp ngay khi đang xem đáp án đúng (sau ít nhất 0,9 giây để kịp nhìn). */
   function skipLearn() {
     if (G.state !== 'playing' || G.phase !== 'learn' || G.learnT < 0.9) return;
+    if (DAO && !DAO.duocQua()) return;   // Chế độ đảo: chỉ chạy tiếp khi bé đã đóng màn "Gần đúng rồi" của đảo
     Voice.stop();
     ui.hud.classList.remove('learning');
     ui.learnContinue.hidden = true;
@@ -2876,14 +2929,15 @@
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) {
-        if (G.state === 'playing') pauseGame();
+        if (G.state === 'playing') pauseGame('an_tab');
         Music._halt();                 // ngừng lập lịch nốt khi tab ẩn; 'wanted' giữ nguyên để phát lại khi hiện
       } else {
         Sfx.unlock();
         if (inGame() && G.state !== 'over') requestWake();   // hệ thống thu hồi wake lock khi ẩn → xin lại
       }
     });
-    window.addEventListener('blur', function () { if (G.state === 'playing') pauseGame(); });
+    // Chế độ đảo: tiêu điểm đi lại giữa iframe và đảo (màn "Gần đúng rồi") nên không tạm dừng theo blur, chỉ theo tab ẩn
+    window.addEventListener('blur', function () { if (!DAO && G.state === 'playing') pauseGame(); });
   }
 
   /* ================= TIỆN ÍCH THIẾT BỊ ================= */
@@ -2988,8 +3042,18 @@
       }
     } catch (e) { /* bỏ qua */ }
     showHud(false);
-    showScreen('menu');
+    if (DAO) DAO.khoiDong();   // Chế độ đảo: thẻ "Bắt đầu" thay cho menu, báo đảo sẵn sàng
+    else showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
+  }
+
+  /* Chế độ đảo: trao cho js/dao.js các phần bên trong cần dùng (vẽ, nhảy, gợi ý, HUD); chơi riêng thì không có gì. */
+  if (DAO) {
+    DAO.gan({
+      G: G, ui: ui, Motion: Motion, fmt: fmt, makeGate: makeGate, gateX: gateX, curGate: curGate, startGame: startGame,
+      beginJump: beginJump, skipLearn: skipLearn, moveCursor: moveCursor, showHint: showHint, cardFx: cardFx, addText: addText,
+      spawnBurst: spawnBurst, spawnSmoke: spawnSmoke, spawnEmber: spawnEmber, spawnConfetti: spawnConfetti, showScreen: showScreen, lockHud: lockHud
+    });
   }
 
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
@@ -2998,7 +3062,8 @@
     startGame: startGame, choose: choose, endGame: endGame, startQuiz: startQuiz, onQuizAnswer: onQuizAnswer, quizNext: quizNext, quizRetry: quizRetry,
     showLesson: showLesson, goLevels: goLevels, goMenu: goMenu, curGate: curGate, update: update, render: render, layout: layout,
     renderLevels: renderLevels, renderReport: renderReport, renderNotes: renderNotes, adultGate: adultGate, persistResults: persistResults, onFatal: onFatal,
-    skipLearn: skipLearn, useHint: useHint, toggleZoom: toggleZoom, gateLimit: gateLimit, lockHud: lockHud, renderAudioToggles: renderAudioToggles
+    skipLearn: skipLearn, useHint: useHint, toggleZoom: toggleZoom, gateLimit: gateLimit, lockHud: lockHud, renderAudioToggles: renderAudioToggles,
+    pauseGame: pauseGame, resumeGame: resumeGame, onCanvasDown: onCanvasDown, stageText: stageText
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

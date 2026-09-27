@@ -42,6 +42,7 @@
   function lam2(x) { return Math.round(x * 100) / 100; }
   function theoId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
   function tenGame(g) {
+    if (window.Dao && window.Dao.TEN_GAME && window.Dao.TEN_GAME[g]) return window.Dao.TEN_GAME[g];
     return { 'dua-xe': 'Đua Xe', 'chem-trai-cay': 'Chém Trái Cây', 'ban-thien-thach': 'Bắn Thiên Thạch', 'truyen-tranh': 'Truyện Tranh', 'lat-the': 'Lật Thẻ Anh Em', 'xep-hinh-so': 'Xếp Hình Số' }[g] || g;
   }
 
@@ -63,7 +64,7 @@
       if (e.loai !== 'thao_tac' || !e.du_lieu) return;
       const k = e.du_lieu.kieu;
       if (k === 'chon') { soChon++; if (soChon > 1) doiY++; }
-      else if (k === 'doi_lan' || k === 'bo_chon' || k === 'doi_cot' || k === 'xoa') doiY++;
+      else if (k === 'doi_lan' || k === 'bo_chon' || k === 'doi_cot' || k === 'xoa' || k === 'bo_ra') doiY++;
     });
     traLoi.forEach(function (e) {
       ((e.du_lieu && e.du_lieu.loi) || []).forEach(function (m) { if (loi.indexOf(m) < 0) loi.push(m); });

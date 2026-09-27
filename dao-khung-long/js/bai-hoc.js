@@ -207,5 +207,7 @@
     setTimeout(function () { try { dom.tiep.focus(); } catch (e) { /* bỏ qua */ } }, 60);
   }
 
-  window.BaiHoc = { BAI: BAI, mo: mo, coBai: function (ma) { return !!BAI[ma]; } };
+  /** Thêm bài học từ tệp khác (các game giai đoạn 4, 5): bai = { ten, buoc: [{ chu, ve(), thu? }] }. */
+  function dangKy(ma, bai) { BAI[ma] = bai; }
+  window.BaiHoc = { BAI: BAI, mo: mo, dangKy: dangKy, coBai: function (ma) { return !!BAI[ma]; } };
 })();

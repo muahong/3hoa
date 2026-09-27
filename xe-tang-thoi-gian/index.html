@@ -21,6 +21,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="game-shell.css">
+  <link rel="stylesheet" href="dao.css">
 </head>
 <body>
 <div id="app">
@@ -48,6 +49,7 @@
         <div class="hint" id="hud-hint" role="status" aria-live="polite" hidden></div>
       </div>
       <div class="hud-right">
+        <div class="dao-berry" id="hud-berry" role="img" aria-label="0 quả mọng" hidden><img id="hud-berry-img" alt=""><span id="hud-berry-n">0</span></div>
         <div class="hearts" id="hud-hearts" role="img" aria-label="Còn 3 tim"><span>❤️</span><span>❤️</span><span>❤️</span></div>
         <button class="btn" id="btn-pause" aria-label="Tạm dừng">⏸</button>
       </div>
@@ -71,6 +73,7 @@
         <div class="logo-mark">
         <canvas id="menu-tank-art" role="img" aria-label="Xe tăng xanh có đồng hồ, nòng xoay và bánh xích" class="hero-character" width="560" height="360"></canvas>
         </div>
+        <img id="dao-be" class="dao-be" alt="" hidden>
         <div>
           <h1 class="title">XE TĂNG<br>THỜI GIAN<small>HỌC XEM ĐỒNG HỒ</small></h1>
         </div>
@@ -204,6 +207,7 @@
         <button class="btn ghost small" id="btn-pause-lesson">📖 Học lại (chơi lại từ đầu)</button>
         <button class="btn ghost small" id="btn-restart">🔄 Chơi lại</button>
         <button class="btn ghost small" id="btn-quit">☰ Menu trò chơi</button>
+        <button class="btn ghost" id="btn-dao-ve" hidden>🏝️ Về đảo</button>
       </div>
     </div>
   </div>
@@ -341,6 +345,7 @@
 <script src="js/clock.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/profile.js"></script>
+<script src="js/dao.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

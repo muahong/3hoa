@@ -23,6 +23,11 @@
   const REVIEW_SLOTS = [2, 6, 10];   // vị trí thiên thạch mang câu ôn lại trong ván
   const HINT_POINTS = 20;      // điểm khi bắn thiên thạch đã hiện đáp án
 
+  /* ================= CHẾ ĐỘ ĐẢO KHỦNG LONG =================
+     Mở trong iframe của Đảo Khủng Long (?dao=1): js/dao.js nạp trước tệp này và đặt window.CuuDao.
+     Mọi móc có dạng `if (DAO) …` (đánh dấu "Móc đảo"); không có đảo thì DAO = null và game chạy y như cũ. */
+  const DAO = window.CuuDao && window.CuuDao.bat ? window.CuuDao : null;
+
   /* ================= LƯU TRỮ (localStorage) =================
      Thiết lập của máy nằm ở mức trên cùng; tiến trình, kỷ lục, "cần ôn lại" và thống kê
      nằm trong players[<id bé>] để nhiều bé dùng chung một máy vẫn có tiến trình riêng.
@@ -123,6 +128,7 @@
       for (let i = 0; i < keys.length - 60; i++) delete m[keys[i]];
     },
     save() {
+      if (DAO) return;                             // Móc đảo: đảo là nơi ghi, game không ghi tiến trình riêng
       try {
         localStorage.setItem(this.key, JSON.stringify(this.data));
       } catch (e) {
@@ -335,7 +341,7 @@
     }
     layout();
     initStars();
-    if (flipped && G.state === 'playing') { pauseGame(); toast('Xoay màn hình rồi, bấm ▶ Chơi tiếp nhé!', 2400); }
+    if (flipped && G.state === 'playing') { pauseGame('xoay_man'); toast('Xoay màn hình rồi, bấm ▶ Chơi tiếp nhé!', 2400); }
   }
 
   /** Tính vùng chơi (phần màn hình không bị bàn phím số che), hành tinh, khiên, pháo. */
@@ -719,7 +725,9 @@
   function renderAnswerCard(pop) {
     const t = liveMeteors().find(function (m) { return m.id === G.targetId; }) || null;
     let html;
-    if (!t || !t.q || G.state === 'over') {
+    if (DAO) {
+      html = DAO.theTraLoi();                    // Móc đảo: đề của câu từ đảo (phép tính, số lớn nhất, xếp thứ tự)
+    } else if (!t || !t.q || G.state === 'over') {
       html = G.state === 'playing' ? 'Sẵn sàng…' : '…';
     } else {
       const typed = G.typed;
@@ -814,6 +822,7 @@
 
   function typeDigit(d) {
     if (G.state !== 'playing') return;
+    if (DAO) { DAO.goSo(d); return; }            // Móc đảo: gõ số và ghi go_so
     if (G.typed.length >= maxDigits()) {
       Sfx.play('del');
       cardFx('shake');
@@ -828,6 +837,7 @@
 
   function delDigit() {
     if (G.state !== 'playing') return;
+    if (DAO) { DAO.xoa(); return; }              // Móc đảo: xóa và ghi xoa
     if (!G.typed) return;
     G.typed = G.typed.slice(0, -1);
     Sfx.play('del');
@@ -843,6 +853,7 @@
 
   function fire() {
     if (G.state !== 'playing') return;
+    if (DAO) { DAO.ban(); return; }              // Móc đảo: bắn, ghi ban rồi nhờ đảo chấm
     if (!G.typed) {
       cardFx('shake');
       showHint('Gõ đáp án trước rồi mới bắn nhé!', 'info', 1500);
@@ -887,6 +898,7 @@
   /** 💡 Gợi ý theo yêu cầu: lần 1 mách cách nghĩ (mất thưởng nhanh, điểm giảm nửa), lần 2 hiện đáp án. */
   function askHint() {
     if (G.state !== 'playing') return;
+    if (DAO) { DAO.goiY(); return; }             // Móc đảo: gợi ý ba cấp của đảo
     const t = getTarget();
     if (!t || !t.q) {
       cardFx('shake');
@@ -1113,7 +1125,8 @@
       if (m.x < f.x + pad) { m.x = f.x + pad; m.vx = Math.abs(m.vx); }
       if (m.x > f.x + f.w - pad) { m.x = f.x + f.w - pad; m.vx = -Math.abs(m.vx); }
       const dx = m.x - P.cx, dy = m.y - P.cy;
-      if (Math.sqrt(dx * dx + dy * dy) <= G.shieldR + m.r * 0.55) {
+      // Móc đảo: thiên thạch của đảo (m.dao) lơ lửng chờ bé, không bao giờ đâm vào khiên
+      if (!m.dao && Math.sqrt(dx * dx + dy * dy) <= G.shieldR + m.r * 0.55) {
         onShieldHit(m);
         arr[w++] = m;
         continue;
@@ -1175,6 +1188,7 @@
   }
 
   function updatePlaying(dt) {
+    if (DAO) { DAO.capNhat(dt); return; }        // Móc đảo: không đồng hồ, không đợt, một câu một lúc
     if (G.readLeft > 0) {
       G.readLeft = Math.max(0, G.readLeft - dt);
       G.holdUntil = Math.max(G.time, G.holdUntil - dt);
@@ -1663,7 +1677,8 @@
       const spans = ui.shields.children;
       for (let i = 0; i < spans.length; i++) spans[i].classList.toggle('lost', i >= G.shields);
     }
-    if (h.stage !== G.stage) { h.stage = G.stage; ui.stage.textContent = 'Đợt ' + G.stage; }
+    // Móc đảo: không có đợt, không có đồng hồ; dải tiến độ câu và quả mọng do js/dao.js vẽ
+    if (!DAO && h.stage !== G.stage) { h.stage = G.stage; ui.stage.textContent = 'Đợt ' + G.stage; }
     const live = G.state === 'playing' || G.state === 'over';
     const mult = live ? multiplier() : 1;
     const streak = live ? G.streak : 0;
@@ -1679,7 +1694,7 @@
       }
     }
     const tt = formatTime(G.timeLeft);
-    if (h.time !== tt) {
+    if (!DAO && h.time !== tt) {
       h.time = tt;
       ui.time.textContent = tt;
       const frac = clamp(G.timeLeft / G.duration, 0, 1);
@@ -1749,11 +1764,15 @@
     Music.setDuck('pause', null);
     Music.play('game');
     Voice.stop();
-    runCountdown(function () {
-      G.state = 'playing';
-      G.nextSpawnAt = G.time + 0.2;
-      renderAnswerCard(false);
-    });
+    runCountdown(beginPlay);
+  }
+
+  /** Hết đếm ngược: bắt đầu bắn. */
+  function beginPlay() {
+    G.state = 'playing';
+    G.nextSpawnAt = G.time + 0.2;
+    renderAnswerCard(false);
+    if (DAO) DAO.vaoChoi();                      // Móc đảo: xin câu đầu tiên từ đảo
   }
 
   function runCountdown(cb) {
@@ -1784,7 +1803,8 @@
     step();
   }
 
-  function pauseGame() {
+  /** Tạm dừng. src: 'nut' | 'phim' | 'an_tab' | 'xoay_man' (nguồn ghi vào nhật ký của đảo). */
+  function pauseGame(src) {
     if (G.state !== 'playing' && G.state !== 'countdown') return;
     if (G.state === 'countdown') { clearTimeout(G.cdTimer); G.resumeCountdown = true; }
     G.state = 'paused';
@@ -1793,6 +1813,7 @@
     quietAudio();
     ui.hud.classList.add('paused');
     $('pause-info').textContent = 'Điểm hiện tại: ' + fmt(G.score) + ' · Còn ' + formatTime(G.timeLeft);
+    if (DAO) DAO.tamDung(src || 'nut');          // Móc đảo: ghi tam_dung, bảng tạm dừng có nút "Về đảo"
     showScreen('pause');
   }
 
@@ -1806,8 +1827,9 @@
     try { Music._kick(); } catch (e) { /* bỏ qua */ }
   }
 
-  function resumeGame() {
+  function resumeGame(src) {
     if (G.state !== 'paused') return;
+    if (DAO) DAO.tiepTuc(src || 'nut');          // Móc đảo: ghi tiep_tuc
     ui.hud.classList.remove('paused');
     showScreen(null);
     wakeAudio();
@@ -1817,14 +1839,11 @@
       G.resumeCountdown = false;
       G.state = 'countdown';
       showScreen('countdown');
-      runCountdown(function () {
-        G.state = 'playing';
-        G.nextSpawnAt = G.time + 0.2;
-        renderAnswerCard(false);
-      });
+      runCountdown(beginPlay);
       return;
     }
     G.state = 'playing';
+    if (DAO) return;                             // Móc đảo: thiên thạch vẫn chờ nguyên chỗ, không đổi mục tiêu
     const t = getTarget();
     G.holdUntil = G.time + 1;
     if (t && t.q) Voice.say(t.q.speech, { queue: true });
@@ -2339,6 +2358,7 @@
       try { console.error('[cuu-chuong]', msg); } catch (e) { /* bỏ qua */ }
       try { toast('Có lỗi nhỏ, con thử lại nhé! 🙏', 2600); } catch (e) { /* bỏ qua */ }
     }
+    if (DAO) { try { DAO.loi(msg); } catch (e) { /* bỏ qua */ } return; }   // Móc đảo: không có menu để quay về
     try { if (inGame()) goMenu(); } catch (e) { /* bỏ qua */ }
   }
 
@@ -2354,6 +2374,7 @@
     if (G.state !== 'playing') return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     const pos = evPos(e);
+    if (DAO) { DAO.cham(pos); if (e.cancelable) e.preventDefault(); return; }   // Móc đảo: chạm thiên thạch (ghi cham)
     const live = liveMeteors();
     let best = null, bd = Infinity;
     for (let i = 0; i < live.length; i++) {
@@ -2413,7 +2434,7 @@
       if (e.key === 'Escape' && anyOverlay() === 'report') { closeReport(); return; }
       if (e.key === 'Escape' && anyOverlay()) { closeOverlays(); return; }
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
-        if (G.state === 'playing') pauseGame(); else if (G.state === 'paused') resumeGame();
+        if (G.state === 'playing') pauseGame('phim'); else if (G.state === 'paused') resumeGame('phim');
         return;
       }
       if (G.state !== 'playing') return;
@@ -2487,7 +2508,7 @@
       }
     });
     click('btn-levels-back', function () { goMenu(); });
-    click('btn-pause', function () { pauseGame(); });
+    click('btn-pause', function () { pauseGame('nut'); });
     click('btn-hint', function () { askHint(); });
     click('btn-resume', function () { resumeGame(); });
     click('btn-restart', function () { const l = G.level; if (l) startGame(l); });
@@ -2647,7 +2668,7 @@
 
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) {
-        if (G.state === 'playing' || G.state === 'countdown') pauseGame();
+        if (G.state === 'playing' || G.state === 'countdown') pauseGame('an_tab');
         else quietAudio();
         return;
       }
@@ -2655,7 +2676,8 @@
       if (inGame() && G.state !== 'paused') requestWake();
     });
     window.addEventListener('pageshow', function () { wakeAudio(); });
-    window.addEventListener('blur', function () { if (G.state === 'playing' || G.state === 'countdown') pauseGame(); });
+    // Móc đảo: iframe mất tiêu điểm mỗi khi đảo hiện màn "Gần đúng rồi" đè lên, đó không phải lúc bé rời game
+    window.addEventListener('blur', function () { if (!DAO && (G.state === 'playing' || G.state === 'countdown')) pauseGame(); });
   }
 
   /* ================= TIỆN ÍCH THIẾT BỊ ================= */
@@ -2765,14 +2787,28 @@
     registerSw();
     try { if (document.fonts && document.fonts.load) document.fonts.load('800 32px "Baloo 2"'); } catch (e) { /* bỏ qua */ }
     showHud(false);
-    showScreen('menu');
+    if (DAO) DAO.khoiDong(noiBo());              // Móc đảo: thẻ bắt đầu thay cho menu
+    else showScreen('menu');
     requestAnimationFrame(function (ts) { lastTs = ts; requestAnimationFrame(frame); });
+  }
+
+  /** Móc đảo: phần bên trong game mà js/dao.js dùng lại (trạng thái, thiên thạch, hiệu ứng, HUD). */
+  function noiBo() {
+    return {
+      G: G, ui: ui, Store: Store, Motion: Motion, Meteor: Meteor, POP_T: POP_T, PRAISE: PRAISE,
+      radiusFor: radiusFor, edgePad: edgePad, liveMeteors: liveMeteors, updateMeteors: updateMeteors,
+      fireLaser: fireLaser, destroyMeteor: destroyMeteor, spawnTwinkle: spawnTwinkle, spawnConfetti: spawnConfetti,
+      addText: addText, showHint: showHint, hideHint: hideHint, cardFx: cardFx, renderAnswerCard: renderAnswerCard,
+      updateSpawnY: updateSpawnY, multiplier: multiplier, startGame: startGame, showScreen: showScreen,
+      applyAudioSettings: applyAudioSettings, renderAudioToggles: renderAudioToggles, fmt: fmt, esc: esc, pick: pick
+    };
   }
 
   // Móc gỡ lỗi (chỉ đọc) để kiểm thử tự động
   window.__CuuChuong = {
     G: G, Store: Store, Motion: Motion, Gate: Gate,
     startGame: startGame, fire: fire, typeDigit: typeDigit, delDigit: delDigit, endGame: endGame,
+    pauseGame: pauseGame, resumeGame: resumeGame, onKey: onKey,
     spawnMeteor: spawnMeteor, spawnForQuestion: spawnForQuestion, liveMeteors: liveMeteors, getTarget: getTarget,
     onHit: onHit, onWrong: onWrong, onShieldHit: onShieldHit, showResults: showResults, askHint: askHint,
     renderReport: renderReport, renderLevels: renderLevels, adultGate: adultGate,

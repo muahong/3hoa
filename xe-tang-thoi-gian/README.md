@@ -39,6 +39,7 @@ Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, đi
 | `js/audio.js` | Hiệu ứng, nhạc nền tổng hợp bằng Web Audio và giọng đọc tiếng Việt (Web Speech) |
 | `js/profile.js` | Hồ sơ người chơi dùng chung giữa các game (tên, hình đại diện) – giống hệt ở mọi game |
 | `js/game.js` | Bộ máy trò chơi: xe tăng, robot, đạn, hiệu ứng, điểm, combo, hỏi đáp, lưu tiến trình, ôn lại thông minh, bảng kết quả |
+| `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chạy trong iframe của `dao-khung-long/`), xem mục dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
 
 ## Các màn chơi
@@ -67,6 +68,20 @@ Các màn mở khóa lần lượt. Nút **👨‍👩‍👧** ở màn chọn 
 
 Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung màn hình, chớp sáng và số hạt; thiết bị bật "giảm chuyển động" cũng tự chuyển sang mức ít.
 
+## Chế độ Đảo Khủng Long (thể loại "Xe Tăng")
+
+Đảo mở game trong một iframe cùng tên miền: `../xe-tang-thoi-gian/?dao=1&man=<mã màn>` (màn `v5-m9` ba điểm thẳng hàng, `v6-m6` xem giờ, ngày giờ). `js/dao.js` chỉ bật khi có `?dao=1` **và** khung cha có `window.DaoCauNoi` (hợp đồng ở `dao-khung-long/js/cau-noi.js`); mở trực tiếp thì game chạy y như cũ. Các móc trong `js/game.js` đánh dấu `[ĐẢO]`.
+
+- **Đảo quyết định câu hỏi và chấm**: mỗi câu gọi `cauTiep({ so_lua_chon: 4 (3 khi màn rộng dưới 900 px), vi_tri: ['cot_1', …] })`, mỗi robot mang một lựa chọn (chữ; mặt đồng hồ kim khi lựa chọn có `dong_ho` mà đề không có hình; bảng LED cho nhãn dạng `15:30`; hình SVG nhỏ). Thẻ câu hỏi hiện `de` và hình SVG `hinh` của đề (hình nhiều chi tiết được vẽ to hơn, chạm hình hoặc ⤢ để phóng to). Robot luôn xếp một hàng nên `vi_tri` là cột tính từ trái.
+- **Không thua**: không tim, không tuyến phòng thủ; robot đi dạo chậm lên xuống giữa thẻ câu hỏi và xe tăng, không bao giờ chạm xe tăng, không hết giờ.
+- **Bắn**: đạn trúng robot nào thì `traLoi(giá trị, { vi_tri, cach, so_phat_ban })`. Đúng: nổ, khen, điểm, `+quả mọng` (chip quả mọng thay chỗ tim). Sai mà còn lượt (`thu_lai`): robot bị gạch, bảng đọc lời của đảo. Sai hẳn (`can_phan_hoi`): robot bị gạch, 0,7 giây sau màn "Gần đúng rồi" của đảo hiện đè lên, đóng màn đó thì hỏi câu sau.
+- **Gợi ý 💡**: ba cấp của đảo (`goiY`), lời gợi ý hiện trong bảng đọc (robot đứng yên); cấp 3 cho một robot sai bay đi (`{ loai_bo }`) khi còn ít nhất hai robot sai.
+- **Nhật ký** (`thaoTac`): `xoay_nong` khi bé chọn xong mục tiêu (chạm robot, hoặc dừng phím mũi tên 0,7 giây; một lần mỗi robot), `ban` khi đạn rời nòng, `cham` robot đã gạch / phóng to hình, `nghe_lai`, `di_chuyen` xe tăng khi nhấc tay. Tạm dừng `tamDung('nut' | 'an_tab')`, chơi tiếp `tiepTuc('nut')`, bảng tạm dừng có **🏝️ Về đảo** (`veDao`). Hết câu: màn "Hoàn thành!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc của nó.
+- Không menu, chọn màn, bài học, hỏi đáp, bảng kết quả; không ghi localStorage của game; âm thanh và giọng đọc theo `thongTin().am_thanh` của đảo.
+- Câu đảo gửi mà không có lựa chọn (dạng `thao_tac_hinh`, `keo_tha`, `sap_xep`, `nhap_so`) là cấu hình màn chưa đúng: game ghi lỗi (`XeTangDao._trangThai().loi`), đóng câu bằng `hetGio` và hỏi câu sau để ván không kẹt.
+
+Kiểm thử: `node --test tests/xe-tang-thoi-gian-dao.test.js` (cầu nối giả theo kịch bản).
+
 ## Tùy chỉnh nhanh
 
 **Đọc rồi thử lại:** khi chọn robot sai hoặc bấm 💡, bảng giải thích tạm dừng thời gian và robot đến khi bé bấm **Đã đọc · Thử lại** (hoặc Enter/Space). Lần sai đầu chưa chỉ đáp án đúng; lần sai thứ hai/gợi ý vẫn giữ mức thưởng 20 điểm. Escape hay chuyển sang ứng dụng khác giữ phần đang đọc; xác nhận xong mới hiện bảng tạm dừng. Nút ⤢ hoặc phím Z mở đồng hồ lớn để đọc bất cứ lúc nào đang hỏi; zoom thủ công đóng ngay bằng Escape, Z hoặc nút Đóng.
@@ -86,5 +101,6 @@ Chạy từ thư mục gốc của kho:
 
 ```
 node --test tests/xe-tang-thoi-gian.test.js
+node --test tests/xe-tang-thoi-gian-dao.test.js
 NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/xe-tang-thoi-gian.e2e.js
 ```

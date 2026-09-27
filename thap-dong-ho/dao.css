@@ -1,0 +1,62 @@
+/* ============================================================
+   dao.css – Chế độ Đảo Khủng Long của Tháp Đồng Hồ (js/dao.js)
+   Chỉ có tác dụng khi <html> mang lớp "dao" hoặc với các phần tử #dao-… / #btn-dao-… (ẩn sẵn khi chơi một mình).
+   ============================================================ */
+
+/* ---------- Thẻ mở đầu ---------- */
+#dao-mo-dau { z-index: 8; }
+.dao-panel { max-width: 580px; width: min(100%, 580px); padding: 22px 28px 24px; }
+.dao-hinh { display: flex; align-items: flex-end; justify-content: center; gap: 6px; min-height: 120px; margin-bottom: 4px; }
+.dao-hinh .dao-logo { width: 132px; height: 132px; display: block; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.22)); }
+.dao-hinh .dao-be {
+  width: 150px; height: 150px; object-fit: contain; display: block;
+  filter: drop-shadow(0 10px 12px rgba(34, 48, 62, 0.2));
+  animation: dao-nhun 2.4s ease-in-out infinite;
+}
+@keyframes dao-nhun { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+.dao-panel .dao-game {
+  margin: 4px 0 2px; font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--blue-dark);
+}
+.dao-panel .dao-ten { margin: 0 0 8px; font-size: 36px; line-height: 1.1; color: var(--orange-dark); }
+.dao-panel .dao-cach { font-size: 20px; line-height: 1.35; color: var(--ink); margin: 8px auto 0; max-width: 470px; }
+.dao-panel .dao-cach b { color: var(--purple-dark); }
+.dao-panel .btn-row { margin-top: 16px; }
+.dao-panel .btn-row + .btn-row { margin-top: 12px; }
+
+/* ---------- HUD: nút nghe lại câu hỏi ---------- */
+#btn-dao-nghe {
+  pointer-events: auto;
+  width: 56px; height: 56px; min-height: 56px; padding: 0;
+  font-size: 24px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94); color: var(--ink);
+  box-shadow: 0 5px 0 #cfd4e6, 0 8px 16px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
+}
+#btn-dao-nghe:active { box-shadow: 0 1px 0 #cfd4e6; }
+/* Chip gợi ý của ngân hàng dài hơn: không tràn quá bảng và thẻ câu hỏi */
+html.dao .hint { max-width: min(92vw, 720px); }
+
+/* ---------- Tạm dừng trong đảo: chỉ "Chơi tiếp" và "Về đảo" ---------- */
+html.dao #pause .hub-return,
+html.dao #pause [data-audio-toggles],
+html.dao #btn-lesson-again,
+html.dao #btn-restart,
+html.dao #btn-quit { display: none !important; }
+
+@media (max-width: 700px) {
+  .dao-panel .dao-ten { font-size: 28px; }
+  .dao-panel .dao-cach { font-size: 17px; }
+  .dao-hinh .dao-logo { width: 100px; height: 100px; }
+  .dao-hinh .dao-be { width: 112px; height: 112px; }
+}
+@media (max-height: 560px) {
+  .dao-hinh { min-height: 0; }
+  .dao-hinh .dao-logo { width: 84px; height: 84px; }
+  .dao-hinh .dao-be { width: 96px; height: 96px; }
+}
+
+/* ---------- Ít hiệu ứng ---------- */
+.lite-fx .dao-hinh .dao-be { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .dao-hinh .dao-be { animation: none !important; }
+}

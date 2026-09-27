@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Đảo Khủng Long – Học Toán lớp 2 | 3hoa.com</title>
-<meta name="description" content="Đảo Khủng Long: game học Toán lớp 2 theo SGK Kết nối tri thức. Bé đua xe, lật thẻ, xếp hình số, đọc truyện tranh giải toán và nuôi khủng long của riêng mình; bố mẹ xem được con sai ở đâu.">
+<meta name="description" content="Đảo Khủng Long: game học Toán lớp 2 theo SGK Kết nối tri thức. Bé đua xe, lật thẻ, xếp hình số, cân đo, đi chợ, câu cá thống kê, chém trái cây, cưỡi hổ và nuôi khủng long của riêng mình; bố mẹ xem được con sai ở đâu.">
 <meta name="theme-color" content="#2ec4b6">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -19,6 +19,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/xuong-do-luong.css">
+<link rel="stylesheet" href="css/cho-khung-long.css">
+<link rel="stylesheet" href="css/cau-ca.css">
+<link rel="stylesheet" href="css/rung-hinh-khoi.css">
+<link rel="stylesheet" href="css/lat-lich.css">
+<link rel="stylesheet" href="css/dau-truong.css">
+<link rel="stylesheet" href="css/cau-noi.css">
+<link rel="stylesheet" href="css/goc-phu-huynh.css">
 </head>
 <body>
 <main id="app">
@@ -216,7 +224,7 @@
     </div>
   </section>
 
-  <!-- 11. Khung chơi chung: Truyện Tranh, Lật Thẻ Anh Em, Xếp Hình Số -->
+  <!-- 11. Khung chơi chung: Truyện Tranh, Lật Thẻ Anh Em, Xếp Hình Số và các game giai đoạn 4 (mỗi game tự tạo vùng chơi .kc-game của mình trong #kc-san) -->
   <section id="man-choi" class="man man-choi hidden" aria-label="Màn chơi">
     <div class="kc-nen" id="kc-nen"></div>
     <div class="dx-trai kc-trai">
@@ -409,43 +417,11 @@
     </div>
   </section>
 
-  <!-- 9. Góc phụ huynh (bản đầu) -->
-  <section id="man-phu-huynh" class="man man-ph hidden" aria-labelledby="ph-tieu-de">
-    <button class="nut-quay" id="ph-quay" type="button" aria-label="Quay lại">‹</button>
-    <div class="ph-cong" id="ph-cong">
-      <div class="ph-khoa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg></div>
-      <h1 id="ph-tieu-de">Dành cho bố mẹ</h1>
-      <p>Nhập kết quả phép tính để vào</p>
-      <p class="ph-hoi" id="ph-hoi">7 × 8 = ?</p>
-      <div class="ph-o" id="ph-o"></div>
-      <div class="ban-phim ban-phim-nho" id="ph-ban-phim">
-        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
-        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
-        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
-        <button type="button" data-k="xoa" class="phim-xoa" aria-label="Xóa">⌫</button><button type="button" data-k="0">0</button><button type="button" data-k="xong" class="phim-xong">Vào</button>
-      </div>
-    </div>
-    <div class="ph-bang hidden" id="ph-bang">
-      <h1>Góc phụ huynh <small>bản đầu</small></h1>
-      <p class="ph-note-dau">Báo cáo tuần, nhật ký chi tiết từng câu và bản đồ kỹ năng sẽ có ở giai đoạn sau. Nhật ký từng thao tác của bé đã được ghi đầy đủ từ bây giờ.</p>
-      <div class="ph-o-be" id="ph-be"></div>
-      <div class="ph-nhom">
-        <h2>Tuổi và lớp</h2>
-        <div class="ph-dong"><span>Tuổi</span><div class="nut-chon-hang" id="ph-tuoi"></div></div>
-        <div class="ph-dong"><span>Lớp</span><div class="nut-chon-hang" id="ph-lop"></div></div>
-        <div class="ph-dong"><span>Bài đang học (Toán 2)</span><div class="ph-buoc-so"><button type="button" id="ph-bai-tru" aria-label="Bớt">−</button><b id="ph-bai">1</b><button type="button" id="ph-bai-cong" aria-label="Thêm">+</button></div></div>
-      </div>
-      <div class="ph-nhom">
-        <h2>Dữ liệu trên máy này</h2>
-        <p id="ph-thong-ke">…</p>
-        <div class="nut-hang trai">
-          <button class="nut nut-trang" id="ph-tai" type="button">Tải nhật ký (JSONL)</button>
-          <button class="nut nut-trang" id="ph-tinh-lai" type="button">Tính lại tóm tắt từ nhật ký</button>
-          <button class="nut nut-do" id="ph-xoa" type="button">Xóa dữ liệu của bé</button>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- 9. Góc phụ huynh: js/goc-phu-huynh.js tự dựng giao diện -->
+  <section id="man-phu-huynh" class="man man-ph hidden" aria-label="Góc phụ huynh"></section>
+
+  <!-- 13. Game cũ trong đảo (giai đoạn 5): iframe và cầu nối js/cau-noi.js -->
+  <section id="man-game-cu" class="man man-game-cu hidden" aria-label="Trò chơi"></section>
 
   <!-- 10. Hỏi lên lớp mỗi năm học -->
   <section id="man-len-lop" class="man man-troi hidden" aria-labelledby="ll-hoi">
@@ -463,18 +439,33 @@
 
 <script src="js/nhat-ky.js"></script>
 <script src="js/ngan-hang.js"></script>
+<script src="js/cau-so-sanh.js"></script>
+<script src="js/cau-do-luong.js"></script>
+<script src="js/cau-tien.js"></script>
+<script src="js/cau-thong-ke.js"></script>
+<script src="js/cau-hinh-hoc.js"></script>
+<script src="js/cau-thoi-gian.js"></script>
 <script src="js/hoc-tap.js"></script>
 <script src="js/dao.js"></script>
 <script src="js/ho-so.js"></script>
 <script src="js/van-choi.js"></script>
 <script src="js/am-thanh.js"></script>
 <script src="js/phan-hoi.js"></script>
+<script src="js/bai-hoc.js"></script>
 <script src="js/dua-xe.js"></script>
 <script src="js/khung-choi.js"></script>
 <script src="js/lat-the.js"></script>
 <script src="js/xep-hinh-so.js"></script>
 <script src="js/truyen-tranh.js"></script>
-<script src="js/bai-hoc.js"></script>
+<script src="js/xuong-do-luong.js"></script>
+<script src="js/cho-khung-long.js"></script>
+<script src="js/cau-ca.js"></script>
+<script src="js/rung-hinh-khoi.js"></script>
+<script src="js/lat-lich.js"></script>
+<script src="js/dau-truong.js"></script>
+<script src="js/cau-noi.js"></script>
+<script src="js/bao-cao.js"></script>
+<script src="js/goc-phu-huynh.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

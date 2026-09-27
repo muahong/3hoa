@@ -1,0 +1,193 @@
+/* ======================================================================
+   xuong-do-luong.css – Xưởng Đo Lường (vùng 3): bàn làm việc bên trái (cân, trạm rót, bàn thước, hộp đơn vị),
+   bảng trả lời bên phải (thẻ lựa chọn, bàn phím số, nút Xong) có Giáp Long ngồi trên. Mọi bộ chọn có tiền tố xd-.
+   ====================================================================== */
+
+.xd-san { display: grid; grid-template-columns: minmax(0, 1fr) 288px; gap: 14px; touch-action: none; -webkit-user-select: none; user-select: none; }
+
+/* ---------- Bàn làm việc ---------- */
+.xd-canh { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: linear-gradient(180deg, #fffaf2 0%, #fff4e1 100%); border-radius: 30px; box-shadow: 0 6px 0 rgba(0, 0, 0, .14), 0 14px 30px rgba(20, 10, 50, .2); overflow: hidden; }
+.xd-khung { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 48px 14px 10px; }
+.xd-khung > svg { display: block; width: 100%; height: 100%; }
+.xd-trang-thai { position: absolute; z-index: 2; top: 10px; left: 50%; transform: translateX(-50%); margin: 0; padding: 6px 20px; border-radius: 99px; font-size: 20px; font-weight: 800; white-space: nowrap; background: #f1ecff; color: var(--tim-dam); box-shadow: 0 3px 0 rgba(0, 0, 0, .08); pointer-events: none; }
+.xd-trang-thai.lech { background: var(--do-nhat); color: var(--do-dam); }
+.xd-trang-thai.thang { background: var(--xanh-nhat); color: var(--xanh-dam); }
+
+/* kệ gỗ phía dưới: quả cân, nút rót, nút dịch thước */
+.xd-khay { flex: none; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px 12px; background: linear-gradient(180deg, #ebc58f 0%, #d9a86b 100%); border-top: 4px solid #c28a4c; }
+.xd-khay-nhan { font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #6b3f12; white-space: nowrap; }
+.xd-khay-goi { font-size: 16px; font-weight: 800; color: #6b3f12; opacity: .85; text-align: center; max-width: 130px; line-height: 1.2; }
+.xd-khay-qua .xd-khay-goi { display: none; }
+.xd-khay-qua .xd-ke { gap: 8px; flex-wrap: nowrap; }
+.xd-ke { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.xd-ke-mon { position: relative; width: 86px; height: 86px; border-radius: 20px; border: 3px solid rgba(255, 255, 255, .7); background: rgba(255, 250, 240, .72); display: grid; place-items: center; padding: 4px; box-shadow: 0 5px 0 rgba(107, 63, 18, .35); cursor: grab; transition: transform .15s, box-shadow .15s, background .15s; }
+.xd-ke-mon .xd-hinh-qc { width: 70px; height: auto; display: block; pointer-events: none; }
+.xd-ke-mon:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(107, 63, 18, .35); }
+.xd-ke-mon.chon { background: #fff7d6; border-color: var(--vang); box-shadow: 0 0 0 5px rgba(255, 209, 102, .75), 0 5px 0 rgba(107, 63, 18, .35); transform: translateY(-4px); }
+.xd-ke-mon.trong, .xd-ke-mon.dang-keo { background: transparent; border: 3px dashed rgba(107, 63, 18, .45); box-shadow: none; cursor: pointer; transform: none; }
+.xd-ke-mon.trong > *, .xd-ke-mon.dang-keo > * { opacity: .12; }
+.xd-ke-qua { width: 62px; height: 62px; border-radius: 16px; }
+.xd-ke-e { font-size: 40px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; pointer-events: none; }
+
+/* bóng quả cân đang kéo */
+.xd-bong-keo { position: fixed; left: 0; top: 0; z-index: 9; width: 96px; height: 96px; margin: -60px 0 0 -48px; display: grid; place-items: center; pointer-events: none; filter: drop-shadow(0 10px 10px rgba(20, 10, 50, .35)); }
+.xd-bong-keo .xd-hinh-qc { width: 92px; height: auto; }
+.xd-bong-keo.qua .xd-ke-e { font-size: 58px; }
+
+/* cân */
+.xd-hinh-can #xd-dia-trai, .xd-hinh-can #xd-dia-phai { transition: filter .2s; }
+.xd-san.xd-tro-phai .xd-hinh-can #xd-dia-phai { filter: drop-shadow(0 0 8px #ffd166) drop-shadow(0 0 16px #ffb000); }
+.xd-cham-dia #xd-dia-trai, .xd-cham-dia #xd-dia-phai { cursor: pointer; }
+.xd-hinh-can .xd-qc-dia { cursor: grab; }
+.xd-san.xd-thang .xd-hinh-can { filter: drop-shadow(0 0 14px rgba(6, 214, 160, .55)); }
+
+/* trạm rót nước */
+.xd-hinh-rot .xd-nuoc { transition: transform .5s cubic-bezier(.3, .9, .4, 1); }
+.xd-hinh-rot .xd-ca { transition: transform .32s cubic-bezier(.3, .8, .4, 1); transform-box: fill-box; transform-origin: 50% 50%; }
+#xd-ca-nuoc { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .45s; }
+#xd-ca-nuoc.can { transform: scaleY(.08); }
+.xd-hinh-rot .xd-dong-nuoc { opacity: 0; transition: opacity .15s; }
+.xd-hinh-rot .xd-dong-nuoc.chay { opacity: .95; }
+.xd-hinh-rot .xd-sao-vach { transform-box: fill-box; transform-origin: 50% 50%; }
+.xd-sao-nhap .xd-sao-vach { animation: xdNhapNhay .8s ease-in-out infinite alternate; }
+@keyframes xdNhapNhay { from { transform: scale(1); } to { transform: scale(1.7); } }
+.xd-nut-rot { display: inline-flex; align-items: center; gap: 10px; font-size: 26px; min-height: 72px; padding: 8px 30px 8px 18px; }
+.xd-rot-bieu .xd-hinh-ca { width: 46px; height: 46px; display: block; pointer-events: none; }
+.xd-nut-bot { font-size: 19px; min-height: 60px; padding: 8px 18px; }
+.xd-da-rot { display: flex; align-items: center; gap: 8px; min-height: 56px; flex: 1 1 auto; max-width: 420px; background: rgba(255, 250, 240, .7); border-radius: 18px; padding: 6px 12px; font-size: 17px; font-weight: 800; color: #6b3f12; }
+.xd-da-rot-ds { display: flex; flex-wrap: wrap; gap: 5px; }
+.xd-ca-nho { display: inline-grid; place-items: center; width: 30px; height: 36px; border-radius: 5px 5px 10px 10px; background: linear-gradient(180deg, #7cc8fb 0%, #3fa6ee 100%); border: 2px solid #2f7fd6; color: #fff; font-style: normal; font-size: 12px; font-weight: 800; }
+@media (prefers-reduced-motion: no-preference) {
+  .xd-ca-nho:last-child { animation: xdRoi .35s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes xdRoi { from { transform: translateY(-14px) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+}
+
+/* bàn thước */
+.xd-hinh-thuoc .xd-thuoc { cursor: grab; }
+.xd-hinh-thuoc .xd-thuoc.xd-muot { transition: transform .18s ease-out; }
+.xd-nut-dich { width: 66px; min-height: 60px; padding: 0; font-size: 26px; }
+
+/* hộp đơn vị */
+.xd-pl { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; }
+.xd-pl-the { position: relative; z-index: 3; display: flex; align-items: center; gap: 16px; max-width: 94%; background: #fff; border-radius: 26px; padding: 12px 26px 12px 16px; box-shadow: 0 6px 0 #e3d8c4, 0 12px 26px rgba(20, 10, 50, .16); border: 4px solid #f2dca0; cursor: grab; transition: transform .3s cubic-bezier(.2, 1.2, .4, 1), opacity .3s; }
+.xd-pl-the.dang-keo { transition: none; box-shadow: 0 18px 30px rgba(20, 10, 50, .3); cursor: grabbing; }
+.xd-pl-the.vao { transform: translateY(26px) scale(.94); }
+.xd-pl-e { font-size: 66px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.xd-pl-cau { font-size: clamp(22px, 2.6vw, 30px); font-weight: 800; line-height: 1.25; color: var(--ink); }
+.xd-pl-o { display: inline-block; min-width: 1.9em; text-align: center; font-style: normal; color: var(--tim); border: 4px dashed var(--tim); border-radius: 14px; padding: 0 .2em; }
+.xd-pl-hang { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.xd-pl-hop { position: relative; min-height: 150px; border: 0; border-radius: 14px 14px 28px 28px; padding: 30px 6px 12px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; color: #fff; box-shadow: inset 0 -10px 0 rgba(0, 0, 0, .12), 0 6px 0 rgba(0, 0, 0, .16); transition: transform .15s, box-shadow .15s, opacity .2s; }
+.xd-pl-hop[data-dv="cm"] { background: linear-gradient(180deg, #ff9fb6 0%, #ef476f 100%); }
+.xd-pl-hop[data-dv="dm"] { background: linear-gradient(180deg, #ffd88a 0%, #f2a900 100%); color: #4a3200; }
+.xd-pl-hop[data-dv="m"] { background: linear-gradient(180deg, #7de3c3 0%, #0fa37f 100%); }
+.xd-pl-hop[data-dv="km"] { background: linear-gradient(180deg, #9cc4ff 0%, #3d7be0 100%); }
+.xd-pl-nap { position: absolute; left: -6px; right: -6px; top: -4px; height: 22px; border-radius: 10px; background: rgba(0, 0, 0, .18); }
+.xd-pl-hop b { font-size: 46px; line-height: 1; }
+.xd-pl-hop small { font-size: 15px; font-weight: 800; opacity: .92; }
+.xd-pl-hop.tro, .xd-pl-hop.nhan { transform: translateY(-6px) scale(1.04); box-shadow: 0 0 0 6px rgba(255, 209, 102, .85), 0 10px 0 rgba(0, 0, 0, .16); }
+.xd-pl-hop.sai { opacity: .55; box-shadow: 0 0 0 5px var(--do), inset 0 -10px 0 rgba(0, 0, 0, .12); }
+.xd-pl-hop.dung { box-shadow: 0 0 0 7px rgba(6, 214, 160, .8), 0 6px 0 rgba(0, 0, 0, .16); }
+.xd-pl-hop.gach { opacity: .35; }
+.xd-pl-hop.gach::after, .xd-pl-hop.sai::after { content: "✕"; position: absolute; top: 26px; font-size: 38px; color: #fff; text-shadow: 0 2px 4px rgba(0, 0, 0, .3); }
+
+/* cân đồng hồ: kim quay từ 0 tới số kg khi câu hiện */
+@media (prefers-reduced-motion: no-preference) {
+  .xd-tranh .xd-kim-dh { animation: xdKimQuay 1.1s cubic-bezier(.3, 1.5, .5, 1) .25s both; }
+  @keyframes xdKimQuay { from { transform: rotate(-140deg); } }
+}
+
+/* tranh và biểu thức */
+.xd-tranh { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.xd-tranh > svg { display: block; max-width: 100%; max-height: 100%; width: 100%; height: 100%; }
+.xd-dem-thuoc .xd-thuoc-2dm { cursor: pointer; }
+.xd-dem-thuoc .xd-thuoc-2dm.da-dem rect { stroke: #06b389; stroke-width: 4; }
+.xd-bt { display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 30px; padding: 26px 36px; box-shadow: 0 6px 0 #e3d8c4, 0 12px 26px rgba(20, 10, 50, .12); border: 4px solid #f2dca0; max-width: 100%; }
+.xd-bt-chu { font-size: clamp(40px, 5.6vw, 66px); font-weight: 800; line-height: 1.15; color: var(--ink); text-align: center; white-space: nowrap; }
+.xd-o-dap { display: inline-block; min-width: 1.4em; padding: 0 .18em; border: 5px dashed var(--tim); border-radius: 18px; color: var(--tim); }
+.xd-o-dap.co { border-style: solid; background: var(--tim-nhat); }
+
+/* đáp án đúng */
+.xd-dung { position: absolute; z-index: 4; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: 92%; background: #fff; border-radius: 24px; padding: 10px 26px; text-align: center; box-shadow: 0 0 0 7px rgba(6, 214, 160, .45), 0 12px 26px rgba(20, 10, 50, .22); pointer-events: none; }
+.xd-dung b { font-size: clamp(21px, 2.4vw, 28px); line-height: 1.25; color: var(--xanh-dam); }
+@media (prefers-reduced-motion: no-preference) {
+  .xd-dung:not(.hidden) { animation: xdHien .4s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes xdHien { from { opacity: 0; transform: translate(-50%, 18px) scale(.9); } to { opacity: 1; transform: translate(-50%, 0); } }
+}
+
+/* ---------- Bảng trả lời ---------- */
+.xd-ben { position: relative; min-height: 0; display: flex; flex-direction: column; gap: 12px; background: #fff; border-radius: 30px; padding: 74px 16px 16px; box-shadow: 0 6px 0 rgba(0, 0, 0, .14), 0 14px 30px rgba(20, 10, 50, .2); }
+.xd-tho { position: absolute; width: 138px; top: -52px; right: 10px; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .25)); pointer-events: none; }
+.xd-ben-nhan { font-size: 20px; font-weight: 800; line-height: 1.25; color: var(--ink-2); padding-right: 6px; }
+.xd-lc { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.xd-lc-chon { gap: 14px; }
+.xd-ben[data-nhap="chon"], .xd-ben[data-nhap="xong"], .xd-ben[data-nhap="keo"] { justify-content: center; padding-bottom: 40px; }
+.xd-lc-nut { position: relative; min-height: 78px; border-radius: 22px; border: 4px solid #d9cff3; background: #fff; color: var(--ink); font-size: 27px; font-weight: 800; line-height: 1.1; box-shadow: 0 6px 0 #d9d2ee; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 12px; transition: transform .12s, opacity .2s, border-color .2s, background .2s; }
+.xd-lc-nut b { font-weight: 800; }
+.xd-lc-nut:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #d9d2ee; }
+.xd-lc-e { font-size: 34px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.xd-lc.bon .xd-lc-nut { min-height: 58px; font-size: 24px; }
+.xd-lc-dau .xd-lc-nut { font-size: 46px; line-height: 1; }
+.xd-ben.cho .xd-lc-nut:disabled { opacity: .42; }
+.xd-lc-nut.sai { border-color: var(--do); background: var(--do-nhat); opacity: .8; }
+.xd-lc-nut.dung { border-color: var(--xanh); background: var(--xanh-nhat); box-shadow: 0 0 0 6px rgba(6, 214, 160, .4), 0 6px 0 #bfe9dc; opacity: 1; }
+.xd-lc-nut.gach { opacity: .45; }
+.xd-lc-nut.gach b { text-decoration: line-through; text-decoration-color: var(--do); text-decoration-thickness: 4px; }
+.xd-lc-meo { font-size: 18px; font-weight: 700; color: var(--ink-2); line-height: 1.35; }
+.xd-lc-meo.nho { font-size: 16px; color: var(--ink-3); }
+.xd-nut-xong { width: 100%; }
+
+/* bàn phím số */
+.xd-man-so { display: flex; align-items: baseline; justify-content: center; gap: 8px; min-height: 70px; border: 4px solid var(--tim); border-radius: 20px; background: #faf8ff; padding: 2px 12px; }
+.xd-man-so b { font-size: 46px; line-height: 1.3; color: var(--ink); }
+.xd-man-so span { font-size: 24px; font-weight: 800; color: var(--ink-2); }
+.xd-phim { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.xd-phim button { min-height: 60px; border: 0; border-radius: 18px; background: #f4f1fd; font-size: 30px; font-weight: 800; color: var(--ink); box-shadow: 0 4px 0 #ddd6ef; }
+.xd-phim button:active { transform: translateY(3px); box-shadow: 0 1px 0 #ddd6ef; }
+.xd-phim .xd-phim-xoa { font-size: 26px; color: var(--ink-2); }
+.xd-phim .xd-phim-xong { background: var(--tim); color: #fff; font-size: 22px; box-shadow: 0 4px 0 var(--tim-dam); }
+
+/* ---------- Hình trong màn "Gần đúng rồi" và bài học ---------- */
+.ph-hinh-giai .xd-hinh { display: block; width: 500px; max-width: 100%; height: auto; max-height: 270px; margin: 0 auto; }
+.xd-bh-hinh { width: 100%; display: flex; justify-content: center; }
+.xd-bh-hinh .xd-hinh { display: block; width: min(100%, 580px); height: auto; max-height: min(34vh, 290px); }
+
+/* ---------- Màn hình hẹp, xoay dọc ---------- */
+@media (max-width: 900px) and (orientation: landscape) {
+  .xd-san { grid-template-columns: minmax(0, 1fr) 250px; }
+  .xd-tho { width: 112px; top: -40px; }
+  .xd-ben { padding-top: 60px; }
+  .xd-lc-nut { font-size: 23px; }
+}
+@media (orientation: portrait), (max-width: 760px) {
+  .xd-san { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 10px; }
+  .xd-ben { padding: 12px 14px 14px; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .xd-tho { display: none; }
+  .xd-ben-nhan { flex: 1 0 100%; font-size: 18px; }
+  .xd-lc { flex: 1 1 100%; }
+  .xd-lc-chon { flex-direction: row; flex-wrap: wrap; }
+  .xd-lc-chon .xd-lc-nut { flex: 1 1 0; min-width: 140px; }
+  .xd-lc-so { flex-direction: row; align-items: stretch; }
+  .xd-lc-so .xd-man-so { flex: 0 0 150px; flex-direction: column; align-items: center; justify-content: center; }
+  .xd-lc-so .xd-phim { flex: 1; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .xd-lc-xong { flex-direction: row; align-items: center; }
+  .xd-khay { flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+  .xd-ke-mon { width: 74px; height: 74px; }
+  .xd-ke-mon .xd-hinh-qc { width: 60px; }
+  .xd-khay-goi { flex: 1 0 100%; font-size: 15px; order: 5; }
+  .xd-pl-hang { gap: 8px; }
+  .xd-pl-hop { min-height: 120px; }
+  .xd-pl-hop b { font-size: 38px; }
+  .xd-bt-chu { font-size: clamp(34px, 7vw, 54px); }
+}
+@media (max-height: 640px) and (orientation: landscape) {
+  .xd-khung { padding-top: 40px; }
+  .xd-ke-mon { width: 70px; height: 70px; }
+  .xd-ke-mon .xd-hinh-qc { width: 58px; }
+  .xd-lc-nut { min-height: 58px; font-size: 23px; }
+  .xd-phim button { min-height: 50px; }
+  .xd-pl-hop { min-height: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xd-hinh-rot .xd-nuoc, .xd-hinh-rot .xd-ca, #xd-ca-nuoc, .xd-hinh-thuoc .xd-thuoc.xd-muot, .xd-pl-the, .xd-pl-hop { transition: none; }
+  .xd-sao-nhap .xd-sao-vach { animation: none; transform: scale(1.5); }
+}

@@ -1,16 +1,18 @@
 /* Service worker: cho phép chơi ngoại tuyến sau lần tải đầu tiên.
    Khi cập nhật game, đổi số phiên bản CACHE để người chơi nhận bản mới. */
-const CACHE = 'xe-tang-thoi-gian-v9';
+const CACHE = 'xe-tang-thoi-gian-v10';
 const CORE = [
   './',
   './index.html',
   './style.css',
   './game-shell.css',
+  './dao.css',
   './assets/tank-body.png',
   './js/audio.js',
   './js/clock.js',
   './js/levels.js',
   './js/profile.js',
+  './js/dao.js',
   './js/game.js',
   './manifest.json',
   './icons/icon-192.png',

@@ -15,7 +15,7 @@
     "van": { "type": "string" },
     "cau": { "type": "string" },
     "game": {
-      "enum": ["chem-trai-cay", "ban-thien-thach", "me-cung", "thap-xep-hinh", "xep-hinh-so", "xe-tang", "cuoi-ho", "dua-xe", "truyen-tranh", "xuong-do-luong", "cho-khung-long", "cau-ca", "lat-the", "dau-truong", "trang-chu", "goc-phu-huynh"]
+      "enum": ["chem-trai-cay", "ban-thien-thach", "me-cung", "thap-xep-hinh", "xep-hinh-so", "xe-tang", "cuoi-ho", "dua-xe", "truyen-tranh", "xuong-do-luong", "cho-khung-long", "cau-ca", "lat-the", "rung-hinh-khoi", "lat-lich", "dau-truong", "trang-chu", "goc-phu-huynh"]
     },
     "vung": { "type": "integer", "minimum": 0, "maximum": 12 },
     "man": { "type": "string" },
@@ -70,7 +70,7 @@
             "type": "object",
             "required": ["kieu"],
             "properties": {
-              "kieu": { "enum": ["cham", "vuot", "keo", "tha", "go_so", "xoa", "doi_lan", "doi_cot", "chon", "bo_chon", "nghe_lai", "lat", "xoay_nong", "ban", "rot", "keo_thuoc", "cau", "dem"] },
+              "kieu": { "enum": ["cham", "vuot", "keo", "tha", "go_so", "xoa", "doi_lan", "doi_cot", "chon", "bo_chon", "nghe_lai", "lat", "xoay_nong", "ban", "rot", "keo_thuoc", "cau", "dem", "ve", "noi", "xoay", "boc", "lat_trang", "dat", "bo_ra", "di_chuyen", "nhay", "ngam", "tro"] },
               "doi_tuong": { "type": "string" },
               "gia_tri": {},
               "tu": { "type": "string" },

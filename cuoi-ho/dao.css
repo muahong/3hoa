@@ -1,0 +1,93 @@
+/* ============================================================
+   dao.css – Chế độ đảo của Cưỡi Hổ Vượt Lửa (js/dao.js)
+   Chỉ có hiệu lực khi <html class="dao"> (Đảo Khủng Long mở game trong iframe); chơi riêng thì không đổi gì.
+   ============================================================ */
+
+/* Phần tử chỉ dành cho đảo */
+.dao-qua-mong, .dao-nut { display: none; }
+html.dao .dao-nut { display: inline-flex; }
+
+/* Đảo là nơi ghi kết quả và giữ thiết lập: không menu, tim, đồng hồ đếm giờ, trang chủ, công tắc âm thanh, chơi lại, bài học */
+html.dao #menu, html.dao #hud-hearts, html.dao #hud-timer, html.dao #pause .hub-return, html.dao #pause .toggle-row,
+html.dao #btn-restart, html.dao #btn-pause-lesson, html.dao #btn-quit { display: none !important; }
+
+/* ---------- Thẻ bắt đầu ---------- */
+#dao-start { z-index: 7; }
+.dao-panel { max-width: 580px; padding: 16px 28px 22px; }
+.dao-hero { width: clamp(180px, 28vw, 280px); height: auto; object-fit: contain; filter: drop-shadow(0 12px 12px rgba(34,48,62,.2)); }
+.dao-panel .dao-game { margin: 2px 0 0; font-size: 17px; letter-spacing: 2px; color: var(--orange-dark); font-weight: 800; text-transform: uppercase; }
+.dao-panel h2 { font-size: clamp(28px, 4vw, 38px); margin: 4px 0 6px; }
+.dao-panel .dao-phu { font-size: 20px; line-height: 1.35; color: var(--ink-soft); }
+.dao-panel .btn-row { margin-top: 14px; }
+#dao-bat-dau { min-width: 240px; }
+
+/* ---------- Quả mọng trong HUD ---------- */
+html.dao .dao-qua-mong {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, #8f63db, #6a3cb6); color: #fff; font-weight: 800; font-size: 19px; line-height: 1;
+  padding: 3px 13px 3px 4px; border-radius: 999px; box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+}
+html.dao .dao-qua-mong img { width: 28px; height: 28px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.dao-qua-mong.nay { animation: dao-nay 0.45s ease; }
+@keyframes dao-nay { 40% { transform: scale(1.28); } }
+
+/* ---------- Thẻ câu hỏi ----------
+   Chiều cao cố định (đủ cho chữ + tia số) để vị trí các vòng lửa không nhảy giữa các câu. */
+html.dao { --dao-hinh: clamp(96px, 14.5vh, 140px); }
+html.dao .question-card {
+  flex-direction: column; gap: 4px; justify-content: center;
+  min-width: 300px; min-height: calc(var(--dao-hinh) + 62px); max-width: min(760px, 72vw);
+  padding: 10px 22px 12px;
+}
+html.dao .question-card .q-text { order: 1; font-size: clamp(24px, 3vw, 32px); line-height: 1.25; }
+html.dao .question-card.dao-co-hinh .q-text { font-size: clamp(20px, 2.4vw, 26px); }
+html.dao .question-card.dao-day .q-text { font-size: clamp(34px, 4.8vw, 50px); letter-spacing: 1px; word-spacing: 4px; }
+html.dao .question-card .q-visual { order: 2; justify-content: center; }
+html.dao .question-card .q-visual > svg { display: block; height: var(--dao-hinh); width: auto; max-width: min(720px, 62vw); }
+/* Tia số (viewBox 640 × 120): đặt bề ngang, chiều cao theo tỉ lệ, không chừa khoảng trống */
+html.dao .question-card .q-visual > svg.tia-so { width: min(calc(var(--dao-hinh) * 5.33), 62vw); height: auto; max-width: none; }
+html.dao .question-card .q-visual .clock { width: var(--dao-hinh); height: var(--dao-hinh); }
+/* Hình gần vuông (đồng hồ): hình bên trái, chữ bên phải như game gốc, hình cao gần bằng thẻ */
+html.dao .question-card.dao-hinh-vuong { flex-direction: row; gap: 16px; }
+html.dao .question-card.dao-hinh-vuong .q-visual { order: 0; }
+html.dao .question-card.dao-hinh-vuong .q-text { order: 1; max-width: 320px; font-size: clamp(22px, 2.9vw, 30px); }
+html.dao .question-card.dao-hinh-vuong .q-visual > svg,
+html.dao .question-card.dao-hinh-vuong .q-visual .clock { height: calc(var(--dao-hinh) + 38px); width: calc(var(--dao-hinh) + 38px); max-width: none; }
+/* Ô "?" trong đề, cùng màu ô trống trên tia số */
+html.dao .dao-hoi {
+  display: inline-block; min-width: 1.3em; padding: 0 0.2em; margin: 0 0.04em;
+  background: linear-gradient(180deg, #ff9a3c, #ff7a1a); color: #fff; border-radius: 0.28em; text-align: center;
+  box-shadow: 0 3px 0 #cf5f0b; line-height: 1.2;
+}
+/* Chạm thẻ để phóng to: thẻ nổi lên giữa phía trên (có thể che tạm điểm và nút), chạm lại hoặc chọn vòng để thu nhỏ */
+html.dao .question-card.zoomed {
+  position: fixed; left: 0; right: 0; top: calc(var(--sat) + 8px); margin: 0 auto;
+  width: max-content; max-width: 96vw; z-index: 4;
+}
+html.dao .question-card.zoomed .q-visual > svg { height: min(200px, 30vh); max-width: 92vw; }
+html.dao .question-card.zoomed .q-visual > svg.tia-so { width: min(1060px, 92vw); height: auto; max-width: none; }
+html.dao .question-card.zoomed .q-visual .clock { width: min(200px, 30vh); height: min(200px, 30vh); }
+html.dao .question-card.dao-hinh-vuong.zoomed .q-visual > svg,
+html.dao .question-card.dao-hinh-vuong.zoomed .q-visual .clock { width: min(280px, 38vh); height: min(280px, 38vh); }
+
+/* Cửa sổ hẹp (iPad dọc, cửa sổ 768 px): HUD hai hàng, thẻ câu hỏi dùng cả bề ngang */
+@media (max-width: 900px) {
+  html.dao .hud-top { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "left right" "center center"; gap: 6px 8px; }
+  html.dao .hud-left { flex-direction: row; align-items: center; flex-wrap: wrap; min-width: 0; gap: 6px; }
+  html.dao .hud-center { justify-self: center; }
+  html.dao .question-card { max-width: 96vw; }
+  html.dao .question-card .q-visual > svg { max-width: min(680px, 88vw); }
+  html.dao .question-card .q-visual > svg.tia-so { width: min(calc(var(--dao-hinh) * 5.33), 88vw); max-width: none; }
+}
+/* Màn hình thấp (điện thoại nằm ngang): thẻ gọn lại */
+@media (max-height: 600px) {
+  html.dao { --dao-hinh: 72px; }
+  html.dao .question-card { min-height: calc(var(--dao-hinh) + 44px); padding: 4px 14px 6px; }
+  html.dao .question-card .q-text { font-size: 20px; }
+  html.dao .question-card.dao-day .q-text { font-size: 30px; }
+  html.dao .dao-qua-mong { font-size: 16px; }
+  html.dao .dao-qua-mong img { width: 22px; height: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .dao-qua-mong.nay { animation: none; } }
+.lite-fx .dao-qua-mong.nay { animation: none; }

@@ -47,7 +47,7 @@ async function main() {
     setTimeout(() => { try { fs.rmSync(hoSo, { recursive: true, force: true }); } catch (e) { /* bỏ qua */ } process.exit(ma); }, 400);
   };
   let tab = null;
-  for (let i = 0; i < 60 && !tab; i++) {
+  for (let i = 0; i < 160 && !tab; i++) {
     await cho(250);
     try {
       const ds = await (await fetch('http://127.0.0.1:' + CONG + '/json/list')).json();

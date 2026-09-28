@@ -220,7 +220,7 @@ IndexedDB `dao-khung-long`:
 | `tom_tat_van` | `van` | Tóm tắt từng ván, có câu mô tả tiếng Việt |
 | `ho_so_hoc_tap` | `be` | Hồ sơ học tập tính từ hai kho trên |
 
-localStorage: `dkl-be-dang-choi-v1` (bé đang chơi, lúc chơi gần nhất), `dkl-phien-mo-v1` (phiên, ván, câu đang mở để đóng lại nếu app bị tắt ngang), `dkl-am-thanh-v1`, `dkl-meo-mh-v1`.
+localStorage: `dkl-be-dang-choi-v1` (bé đang chơi, lúc chơi gần nhất), `dkl-phien-mo-v1` (phiên, ván, câu đang mở để đóng lại nếu app bị tắt ngang, kèm số quả mọng của ván đang mở), `dkl-the-dang-mo-v1` (cửa sổ đang giữ đảo), `dkl-sao-luu-v1` (lúc sao lưu gần nhất), `dkl-don-nhat-ky-v1`, `dkl-am-thanh-v1`, `dkl-meo-mh-v1`.
 
 Tên bé không đi vào nhật ký (chỉ có mã `be_…`), không vào gói xuất cho trợ lý AI. Không gửi gì ra ngoài; phụ huynh tự tải tệp.
 
@@ -234,9 +234,9 @@ Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu,
 node tests/run.js
 ```
 
-450 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/dao-khung-long-huong-dan.test.js` (bước tiếp theo, còn thiếu gì để Đã thuộc, cách chơi đủ mọi thể loại và chế độ, 10 chương dựng được), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`), `tests/dao-khung-long-sua-loi.test.js` (các lỗi sửa sau lần rà soát 2026-09-28).
+455 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/dao-khung-long-huong-dan.test.js` (bước tiếp theo, còn thiếu gì để Đã thuộc, cách chơi đủ mọi thể loại và chế độ, 10 chương dựng được), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`), `tests/dao-khung-long-sua-loi.test.js` (các lỗi sửa sau lần rà soát 2026-09-28), `tests/dao-khung-long-luu-tru.test.js` (sao lưu và khôi phục, quả mọng của ván dở, một cửa sổ giữ đảo).
 
-Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở gốc repo (máy chủ tĩnh có hàng đợi lớn), rồi `node scripts/dkl-cdp.js --kich-ban <tệp.js>` (Chrome headless, không cần Playwright; đọc phần đầu tệp). Trong bảng điều khiển có `window.__DKL` (`batDauMan(id)`, `moPhuHuynh`, `tinhLai`), `window.DaoTroChoi`, `CauNoi._trangThai()`, và `_trangThai()` của từng game.
+Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở gốc repo (máy chủ tĩnh có hàng đợi lớn), rồi `node scripts/dkl-cdp.js --kich-ban <tệp.js>` (Chrome headless, không cần Playwright; đọc phần đầu tệp). Trong bảng điều khiển có `window.__DKL` (`batDauMan(id)`, `moPhuHuynh`, `tinhLai`, `khoiPhucTep(tệp)`), `window.DaoTroChoi`, `CauNoi._trangThai()`, và `_trangThai()` của từng game.
 
 ## Sửa sau lần rà soát 2026-09-28
 
@@ -246,6 +246,15 @@ Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở g�
 - Mức thành thạo: Đã thuộc chỉ tụt về Đang luyện khi có từ 2 câu nợ hoặc một câu nợ để quá 3 ngày (vẫn tụt khi tự làm đúng dưới 85%). Vững chắc cần 4 buổi ôn đạt, từ ngày 1, 3, 7, 14 sau ngày thuộc và mỗi buổi cách buổi đạt trước ít nhất 1, 2, 4, 7 ngày; hạn ôn tính theo cả hai.
 - Nhật ký gốc cũ hơn 120 ngày được dọn mỗi ngày một lần, chạy nền 3 giây sau khi mở app, bằng một lệnh xóa theo khoảng mã ULID (trước đây duyệt cả kho mỗi lần mở app và bắt bé chờ).
 - Nội dung: Bài 9 (thêm, bớt) chỉ trừ không qua 10; màn bài toán có lời văn vùng 4 mở từ Bài 23; Đấu Trường chỉ lấy kỹ năng của bài đã học tới hoặc đã luyện (thiếu thì thêm bài gần nhất cho đủ 4), mỗi vùng ít nhất một kỹ năng, bằng trọng số thì trộn theo ngày thay vì theo bảng chữ cái.
+
+## Giữ dữ liệu của bé (nhóm B của lần rà soát 2026-09-28)
+
+- Sao lưu và khôi phục (Góc phụ huynh, Cài đặt, mục "Sao lưu và giữ dữ liệu"): một tệp JSON `dao-khung-long-sao-luu` (phiên bản 1) gồm hồ sơ, tóm tắt câu, tóm tắt ván của mọi bé trên máy và nhật ký gốc 14 ngày gần nhất (hoặc toàn bộ nếu chọn). Khôi phục gộp theo mã, không xóa gì của máy: hồ sơ trùng mã giữ bản cập nhật sau, tóm tắt và nhật ký ghi theo mã nên khôi phục hai lần không nhân đôi, hồ sơ học tập được tính lại. Máy chưa có bé thì màn đầu có nút "Bố mẹ: khôi phục từ tệp sao lưu" (đổi máy, hoặc chuyển từ Safari sang đảo ở màn hình chính vì hai nơi có bộ nhớ riêng). API: `NhatKy.saoLuu`, `kiemTraSaoLuu`, `khoiPhuc`.
+- Lưu bền: lần chạm đầu xin `navigator.storage.persist()` (trừ Firefox vì nó hiện hộp hỏi quyền; phụ huynh bấm "Xin lưu bền"). Góc phụ huynh nói rõ Safari có thể tự xóa dữ liệu sau 7 ngày không mở, lần sao lưu gần nhất, và cảnh báo khi máy không lưu được (duyệt riêng tư: app chạy bằng kho bộ nhớ, có thêm thông báo lúc mở). `NhatKy.trangThaiKho()`.
+- IndexedDB: kết nối mất (iOS sau khi ra nền) hay đóng vì thẻ khác nâng phiên bản thì mở lại và thử lại một lần; giao dịch bị hủy nếu việc ghi ném lỗi giữa chừng; sự kiện chuẩn hóa qua JSON trước khi ghi. Chỉ lỗi hết chỗ mới dọn bớt nhật ký gốc (trước đây mọi lỗi đều xóa nhật ký cũ hơn 30 ngày); lỗi khác giữ bộ đệm và thử lại sau 6 giây. Đọc nhật ký theo bé, theo ván dùng `getAll` theo khoảng.
+- App bị tắt ngang giữa ván: số quả mọng của ván đang mở được ghi vào dấu mở sau mỗi câu; lần mở sau ghi vào `van_ket_thuc` và cộng vào hồ sơ.
+- Một cửa sổ giữ đảo: mở đảo ở cửa sổ (thẻ) khác thì cửa sổ cũ ghi nốt bộ đệm, thôi ghi nhật ký, dấu mở và kho (`NhatKy.giuThe`, kho của app bỏ qua lần ghi của cửa sổ đã nhường), hiện "Đảo đang mở ở cửa sổ khác" với nút "Chơi ở cửa sổ này" (tải lại để giữ đảo). Cửa sổ mới chờ 0,45 giây nếu cửa sổ kia vừa còn chạy. Trước đây hai cửa sổ ghi đè hồ sơ của nhau (mất giới hạn giờ vừa đặt, mất quả mọng).
+- Tính lại tóm tắt chỉ dựng lại các ván còn nhật ký gốc, giữ nguyên tóm tắt của ván cũ hơn 120 ngày (trước đây mất lịch sử cũ và mức Vững chắc).
 
 ## Việc của các giai đoạn sau
 

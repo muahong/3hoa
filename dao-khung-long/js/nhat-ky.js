@@ -17,7 +17,11 @@
   const GHI_MOI_MS = 2000;
   const GIU_NHAT_KY_NGAY = 120;
   const KHOA_DON = 'dkl-don-nhat-ky-v1'; // ngày dọn nhật ký gốc gần nhất (mỗi ngày dọn một lần, không chờ lúc mở app)
-  const KHOA_DANG_MO = 'dkl-phien-mo-v1'; // dấu phiên đang mở (localStorage, ghi đồng bộ) để đóng phiên dở khi app bị tắt ngang
+  const KHOA_DANG_MO = 'dkl-phien-mo-v1';
+  const KHOA_THE = 'dkl-the-dang-mo-v1'; // thẻ (cửa sổ) đang giữ đảo: { id, luc }; thẻ khác thấy mã lạ thì nhường
+  const KHOA_SAO_LUU = 'dkl-sao-luu-v1'; // lúc sao lưu gần nhất trên máy này (ISO)
+  const TOI_DA_BO_DEM = 50000; // ghi hỏng mãi thì bộ đệm không lớn vô hạn (bỏ sự kiện cũ nhất)
+  const DINH_DANG_SAO_LUU = 'dao-khung-long-sao-luu'; // dấu phiên đang mở (localStorage, ghi đồng bộ) để đóng phiên dở khi app bị tắt ngang
 
   const KHO = {
     ho_so: { keyPath: 'id' },
@@ -62,11 +66,22 @@
     };
   }
 
+  /** Lỗi do kết nối IndexedDB bị đóng hay mất (iOS sau khi app ra nền, phiên bản DB đổi ở thẻ khác): mở lại rồi thử lại được. */
+  function laLoiKetNoi(e) {
+    const ten = e && e.name;
+    return ten === 'InvalidStateError' || ten === 'UnknownError' || ten === 'TransactionInactiveError' ||
+      /connection|closing|closed|lost/i.test(String((e && e.message) || ''));
+  }
+  /** Lỗi hết chỗ lưu (chỉ khi đó mới dọn bớt nhật ký gốc). */
+  function laLoiHetCho(e) {
+    return !!e && (e.name === 'QuotaExceededError' || e.code === 22 || /quota/i.test(String(e.message || '')));
+  }
+
   function khoIndexedDB(idb) {
     let dbHua = null;
     function mo() {
       if (dbHua) return dbHua;
-      dbHua = new Promise(function (ok, loi) {
+      const hua = new Promise(function (ok, loi) {
         const yc = idb.open(DB_TEN, DB_PHIEN_BAN);
         yc.onupgradeneeded = function () {
           const db = yc.result;
@@ -76,19 +91,36 @@
             (KHO[ten].chiMuc || []).forEach(function (cm) { st.createIndex(cm[0], cm[1], { unique: false }); });
           });
         };
-        yc.onsuccess = function () { ok(yc.result); };
+        yc.onsuccess = function () {
+          const db = yc.result;
+          // Thẻ khác nâng phiên bản DB: đóng để không chặn nó; trình duyệt tự đóng kết nối: lần sau mở lại
+          db.onversionchange = function () { try { db.close(); } catch (e) { /* bỏ qua */ } if (dbHua === hua) dbHua = null; };
+          db.onclose = function () { if (dbHua === hua) dbHua = null; };
+          ok(db);
+        };
         yc.onerror = function () { loi(yc.error); };
         yc.onblocked = function () { loi(new Error('IndexedDB bị chặn')); };
       });
-      return dbHua;
+      dbHua = hua;
+      hua.catch(function () { if (dbHua === hua) dbHua = null; });
+      return hua;
+    }
+    /** Chạy fn(db); kết nối hỏng thì mở lại và thử lại một lần (các việc ở đây đều làm lại được: put, delete, đọc). */
+    function voiDb(fn) {
+      return mo().then(fn).catch(function (e) {
+        if (!laLoiKetNoi(e)) throw e;
+        dbHua = null;
+        return mo().then(fn);
+      });
     }
     function gd(ten, cheDo, viec) {
-      return mo().then(function (db) {
+      return voiDb(function (db) {
         return new Promise(function (ok, loi) {
           const tx = db.transaction(ten, cheDo);
           const st = tx.objectStore(ten);
           let kq;
-          try { kq = viec(st); } catch (e) { loi(e); return; }
+          // viec ném lỗi giữa chừng (ví dụ DataCloneError): hủy cả giao dịch để không ghi dở một nửa
+          try { kq = viec(st); } catch (e) { try { tx.abort(); } catch (e2) { /* bỏ qua */ } loi(e); return; }
           tx.oncomplete = function () { ok(kq && kq.__yc ? kq.__yc.result : kq); };
           tx.onerror = function () { loi(tx.error); };
           tx.onabort = function () { loi(tx.error || new Error('abort')); };
@@ -97,21 +129,27 @@
     }
     const boc = function (yc) { return { __yc: yc }; };
     function quet(ten, nguon, dk) {
-      // Duyệt con trỏ; dk(o) trả về true để giữ
-      return mo().then(function (db) {
+      // Không lọc thì getAll theo khoảng (nhanh hơn con trỏ nhiều trên Safari); có lọc thì duyệt con trỏ, dk(o) true để giữ
+      return voiDb(function (db) {
         return new Promise(function (ok, loi) {
           const tx = db.transaction(ten, 'readonly');
           const src = nguon(tx.objectStore(ten));
-          const ra = [];
-          const yc = src.st.openCursor(src.range || null);
-          yc.onsuccess = function () {
-            const c = yc.result;
-            if (!c) return;
-            if (!dk || dk(c.value)) ra.push(c.value);
-            c.continue();
-          };
+          let ra = [];
+          if (!dk && src.st.getAll) {
+            const g = src.st.getAll(src.range || null);
+            g.onsuccess = function () { ra = g.result || []; };
+          } else {
+            const yc = src.st.openCursor(src.range || null);
+            yc.onsuccess = function () {
+              const c = yc.result;
+              if (!c) return;
+              if (!dk || dk(c.value)) ra.push(c.value);
+              c.continue();
+            };
+          }
           tx.oncomplete = function () { ok(ra); };
           tx.onerror = function () { loi(tx.error); };
+          tx.onabort = function () { loi(tx.error || new Error('abort')); };
         });
       });
     }
@@ -134,7 +172,7 @@
         return quet('su_kien', function (st) { return { st: st.index('van'), range: IDBKeyRange.only(van) }; });
       },
       xoaNeu: function (ten, dk) {
-        return mo().then(function (db) {
+        return voiDb(function (db) {
           return new Promise(function (ok, loi) {
             const tx = db.transaction(ten, 'readwrite');
             let n = 0;
@@ -147,6 +185,7 @@
             };
             tx.oncomplete = function () { ok(n); };
             tx.onerror = function () { loi(tx.error); };
+            tx.onabort = function () { loi(tx.error || new Error('abort')); };
           });
         });
       },
@@ -163,12 +202,27 @@
   }
 
   let kho = khoBoNho();
+  /**
+   * Kho cho phần còn lại của app (api.kho): đọc như thường, ghi chỉ khi thẻ này còn giữ đảo (xem giuThe).
+   * Thẻ đã nhường thì mọi lần ghi bị bỏ qua, để hai cửa sổ không ghi đè hồ sơ của nhau.
+   */
+  function bocGhi(k) {
+    const ghiDuoc = function (ten, rong) { return function () { return conGiuThe() ? k[ten].apply(k, arguments) : Promise.resolve(rong); }; };
+    return {
+      loai: k.loai,
+      lay: k.lay.bind(k), tatCa: k.tatCa.bind(k), theoBe: k.theoBe.bind(k), theoVan: k.theoVan.bind(k),
+      dat: ghiDuoc('dat'), datNhieu: ghiDuoc('datNhieu'), xoa: ghiDuoc('xoa'), xoaNeu: ghiDuoc('xoaNeu', 0), xoaKhoaDuoi: ghiDuoc('xoaKhoaDuoi', 0)
+    };
+  }
   function moKho() {
     let idb = null;
     try { idb = window.indexedDB || null; } catch (e) { idb = null; }
-    if (!idb) return Promise.resolve(kho);
+    if (!idb) { st.loiMoKho = 'khong_co_indexeddb'; return Promise.resolve(kho); }
     const k = khoIndexedDB(idb);
-    return k.mo().then(function () { kho = k; api.kho = k; return k; }).catch(function () { return kho; });
+    return k.mo().then(function () { kho = k; api.kho = bocGhi(k); st.loiMoKho = null; return k; }).catch(function (e) {
+      st.loiMoKho = String((e && (e.name || e.message)) || e);
+      return kho;
+    });
   }
 
   /* ---------------- ULID (sắp xếp được theo thời gian) ---------------- */
@@ -262,18 +316,53 @@
     dangGhi: null,
     nghe: [],
     vanDongDo: [], // ván còn dở của lần chạy trước, vừa được đóng lúc khởi động (app cần tóm tắt lại)
-    canhBaoLuuTru: false
+    canhBaoLuuTru: false,
+    loiMoKho: null, // vì sao không mở được IndexedDB (đang lưu tạm trong bộ nhớ)
+    loiGhi: null, // lỗi ghi gần nhất (null khi lần ghi sau đã được)
+    ben: null, // trình duyệt đã cho lưu bền chưa (navigator.storage.persisted), null là chưa biết
+    daXinBen: false,
+    theId: null, // mã thẻ này khi đã giữ đảo (giuThe), null khi chưa (kiểm thử)
+    nhuong: false, // thẻ này đã nhường cho cửa sổ khác: không ghi gì nữa
+    onNhuong: null
   };
+
+  /* ---------------- Một cửa sổ giữ đảo ---------------- */
+
+  function docThe() {
+    try { const x = window.localStorage.getItem(KHOA_THE); return x ? JSON.parse(x) : null; } catch (e) { return null; }
+  }
+  function ghiThe() {
+    try { window.localStorage.setItem(KHOA_THE, JSON.stringify({ id: st.theId, luc: Date.now() })); } catch (e) { /* bỏ qua */ }
+  }
+  /** Thẻ này còn được ghi không. Thấy cửa sổ khác đã giữ đảo thì nhường ngay. */
+  function conGiuThe() {
+    if (st.nhuong) return false;
+    if (!st.theId) return true;
+    const t = docThe();
+    if (t && t.id && t.id !== st.theId) { nhuong(); return false; }
+    return true;
+  }
+  /** Nhường đảo cho cửa sổ khác: ghi nốt bộ đệm (dấu phiên mở để lại cho cửa sổ kia đóng), rồi thôi ghi. */
+  function nhuong() {
+    if (st.nhuong) return;
+    st.nhuong = true;
+    if (st.hengio) { clearTimeout(st.hengio); st.hengio = null; }
+    const lo = st.boDem.splice(0, st.boDem.length).map(saoAnToan).filter(Boolean);
+    if (lo.length) kho.datNhieu('su_kien', lo).catch(function () { /* bỏ qua */ });
+    if (st.onNhuong) { try { st.onNhuong(); } catch (e) { /* bỏ qua */ } }
+  }
+  function saoAnToan(o) { try { return sao(o); } catch (e) { return null; } }
 
   function docDauMo() {
     try { const s = window.localStorage.getItem(KHOA_DANG_MO); return s ? JSON.parse(s) : null; } catch (e) { return null; }
   }
   function ghiDauMo() {
+    if (!conGiuThe()) return;
     try {
       if (!st.phien || !st.be) { window.localStorage.removeItem(KHOA_DANG_MO); return; }
       window.localStorage.setItem(KHOA_DANG_MO, JSON.stringify({
         be: st.be, phien: st.phien.id, phienBatDau: st.phien.batDau, cuoi: st.cuoi,
-        van: st.van ? { id: st.van.id, game: st.van.game, vung: st.van.vung, man: st.van.man, batDau: st.van.batDau, dem: st.van.dem, cauCuoi: st.van.cauCuoi } : null,
+        van: st.van ? { id: st.van.id, game: st.van.game, vung: st.van.vung, man: st.van.man, batDau: st.van.batDau, dem: st.van.dem, cauCuoi: st.van.cauCuoi, quaMong: st.van.quaMong || 0 } : null,
         cau: st.cau ? { id: st.cau.id, batDau: st.cau.batDau, maCau: st.cau.maCau } : null
       }));
     } catch (e) { /* bỏ qua: localStorage đầy hoặc bị chặn */ }
@@ -322,7 +411,7 @@
   }
 
   function ghi(loai, duLieu, tuyChon) {
-    if (!st.be) return null;
+    if (!st.be || st.nhuong) return null;
     const now = st.dongHo.now();
     if (!(tuyChon && tuyChon.luc != null)) kiemTraNghi(now);
     const ev = day(taoSuKien(loai, duLieu, tuyChon));
@@ -339,19 +428,28 @@
   /** Ghi bộ đệm xuống kho. Trả về Promise. */
   function xa() {
     if (st.hengio) { clearTimeout(st.hengio); st.hengio = null; }
+    if (!conGiuThe()) return Promise.resolve();
     if (st.dangGhi) return st.dangGhi.then(function () { return st.boDem.length ? xa() : undefined; });
     if (!st.boDem.length) return Promise.resolve();
-    const lo = st.boDem.splice(0, st.boDem.length);
-    st.dangGhi = kho.datNhieu('su_kien', lo).catch(function (e) {
-      // Hết chỗ: bỏ bớt nhật ký gốc cũ nhất (tóm tắt vẫn giữ), rồi thử lại một lần
+    // Chuẩn hóa qua JSON: kho bộ nhớ và IndexedDB lưu giống hệt nhau, và một giá trị lạ không làm hỏng cả lô (DataCloneError)
+    const lo = st.boDem.splice(0, st.boDem.length).map(saoAnToan).filter(Boolean);
+    st.dangGhi = kho.datNhieu('su_kien', lo).then(function () { st.loiGhi = null; }, function (e) {
+      st.loiGhi = e || new Error('loi_ghi');
       st.boDem = lo.concat(st.boDem);
-      if (st.canhBaoLuuTru) return;
+      if (st.boDem.length > TOI_DA_BO_DEM) st.boDem.splice(0, st.boDem.length - TOI_DA_BO_DEM);
+      // Lỗi khác hết chỗ (kết nối mất, trình duyệt bận): giữ bộ đệm, thử lại sau, không xóa gì
+      if (!laLoiHetCho(e) || st.canhBaoLuuTru) { henGhiLai(); return; }
+      // Hết chỗ: bỏ bớt nhật ký gốc cũ nhất (tóm tắt vẫn giữ), rồi thử lại
       st.canhBaoLuuTru = true;
       return donNhatKyCu(30).then(function (n) {
         day(taoSuKien('luu_tru_canh_bao', { loi: String((e && e.name) || e), da_xoa_su_kien: n }));
       });
     }).then(function () { st.dangGhi = null; }, function () { st.dangGhi = null; });
     return st.dangGhi;
+  }
+  function henGhiLai() {
+    if (st.hengio) return;
+    st.hengio = setTimeout(function () { st.hengio = null; xa(); }, GHI_MOI_MS * 3);
   }
 
   /**
@@ -420,10 +518,12 @@
         Object.assign({ van: d.van.id, cau: d.cau.id, game: d.van.game, vung: d.van.vung, man: d.van.man, ms: Math.max(0, luc - (d.cau.batDau || luc)) }, ctx)));
     }
     if (d.van) {
-      st.vanDongDo.push({ be: d.be, van: d.van.id, man: d.van.man || null });
+      // Quả mọng bé đã kiếm trong ván dở vẫn được giữ (dấu mở ghi lại sau mỗi câu)
+      const qua = Math.max(0, Math.round(Number(d.van.quaMong) || 0));
+      st.vanDongDo.push({ be: d.be, van: d.van.id, man: d.van.man || null, qua_mong: qua });
       const dem = Object.assign(demMoi(), d.van.dem || {});
       day(taoSuKien('van_ket_thuc', Object.assign(dem, {
-        bo_do: true, ly_do: 'dong_app', sao: 0, qua_mong: 0,
+        bo_do: true, ly_do: 'dong_app', sao: 0, qua_mong: qua,
         giay: Math.max(0, Math.round((luc - (d.van.batDau || luc)) / 100) / 10),
         cau_cuoi: d.van.cauCuoi || null
       }), Object.assign({ van: d.van.id, cau: null, game: d.van.game, vung: d.van.vung, man: d.van.man, ms: Math.max(0, luc - (d.van.batDau || luc)) }, ctx)));
@@ -523,12 +623,20 @@
     } catch (e) { /* bỏ qua */ }
   }
 
+  /** Hỏi (không xin) trình duyệt đã cho lưu bền chưa, để Góc phụ huynh hiện đúng. */
+  function kiemTraLuuBen() {
+    try {
+      const sto = window.navigator && window.navigator.storage;
+      if (sto && sto.persisted) sto.persisted().then(function (b) { st.ben = !!b; }, function () { /* bỏ qua */ });
+    } catch (e) { /* bỏ qua */ }
+  }
+
   /* ---------------- API ---------------- */
 
   const api = {
     PHIEN_BAN: PHIEN_BAN,
     NGHI_MS: NGHI_MS,
-    kho: kho,
+    kho: bocGhi(kho),
     ulid: ulid,
     isoDiaPhuong: isoDiaPhuong,
     ngayDiaPhuong: ngayDiaPhuong,
@@ -544,13 +652,148 @@
       ganSuKienTrang();
       const p = opts.khongDungIndexedDB ? Promise.resolve(kho) : moKho();
       return p.then(function () {
-        api.kho = kho;
+        api.kho = bocGhi(kho);
         dongPhienDo();
         return xa();
       }).then(function () {
         donNhatKyMoiNgay();
+        kiemTraLuuBen();
         return kho;
       });
+    },
+
+    /**
+     * Thẻ này giữ đảo: thẻ khác đang mở (hay mở sau) sẽ nhường và thôi ghi, onNhuong() được gọi ở thẻ nhường.
+     * Gọi trước khoiDong. Trả về Promise, chờ một chút khi vừa có thẻ khác đang chạy để nó kịp ghi nốt.
+     */
+    giuThe: function (onNhuong) {
+      st.onNhuong = onNhuong || null;
+      const truoc = docThe();
+      st.theId = 'the_' + ulid(st.dongHo.now()).slice(-12);
+      ghiThe();
+      try {
+        window.addEventListener('storage', function (e) { if (e.key === KHOA_THE) conGiuThe(); });
+        window.document.addEventListener('visibilitychange', function () {
+          if (window.document.visibilityState !== 'hidden' && conGiuThe()) ghiThe();
+        });
+        const nhip = setInterval(function () { if (window.document.visibilityState !== 'hidden' && conGiuThe()) ghiThe(); }, 4000);
+        if (nhip && nhip.unref) nhip.unref(); // chạy kiểm thử bằng Node: không giữ tiến trình
+      } catch (e) { /* bỏ qua */ }
+      const conSong = truoc && truoc.id && Date.now() - (truoc.luc || 0) < 10000;
+      return new Promise(function (ok) { setTimeout(ok, conSong ? 450 : 0); });
+    },
+    daNhuong: function () { return st.nhuong; },
+
+    /** Tình trạng lưu trữ cho Góc phụ huynh: { loai, loi_mo, loi_ghi, ben, sao_luu_luc }. */
+    trangThaiKho: function () {
+      let luc = null;
+      try { luc = window.localStorage.getItem(KHOA_SAO_LUU); } catch (e) { luc = null; }
+      return { loai: kho.loai, loi_mo: st.loiMoKho, loi_ghi: st.loiGhi ? String(st.loiGhi.name || st.loiGhi.message || st.loiGhi) : null, ben: st.ben, sao_luu_luc: luc };
+    },
+    /** Xin trình duyệt lưu bền (không tự xóa khi thiếu chỗ, hay sau 7 ngày không mở trên Safari). Trả về Promise<true | false | null>. */
+    xinLuuBen: function () {
+      const sto = window.navigator && window.navigator.storage;
+      st.daXinBen = true;
+      if (!sto || !sto.persist) return Promise.resolve(null);
+      return sto.persisted().then(function (b) { return b || sto.persist(); }).then(function (b) { st.ben = !!b; return st.ben; }, function () { return null; });
+    },
+    /** Lần đầu bé chạm: xin lưu bền một lần (bỏ qua Firefox vì nó hiện hộp hỏi quyền; phụ huynh tự bấm trong Góc phụ huynh). */
+    xinLuuBenLanDau: function () {
+      if (st.daXinBen || st.ben) return;
+      st.daXinBen = true;
+      if (/Firefox\//.test(String((window.navigator && window.navigator.userAgent) || ''))) return;
+      api.xinLuuBen();
+    },
+    /** Ghi số quả mọng hiện có của ván đang mở vào dấu mở (app bị tắt ngang thì vẫn giữ được). */
+    quaMongVan: function (n) { if (st.van) { st.van.quaMong = n; ghiDauMo(); } },
+
+    /**
+     * Sao lưu cả máy thành một đối tượng JSON: hồ sơ, tóm tắt câu, tóm tắt ván của mọi bé, cùng nhật ký gốc
+     * (o.ngayNhatKy ngày gần nhất, mặc định 14; null là toàn bộ). Hồ sơ học tập không cần: app tự tính lại.
+     */
+    saoLuu: function (o) {
+      o = o || {};
+      const soNgay = o.ngayNhatKy === undefined ? 14 : o.ngayNhatKy;
+      const moc = soNgay == null ? null : ngayDiaPhuong(st.dongHo.now() - (soNgay - 1) * 86400000);
+      return xa().then(function () { return kho.tatCa('ho_so'); }).then(function (dsHs) {
+        dsHs = dsHs.filter(function (p) { return p && typeof p.id === 'string'; });
+        return Promise.all(dsHs.map(function (p) {
+          return Promise.all([kho.theoBe('tom_tat_cau', p.id), kho.theoBe('tom_tat_van', p.id), kho.theoBe('su_kien', p.id)]).then(function (r) {
+            return {
+              ho_so: p, tom_tat_cau: r[0], tom_tat_van: r[1],
+              su_kien: moc ? r[2].filter(function (e) { return String(e.luc).slice(0, 10) >= moc; }) : r[2]
+            };
+          });
+        }));
+      }).then(function (be) {
+        return { dinh_dang: DINH_DANG_SAO_LUU, phien_ban: 1, phien_ban_app: st.phienBanApp, tao_luc: isoDiaPhuong(st.dongHo.now()), nhat_ky_tu: moc, be: be };
+      });
+    },
+    /** Ghi nhớ lúc vừa sao lưu xong (phụ huynh đã tải tệp). */
+    daSaoLuu: function () { try { window.localStorage.setItem(KHOA_SAO_LUU, isoDiaPhuong(st.dongHo.now())); } catch (e) { /* bỏ qua */ } },
+    /**
+     * Kiểm tra một tệp sao lưu (đã JSON.parse). Trả về Promise<{ hop_le, loi, tao_luc, so_be_tren_may, be: [{ id, ten, so_cau, so_van, so_su_kien, da_co }] }>.
+     * da_co: máy này đã có bé cùng mã (khôi phục sẽ gộp, giữ bản hồ sơ cập nhật sau).
+     */
+    kiemTraSaoLuu: function (g) {
+      const hong = function (loi) { return Promise.resolve({ hop_le: false, loi: loi, be: [] }); };
+      if (!g || typeof g !== 'object' || g.dinh_dang !== DINH_DANG_SAO_LUU) return hong('Tệp này không phải tệp sao lưu của Đảo Khủng Long.');
+      if (g.phien_ban !== 1) return hong('Tệp sao lưu của phiên bản mới hơn, hãy tải lại trang rồi thử lại.');
+      if (!Array.isArray(g.be) || !g.be.length) return hong('Tệp sao lưu không có bé nào.');
+      const ds = [];
+      for (let i = 0; i < g.be.length; i++) {
+        const b = g.be[i];
+        const p = b && b.ho_so;
+        if (!p || typeof p.id !== 'string' || !/^be_[0-9A-Z]{6,40}$/.test(p.id) || typeof p.ten !== 'string') return hong('Tệp sao lưu bị hỏng (hồ sơ thứ ' + (i + 1) + ').');
+        ds.push({ id: p.id, ten: p.ten, so_cau: (b.tom_tat_cau || []).length, so_van: (b.tom_tat_van || []).length, so_su_kien: (b.su_kien || []).length });
+      }
+      return kho.tatCa('ho_so').then(function (co) {
+        const ma = {};
+        co.forEach(function (p) { if (p && p.id) ma[p.id] = true; });
+        ds.forEach(function (x) { x.da_co = !!ma[x.id]; });
+        return { hop_le: true, loi: null, tao_luc: typeof g.tao_luc === 'string' ? g.tao_luc : null, be: ds, so_be_tren_may: Object.keys(ma).length };
+      });
+    },
+    /**
+     * Khôi phục từ tệp sao lưu: gộp theo mã, không xóa gì của máy. Hồ sơ trùng mã giữ bản cập nhật sau; tóm tắt và
+     * nhật ký ghi theo mã (cùng mã là cùng một câu, một ván, một sự kiện). toiDaBe: số bé tối đa trên máy (bé mới vượt thì bỏ qua).
+     * Trả về Promise<{ so_be, so_cau, so_van, so_su_kien, bo_qua: [tên] }>.
+     */
+    khoiPhuc: function (g, toiDaBe) {
+      const ra = { so_be: 0, so_cau: 0, so_van: 0, so_su_kien: 0, bo_qua: [] };
+      const theoLo = function (ten, ds) {
+        let hua = Promise.resolve();
+        for (let i = 0; i < ds.length; i += 2000) {
+          const lo = ds.slice(i, i + 2000);
+          hua = hua.then(function () { return kho.datNhieu(ten, lo); });
+        }
+        return hua;
+      };
+      return api.kiemTraSaoLuu(g).then(function (kt) {
+        if (!kt.hop_le) throw new Error(kt.loi);
+        let soBe = kt.so_be_tren_may;
+        return g.be.reduce(function (hua, b) {
+          return hua.then(function () {
+            const p = sao(b.ho_so);
+            const id = p.id;
+            const cua = function (ds, khoa) {
+              return (Array.isArray(ds) ? ds : []).filter(function (o) { return o && o.be === id && typeof o[khoa] === 'string'; }).map(sao);
+            };
+            return kho.lay('ho_so', id).then(function (co) {
+              if (!co && toiDaBe && soBe >= toiDaBe) { ra.bo_qua.push(p.ten); return null; }
+              if (!co) soBe++;
+              const cau = cua(b.tom_tat_cau, 'cau'), van = cua(b.tom_tat_van, 'van'), ev = cua(b.su_kien, 'id');
+              return Promise.resolve()
+                .then(function () { return !co || String(p.cap_nhat_luc || '') >= String(co.cap_nhat_luc || '') ? kho.dat('ho_so', p) : null; })
+                .then(function () { return theoLo('tom_tat_cau', cau); })
+                .then(function () { return theoLo('tom_tat_van', van); })
+                .then(function () { return theoLo('su_kien', ev); })
+                .then(function () { return kho.xoa('ho_so_hoc_tap', id); })
+                .then(function () { ra.so_be++; ra.so_cau += cau.length; ra.so_van += van.length; ra.so_su_kien += ev.length; });
+            });
+          });
+        }, Promise.resolve());
+      }).then(function () { return ra; });
     },
 
     /** Đổi bé đang chơi: đóng phiên của bé cũ, mở phiên cho bé mới. */

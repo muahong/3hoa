@@ -29,7 +29,8 @@
     this.man = o.man;
     this.hatGiong = o.hatGiong != null ? o.hatGiong : Math.floor(Math.random() * 2147483647);
     this.rng = window.NganHang.taoRng(this.hatGiong);
-    this.ds = window.NganHang.lapDanhSach(o.man, this.rng, { cauNo: o.cauNo || [], soCau: o.soCau });
+    // mucKy: bộ sinh chọn cặp số dễ hơn khi kỹ năng mới học, khó hơn khi đã thuộc (ngan-hang.js, theoDoKho)
+    this.ds = window.NganHang.lapDanhSach(o.man, this.rng, { cauNo: o.cauNo || [], soCau: o.soCau, mucKy: o.mucKy || null });
     this.hang = this.ds.slice();
     this.choOnLai = [];
     // Đấu trường không giới hạn: ván dừng khi hạ trùm, số câu đã cân theo câu sai quay lại (xem kiểm thử cân bằng)
@@ -234,6 +235,14 @@
       const kq = q.lan_thu > 1 ? 'dung_lan_2' : q.goiYCap > 0 ? 'dung_sau_goi_y' : 'dung_ngay';
       const qm = this._ketThucCau(kq);
       return { dung: true, loi: [], ketQua: kq, quaMong: qm };
+    }
+    // Đảo thứ tự thừa số (5 × 3 viết 3 + 3 + 3 + 3 + 3): cùng giá trị, chỉ chưa quen thứ tự viết. Như bước 1 của Truyện Tranh,
+    // mọi game (Lật Thẻ, Đấu Trường, chọn đáp án) nhắc rồi cho chọn lại một lần, không mất lượt thử; đúng sau đó là dung_lan_2
+    if (loi.length === 1 && loi[0] === 'dao-thu-tu' && !q.daNhacThuTu) {
+      q.daNhacThuTu = true;
+      q.lan_thu++;
+      q.toiDaLanThu++;
+      return { dung: false, loi: loi, thuLai: true, loiNoi: NH.loiNoiVoiBe(q.cau_truc, giaTri, loi) };
     }
     if (q.lan_thu < q.toiDaLanThu) {
       q.lan_thu++;

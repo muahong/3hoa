@@ -54,8 +54,12 @@
     { id: 'v1-m5', so: 5, ten: 'So sánh số', bai: 'Bài 1', bai_dau: 1, game: 'chem-trai-cay', ky_nang_chinh: 'so-sanh-100', cau: [{ ky_nang: 'so-sanh-100', cach: ['dau', 'dau', 'lon_nhat', 'be_nhat'] }], so_cau: 12 },
     { id: 'v1-m6', so: 6, ten: 'Xếp thứ tự từ bé đến lớn', bai: 'Bài 1', bai_dau: 1, game: 'ban-thien-thach', luyen_tap: true, cau: [{ ky_nang: 'so-sanh-100', cach: ['xep'], dang: 'sap_xep' }], so_cau: 6 },
     { id: 'v1-m7', so: 7, ten: 'Mê cung đếm thêm', bai: 'Bài 2', bai_dau: 2, game: 'me-cung', luyen_tap: true, cau: [{ ky_nang: 'tia-so-100', cach: ['day'] }], so_cau: 8 },
-    { id: 'v1-cup', so: 8, ten: 'Cúp Bờ Biển · Luyện tập chung', bai: 'Bài 6', bai_dau: 6, game: 'lat-the', cup: true, so_cau: 12, cup_can: ['v1-m1', 'v1-m2', 'v1-m3'],
-      cau: [{ ky_nang: 'lien-truoc-sau-100', ty_le: 1 }, { ky_nang: 'cau-tao-so-100', ty_le: 1, cach: ['chu', 'hang', 'tong'] }] }
+    // Nhóm D của lần rà soát 2026-09-28: thêm màn sau các màn cũ (giữ số màn cũ để bé và bước tiếp theo không lẫn)
+    { id: 'v1-m8', so: 8, ten: 'Số hạng, tổng, số bị trừ, số trừ, hiệu', bai: 'Bài 3', bai_dau: 3, game: 'chem-trai-cay', ky_nang_chinh: 'ten-thanh-phan-cong-tru', cau: [{ ky_nang: 'ten-thanh-phan-cong-tru' }], so_cau: 10 },
+    { id: 'v1-m9', so: 9, ten: 'Cộng, trừ không nhớ trong phạm vi 100', bai: 'Bài 5, 6', bai_dau: 5, game: 'dua-xe', ky_nang_chinh: 'cong-tru-khong-nho-100', cau: [{ ky_nang: 'cong-tru-khong-nho-100' }], so_cau: 12 },
+    { id: 'v1-cup', so: 10, ten: 'Cúp Bờ Biển · Luyện tập chung', bai: 'Bài 6', bai_dau: 6, game: 'lat-the', cup: true, so_cau: 12, cup_can: ['v1-m1', 'v1-m2', 'v1-m3'],
+      cau: [{ ky_nang: 'lien-truoc-sau-100', ty_le: 1 }, { ky_nang: 'cau-tao-so-100', ty_le: 1, cach: ['chu', 'hang', 'tong'] },
+        { ky_nang: 'ten-thanh-phan-cong-tru', ty_le: 0.5, cach: ['tinh'] }, { ky_nang: 'cong-tru-khong-nho-100', ty_le: 0.5 }] }
   ];
   const MAN_V2 = [
     { id: 'v2-m1', so: 1, ten: 'Cộng qua 10', bai: 'Bài 7, 8', bai_dau: 7, game: 'dua-xe', ky_nang_chinh: 'cong-qua-10', cau: [{ ky_nang: 'cong-qua-10' }], so_cau: 12 },
@@ -64,9 +68,11 @@
     { id: 'v2-m4', so: 4, ten: 'Bài toán thêm, bớt', bai: 'Bài 9', bai_dau: 9, game: 'truyen-tranh', ky_nang_chinh: 'toan-them-bot', cau: [{ ky_nang: 'toan-them-bot' }], so_cau: 8 },
     { id: 'v2-m5', so: 5, ten: 'Bài toán nhiều hơn, ít hơn', bai: 'Bài 13', bai_dau: 13, game: 'truyen-tranh', ky_nang_chinh: 'toan-nhieu-it', cau: [{ ky_nang: 'toan-nhieu-it' }], so_cau: 8 },
     { id: 'v2-m6', so: 6, ten: 'Lật thẻ: bảng cộng, bảng trừ', bai: 'Bài 8, 12', bai_dau: 12, game: 'lat-the', luyen_tap: true, cau: [{ ky_nang: 'cong-qua-10' }, { ky_nang: 'tru-qua-10' }], so_cau: 12 },
-    { id: 'v2-m7', so: 7, ten: 'Chém trái cây: cộng, trừ qua 10', bai: 'Bài 8, 12', bai_dau: 12, game: 'chem-trai-cay', luyen_tap: true, cau: [{ ky_nang: 'cong-qua-10' }, { ky_nang: 'tru-qua-10' }], so_cau: 15 },
+    { id: 'v2-m7', so: 7, ten: 'Chém trái cây: cộng, trừ qua 10', bai: 'Bài 8, 12', bai_dau: 12, game: 'chem-trai-cay', luyen_tap: true, so_cau: 15,
+      cau: [{ ky_nang: 'cong-qua-10' }, { ky_nang: 'tru-qua-10' }, { ky_nang: 'cong-qua-10', cach: ['so_sanh'], ty_le: 0.4 }, { ky_nang: 'tru-qua-10', cach: ['so_sanh'], ty_le: 0.4 }] },
     { id: 'v2-cup', so: 8, ten: 'Cúp Núi Lửa · Luyện tập chung', bai: 'Bài 14', bai_dau: 14, game: 'dua-xe', cup: true, tram_dung: true, so_cau: 15, cup_can: ['v2-m1', 'v2-m2', 'v2-m3'],
-      cau: [{ ky_nang: 'cong-qua-10', ty_le: 1 }, { ky_nang: 'tru-qua-10', ty_le: 1 }, { ky_nang: 'tim-so-thieu-20', ty_le: 0.6 }] }
+      cau: [{ ky_nang: 'cong-qua-10', ty_le: 1 }, { ky_nang: 'tru-qua-10', ty_le: 1 }, { ky_nang: 'tim-so-thieu-20', ty_le: 0.6 },
+        { ky_nang: 'cong-qua-10', cach: ['so_sanh'], ty_le: 0.25 }, { ky_nang: 'tru-qua-10', cach: ['so_sanh'], ty_le: 0.25 }] }
   ];
   const MAN_V3 = [
     { id: 'v3-m1', so: 1, ten: 'Nặng hơn, nhẹ hơn', bai: 'Bài 15', bai_dau: 15, game: 'xuong-do-luong', che_do: 'can', ky_nang_chinh: 'nang-nhe', cau: [{ ky_nang: 'nang-nhe' }], so_cau: 8 },
@@ -79,11 +85,11 @@
       cau: [{ ky_nang: 'nang-nhe', ty_le: 0.6 }, { ky_nang: 'can-kg', ty_le: 1 }, { ky_nang: 'rot-lit', ty_le: 1 }] }
   ];
   const MAN_V4 = [
-    { id: 'v4-m1', so: 1, ten: 'Cộng có nhớ: 2 chữ số + 1 chữ số', bai: 'Bài 19', bai_dau: 19, game: 'dua-xe', ky_nang_chinh: 'cong-nho-2cs-1cs', cau: [{ ky_nang: 'cong-nho-2cs-1cs' }], so_cau: 12 },
-    { id: 'v4-m2', so: 2, ten: 'Cộng có nhớ: 2 chữ số + 2 chữ số', bai: 'Bài 20', bai_dau: 20, game: 'dua-xe', ky_nang_chinh: 'cong-nho-2cs-2cs', cau: [{ ky_nang: 'cong-nho-2cs-2cs' }], so_cau: 12, tram_dung: true },
+    { id: 'v4-m1', so: 1, ten: 'Cộng có nhớ: 2 chữ số + 1 chữ số', bai: 'Bài 19', bai_dau: 19, game: 'dua-xe', ky_nang_chinh: 'cong-nho-2cs-1cs', cau: [{ ky_nang: 'cong-nho-2cs-1cs', ty_le: 3 }, { ky_nang: 'cong-tru-khong-nho-100', cach: ['cong_1cs'], ty_le: 1 }], so_cau: 12 },
+    { id: 'v4-m2', so: 2, ten: 'Cộng có nhớ: 2 chữ số + 2 chữ số', bai: 'Bài 20', bai_dau: 20, game: 'dua-xe', ky_nang_chinh: 'cong-nho-2cs-2cs', cau: [{ ky_nang: 'cong-nho-2cs-2cs', ty_le: 3 }, { ky_nang: 'cong-tru-khong-nho-100', cach: ['cong_2cs'], ty_le: 1 }], so_cau: 12, tram_dung: true },
     { id: 'v4-m3', so: 3, ten: 'Nhẩm số tròn chục', bai: 'Bài 21', bai_dau: 21, game: 'dua-xe', ky_nang_chinh: 'nham-tron-chuc', cau: [{ ky_nang: 'nham-tron-chuc' }], so_cau: 12 },
-    { id: 'v4-m4', so: 4, ten: 'Trừ có nhớ: 2 chữ số − 1 chữ số', bai: 'Bài 22', bai_dau: 22, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-1cs', cau: [{ ky_nang: 'tru-nho-2cs-1cs' }], so_cau: 12 },
-    { id: 'v4-m5', so: 5, ten: 'Trừ có nhớ: 2 chữ số − 2 chữ số', bai: 'Bài 23', bai_dau: 23, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-2cs', cau: [{ ky_nang: 'tru-nho-2cs-2cs' }], so_cau: 12, tram_dung: true },
+    { id: 'v4-m4', so: 4, ten: 'Trừ có nhớ: 2 chữ số − 1 chữ số', bai: 'Bài 22', bai_dau: 22, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-1cs', cau: [{ ky_nang: 'tru-nho-2cs-1cs', ty_le: 3 }, { ky_nang: 'cong-tru-khong-nho-100', cach: ['tru_1cs'], ty_le: 1 }], so_cau: 12 },
+    { id: 'v4-m5', so: 5, ten: 'Trừ có nhớ: 2 chữ số − 2 chữ số', bai: 'Bài 23', bai_dau: 23, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-2cs', cau: [{ ky_nang: 'tru-nho-2cs-2cs', ty_le: 3 }, { ky_nang: 'cong-tru-khong-nho-100', cach: ['tru_2cs'], ty_le: 1 }], so_cau: 12, tram_dung: true },
     { id: 'v4-m6', so: 6, ten: 'Bài toán có lời văn', bai: 'Bài 19 đến 23', bai_dau: 23, game: 'truyen-tranh', ky_nang_chinh: 'toan-loi-van-100', cau: [{ ky_nang: 'toan-loi-van-100' }], so_cau: 8 },
     { id: 'v4-m7', so: 7, ten: 'Cặp tấm thẻ anh em', bai: 'Bài 24', bai_dau: 24, game: 'lat-the', luyen_tap: true, so_cau: 12,
       cau: [{ ky_nang: 'tru-nho-2cs-1cs', ty_le: 1 }, { ky_nang: 'tru-nho-2cs-2cs', ty_le: 1 }, { ky_nang: 'nham-tron-chuc', ty_le: 0.5 }] },
@@ -130,8 +136,11 @@
       cau: [{ ky_nang: 'bang-nhan-2-5', ty_le: 1 }, { ky_nang: 'bang-chia-2-5', ty_le: 1 }] },
     { id: 'v7-m7', so: 7, ten: 'Chém trái cây: nhân, chia', bai: 'Bài 39 đến 44', bai_dau: 44, game: 'chem-trai-cay', luyen_tap: true, so_cau: 15,
       cau: [{ ky_nang: 'bang-nhan-2-5', ty_le: 1 }, { ky_nang: 'bang-chia-2-5', ty_le: 1 }] },
-    { id: 'v7-cup', so: 8, ten: 'Cúp Thung Lũng · Luyện tập chung', bai: 'Bài 45', bai_dau: 45, game: 'lat-the', cup: true, so_cau: 12, cup_can: ['v7-m1', 'v7-m2', 'v7-m3', 'v7-m4', 'v7-m5'],
-      cau: [{ ky_nang: 'bang-nhan-2-5', ty_le: 1 }, { ky_nang: 'bang-chia-2-5', ty_le: 1 }, { ky_nang: 'nhan-y-nghia', ty_le: 0.6 }] }
+    { id: 'v7-m8', so: 8, ten: 'Thừa số, tích', bai: 'Bài 38', bai_dau: 38, game: 'chem-trai-cay', ky_nang_chinh: 'ten-thanh-phan-nhan-chia', cau: [{ ky_nang: 'ten-thanh-phan-nhan-chia', phep: ['×'] }], so_cau: 10 },
+    { id: 'v7-m9', so: 9, ten: 'Số bị chia, số chia, thương', bai: 'Bài 41, 42', bai_dau: 42, game: 'chem-trai-cay', ky_nang_chinh: 'nhan-chia-lien-he', so_cau: 12,
+      cau: [{ ky_nang: 'nhan-chia-lien-he', ty_le: 1 }, { ky_nang: 'ten-thanh-phan-nhan-chia', phep: [':'], ty_le: 1 }] },
+    { id: 'v7-cup', so: 10, ten: 'Cúp Thung Lũng · Luyện tập chung', bai: 'Bài 45', bai_dau: 45, game: 'lat-the', cup: true, so_cau: 12, cup_can: ['v7-m1', 'v7-m2', 'v7-m3', 'v7-m4', 'v7-m5'],
+      cau: [{ ky_nang: 'bang-nhan-2-5', ty_le: 1 }, { ky_nang: 'bang-chia-2-5', ty_le: 1 }, { ky_nang: 'nhan-y-nghia', ty_le: 0.6 }, { ky_nang: 'nhan-chia-lien-he', ty_le: 0.5 }] }
   ];
   const MAN_V8 = [
     { id: 'v8-m1', so: 1, ten: 'Trăm, chục, đơn vị', bai: 'Bài 48 đến 52', bai_dau: 48, game: 'xep-hinh-so', ky_nang_chinh: 'cau-tao-so-1000', cau: [{ ky_nang: 'cau-tao-so-1000' }], so_cau: 10 },
@@ -142,7 +151,8 @@
     { id: 'v8-m5', so: 5, ten: 'So sánh số có ba chữ số', bai: 'Bài 50, 53', bai_dau: 53, game: 'ban-thien-thach', ky_nang_chinh: 'so-sanh-1000', cau: [{ ky_nang: 'so-sanh-1000', cach: ['lon_nhat', 'be_nhat', 'xep'] }], so_cau: 10 },
     { id: 'v8-m6', so: 6, ten: 'Số liền trước, số liền sau đến 1000', bai: 'Bài 51', bai_dau: 51, game: 'cuoi-ho', ky_nang_chinh: 'lien-truoc-sau-1000', cau: [{ ky_nang: 'lien-truoc-sau-1000' }], so_cau: 12 },
     { id: 'v8-m7', so: 7, ten: 'Ước lượng theo nhóm chục', bai: 'Bài 49', bai_dau: 49, game: 'cau-ca', che_do: 'uoc_luong', ky_nang_chinh: 'uoc-luong-chuc', cau: [{ ky_nang: 'uoc-luong-chuc' }], so_cau: 8 },
-    { id: 'v8-cup', so: 8, ten: 'Cúp Kim Tự Tháp · Luyện tập chung', bai: 'Bài 54, 63', bai_dau: 63, game: 'dua-xe', cup: true, tram_dung: true, so_cau: 15, cup_can: ['v8-m1', 'v8-m2', 'v8-m4'],
+    { id: 'v8-m8', so: 8, ten: 'Bài toán có lời văn trong phạm vi 1000', bai: 'Bài 59 đến 63', bai_dau: 60, game: 'truyen-tranh', ky_nang_chinh: 'toan-loi-van-1000', cau: [{ ky_nang: 'toan-loi-van-1000' }], so_cau: 8 },
+    { id: 'v8-cup', so: 9, ten: 'Cúp Kim Tự Tháp · Luyện tập chung', bai: 'Bài 54, 63', bai_dau: 63, game: 'dua-xe', cup: true, tram_dung: true, so_cau: 15, cup_can: ['v8-m1', 'v8-m2', 'v8-m4'],
       cau: [{ ky_nang: 'cong-tru-1000', ty_le: 1 }, { ky_nang: 'lien-truoc-sau-1000', ty_le: 0.6 }, { ky_nang: 'so-sanh-1000', ty_le: 0.6, cach: ['lon_nhat', 'be_nhat'] }] }
   ];
   const MAN_V9 = [
@@ -170,10 +180,10 @@
 
   /** vi_tri: tọa độ trên ảnh bg-island-map (tỉ lệ 0..1). nen: ảnh nền trang vùng. noi_dung: các mã nội dung của vùng (bản đồ kỹ năng 43 ô). */
   const VUNG = [
-    { so: 1, ten: 'Bờ Biển Số 100', chu_de: 'Chủ đề 1', bai: [1, 6], hoc_ky: 1, loai: 'sp-rong-bien', ten_loai: 'Rồng Biển', phu_kien: 'Khăn Số 100', mau: '#0ea5c6', vi_tri: [0.168, 0.2], nen: 'bg-meadow', phu: 'rgba(14,140,190,.62)', noi_dung: ['2.1', '2.2', '2.5', '2.14'], man: MAN_V1 },
+    { so: 1, ten: 'Bờ Biển Số 100', chu_de: 'Chủ đề 1', bai: [1, 6], hoc_ky: 1, loai: 'sp-rong-bien', ten_loai: 'Rồng Biển', phu_kien: 'Khăn Số 100', mau: '#0ea5c6', vi_tri: [0.168, 0.2], nen: 'bg-meadow', phu: 'rgba(14,140,190,.62)', noi_dung: ['2.1', '2.2', '2.5', '2.10', '2.14'], man: MAN_V1 },
     { so: 2, ten: 'Núi Lửa Qua 10', chu_de: 'Chủ đề 2', bai: [7, 14], hoc_ky: 1, loai: 'sp-khung-long-lua', ten_loai: 'Khủng Long Lửa', phu_kien: 'Mào Lửa', mau: '#ef5a3c', vi_tri: [0.361, 0.148], nen: 'bg-dusk-sky', phu: 'rgba(214,64,36,.55)', noi_dung: ['2.8', '2.9', '2.15', '2.17', '2.18'], man: MAN_V2 },
     { so: 3, ten: 'Xưởng Đo Lường', chu_de: 'Chủ đề 3 và 11', bai: [15, 18], hoc_ky: 1, loai: 'sp-giap-long', ten_loai: 'Giáp Long', phu_kien: 'Thước Vàng', mau: '#8b6fd6', vi_tri: [0.539, 0.212], nen: 'bg-workshop', phu: 'rgba(90,60,170,.55)', noi_dung: ['B2.6', 'B2.7', 'B2.9', 'B2.10'], man: MAN_V3 },
-    { so: 4, ten: 'Đường Đua Có Nhớ', chu_de: 'Chủ đề 4', bai: [19, 24], hoc_ky: 1, loai: 'sp-toc-long', ten_loai: 'Tốc Long', phu_kien: 'Giày Đua', mau: '#ff8a1f', vi_tri: [0.142, 0.372], nen: 'bg-race-track', phu: 'rgba(255,122,60,.72)', noi_dung: ['2.10', '2.11', '2.13', '2.16'], man: MAN_V4 },
+    { so: 4, ten: 'Đường Đua Có Nhớ', chu_de: 'Chủ đề 4', bai: [19, 24], hoc_ky: 1, loai: 'sp-toc-long', ten_loai: 'Tốc Long', phu_kien: 'Giày Đua', mau: '#ff8a1f', vi_tri: [0.142, 0.372], nen: 'bg-race-track', phu: 'rgba(255,122,60,.72)', noi_dung: ['2.11', '2.13', '2.16'], man: MAN_V4 },
     { so: 5, ten: 'Rừng Hình Khối', chu_de: 'Chủ đề 5 và 9', bai: [25, 28], hoc_ky: 1, loai: 'sp-kiem-long', ten_loai: 'Kiếm Long', phu_kien: 'Khiên Hình Khối', mau: '#3aa65b', vi_tri: [0.361, 0.338], nen: 'bg-garden', phu: 'rgba(30,120,60,.55)', noi_dung: ['B2.1', 'B2.2', 'B2.3', 'B2.4', 'B2.5', 'B2.8'], man: MAN_V5 },
     { so: 6, ten: 'Phố Đồng Hồ', chu_de: 'Chủ đề 6', bai: [29, 32], hoc_ky: 1, loai: 'sp-duc-long', ten_loai: 'Dực Long', phu_kien: 'Mũ Đồng Hồ', mau: '#3d7be0', vi_tri: [0.539, 0.418], nen: 'bg-dusk-sky', phu: 'rgba(40,80,190,.55)', noi_dung: ['B2.11', 'B2.12', 'B2.13'], man: MAN_V6 },
     { so: 11, ten: 'Đấu Trường Học Kì 1', chu_de: 'Chủ đề 7', bai: [33, 36], hoc_ky: 1, dau_truong: true, loai: null, mau: '#c7a24a', vi_tri: [0.16, 0.55], nen: 'bg-circus-night', phu: 'rgba(40,20,70,.45)', noi_dung: [], man: MAN_DT1 },

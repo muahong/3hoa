@@ -271,8 +271,8 @@ test('tiền: chữ hiện cho bé và phụ huynh (nhóm ba chữ số, tên b�
   const { NH } = moi();
   const t = (ct) => Object.assign({ loai: 'tien' }, ct);
   const tra = t({ kieu: 'tra', mon: 'banh-mi', gia: 700, vi: [1, 1, 2, 3] });
-  assert.equal(NH.deHien(tra), 'Bánh mì giá 700 đồng. Con trả bằng những tờ nào?');
-  assert.equal(NH.deDoc(tra), 'Bánh mì giá bảy trăm đồng. Con trả bằng những tờ nào?');
+  assert.equal(NH.deHien(tra), 'Bánh mì giá 700 đồng. Con trả vừa đủ bằng những tờ nào?');
+  assert.equal(NH.deDoc(tra), 'Bánh mì giá bảy trăm đồng. Con trả vừa đủ bằng những tờ nào?');
   assert.equal(NH.tinh(tra), '500,200');
   assert.equal(NH.hienGiaTriCau(tra, '500,200'), '500 đồng và 200 đồng');
   assert.equal(NH.hienGiaTriCau(tra, '500,200,200,100'), '500 đồng, 2 tờ 200 đồng và 100 đồng');

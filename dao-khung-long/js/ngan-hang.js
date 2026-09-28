@@ -9,6 +9,8 @@
    - so: số liền trước, liền sau, cấu tạo số, đọc số; cấu trúc { loai: 'so', kieu, so, cach }
    - nhan_tong: phép nhân là tổng các số hạng bằng nhau; cấu trúc { loai: 'nhan_tong', chieu, a, b }
    - loi_van: bài toán có lời văn hai bước (chọn phép tính rồi tính); cấu trúc { loai: 'loi_van', mau, dang, phep, so, nv }
+   Thêm ở mục 5 (cắm bằng dangKyLoai ngay trong tệp này): 'thanh_phan' (tên số hạng, tổng, thừa số, thương…, 2.14, 2.23) và
+   'lien_he_nhan_chia' (từ 2 × 7 = 14 viết phép chia, 2.24).
    API: window.NganHang
    ============================================================ */
 (function () {
@@ -68,6 +70,8 @@
     '2.22': 'Bảng chia 2, bảng chia 5',
     '2.23': 'Gọi tên thừa số, tích, số bị chia, số chia, thương',
     '2.24': 'Quan hệ giữa phép nhân và phép chia',
+    // 2.25 có trong chương trình 2018 nhưng KHÔNG có trong SGK Toán 2 Kết nối tri thức (sách không dạy một phần hai,
+    // một phần năm): giữ mã để đủ 43 nội dung của chương trình, chưa có kỹ năng, màn hay câu hỏi nào dùng mã này.
     '2.25': 'Một phần hai, một phần năm',
     '2.26': 'Giải bài toán bằng một phép nhân hoặc một phép chia',
     'B2.1': 'Điểm, đoạn thẳng, đường thẳng, đường cong, đường gấp khúc',
@@ -158,6 +162,9 @@
     'chieu-dau': { be: 'Dấu mở miệng về phía số lớn hơn', mo_ta: 'Biết số nào lớn hơn nhưng điền dấu ngược, hoặc xếp đúng dãy nhưng ngược chiều yêu cầu', ngan: 'Con hay đặt dấu ngược chiều' },
     'ten-thanh-phan': { be: 'Con xem lại tên các thành phần nhé', mo_ta: 'Gọi nhầm tên thành phần: số bị trừ với số trừ, tổng với hiệu, tích với thương', ngan: 'Con hay nhầm tên thành phần' },
     'phan-khong-bang-nhau': { be: 'Một phần hai là chia thành hai phần bằng nhau', mo_ta: 'Chọn hình chia thành các phần không bằng nhau, hoặc nhầm một phần hai với một phần năm', ngan: 'Con hay nhầm phần bằng nhau' },
+    'tach-10-sai': { be: 'Tách để được 10 rồi mới tính tiếp phần còn lại nhé', mo_ta: 'Tách số theo cách SGK Bài 7, 11 nhưng tính nhầm phần còn lại: 8 + 5 (tách 5 = 2 + 3) ra 12 hay 15; 13 − 5 (tách 13 = 10 + 3, 10 − 5 = 5) ra 5 vì quên cộng 3, hay 2 vì trừ 3', ngan: 'Con hay tách 10 sai' },
+    'be-tru-lon': { be: 'Phép trừ lấy số lớn trừ số bé', mo_ta: 'Chọn phép trừ lấy số bé trừ số lớn (viết theo thứ tự các số trong đề) ở bài toán có lời văn', ngan: 'Con hay lấy số bé trừ số lớn' },
+    'lien-he-nhan-chia': { be: 'Tích chia cho thừa số này thì được thừa số kia', mo_ta: 'Viết phép chia từ phép nhân mà nhầm vai các số: từ 2 × 7 = 14 viết 14 : 7 = 7 hay 14 : 7 = 14', ngan: 'Con hay nhầm khi viết phép chia từ phép nhân' },
     'khac': { be: 'Chưa đúng rồi', mo_ta: 'Không khớp lỗi nào đã biết', ngan: 'Luyện thêm cho chắc' }
   };
 
@@ -167,14 +174,14 @@
    * bai_hoc: mã bài học 30 giây hiện trước lần đầu gặp kỹ năng.
    */
   const KY_NANG = {
-    'cong-qua-10': { noi_dung: '2.8', ten: 'Cộng qua 10 trong phạm vi 20', kieu: 'K1', giay: 7, gioi_han: 20 },
-    'tru-qua-10': { noi_dung: '2.9', ten: 'Trừ qua 10 trong phạm vi 20', kieu: 'K1', giay: 8, gioi_han: 20 },
+    'cong-qua-10': { noi_dung: '2.8', ten: 'Cộng qua 10 trong phạm vi 20', kieu: 'K1', giay: 7, gioi_han: 20, bai_hoc: 'tach-10' },
+    'tru-qua-10': { noi_dung: '2.9', ten: 'Trừ qua 10 trong phạm vi 20', kieu: 'K1', giay: 8, gioi_han: 20, bai_hoc: 'tach-10' },
     'tim-so-thieu-20': { noi_dung: '2.15', ten: 'Tìm số còn thiếu trong phạm vi 20', kieu: 'K2', giay: 10, gioi_han: 20 },
     'cong-tru-khong-nho-100': { noi_dung: '2.10', ten: 'Cộng, trừ không nhớ trong phạm vi 100', kieu: 'K2', giay: 9, gioi_han: 100 },
-    'cong-nho-2cs-1cs': { noi_dung: '2.11', ten: 'Cộng có nhớ: số có hai chữ số với số có một chữ số', kieu: 'K2', giay: 10, gioi_han: 100 },
-    'cong-nho-2cs-2cs': { noi_dung: '2.11', ten: 'Cộng có nhớ: số có hai chữ số với số có hai chữ số', kieu: 'K2', giay: 13, gioi_han: 100 },
-    'tru-nho-2cs-1cs': { noi_dung: '2.11', ten: 'Trừ có nhớ: số có hai chữ số cho số có một chữ số', kieu: 'K2', giay: 11, gioi_han: 100 },
-    'tru-nho-2cs-2cs': { noi_dung: '2.11', ten: 'Trừ có nhớ: số có hai chữ số cho số có hai chữ số', kieu: 'K2', giay: 14, gioi_han: 100 },
+    'cong-nho-2cs-1cs': { noi_dung: '2.11', ten: 'Cộng có nhớ: số có hai chữ số với số có một chữ số', kieu: 'K2', giay: 10, gioi_han: 100, bai_hoc: 'dat-tinh-co-nho' },
+    'cong-nho-2cs-2cs': { noi_dung: '2.11', ten: 'Cộng có nhớ: số có hai chữ số với số có hai chữ số', kieu: 'K2', giay: 13, gioi_han: 100, bai_hoc: 'dat-tinh-co-nho' },
+    'tru-nho-2cs-1cs': { noi_dung: '2.11', ten: 'Trừ có nhớ: số có hai chữ số cho số có một chữ số', kieu: 'K2', giay: 11, gioi_han: 100, bai_hoc: 'dat-tinh-co-nho' },
+    'tru-nho-2cs-2cs': { noi_dung: '2.11', ten: 'Trừ có nhớ: số có hai chữ số cho số có hai chữ số', kieu: 'K2', giay: 14, gioi_han: 100, bai_hoc: 'dat-tinh-co-nho' },
     'nham-tron-chuc': { noi_dung: '2.13', ten: 'Nhẩm với số tròn chục', kieu: 'K1', giay: 7, gioi_han: 100 },
     'bieu-thuc-2-dau': { noi_dung: '2.16', ten: 'Biểu thức có hai dấu cộng, trừ', kieu: 'K2', giay: 18, gioi_han: 100 },
     // Giai đoạn 2
@@ -191,12 +198,15 @@
     'toan-nhan-chia': { noi_dung: '2.26', ten: 'Bài toán bằng một phép nhân hoặc một phép chia', kieu: 'K4', giay: 40, gioi_han: 100, loai: 'loi_van', bai_hoc: 'phep-chia' },
     'cau-tao-so-1000': { noi_dung: '2.3', ten: 'Trăm, chục, đơn vị: cấu tạo số đến 1000', kieu: 'K3', giay: 15, gioi_han: 1000, nhieu_toi_da: 99999, loai: 'so', bai_hoc: 'tram-chuc-don-vi' },
     'doc-so-1000': { noi_dung: '2.4', ten: 'Đọc, viết số có ba chữ số', kieu: 'K3', giay: 12, gioi_han: 1000, nhieu_toi_da: 99999, loai: 'so', bai_hoc: 'tram-chuc-don-vi' },
-    'cong-tru-1000': { noi_dung: '2.12', ten: 'Cộng, trừ trong phạm vi 1000 (nhớ không quá một lượt)', kieu: 'K2', giay: 18, gioi_han: 1000 },
+    'cong-tru-1000': { noi_dung: '2.12', ten: 'Cộng, trừ trong phạm vi 1000 (nhớ không quá một lượt)', kieu: 'K2', giay: 18, gioi_han: 1000, bai_hoc: 'cong-tru-1000' },
     // Giai đoạn 5 (Cưỡi Hổ, vùng 8)
     'lien-truoc-sau-1000': { noi_dung: '2.5', ten: 'Số liền trước, số liền sau trong phạm vi 1000', kieu: 'K1', giay: 7, gioi_han: 1000, nhieu_toi_da: 9999, loai: 'so' },
     // Giai đoạn 4: bài toán có lời văn với đơn vị đo (Truyện Tranh vùng 3) và với tiền (vùng 9)
     'toan-kg-lit': { noi_dung: '2.18', ten: 'Bài toán có lời văn với ki-lô-gam, lít', kieu: 'K4', giay: 30, gioi_han: 100, loai: 'loi_van', bai_hoc: 'giai-toan' },
-    'toan-tien': { noi_dung: 'B2.14', ten: 'Bài toán mua bán với tiền Việt Nam', kieu: 'K4', giay: 35, gioi_han: 1000, loai: 'loi_van', bai_hoc: 'giai-toan' }
+    'toan-tien': { noi_dung: 'B2.14', ten: 'Bài toán mua bán với tiền Việt Nam', kieu: 'K4', giay: 35, gioi_han: 1000, loai: 'loi_van', bai_hoc: 'giai-toan' },
+    // Nhóm D của lần rà soát 2026-09-28: bài toán có lời văn trong phạm vi 1000 (SGK Bài 59 đến 63, 70), Truyện Tranh vùng 8
+    'toan-loi-van-1000': { noi_dung: '2.18', ten: 'Bài toán có lời văn trong phạm vi 1000', kieu: 'K4', giay: 45, gioi_han: 1000, loai: 'loi_van', bai_hoc: 'giai-toan' }
+    // Tên thành phần (2.14, 2.23) và quan hệ nhân, chia (2.24): thêm ở mục 5 bằng themKyNang
   };
   const THU_TU_KY_NANG = Object.keys(KY_NANG);
   function loaiKyNang(kn) { return (KY_NANG[kn] && KY_NANG[kn].loai) || 'phep_tinh'; }
@@ -345,6 +355,11 @@
       }
       if (ct.phep === '+') {
         const nho = ua + ub >= 10;
+        // Hai số có một chữ số: SGK Bài 7 dạy tách để được 10 (8 + 5: tách 5 = 2 + 3, 8 + 2 = 10, 10 + 3 = 13), gọi lỗi theo cách đó
+        if (!haiChuSo && nho) {
+          const lon = Math.max(a, b), can = 10 - lon;
+          if (v === 10 + can || v === 10 + Math.min(a, b) || v === d - 10 || v === 10) them('tach-10-sai');
+        }
         if (nho && v === d - 10) them('quen-nho');
         if (nho && haiChuSo && v === Number(String(ta + tb) + String(ua + ub))) them('viet-ca-so-nho');
         if (v === Math.abs(a - b)) them('nham-dau');
@@ -358,6 +373,8 @@
         if (haiChuSo && (v === d + 10 || (v === d - 10 && !nho))) them('dem-lech');
       } else {
         const muon = ua < ub;
+        // Trừ qua 10 theo SGK Bài 11: 13 − 5, tách 13 = 10 + 3, 10 − 5 = 5, 5 + 3 = 8; quên cộng 3 ra 5, trừ 3 ra 2
+        if (muon && a < 20 && b < 10 && (v === 10 - b || v === 10 - b - ua || v === 10)) them('tach-10-sai');
         if (muon && v === d + 10) them('quen-muon');
         if (muon && a < 20 && b < 10 && v === 10 - b) them('quen-muon');
         if (muon && v === (ta - tb) * 10 + (ub - ua)) them('tru-nguoc');
@@ -418,9 +435,19 @@
     if (m === 'dem-lech') return Number(v) < d ? 'Con đếm thiếu một chút rồi' : 'Con đếm thừa một chút rồi';
     if (m === 'viet-ca-so-nho' && ct.an === 'ket_qua' && ct.so[0] <= 100 && ct.so[1] <= 100) return 'Con viết cả ' + (dv(ct.so[0]) + dv(ct.so[1])) + ' xuống, quên nhớ 1 sang hàng chục';
     if (m === 'nguoc-thanh-phan') {
-      if (ct.an === 'so_hang_1' || ct.an === 'so_hang_2') return 'Muốn tìm số hạng, con lấy tổng trừ số hạng kia';
-      if (ct.an === 'so_bi_tru') return 'Muốn tìm số bị trừ, con lấy hiệu cộng số trừ';
-      return 'Muốn tìm số trừ, con lấy số bị trừ trừ đi hiệu';
+      // Lớp 2 chưa học quy tắc tìm thành phần (lớp 3): nói bằng câu hỏi "mấy cộng mấy" như SGK Bài 14
+      if (ct.an === 'so_hang_1') return 'Số cần tìm cộng ' + ct.so[1] + ' phải bằng ' + ct.kq;
+      if (ct.an === 'so_hang_2') return ct.so[0] + ' cộng số cần tìm phải bằng ' + ct.kq;
+      if (ct.an === 'so_bi_tru') return 'Số cần tìm bớt đi ' + ct.so[1] + ' phải còn ' + ct.kq;
+      return ct.so[0] + ' bớt đi số cần tìm phải còn ' + ct.kq;
+    }
+    if (m === 'tach-10-sai' && ct.an === 'ket_qua' && !Array.isArray(ct.phep)) {
+      const a = ct.so[0], b = ct.so[1];
+      if (ct.phep === '+' && a < 10 && b < 10) {
+        const lon = Math.max(a, b), be = Math.min(a, b), can = 10 - lon;
+        return 'Tách ' + be + ' = ' + can + ' + ' + (be - can) + ', ' + lon + ' + ' + can + ' = 10 rồi cộng tiếp ' + (be - can);
+      }
+      if (ct.phep === '-' && a < 20 && b < 10) return 'Tách ' + a + ' = 10 + ' + dv(a) + ', 10 ' + TRU + ' ' + b + ' = ' + (10 - b) + ' rồi cộng thêm ' + dv(a);
     }
     if (m === 'nham-bang') {
       const bang = ct.phep === '×' ? (ct.so[0] === 2 || ct.so[0] === 5 ? ct.so[0] : ct.so[1]) : ct.so[1];
@@ -435,9 +462,91 @@
   const CAP_TRU_QUA_10 = [];
   for (let a = 11; a <= 18; a++) for (let b = 2; b <= 9; b++) if (a - b <= 9) CAP_TRU_QUA_10.push([a, b]);
 
+  /**
+   * Độ khó theo mức thành thạo (nhóm D của lần rà soát 2026-09-28): lapDanhSach gửi mức của kỹ năng trong muc.muc_thanh_thao.
+   * Chưa học, làm quen: ưu tiên cặp số dễ; đã thuộc, vững chắc: ưu tiên cặp số khó (vẫn giữ khoảng một phần tư câu thường);
+   * đang luyện hay không rõ mức: sinh như cũ và không gọi thêm rng, nên cùng hạt giống vẫn ra đúng danh sách câu như trước.
+   */
+  const MUC_DE = { chua_hoc: 1, lam_quen: 1 };
+  const MUC_KHO = { da_thuoc: 1, vung_chac: 1 };
+  function theoDoKho(rng, muc, sinh, de, kho) {
+    const m = muc && muc.muc_thanh_thao;
+    const loc = MUC_DE[m] ? de : MUC_KHO[m] ? kho : null;
+    if (!loc) return sinh();
+    if (rng() < 0.25) return sinh();
+    let ct = sinh();
+    for (let i = 0; i < 15 && !loc(ct.so[0], ct.so[1], ct); i++) ct = sinh();
+    return ct;
+  }
+  /** Cặp số dễ, khó của từng kỹ năng cộng, trừ chính (a, b là hai số của phép tính). */
+  const DO_KHO = {
+    // 9 + 5, 8 + 4 dễ tách để được 10; 6 + 7, 5 + 8 khó hơn
+    'cong-qua-10': { de: function (a, b) { return Math.max(a, b) === 9 || a + b <= 12; }, kho: function (a, b) { return Math.min(a, b) >= 5 && Math.max(a, b) <= 8; } },
+    // 12 − 5, 15 − 9 dễ; 16 − 7, 14 − 6 khó hơn
+    'tru-qua-10': { de: function (a, b) { return b === 9 || a <= 12; }, kho: function (a, b) { return a >= 14 && b >= 6 && b <= 8; } },
+    'cong-nho-2cs-1cs': { de: function (a, b) { return dv(a) + b <= 12 && a < 50; }, kho: function (a, b) { return dv(a) + b >= 14; } },
+    'cong-nho-2cs-2cs': { de: function (a, b) { return dv(a) + dv(b) <= 12 && a + b <= 70; }, kho: function (a, b) { return dv(a) + dv(b) >= 14 || a + b >= 90; } },
+    'tru-nho-2cs-1cs': { de: function (a, b) { return b - dv(a) <= 3 && a <= 50; }, kho: function (a, b) { return b - dv(a) >= 5; } },
+    'tru-nho-2cs-2cs': { de: function (a, b) { return a !== 100 && dv(b) - dv(a) <= 3 && a <= 60; }, kho: function (a, b) { return a === 100 || dv(b) - dv(a) >= 5; } },
+    // Không nhớ là dễ, có nhớ (một lượt) là khó
+    'cong-tru-1000': {
+      de: function (a, b, ct) { const n = nhoBaChuSo(a, ct.phep, b); return !n.dv && !n.chuc; },
+      kho: function (a, b, ct) { const n = nhoBaChuSo(a, ct.phep, b); return n.dv || n.chuc; }
+    }
+  };
+  /** Bọc bộ sinh của một kỹ năng cộng, trừ chính bằng độ khó theo mức thành thạo. */
+  function coDoKho(kn, sinh) {
+    return function (rng, muc) { return theoDoKho(rng, muc, function () { return sinh(rng, muc); }, DO_KHO[kn].de, DO_KHO[kn].kho); };
+  }
+
+  /**
+   * Dạng SGK Bài 10, 14: so sánh biểu thức với một số (9 + 5 ? 13, đáp án '<' '>' '='), dựng khi mục câu của màn có
+   * cach 'so_sanh'; loại 'so_sanh' ở cau-so-sanh.js (chưa nạp thì hỏi phép tính như thường). Ba dấu đều nhau.
+   */
+  function coSoSanh(sinh) {
+    return function (rng, muc) {
+      const ct = sinh(rng, muc);
+      if (!(muc && muc.cach && muc.cach.indexOf('so_sanh') >= 0 && LOAI_RIENG.so_sanh)) return ct;
+      if (muc.cach.length > 1 && chonCach(rng, muc, []) !== 'so_sanh') return ct;
+      const gt = tinhPhep(ct.so[0], ct.phep, ct.so[1]);
+      const dich = chon(rng, ['<', '>', '=']);
+      let b = dich === '=' ? gt : dich === '>' ? gt - nn(rng, 1, 3) : gt + nn(rng, 1, 3);
+      if (b < 0) b = gt + 1;
+      if (b > 20) b = gt - 1;
+      return { loai: 'so_sanh', kieu: 'dau_bt', phep: ct.phep, so: [ct.so[0], ct.so[1]], b: b };
+    };
+  }
+
+  /** Cộng, trừ trong 1000, nhớ không quá một lượt; nhom 0: không nhớ, 1: nhớ ở hàng đơn vị, 2: nhớ ở hàng chục. */
+  function capCongTru1000(rng, cong, nhom, haiCs) {
+    for (let thu = 0; ; thu++) {
+      const a = nn(rng, 110, 899), b = haiCs ? nn(rng, 12, 98) : nn(rng, 110, 899);
+      if (cong) {
+        if (a + b > 999) continue;
+        const n = nhoBaChuSo(a, '+', b);
+        if (n.dv && n.chuc) continue;
+        if ((n.dv ? 1 : n.chuc ? 2 : 0) !== nhom && thu < 400) continue;
+        return { phep: '+', so: [a, b], an: 'ket_qua' };
+      }
+      if (b >= a || a - b < 10) continue;
+      const m = nhoBaChuSo(a, '-', b);
+      if (m.dv && m.chuc) continue;
+      if (m.chuc && tram(a) - tram(b) - 1 < 0) continue;
+      if ((m.dv ? 1 : m.chuc ? 2 : 0) !== nhom && thu < 400) continue;
+      return { phep: '-', so: [a, b], an: 'ket_qua' };
+    }
+  }
+  /** Hai số (x, y theo thứ tự phép tính) hợp với cộng, trừ trong 1000 của SGK: tổng không quá 999, nhớ không quá một lượt. */
+  function hopLe1000(x, p, y) {
+    if (p === '+') { if (x + y > 999) return false; const n = nhoBaChuSo(x, '+', y); return !(n.dv && n.chuc); }
+    if (y >= x || x - y < 10) return false;
+    const m = nhoBaChuSo(x, '-', y);
+    return !(m.dv && m.chuc) && !(m.chuc && tram(x) - tram(y) - 1 < 0);
+  }
+
   const SINH_PT = {
-    'cong-qua-10': function (rng) { const p = chon(rng, CAP_CONG_QUA_10); return { phep: '+', so: [p[0], p[1]], an: 'ket_qua' }; },
-    'tru-qua-10': function (rng) { const p = chon(rng, CAP_TRU_QUA_10); return { phep: '-', so: [p[0], p[1]], an: 'ket_qua' }; },
+    'cong-qua-10': coSoSanh(coDoKho('cong-qua-10', function (rng) { const p = chon(rng, CAP_CONG_QUA_10); return { phep: '+', so: [p[0], p[1]], an: 'ket_qua' }; })),
+    'tru-qua-10': coSoSanh(coDoKho('tru-qua-10', function (rng) { const p = chon(rng, CAP_TRU_QUA_10); return { phep: '-', so: [p[0], p[1]], an: 'ket_qua' }; })),
     'tim-so-thieu-20': function (rng) {
       if (rng() < 0.5) {
         const p = chon(rng, CAP_CONG_QUA_10);
@@ -446,9 +555,21 @@
       const q = chon(rng, CAP_TRU_QUA_10);
       return { phep: '-', so: [q[0], q[1]], kq: q[0] - q[1], an: rng() < 0.5 ? 'so_bi_tru' : 'so_tru' };
     },
-    'cong-tru-khong-nho-100': function (rng) {
-      const mot = rng() < 0.4;
-      if (rng() < 0.5) {
+    /**
+     * muc.cach (tùy chọn) chọn phép: 'cong', 'tru' (số thứ hai có một hay hai chữ số như cũ), 'cong_1cs', 'cong_2cs', 'tru_1cs',
+     * 'tru_2cs' (các màn có nhớ của vùng 4 trộn câu không nhớ cùng phép để bé phải xét có nhớ hay không). Không có cach: như cũ.
+     */
+    'cong-tru-khong-nho-100': function (rng, muc) {
+      let mot, cong;
+      if (muc && muc.cach && muc.cach.length) {
+        const c = chonCach(rng, muc, []);
+        cong = c.indexOf('cong') === 0;
+        mot = /_1cs$/.test(c) ? true : /_2cs$/.test(c) ? false : rng() < 0.4;
+      } else {
+        mot = rng() < 0.4;
+        cong = rng() < 0.5;
+      }
+      if (cong) {
         for (;;) {
           const a = nn(rng, 10, 88), b = mot ? nn(rng, 1, 9) : nn(rng, 10, 89);
           if (a + b <= 99 && dv(a) + dv(b) <= 9) return { phep: '+', so: [a, b], an: 'ket_qua' };
@@ -459,27 +580,27 @@
         if (b2 < a2 && dv(b2) <= dv(a2)) return { phep: '-', so: [a2, b2], an: 'ket_qua' };
       }
     },
-    'cong-nho-2cs-1cs': function (rng) {
+    'cong-nho-2cs-1cs': coDoKho('cong-nho-2cs-1cs', function (rng) {
       const u = nn(rng, 2, 9);
       const a = nn(rng, 1, 8) * 10 + u;
       const b = nn(rng, 10 - u, 9);
       return { phep: '+', so: [a, b], an: 'ket_qua' };
-    },
-    'cong-nho-2cs-2cs': function (rng) {
+    }),
+    'cong-nho-2cs-2cs': coDoKho('cong-nho-2cs-2cs', function (rng) {
       for (;;) {
         const ua = nn(rng, 1, 9), ub = nn(rng, 10 - ua, 9);
         const ta = nn(rng, 1, 8), tb = nn(rng, 1, 9 - ta);
         const a = ta * 10 + ua, b = tb * 10 + ub;
         if (a + b <= 100) return { phep: '+', so: rng() < 0.5 ? [a, b] : [b, a], an: 'ket_qua' };
       }
-    },
-    'tru-nho-2cs-1cs': function (rng) {
+    }),
+    'tru-nho-2cs-1cs': coDoKho('tru-nho-2cs-1cs', function (rng) {
       const ua = nn(rng, 0, 8);
       const a = nn(rng, 2, 9) * 10 + ua;
       const b = nn(rng, ua + 1, 9);
       return { phep: '-', so: [a, b], an: 'ket_qua' };
-    },
-    'tru-nho-2cs-2cs': function (rng) {
+    }),
+    'tru-nho-2cs-2cs': coDoKho('tru-nho-2cs-2cs', function (rng) {
       if (rng() < 0.15) {
         const b0 = nn(rng, 1, 9) * 10 + nn(rng, 1, 9);
         return { phep: '-', so: [100, b0], an: 'ket_qua' };
@@ -487,7 +608,7 @@
       const ua = nn(rng, 0, 8), ub = nn(rng, ua + 1, 9);
       const ta = nn(rng, 2, 9), tb = nn(rng, 1, ta - 1);
       return { phep: '-', so: [ta * 10 + ua, tb * 10 + ub], an: 'ket_qua' };
-    },
+    }),
     'nham-tron-chuc': function (rng) {
       const dang = nn(rng, 1, 4);
       if (dang === 1) { const a = nn(rng, 1, 8), b = nn(rng, 1, 10 - a); return { phep: '+', so: [a * 10, b * 10], an: 'ket_qua' }; }
@@ -514,27 +635,12 @@
       return { phep: ':', so: [b * nn(rng, 1, 10), b], an: 'ket_qua' };
     },
     /** Ba nhóm đều nhau: không nhớ, nhớ ở hàng đơn vị, nhớ ở hàng chục; số thứ hai đôi khi có hai chữ số. */
-    'cong-tru-1000': function (rng) {
+    'cong-tru-1000': coDoKho('cong-tru-1000', function (rng) {
       const nhom = nn(rng, 0, 2);
       const cong = rng() < 0.5;
       const haiCs = rng() < 0.3;
-      for (let thu = 0; ; thu++) {
-        const a = nn(rng, 110, 899), b = haiCs ? nn(rng, 12, 98) : nn(rng, 110, 899);
-        if (cong) {
-          if (a + b > 999) continue;
-          const n = nhoBaChuSo(a, '+', b);
-          if (n.dv && n.chuc) continue;
-          if ((n.dv ? 1 : n.chuc ? 2 : 0) !== nhom && thu < 400) continue;
-          return { phep: '+', so: [a, b], an: 'ket_qua' };
-        }
-        if (b >= a || a - b < 10) continue;
-        const m = nhoBaChuSo(a, '-', b);
-        if (m.dv && m.chuc) continue;
-        if (m.chuc && tram(a) - tram(b) - 1 < 0) continue;
-        if ((m.dv ? 1 : m.chuc ? 2 : 0) !== nhom && thu < 400) continue;
-        return { phep: '-', so: [a, b], an: 'ket_qua' };
-      }
-    }
+      return capCongTru1000(rng, cong, nhom, haiCs);
+    })
   };
 
   /** Ứng viên nhiễu có tên lỗi (w: trọng số), theo công thức ở 03a. */
@@ -581,18 +687,30 @@
       const a = ct.so[0], b = ct.so[1];
       const ua = dv(a), ub = dv(b), ta = chuc(a), tb = chuc(b);
       if (ct.phep === '+') {
-        them(d - 10, kyNang === 'nham-tron-chuc' ? 0.5 : 4);
-        them(Math.abs(a - b), 1);
+        if (a < 10 && b < 10) {
+          // Cộng qua 10 (hai số có một chữ số): không dùng đ − 10 (4 + 7 hiện "1" là lộ đáp án), dùng lỗi tách 10 như SGK Bài 7;
+          // lệch 1, lệch 2 do taoNhieu thêm
+          const lon = Math.max(a, b), can = 10 - lon;
+          if (ua + ub >= 10) { them(10 + can, 2.5); them(10 + Math.min(a, b), 2); }
+          if (2 * a >= 10) them(2 * a, 0.5);
+          if (2 * b >= 10) them(2 * b, 0.5);
+        } else {
+          them(d - 10, kyNang === 'nham-tron-chuc' ? 0.5 : 4);
+          them(Math.abs(a - b), 1);
+        }
         if (a >= 10 && b < 10) them(a + 10 * b, 2);
         if (b >= 10 && b % 10 === 0 && a % 10 !== 0) them(a + b / 10, 3);
         if (a % 10 === 0 && b % 10 === 0) { them(d / 10, 3); them(d * 10, 1); }
-        if (a < 10 && b < 10) { them(2 * a, 0.5); them(2 * b, 0.5); }
       } else {
-        them(d + 10, 3);
-        if (ua < ub) them((ta - tb) * 10 + (ub - ua), 3);
-        if (a < 20 && b < 10) them(10 - b, 1.5);
+        const quaMuoi = a < 20 && b < 10;
+        // Trừ qua 10 (SGK Bài 11): hiệu luôn có một chữ số, nên nhiễu lớn hơn cả số bị trừ (đ + 10, cộng nhầm) lộ đáp án, không dùng;
+        // ưu tiên lỗi tách 10 có một chữ số: 13 − 5 ra 5 (10 − 5, quên cộng 3) hay 2 (10 − 5 − 3)
+        if (!quaMuoi) them(d + 10, 3);
+        if (ua < ub) { const tn = (ta - tb) * 10 + (ub - ua); if (!quaMuoi) them(tn, 3); else if (tn < a) them(tn, 0.5); }
+        if (quaMuoi) them(10 - b, 2);
+        if (quaMuoi && ua < ub) them(10 - b - ua, 1.5);
         if (a >= 10 && b < 10 && ua < ub) them(d - 2 * (10 - b), 1.5);
-        them(a + b, 1);
+        if (!quaMuoi) them(a + b, 1);
         if (a >= 10 && b < 10) them(a - 10 * b, 1);
         if (b >= 10 && b % 10 === 0 && a % 10 !== 0) them(a - b / 10, 3);
         if (a % 10 === 0 && b % 10 === 0) { them(d / 10, 3); them(d * 10, 1); }
@@ -612,13 +730,18 @@
       ];
     }
     if (ct.an !== 'ket_qua') {
+      // Lớp 2 (SGK Bài 14): hỏi "mấy cộng mấy", đếm thêm, nhẩm bảng cộng, bảng trừ; quy tắc "muốn tìm số hạng…" là của lớp 3
       const a = ct.so[0], b = ct.so[1], c = ct.kq;
       if (ct.phep === '+') {
         const biet = ct.an === 'so_hang_1' ? b : a;
-        return ['Muốn tìm số hạng, lấy tổng trừ đi số hạng kia.', 'Con tính ' + c + ' ' + TRU + ' ' + biet + '.', c + ' ' + TRU + ' ' + biet + ' = ?'];
+        return [
+          (ct.an === 'so_hang_1' ? 'Mấy cộng ' + b : a + ' cộng mấy') + ' bằng ' + c + '? Đếm thêm từ ' + biet + ' tới ' + c + '.',
+          'Đếm thêm từ ' + biet + ': mỗi lần đếm là thêm 1, đếm tới ' + c + ' thì dừng. Đếm được mấy lần?',
+          'Nhẩm bảng trừ cũng được: ' + c + ' ' + TRU + ' ' + biet + ' = ?'
+        ];
       }
-      if (ct.an === 'so_bi_tru') return ['Muốn tìm số bị trừ, lấy hiệu cộng với số trừ.', 'Con tính ' + c + ' + ' + b + '.', c + ' + ' + b + ' = ?'];
-      return ['Muốn tìm số trừ, lấy số bị trừ trừ đi hiệu.', 'Con tính ' + a + ' ' + TRU + ' ' + c + '.', a + ' ' + TRU + ' ' + c + ' = ?'];
+      if (ct.an === 'so_bi_tru') return ['Mấy trừ ' + b + ' bằng ' + c + '?', 'Bớt đi ' + b + ' còn ' + c + ', vậy lúc đầu phải thêm lại ' + b + '.', c + ' + ' + b + ' = ?'];
+      return [a + ' trừ mấy bằng ' + c + '?', 'Đếm lùi từ ' + a + ' tới ' + c + ': đếm được mấy lần?', 'Nhẩm bảng trừ: ' + a + ' ' + TRU + ' ' + c + ' = ?'];
     }
     const a = ct.so[0], b = ct.so[1];
     if (ct.phep === '×') {
@@ -634,12 +757,18 @@
     if (a % 10 === 0 && b % 10 === 0) {
       return ['Đếm theo chục: ' + a + ' là ' + a / 10 + ' chục.', a / 10 + ' chục ' + (ct.phep === '+' ? 'cộng' : 'trừ') + ' ' + b / 10 + ' chục = ' + d / 10 + ' chục.', d / 10 + ' chục là mấy?'];
     }
+    if (a < 10 && b < 10 && ct.phep === '+' && a + b <= 10) {
+      const lon = Math.max(a, b), be = Math.min(a, b);
+      return ['Đếm thêm ' + be + ' từ ' + lon + ' nhé.', 'Bắt đầu từ ' + lon + ', đếm thêm ' + be + ' số nữa.', lon + ' + ' + be + ' = ?'];
+    }
     if (a < 10 && b < 10 && ct.phep === '+') {
       const lon = Math.max(a, b), be = Math.min(a, b), can = 10 - lon;
       return ['Tách ' + be + ' để ' + lon + ' thành 10 nhé.', lon + ' + ' + can + ' = 10, còn ' + (be - can) + '.', '10 + ' + (be - can) + ' = ?'];
     }
-    if (a < 20 && b < 10 && ct.phep === '-') {
-      return ['Tách ' + b + ' để trừ về 10 trước nhé.', a + ' ' + TRU + ' ' + ua + ' = 10, còn phải bớt ' + (b - ua) + '.', '10 ' + TRU + ' ' + (b - ua) + ' = ?'];
+    if (a === 10 && b < 10 && ct.phep === '-') return ['Nhẩm bảng trừ: 10 ' + TRU + ' ' + b + '.', 'Đếm lùi ' + b + ' số từ 10.', '10 ' + TRU + ' ' + b + ' = ?'];
+    if (a < 20 && b < 10 && ct.phep === '-' && ua < ub) {
+      // SGK Bài 11: tách số bị trừ thành 10 và số lẻ (13 = 10 + 3), lấy 10 trừ trước rồi cộng số lẻ
+      return ['Tách ' + a + ' = 10 + ' + ua + ' nhé.', '10 ' + TRU + ' ' + b + ' = ' + (10 - b) + '.', (10 - b) + ' + ' + ua + ' = ?'];
     }
     if (ct.phep === '+') {
       if (ua + ub >= 10) {
@@ -680,8 +809,12 @@
       return { ma: 'tu-trai-sang-phai', buoc: [ct.so[0] + ' ' + kyHieu(ct.phep[0]) + ' ' + ct.so[1] + ' = ' + r1, r1 + ' ' + kyHieu(ct.phep[1]) + ' ' + ct.so[2] + ' = ' + d], kq: d };
     }
     if (ct.an !== 'ket_qua') {
-      const g = goiYPT(ct);
-      return { ma: 'tim-thanh-phan', buoc: [g[0], g[2].replace('?', String(d))], kq: d };
+      const a = ct.so[0], b = ct.so[1], c = ct.kq;
+      let buoc;
+      if (ct.phep === '+') buoc = ct.an === 'so_hang_1' ? [d + ' + ' + b + ' = ' + c, 'Vậy số còn thiếu là ' + d] : [a + ' + ' + d + ' = ' + c, 'Vậy số còn thiếu là ' + d];
+      else if (ct.an === 'so_bi_tru') buoc = [c + ' + ' + b + ' = ' + d + ', thử lại: ' + d + ' ' + TRU + ' ' + b + ' = ' + c, 'Vậy số còn thiếu là ' + d];
+      else buoc = [a + ' ' + TRU + ' ' + d + ' = ' + c, 'Vậy số còn thiếu là ' + d];
+      return { ma: 'tim-thanh-phan', buoc: buoc, kq: d };
     }
     const a = ct.so[0], b = ct.so[1];
     if (ct.phep === '×') {
@@ -699,12 +832,16 @@
     if (a % 10 === 0 && b % 10 === 0) {
       return { ma: 'dem-chuc', buoc: [a / 10 + ' chục ' + (ct.phep === '+' ? '+' : TRU) + ' ' + b / 10 + ' chục = ' + d / 10 + ' chục', 'Vậy ' + dePT(ct).replace('?', String(d))], kq: d };
     }
+    if (a < 10 && b < 10 && ct.phep === '+' && a + b <= 10) {
+      return { ma: 'dem-them', buoc: ['Đếm thêm ' + Math.min(a, b) + ' từ ' + Math.max(a, b), 'Vậy ' + a + ' + ' + b + ' = ' + d], kq: d };
+    }
+    if (a === 10 && b < 10 && ct.phep === '-') return { ma: 'dem-lui', buoc: ['Đếm lùi ' + b + ' số từ 10', 'Vậy 10 ' + TRU + ' ' + b + ' = ' + d], kq: d };
     if (a < 10 && b < 10 && ct.phep === '+') {
       const lon = Math.max(a, b), be = Math.min(a, b), can = 10 - lon;
       return { ma: 'tach-10-cong', buoc: ['Tách ' + be + ' = ' + can + ' + ' + (be - can), lon + ' + ' + can + ' = 10', '10 + ' + (be - can) + ' = ' + d], kq: d };
     }
-    if (a < 20 && b < 10 && ct.phep === '-') {
-      return { ma: 'tach-10-tru', buoc: ['Tách ' + b + ' = ' + ua + ' + ' + (b - ua), a + ' ' + TRU + ' ' + ua + ' = 10', '10 ' + TRU + ' ' + (b - ua) + ' = ' + d], kq: d };
+    if (a < 20 && b < 10 && ct.phep === '-' && ua < ub) {
+      return { ma: 'tach-10-tru', buoc: ['Tách ' + a + ' = 10 + ' + ua, '10 ' + TRU + ' ' + b + ' = ' + (10 - b), (10 - b) + ' + ' + ua + ' = ' + d], kq: d };
     }
     const cot = { tren: a, duoi: b, phep: ct.phep, kq: d, nho: false };
     if (ct.phep === '+') {
@@ -1005,14 +1142,17 @@
     if (ct.chieu === 'tranh_nhan') return ct.b + ' nhóm, mỗi nhóm ' + ct.a;
     return hienGiaTri(chuoiTong(ct.a, ct.b));
   }
+  /** Tên đồ vật trong tranh các nhóm (để đề đọc lên có danh từ: "mỗi nhóm 4 quả cam"). */
+  const TEN_VAT_NT = { '🍊': 'quả cam', '🍎': 'quả táo', '🌸': 'bông hoa', '⭐': 'ngôi sao', '🥚': 'quả trứng' };
+  function tenVatNT(ct) { return TEN_VAT_NT[ct.vat] || 'đồ vật'; }
   function deNT(ct) {
     if (ct.chieu === 'nhan_tong') return ct.a + ' × ' + ct.b + ' viết thành tổng nào?';
-    if (ct.chieu === 'tranh_nhan') return ct.b + ' nhóm, mỗi nhóm ' + ct.a + ' ' + (ct.vat || '') + ': phép nhân nào?';
+    if (ct.chieu === 'tranh_nhan') return ct.b + ' nhóm, mỗi nhóm ' + ct.a + ' ' + tenVatNT(ct) + ' ' + (ct.vat || '') + ': phép nhân nào?';
     return hienGiaTri(chuoiTong(ct.a, ct.b)) + ' viết thành phép nhân nào?';
   }
   function deDocNT(ct) {
     if (ct.chieu === 'nhan_tong') return ct.a + ' nhân ' + ct.b + ' viết thành tổng nào?';
-    if (ct.chieu === 'tranh_nhan') return 'Có ' + ct.b + ' nhóm, mỗi nhóm ' + ct.a + '. Phép nhân nào?';
+    if (ct.chieu === 'tranh_nhan') return 'Có ' + ct.b + ' nhóm, mỗi nhóm ' + ct.a + ' ' + tenVatNT(ct) + '. Phép nhân nào?';
     return chuoiTong(ct.a, ct.b).split('+').join(' cộng ') + ' viết thành phép nhân nào?';
   }
   function maNT(ct) { return ct.chieu + ':' + ct.a + 'x' + ct.b; }
@@ -1072,13 +1212,15 @@
     const a = ct.a, b = ct.b;
     const d = tinhNT(ct);
     const ungVien = [];
+    // Thẻ đảo thứ tự (5 × 3 viết 3 + 3 + 3 + 3 + 3) có cùng giá trị với đáp án: ít dùng (trọng số 0,6) và nếu bé chọn thì
+    // VanChoi cho chọn lại như Truyện Tranh (03a mục 2.19), không tính là sai hẳn
     if (ct.chieu === 'nhan_tong') {
-      if (a !== b) ungVien.push({ v: chuoiTong(b, a), w: 3 });
+      if (a !== b) ungVien.push({ v: chuoiTong(b, a), w: 0.6 });
       ungVien.push({ v: chuoiTong(a, b + 1), w: 2 });
       if (b > 2) ungVien.push({ v: chuoiTong(a, b - 1), w: 2 });
       ungVien.push({ v: a + '+' + b, w: 2 });
     } else {
-      if (a !== b) ungVien.push({ v: b + 'x' + a, w: 3 });
+      if (a !== b) ungVien.push({ v: b + 'x' + a, w: 0.6 });
       ungVien.push({ v: a + 'x' + (b + 1), w: 2 });
       if (b > 2) ungVien.push({ v: a + 'x' + (b - 1), w: 2 });
       ungVien.push({ v: a + '+' + b, w: 1.5 });
@@ -1116,9 +1258,9 @@
 
   const MAU = [
     // Thêm
-    { id: 'trung-khay', dang: 'them', ky: KY_CONG_TRU, vat: '🥚', dv: 'quả', ten: 'quả trứng', khung: ['Trên khay có {x} quả trứng.', '{A} đặt thêm {y} quả trứng vào khay.', 'Hỏi trên khay có tất cả bao nhiêu quả trứng?'], giai: 'Số quả trứng có tất cả là:' },
-    { id: 'hoa-lo', dang: 'them', ky: KY_CONG_TRU, vat: '🌸', dv: 'bông', ten: 'bông hoa', khung: ['Lọ hoa có {x} bông hoa.', '{A} cắm thêm {y} bông hoa vào lọ.', 'Hỏi lọ hoa có tất cả bao nhiêu bông hoa?'], giai: 'Số bông hoa có tất cả là:' },
-    { id: 'keo-co', dang: 'them', ky: KY_CONG_TRU, vat: '🦕', dv: 'bạn', ten: 'bạn', khung: ['Có {x} bạn khủng long đang chơi kéo co.', 'Có thêm {y} bạn chạy đến cùng chơi.', 'Hỏi lúc đó có tất cả bao nhiêu bạn chơi kéo co?'], giai: 'Số bạn chơi kéo co có tất cả là:' },
+    { id: 'trung-khay', toi_da: 30, dang: 'them', ky: KY_CONG_TRU, vat: '🥚', dv: 'quả', ten: 'quả trứng', khung: ['Trên khay có {x} quả trứng.', '{A} đặt thêm {y} quả trứng vào khay.', 'Hỏi trên khay có tất cả bao nhiêu quả trứng?'], giai: 'Số quả trứng có tất cả là:' },
+    { id: 'hoa-lo', toi_da: 20, dang: 'them', ky: KY_CONG_TRU, vat: '🌸', dv: 'bông', ten: 'bông hoa', khung: ['Lọ hoa có {x} bông hoa.', '{A} cắm thêm {y} bông hoa vào lọ.', 'Hỏi lọ hoa có tất cả bao nhiêu bông hoa?'], giai: 'Số bông hoa có tất cả là:' },
+    { id: 'keo-co', toi_da: 30, dang: 'them', ky: KY_CONG_TRU, vat: '🦕', dv: 'bạn', ten: 'bạn', khung: ['Có {x} bạn khủng long đang chơi kéo co.', 'Có thêm {y} bạn chạy đến cùng chơi.', 'Hỏi lúc đó có tất cả bao nhiêu bạn chơi kéo co?'], giai: 'Số bạn chơi kéo co có tất cả là:' },
     { id: 'thuyen-ben', dang: 'them', ky: KY_CONG_TRU, vat: '⛵', dv: 'chiếc', ten: 'chiếc thuyền', khung: ['Bến sông có {x} chiếc thuyền.', 'Có thêm {y} chiếc thuyền cập bến.', 'Hỏi bến sông có tất cả bao nhiêu chiếc thuyền?'], giai: 'Số thuyền có tất cả là:' },
     { id: 'qua-mong-tang', dang: 'them', ky: KY_CONG_TRU, anh: 'berry', dv: 'quả', ten: 'quả mọng', khung: ['{A} có {x} quả mọng.', '{B} tặng {A} thêm {y} quả mọng.', 'Hỏi {A} có tất cả bao nhiêu quả mọng?'], giai: 'Số quả mọng {A} có tất cả là:' },
     { id: 'trung-ba-mua', dang: 'them', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🥚', dv: 'quả', ten: 'quả trứng', khung: ['Bà có {x} quả trứng.', 'Bà mua thêm {y} quả trứng nữa.', 'Hỏi bà có tất cả bao nhiêu quả trứng?'], giai: 'Số quả trứng bà có tất cả là:' },
@@ -1128,15 +1270,15 @@
     { id: 'hai-gio-tao', dang: 'gop', ky: KY_CONG_TRU, vat: '🍎', dv: 'quả', ten: 'quả táo', khung: ['Giỏ thứ nhất có {x} quả táo.', 'Giỏ thứ hai có {y} quả táo.', 'Hỏi cả hai giỏ có bao nhiêu quả táo?'], giai: 'Số quả táo cả hai giỏ có là:' },
     { id: 'hai-ban-hai', dang: 'gop', ky: KY_CONG_TRU, anh: 'berry', dv: 'quả', ten: 'quả mọng', khung: ['{A} hái được {x} quả mọng.', '{B} hái được {y} quả mọng.', 'Hỏi cả hai bạn hái được bao nhiêu quả mọng?'], giai: 'Số quả mọng cả hai bạn hái được là:' },
     // Bớt
-    { id: 'chim-canh', dang: 'bot', ky: KY_CONG_TRU, vat: '🐦', dv: 'con', ten: 'con chim', khung: ['Có {x} con chim đậu trên cành.', 'Sau đó {y} con chim bay đi.', 'Hỏi trên cành còn lại bao nhiêu con chim?'], giai: 'Số con chim còn lại là:' },
-    { id: 'xe-buyt', dang: 'bot', ky: KY_CONG_TRU, vat: '🦕', dv: 'bạn', ten: 'bạn', khung: ['Trên xe buýt có {x} bạn khủng long.', 'Đến điểm dừng, {y} bạn xuống xe.', 'Hỏi trên xe còn lại bao nhiêu bạn?'], giai: 'Số bạn còn lại trên xe là:' },
-    { id: 'bong-bay', dang: 'bot', ky: KY_CONG_TRU, vat: '🎈', dv: 'quả', ten: 'quả bóng bay', khung: ['{A} có {x} quả bóng bay.', 'Gió thổi bay mất {y} quả.', 'Hỏi {A} còn lại bao nhiêu quả bóng bay?'], giai: 'Số bóng bay {A} còn lại là:' },
-    { id: 'banh-dia', dang: 'bot', ky: KY_CONG_TRU, vat: '🍪', dv: 'cái', ten: 'cái bánh', khung: ['Trên đĩa có {x} cái bánh.', '{A} và {B} đã ăn {y} cái bánh.', 'Hỏi trên đĩa còn lại mấy cái bánh?'], giai: 'Số bánh còn lại trên đĩa là:' },
+    { id: 'chim-canh', toi_da: 30, dang: 'bot', ky: KY_CONG_TRU, vat: '🐦', dv: 'con', ten: 'con chim', khung: ['Có {x} con chim đậu trên cành.', 'Sau đó {y} con chim bay đi.', 'Hỏi trên cành còn lại bao nhiêu con chim?'], giai: 'Số con chim còn lại là:' },
+    { id: 'xe-buyt', toi_da: 45, dang: 'bot', ky: KY_CONG_TRU, vat: '🦕', dv: 'bạn', ten: 'bạn', khung: ['Trên xe buýt có {x} bạn khủng long.', 'Đến điểm dừng, {y} bạn xuống xe.', 'Hỏi trên xe còn lại bao nhiêu bạn?'], giai: 'Số bạn còn lại trên xe là:' },
+    { id: 'bong-bay', toi_da: 30, dang: 'bot', ky: KY_CONG_TRU, vat: '🎈', dv: 'quả', ten: 'quả bóng bay', khung: ['{A} có {x} quả bóng bay.', 'Gió thổi bay mất {y} quả.', 'Hỏi {A} còn lại bao nhiêu quả bóng bay?'], giai: 'Số bóng bay {A} còn lại là:' },
+    { id: 'banh-dia', toi_da: 20, dang: 'bot', ky: KY_CONG_TRU, vat: '🍪', dv: 'cái', ten: 'cái bánh', khung: ['Trên đĩa có {x} cái bánh.', '{A} và {B} đã ăn {y} cái bánh.', 'Hỏi trên đĩa còn lại mấy cái bánh?'], giai: 'Số bánh còn lại trên đĩa là:' },
     { id: 'ca-ao', dang: 'bot', ky: KY_CONG_TRU, vat: '🐟', dv: 'con', ten: 'con cá', khung: ['Trong ao có {x} con cá.', '{A} câu được {y} con cá.', 'Hỏi trong ao còn lại bao nhiêu con cá?'], giai: 'Số cá còn lại trong ao là:' },
     // Còn lại (có bán, cắt đi, dùng đơn vị đo)
     { id: 'lon-ban', dang: 'con_lai', ky: ['toan-them-bot', 'toan-loi-van-100'], vat: '🐷', dv: 'con', ten: 'con lợn', khung: ['Đàn lợn nhà {A} có {x} con.', 'Mẹ đã bán {y} con lợn.', 'Hỏi đàn lợn nhà {A} còn lại bao nhiêu con?'], giai: 'Số con lợn còn lại là:' },
     { id: 'day-cat', do_luong: true, dang: 'con_lai', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🧶', dv: 'cm', ten: 'cm', khung: ['Sợi dây dài {x} xăng-ti-mét.', '{A} cắt đi {y} xăng-ti-mét.', 'Hỏi sợi dây còn lại dài bao nhiêu xăng-ti-mét?'], giai: 'Sợi dây còn lại dài là:' },
-    { id: 'gao-ban', do_luong: true, dang: 'con_lai', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng có {x} ki-lô-gam gạo.', 'Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo cửa hàng còn lại là:' },
+    { id: 'gao-ban', do_luong: true, dang: 'con_lai', ky: ['toan-loi-van-100', 'toan-loi-van-1000'], khoang_1000: [[200, 900], [100, 500]], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng có {x} ki-lô-gam gạo.', 'Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam gạo?'], giai: 'Số gạo cửa hàng còn lại là:' },
     // Nhiều hơn
     { id: 'hoa-do-vang', dang: 'nhieu_hon', ky: KY_NHIEU_IT, vat: '🌼', dv: 'bông', ten: 'bông hoa', khung: ['Có {x} bông hoa màu đỏ.', 'Số hoa màu vàng nhiều hơn số hoa màu đỏ là {y} bông.', 'Hỏi có bao nhiêu bông hoa màu vàng?'], giai: 'Số bông hoa màu vàng là:' },
     { id: 'ga-vit', dang: 'nhieu_hon', ky: KY_NHIEU_IT, vat: '🦆', dv: 'con', ten: 'con vịt', khung: ['Trên sân có {x} con gà.', 'Số vịt nhiều hơn số gà là {y} con.', 'Hỏi trên sân có bao nhiêu con vịt?'], giai: 'Số con vịt trên sân là:' },
@@ -1152,9 +1294,19 @@
     { id: 'ngo-gui', dang: 'hon_kem', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🌽', dv: 'bắp', ten: 'bắp ngô', khung: ['Anh {A} gùi được {x} bắp ngô.', 'Em {B} gùi được {y} bắp ngô.', 'Hỏi anh gùi nhiều hơn em bao nhiêu bắp ngô?'], giai: 'Anh gùi nhiều hơn em số bắp ngô là:' },
     { id: 'cay-to', dang: 'hon_kem', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🌳', dv: 'cây', ten: 'cây', khung: ['Tổ Một trồng được {x} cây.', 'Tổ Hai trồng được {y} cây.', 'Hỏi tổ Hai trồng được ít hơn tổ Một bao nhiêu cây?'], giai: 'Tổ Hai trồng ít hơn tổ Một số cây là:' },
     { id: 'sach-ke', dang: 'hon_kem', ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '📘', dv: 'quyển', ten: 'quyển sách', khung: ['Kệ trên có {x} quyển sách.', 'Kệ dưới có {y} quyển sách.', 'Hỏi kệ trên nhiều hơn kệ dưới bao nhiêu quyển sách?'], giai: 'Kệ trên nhiều hơn kệ dưới số sách là:' },
+    // Hơn, kém theo SGK Bài 4: "kém", "ngắn hơn", "thấp hơn", "hơn mấy tuổi"; so_be_truoc: đề nói số bé trước ({y} rồi mới {x}),
+    // để bé không quen "số đầu trừ số sau" (thẻ nhiễu {y} − {x} bắt lỗi be-tru-lon). khoang: { x: [a, b], y: [a, b] } cho số thật.
+    { id: 'be-ca', dang: 'hon_kem', so_be_truoc: true, toi_da: 40, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🐟', dv: 'con', ten: 'con cá', khung: ['Bể nhỏ có {y} con cá.', 'Bể to có {x} con cá.', 'Hỏi số cá ở bể nhỏ kém số cá ở bể to mấy con?'], giai: 'Số cá ở bể nhỏ kém số cá ở bể to là:' },
+    { id: 'hoa-chua-to', dang: 'hon_kem', so_be_truoc: true, toi_da: 30, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🌼', dv: 'bông', ten: 'bông hoa', khung: ['Trên tờ giấy có {y} bông hoa chưa tô màu.', '{A} đã tô màu {x} bông hoa.', 'Hỏi số bông hoa chưa tô màu kém số bông hoa đã tô màu mấy bông?'], giai: 'Số bông hoa chưa tô màu kém số bông hoa đã tô màu là:' },
+    { id: 'thuyen-kem', dang: 'hon_kem', so_be_truoc: true, toi_da: 40, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '⛵', dv: 'cái', ten: 'cái thuyền', khung: ['{A} gấp được {y} cái thuyền giấy.', '{B} gấp được {x} cái thuyền giấy.', 'Hỏi {A} gấp được kém {B} mấy cái thuyền?'], giai: '{A} gấp được kém {B} số thuyền là:' },
+    { id: 'tuoi-bo', dang: 'hon_kem', so_be_truoc: true, do_luong: true, khoang: { x: [30, 45], y: [5, 9] }, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🎂', dv: 'tuổi', ten: 'tuổi', khung: ['{A} {y} tuổi.', 'Bố của {A} {x} tuổi.', 'Hỏi bố hơn {A} bao nhiêu tuổi?'], giai: 'Bố hơn {A} số tuổi là:' },
+    { id: 'bang-giay', dang: 'hon_kem', do_luong: true, toi_da: 30, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🎀', dv: 'cm', ten: 'cm', khung: ['Băng giấy màu đỏ dài {x} cm.', 'Băng giấy màu vàng dài {y} cm.', 'Hỏi băng giấy màu vàng ngắn hơn băng giấy màu đỏ mấy xăng-ti-mét?'], giai: 'Băng giấy màu vàng ngắn hơn băng giấy màu đỏ là:' },
+    { id: 'but-sap', dang: 'hon_kem', so_be_truoc: true, do_luong: true, khoang: { x: [14, 25], y: [5, 12] }, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🖍️', dv: 'cm', ten: 'cm', khung: ['Bút sáp dài {y} cm.', 'Bút chì dài {x} cm.', 'Hỏi bút sáp ngắn hơn bút chì mấy xăng-ti-mét?'], giai: 'Bút sáp ngắn hơn bút chì là:' },
+    { id: 'robot-cao', dang: 'hon_kem', do_luong: true, khoang: { x: [45, 99], y: [30, 90] }, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🤖', dv: 'cm', ten: 'cm', khung: ['Rô-bốt A cao {x} cm.', 'Rô-bốt B cao {y} cm.', 'Hỏi rô-bốt B thấp hơn rô-bốt A bao nhiêu xăng-ti-mét?'], giai: 'Rô-bốt B thấp hơn rô-bốt A là:' },
+    { id: 'cay-thap', dang: 'hon_kem', so_be_truoc: true, do_luong: true, khoang: { x: [40, 95], y: [20, 70] }, ky: ['toan-hon-kem', 'toan-loi-van-100'], vat: '🌱', dv: 'cm', ten: 'cm', khung: ['Cây ớt cao {y} cm.', 'Cây cà chua cao {x} cm.', 'Hỏi cây ớt thấp hơn cây cà chua bao nhiêu xăng-ti-mét?'], giai: 'Cây ớt thấp hơn cây cà chua là:' },
     // Lúc đầu (có chữ "còn lại", "bán" nhưng phải cộng: bẫy từ khóa như 03a mục 2.18)
     { id: 'bi-cho', dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🔵', dv: 'viên', ten: 'viên bi', khung: ['{A} cho {B} {y} viên bi.', 'Sau khi cho, {A} còn lại {x} viên bi.', 'Hỏi lúc đầu {A} có bao nhiêu viên bi?'], giai: 'Lúc đầu {A} có số viên bi là:' },
-    { id: 'gao-luc-dau', do_luong: true, dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Cửa hàng còn lại {x} ki-lô-gam gạo.', 'Hỏi lúc đầu cửa hàng có bao nhiêu ki-lô-gam gạo?'], giai: 'Lúc đầu cửa hàng có số gạo là:' },
+    { id: 'gao-luc-dau', do_luong: true, dang: 'luc_dau', ky: ['toan-loi-van-100', 'toan-loi-van-1000'], khoang_1000: [[150, 600], [100, 350]], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Cửa hàng đã bán {y} ki-lô-gam gạo.', 'Cửa hàng còn lại {x} ki-lô-gam gạo.', 'Hỏi lúc đầu cửa hàng có bao nhiêu ki-lô-gam gạo?'], giai: 'Lúc đầu cửa hàng có số gạo là:' },
     { id: 'chim-luc-dau', dang: 'luc_dau', ky: ['toan-loi-van-100'], vat: '🐦', dv: 'con', ten: 'con chim', khung: ['Có {y} con chim đã bay đi.', 'Trên cành còn lại {x} con chim.', 'Hỏi lúc đầu trên cành có bao nhiêu con chim?'], giai: 'Lúc đầu trên cành có số con chim là:' },
     // Nhân: {x} trong mỗi nhóm, có {y} nhóm
     { id: 'dia-cam', dang: 'nhan', ky: ['toan-nhan-chia'], vat: '🍊', dv: 'quả', ten: 'quả cam', khung: ['Mỗi đĩa có {x} quả cam.', 'Có {y} đĩa như thế.', 'Hỏi có tất cả bao nhiêu quả cam?'], giai: 'Số quả cam có tất cả là:' },
@@ -1174,15 +1326,25 @@
     { id: 'cam-dia-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🍊', dv: 'đĩa', ten: 'đĩa cam', khung: ['Có {x} quả cam.', 'Xếp vào các đĩa, mỗi đĩa {y} quả.', 'Hỏi được mấy đĩa cam như thế?'], giai: 'Số đĩa cam là:' },
     { id: 'hoa-lo-nhom', dang: 'chia_nhom', ky: KY_CHIA, vat: '🌸', dv: 'lọ', ten: 'lọ hoa', khung: ['Có {x} bông hoa.', 'Cắm vào các lọ, mỗi lọ {y} bông.', 'Hỏi cắm được mấy lọ hoa?'], giai: 'Số lọ hoa cắm được là:' },
     // Ki-lô-gam, lít (SGK Bài 15 đến 18): do_luong = số đo, vẽ một hình kèm số đo thay vì đếm từng vật
-    { id: 'bao-thoc', dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '🌾', dv: 'kg', ten: 'kg thóc', khung: ['Bao thứ nhất có {x} kg thóc.', 'Bao thứ hai có {y} kg thóc.', 'Hỏi cả hai bao có bao nhiêu ki-lô-gam thóc?'], giai: 'Cả hai bao có số ki-lô-gam thóc là:' },
+    { id: 'bao-thoc', toi_da: 60, dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '🌾', dv: 'kg', ten: 'kg thóc', khung: ['Bao thứ nhất có {x} kg thóc.', 'Bao thứ hai có {y} kg thóc.', 'Hỏi cả hai bao có bao nhiêu ki-lô-gam thóc?'], giai: 'Cả hai bao có số ki-lô-gam thóc là:' },
     { id: 'robot-can', dang: 'nhieu_hon', ky: ['toan-kg-lit'], do_luong: true, vat: '🤖', dv: 'kg', ten: 'kg', khung: ['Rô-bốt A cân nặng {x} kg.', 'Rô-bốt B nặng hơn rô-bốt A {y} kg.', 'Hỏi rô-bốt B cân nặng bao nhiêu ki-lô-gam?'], giai: 'Rô-bốt B cân nặng là:' },
     { id: 'khung-long-can', dang: 'it_hon', ky: ['toan-kg-lit'], do_luong: true, vat: '⚖️', dv: 'kg', ten: 'kg', khung: ['{A} cân nặng {x} kg.', '{B} nhẹ hơn {A} {y} kg.', 'Hỏi {B} cân nặng bao nhiêu ki-lô-gam?'], giai: '{B} cân nặng là:' },
     { id: 'duong-ban', dang: 'con_lai', ky: ['toan-kg-lit'], do_luong: true, vat: '🍬', dv: 'kg', ten: 'kg đường', khung: ['Cửa hàng có {x} kg đường.', 'Cửa hàng đã bán {y} kg đường.', 'Hỏi cửa hàng còn lại bao nhiêu ki-lô-gam đường?'], giai: 'Số ki-lô-gam đường còn lại là:' },
-    { id: 'gao-hai-tui', dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🍚', dv: 'kg', ten: 'kg', khung: ['Túi gạo tẻ nặng {x} kg.', 'Túi gạo nếp nặng {y} kg.', 'Hỏi túi gạo tẻ nặng hơn túi gạo nếp bao nhiêu ki-lô-gam?'], giai: 'Túi gạo tẻ nặng hơn túi gạo nếp là:' },
-    { id: 'nuoc-can', dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '💧', dv: 'l', ten: 'l nước', khung: ['Can thứ nhất đựng {x} l nước.', 'Can thứ hai đựng {y} l nước.', 'Hỏi cả hai can đựng bao nhiêu lít nước?'], giai: 'Cả hai can đựng số lít nước là:' },
-    { id: 'sua-thung', dang: 'bot', ky: ['toan-kg-lit'], do_luong: true, vat: '🥛', dv: 'l', ten: 'l sữa', khung: ['Thùng có {x} l sữa.', 'Mẹ rót ra {y} l sữa.', 'Hỏi thùng còn lại bao nhiêu lít sữa?'], giai: 'Thùng còn lại số lít sữa là:' },
-    { id: 'dau-can', dang: 'them', ky: ['toan-kg-lit'], do_luong: true, vat: '🫙', dv: 'l', ten: 'l dầu', khung: ['Trong can có {x} l dầu.', 'Bố đổ thêm {y} l dầu vào can.', 'Hỏi trong can có tất cả bao nhiêu lít dầu?'], giai: 'Trong can có tất cả số lít dầu là:' },
-    { id: 'xo-nuoc', dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🪣', dv: 'l', ten: 'l', khung: ['Xô to đựng {x} l nước.', 'Xô bé đựng {y} l nước.', 'Hỏi xô to đựng nhiều hơn xô bé bao nhiêu lít nước?'], giai: 'Xô to đựng nhiều hơn xô bé là:' },
+    { id: 'gao-hai-tui', toi_da: 30, dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🍚', dv: 'kg', ten: 'kg', khung: ['Túi gạo tẻ nặng {x} kg.', 'Túi gạo nếp nặng {y} kg.', 'Hỏi túi gạo tẻ nặng hơn túi gạo nếp bao nhiêu ki-lô-gam?'], giai: 'Túi gạo tẻ nặng hơn túi gạo nếp là:' },
+    { id: 'nuoc-can', toi_da: 20, dang: 'gop', ky: ['toan-kg-lit'], do_luong: true, vat: '💧', dv: 'l', ten: 'l nước', khung: ['Can thứ nhất đựng {x} l nước.', 'Can thứ hai đựng {y} l nước.', 'Hỏi cả hai can đựng bao nhiêu lít nước?'], giai: 'Cả hai can đựng số lít nước là:' },
+    { id: 'sua-thung', toi_da: 30, dang: 'bot', ky: ['toan-kg-lit'], do_luong: true, vat: '🥛', dv: 'l', ten: 'l sữa', khung: ['Thùng có {x} l sữa.', 'Mẹ rót ra {y} l sữa.', 'Hỏi thùng còn lại bao nhiêu lít sữa?'], giai: 'Thùng còn lại số lít sữa là:' },
+    { id: 'dau-can', toi_da: 20, dang: 'them', ky: ['toan-kg-lit'], do_luong: true, vat: '🫙', dv: 'l', ten: 'l dầu', khung: ['Trong can có {x} l dầu.', 'Bố đổ thêm {y} l dầu vào can.', 'Hỏi trong can có tất cả bao nhiêu lít dầu?'], giai: 'Trong can có tất cả số lít dầu là:' },
+    { id: 'xo-nuoc', toi_da: 20, dang: 'hon_kem', ky: ['toan-kg-lit'], do_luong: true, vat: '🪣', dv: 'l', ten: 'l', khung: ['Xô to đựng {x} l nước.', 'Xô bé đựng {y} l nước.', 'Hỏi xô to đựng nhiều hơn xô bé bao nhiêu lít nước?'], giai: 'Xô to đựng nhiều hơn xô bé là:' },
+    // Trong phạm vi 1000 (SGK Bài 59 đến 63, 70): khoang_1000 = [[x nhỏ nhất, x lớn nhất], [y nhỏ nhất, y lớn nhất]] cho số thật
+    // (sư tử con 107 kg, vườn ươm 456 cây); số chọn như cong-tru-1000 (nhớ không quá một lượt)
+    { id: 'su-tu-ho', dang: 'nhieu_hon', ky: ['toan-loi-van-1000'], do_luong: true, khoang_1000: [[101, 180], [12, 60]], vat: '🐯', dv: 'kg', ten: 'kg', khung: ['Sư tử con nặng {x} kg.', 'Hổ con nặng hơn sư tử con {y} kg.', 'Hỏi hổ con nặng bao nhiêu ki-lô-gam?'], giai: 'Hổ con nặng là:' },
+    { id: 'vuon-uom', dang: 'con_lai', ky: ['toan-loi-van-1000'], khoang_1000: [[300, 900], [100, 500]], vat: '🌱', dv: 'cây', ten: 'cây giống', khung: ['Vườn ươm có {x} cây giống.', 'Người ta lấy đi {y} cây giống để trồng.', 'Hỏi vườn ươm còn lại bao nhiêu cây giống?'], giai: 'Số cây giống còn lại là:' },
+    { id: 'thu-vien', dang: 'them', ky: ['toan-loi-van-1000'], khoang_1000: [[200, 700], [50, 300]], vat: '📚', dv: 'quyển', ten: 'quyển sách', khung: ['Thư viện có {x} quyển sách.', 'Thư viện mua thêm {y} quyển sách.', 'Hỏi thư viện có tất cả bao nhiêu quyển sách?'], giai: 'Số sách thư viện có tất cả là:' },
+    { id: 'hai-chang', dang: 'gop', ky: ['toan-loi-van-1000'], do_luong: true, khoang_1000: [[101, 500], [100, 400]], vat: '🚌', dv: 'km', ten: 'km', khung: ['Chặng đường thứ nhất dài {x} km.', 'Chặng đường thứ hai dài {y} km.', 'Hỏi cả hai chặng đường dài bao nhiêu ki-lô-mét?'], giai: 'Cả hai chặng đường dài là:' },
+    { id: 'vai-ban', dang: 'con_lai', ky: ['toan-loi-van-1000'], do_luong: true, khoang_1000: [[200, 800], [100, 400]], vat: '🧵', dv: 'm', ten: 'm vải', khung: ['Cửa hàng có {x} m vải.', 'Cửa hàng đã bán {y} m vải.', 'Hỏi cửa hàng còn lại bao nhiêu mét vải?'], giai: 'Số mét vải cửa hàng còn lại là:' },
+    { id: 'hai-kho', dang: 'hon_kem', ky: ['toan-loi-van-1000'], do_luong: true, khoang_1000: [[300, 900], [100, 600]], vat: '🍚', dv: 'kg', ten: 'kg gạo', khung: ['Kho thứ nhất có {x} kg gạo.', 'Kho thứ hai có {y} kg gạo.', 'Hỏi kho thứ hai có ít hơn kho thứ nhất bao nhiêu ki-lô-gam gạo?'], giai: 'Kho thứ hai có ít hơn kho thứ nhất là:' },
+    { id: 'cau-dai', dang: 'hon_kem', so_be_truoc: true, ky: ['toan-loi-van-1000'], do_luong: true, khoang_1000: [[200, 900], [100, 600]], vat: '🌉', dv: 'm', ten: 'm', khung: ['Cây cầu thứ nhất dài {y} m.', 'Cây cầu thứ hai dài {x} m.', 'Hỏi cây cầu thứ nhất ngắn hơn cây cầu thứ hai bao nhiêu mét?'], giai: 'Cây cầu thứ nhất ngắn hơn cây cầu thứ hai là:' },
+    { id: 'hai-truong', dang: 'it_hon', ky: ['toan-loi-van-1000'], khoang_1000: [[300, 900], [50, 250]], vat: '🎒', dv: 'học sinh', ten: 'học sinh', khung: ['Trường thứ nhất có {x} học sinh.', 'Trường thứ hai có ít hơn trường thứ nhất {y} học sinh.', 'Hỏi trường thứ hai có bao nhiêu học sinh?'], giai: 'Số học sinh trường thứ hai có là:' },
     // Tiền Việt Nam (SGK Bài 56, 58): tờ 100, 200, 500, 1 000 đồng, số tiền là số tròn trăm đến 1 000
     { id: 'mua-keo', dang: 'con_lai', ky: ['toan-tien'], do_luong: true, vat: '👛', dv: 'đồng', ten: 'đồng', khung: ['{A} có {x} đồng.', '{A} mua một gói kẹo hết {y} đồng.', 'Hỏi {A} còn lại bao nhiêu tiền?'], giai: 'Số tiền {A} còn lại là:' },
     { id: 'but-vo', dang: 'gop', ky: ['toan-tien'], do_luong: true, vat: '✏️', dv: 'đồng', ten: 'đồng', khung: ['Một chiếc bút chì giá {x} đồng.', 'Một quyển vở giá {y} đồng.', 'Hỏi mua cả bút chì và vở hết bao nhiêu tiền?'], giai: 'Mua cả bút chì và vở hết số tiền là:' },
@@ -1203,14 +1365,63 @@
     'chia-y-nghia': { chia_deu: 1, chia_nhom: 1 },
     'toan-nhan-chia': { nhan: 1, chia_deu: 1, chia_nhom: 1 },
     'toan-kg-lit': { gop: 1, them: 0.8, bot: 0.8, con_lai: 1, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.6 },
-    'toan-tien': { gop: 1, them: 0.7, con_lai: 1.2, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.7 }
+    'toan-tien': { gop: 1, them: 0.7, con_lai: 1.2, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 0.7 },
+    'toan-loi-van-1000': { them: 1, gop: 1, con_lai: 1.2, nhieu_hon: 0.8, it_hon: 0.8, hon_kem: 1, luc_dau: 0.6 }
   };
+  /** Đề có toi_da nhỏ hơn mức này thì không dùng cho kỹ năng (đĩa 20 cái bánh không hợp bài toán số có hai chữ số). */
+  const TOI_THIEU_LV = { 'toan-hon-kem': 30, 'toan-loi-van-100': 30 };
+  function hopKyNang(kn, m) { return m.ky.indexOf(kn) >= 0 && !(m.toi_da && TOI_THIEU_LV[kn] && m.toi_da < TOI_THIEU_LV[kn]); }
 
   const TEN_NV = ['Rex', 'Mây', 'Tốc Long', 'Khủng Long Lửa', 'Giáp Long', 'Rồng Biển', 'Mỏ Vịt Long', 'Tam Giác Long', 'Long Cổ Dài', 'Kiếm Long', 'Gai Long', 'Dực Long'];
 
-  /** Hai số theo phạm vi của kỹ năng và phép tính của đề. */
+  /** Hai số có hai chữ số, cộng hoặc trừ không nhớ, không quá toiDa (đề có số thật nhỏ như khay 30 quả trứng). */
+  function soHaiCsKhongNho(rng, p, toiDa) {
+    for (let thu = 0; thu < 300; thu++) {
+      if (p === '+') {
+        const a = nn(rng, 11, Math.max(11, toiDa - 10)), b = nn(rng, 10, Math.max(10, toiDa - a));
+        if (a + b <= toiDa && dv(a) + dv(b) <= 9) return [a, b];
+      } else {
+        const a2 = nn(rng, 20, toiDa), b2 = nn(rng, 10, a2 - 5);
+        if (dv(b2) <= dv(a2)) return [a2, b2];
+      }
+    }
+    return p === '+' ? [10, Math.max(10, toiDa - 10)] : [toiDa, 10];
+  }
+  /** Hai số trong khoảng của đề (khoang), cộng trừ trong 100; có nhớ nếu kỹ năng là bài toán có nhớ (toan-loi-van-100). */
+  function soTheoKhoang(kn, mau, rng) {
+    const k = mau.khoang, p = mau.phep, canNho = kn === 'toan-loi-van-100';
+    let du = null;
+    for (let thu = 0; thu < 400; thu++) {
+      const x = nn(rng, k.x[0], k.x[1]), y = nn(rng, k.y[0], k.y[1]);
+      const kq = tinhPhep(x, p, y);
+      if ((p === '-' && x <= y) || kq > 100) continue;
+      du = du || [x, y];
+      const nho = p === '+' ? dv(x) + dv(y) >= 10 : dv(x) < dv(y);
+      if (nho === canNho) return [x, y];
+    }
+    return du || [k.x[1], k.y[0]];
+  }
+  /** Hai số cho bài toán trong phạm vi 1000 theo khoảng của đề, nhớ không quá một lượt, ba nhóm đều nhau như cong-tru-1000. */
+  function soLoiVan1000(mau, rng) {
+    const p = mau.phep;
+    const k = mau.khoang_1000 || [[110, 899], [12, 899]];
+    const nhom = nn(rng, 0, 2);
+    let du = null;
+    for (let thu = 0; thu < 800; thu++) {
+      const x = nn(rng, k[0][0], k[0][1]), y = nn(rng, k[1][0], k[1][1]);
+      if ((x <= 100 && y <= 100) || !hopLe1000(x, p, y)) continue;
+      du = du || [x, y];
+      const n = nhoBaChuSo(x, p, y);
+      if ((n.dv ? 1 : n.chuc ? 2 : 0) === nhom) return [x, y];
+    }
+    return du || (p === '+' ? [345, 123] : [456, 148]);
+  }
+
+  /** Hai số theo phạm vi của kỹ năng và phép tính của đề (và số thật của đề: toi_da, khoang, khoang_1000). */
   function soLoiVan(kn, mau, rng) {
     const p = mau.phep;
+    if (kn === 'toan-loi-van-1000') return soLoiVan1000(mau, rng);
+    if (mau.khoang && (kn === 'toan-hon-kem' || kn === 'toan-loi-van-100' || kn === 'toan-kg-lit')) return soTheoKhoang(kn, mau, rng);
     if (kn === 'toan-them-bot' || kn === 'toan-nhieu-it') {
       const r = rng();
       if (p === '+') {
@@ -1228,6 +1439,7 @@
       return [10, nn(rng, 2, 8)];
     }
     if (kn === 'toan-hon-kem') {
+      if (mau.toi_da && mau.toi_da < 99) return soHaiCsKhongNho(rng, p, mau.toi_da);
       for (;;) {
         if (p === '+') {
           const a = nn(rng, 12, 76), b = nn(rng, 11, 60);
@@ -1239,7 +1451,9 @@
       }
     }
     if (kn === 'toan-kg-lit') {
-      // Bài 15 đến 18 học trước cộng, trừ có nhớ trong 100: số trong 20 qua 10, hoặc số có hai chữ số không nhớ (như SGK)
+      // Bài 15 đến 18 học trước cộng, trừ có nhớ trong 100: số trong 20 qua 10, hoặc số có hai chữ số không nhớ (như SGK).
+      // Đề có toi_da (can 20 l, túi gạo 30 kg) thì số không vượt quá: toi_da từ 20 trở xuống chỉ dùng số trong 20
+      if (mau.toi_da && mau.toi_da <= 20) return soLoiVan('toan-nhieu-it', mau, rng);
       if (rng() < 0.45) return soLoiVan('toan-nhieu-it', mau, rng);
       return soLoiVan('toan-hon-kem', mau, rng);
     }
@@ -1252,8 +1466,13 @@
       }
     }
     if (kn === 'toan-loi-van-100') {
-      const ct = SINH_PT[p === '+' ? (rng() < 0.7 ? 'cong-nho-2cs-2cs' : 'cong-nho-2cs-1cs') : (rng() < 0.7 ? 'tru-nho-2cs-2cs' : 'tru-nho-2cs-1cs')](rng);
-      return [ct.so[0], ct.so[1]];
+      let so = null;
+      for (let thu = 0; thu < 300; thu++) {
+        const ct = SINH_PT[p === '+' ? (rng() < 0.7 ? 'cong-nho-2cs-2cs' : 'cong-nho-2cs-1cs') : (rng() < 0.7 ? 'tru-nho-2cs-2cs' : 'tru-nho-2cs-1cs')](rng);
+        so = [ct.so[0], ct.so[1]];
+        if (!mau.toi_da || Math.max(so[0], so[1], tinhPhep(so[0], p, so[1])) <= mau.toi_da) return so;
+      }
+      return so;
     }
     if (kn === 'chia-y-nghia') {
       if (p === '×') return [nn(rng, 2, 5), nn(rng, 2, 5)];
@@ -1268,9 +1487,9 @@
 
   function sinhLoiVan(kn, rng, muc) {
     const tiLe = (muc && muc.dang_bai) || DANG_THEO_KY[kn];
-    const dsDang = Object.keys(tiLe).filter(function (dg) { return MAU.some(function (m) { return m.dang === dg && m.ky.indexOf(kn) >= 0; }); });
+    const dsDang = Object.keys(tiLe).filter(function (dg) { return MAU.some(function (m) { return m.dang === dg && hopKyNang(kn, m); }); });
     const dang = chonTheoTrongSo(rng, dsDang.map(function (dg) { return { dg: dg, w: tiLe[dg] }; })).dg;
-    const mau = chon(rng, MAU.filter(function (m) { return m.dang === dang && m.ky.indexOf(kn) >= 0; }));
+    const mau = chon(rng, MAU.filter(function (m) { return m.dang === dang && hopKyNang(kn, m); }));
     const so = soLoiVan(kn, mau, rng);
     const a = chon(rng, TEN_NV);
     let b = chon(rng, TEN_NV);
@@ -1292,14 +1511,18 @@
   function tinhLV(ct) { return tinhPhep(ct.so[0], ct.phep, ct.so[1]); }
   function maLV(ct) { return ct.mau + ':' + bieuThuc(ct); }
 
-  /** Các thẻ phép tính ở bước 1 (thẻ đúng và thẻ nhiễu mang mã lỗi). */
+  /**
+   * Các thẻ phép tính ở bước 1 (thẻ đúng và thẻ nhiễu mang mã lỗi). Phép trừ có 3 thẻ: thêm thẻ lấy số bé trừ số lớn
+   * ({y} − {x}, lỗi be-tru-lon). Phép cộng giữ 2 thẻ: đổi chỗ hai số hạng (y + x) vẫn đúng nên không bao giờ làm thẻ nhiễu,
+   * còn thẻ trừ theo thứ tự ngược lại là phép trừ số bé cho số lớn, lớp 2 chưa gặp.
+   */
   function luaChonBuoc1(ct, rng) {
     const x = ct.so[0], y = ct.so[1];
     const dung = bieuThuc(ct);
     const ds = [{ gia_tri: dung, loi: [] }];
     const them = function (v) { if (v !== dung && !ds.some(function (o) { return o.gia_tri === v; })) ds.push({ gia_tri: v, loi: loiBuoc1(ct, v) }); };
     if (ct.phep === '+') them(x >= y ? x + '-' + y : y + '-' + x);
-    else if (ct.phep === '-') them(x + '+' + y);
+    else if (ct.phep === '-') { them(x + '+' + y); if (x !== y) them(y + '-' + x); }
     else if (ct.phep === '×') {
       if (x !== y) them(y + 'x' + x); else them(x + ':' + y);
       them(x + '+' + y);
@@ -1322,6 +1545,7 @@
     if (p === ct.phep) {
       if ((ct.phep === '×' || ct.phep === ':') && a === y && b === x) return ['dao-thu-tu'];
       if (ct.phep === '+' && a === y && b === x) return [];
+      if (ct.phep === '-' && a === y && b === x) return ['be-tru-lon'];
       return ['khac'];
     }
     const ma = ['sai-phep'];
@@ -1348,6 +1572,7 @@
   function loiNoiBuoc1(ct, v, maLoi) {
     const m = (maLoi && maLoi[0]) || 'khac';
     if (m === 'dao-thu-tu') return ct.phep === '×' ? ct.so[0] + ' được lấy ' + ct.so[1] + ' lần, viết ' + ct.so[0] + ' × ' + ct.so[1] : 'Số bị chia là số tất cả, viết trước: ' + ct.so[0] + ' : ' + ct.so[1];
+    if (m === 'be-tru-lon') return 'Phép trừ lấy số lớn trừ số bé: ' + soLV(ct, ct.so[0]) + ' ' + TRU + ' ' + soLV(ct, ct.so[1]);
     return LY_DO_PHEP[ct.dang] || LOI['sai-phep'].be;
   }
 
@@ -1594,6 +1819,372 @@
   const SINH = Object.assign({}, SINH_PT, SINH_SO, SINH_NT);
   Object.keys(DANG_THEO_KY).forEach(function (kn) { SINH[kn] = function (rng, muc) { return sinhLoiVan(kn, rng, muc); }; });
 
+  /* ============================================================
+     5. Tên thành phần của phép tính (2.14: SGK Bài 3; 2.23: Bài 38, 42) và quan hệ nhân, chia (2.24: Bài 41, 42)
+     Cắm bằng dangKyLoai như các tệp cau-*.js, nhưng để trong tệp này để mọi trang, kiểm thử đã nạp ngân hàng là có ngay.
+     Loại 'thanh_phan': { loai, kieu, phep, so: [a, b], vi_tri }; vi_tri 0, 1, 2 là số thứ nhất, số thứ hai, kết quả.
+       kieu 'ten':  "Trong 6 + 3 = 9, số 9 gọi là gì?", đáp án là mã tên ('tong'), lựa chọn hiện chữ "Tổng"
+       kieu 'so':   "Trong 12 − 2 = 10, số trừ là số nào?", đáp án là số
+       kieu 'tinh': "Tìm tổng, biết hai số hạng là 42 và 35." (SGK Bài 3, 38, 42: tìm tổng, hiệu, tích, thương)
+     Mã lỗi: ten-thanh-phan (gọi nhầm tên, nhầm tổng với hiệu, tích với thương), kèm lỗi tính của phép tính bên trong.
+     Loại 'lien_he_nhan_chia': { loai, so: [a, b], chia_cho: 0 | 1, an: 'thuong' | 'so_chia' | 'so_bi_chia' }
+       "Từ 2 × 7 = 14, ta có 14 : 7 = ?" (SGK Bài 41: từ 2 × 3 = 6 viết được 6 : 3 = 2 và 6 : 2 = 3). Lỗi lien-he-nhan-chia.
+     ============================================================ */
+
+  const TEN_TP = { so_hang: 'Số hạng', tong: 'Tổng', so_bi_tru: 'Số bị trừ', so_tru: 'Số trừ', hieu: 'Hiệu', thua_so: 'Thừa số', tich: 'Tích', so_bi_chia: 'Số bị chia', so_chia: 'Số chia', thuong: 'Thương' };
+  const VI_TRI_TP = { '+': ['so_hang', 'so_hang', 'tong'], '-': ['so_bi_tru', 'so_tru', 'hieu'], '×': ['thua_so', 'thua_so', 'tich'], ':': ['so_bi_chia', 'so_chia', 'thuong'] };
+  /** Tên của phép "anh em" hay bị nhầm (tổng với hiệu, tích với thương). */
+  const TEN_NHIEU_TP = { '+': 'hieu', '-': 'tong', '×': 'thuong', ':': 'tich' };
+  const TEN_PHEP_TP = { '+': 'phép cộng', '-': 'phép trừ', '×': 'phép nhân', ':': 'phép chia' };
+  const QUY_TAC_TP = {
+    '+': 'Trong phép cộng, hai số được cộng gọi là số hạng, kết quả gọi là tổng.',
+    '-': 'Trong phép trừ, số đứng đầu là số bị trừ, số đứng sau dấu trừ là số trừ, kết quả là hiệu.',
+    '×': 'Trong phép nhân, hai số được nhân gọi là thừa số, kết quả gọi là tích.',
+    ':': 'Trong phép chia, số đứng đầu là số bị chia, số đứng sau dấu chia là số chia, kết quả là thương.'
+  };
+  function tenTP(ma) { return TEN_TP[ma] || String(ma); }
+  function thuongTP(ma) { return tenTP(ma).toLowerCase(); }
+  function soTP(ct) { return [ct.so[0], ct.so[1], tinhPhep(ct.so[0], ct.phep, ct.so[1])]; }
+  function bieuTP(ct) { const s = soTP(ct); return s[0] + ' ' + kyHieu(ct.phep) + ' ' + s[1] + ' = ' + s[2]; }
+  function docBieuTP(ct) { const s = soTP(ct); return s[0] + ' ' + tuPhep(ct.phep) + ' ' + s[1] + ' bằng ' + s[2]; }
+  /** Vị trí của một số trong phép tính, nói cho bé hiểu. */
+  function moTaViTri(p, i) {
+    if (i === 2) return 'kết quả của ' + TEN_PHEP_TP[p];
+    if (p === '+') return 'một số được cộng';
+    if (p === '×') return 'một số được nhân';
+    if (p === '-') return i === 0 ? 'số đứng đầu phép trừ' : 'số đứng sau dấu trừ';
+    return i === 0 ? 'số đứng đầu phép chia' : 'số đứng sau dấu chia';
+  }
+  function tenKetQuaTP(p) { return VI_TRI_TP[p][2]; }
+
+  function tinhTP(ct) {
+    if (ct.kieu === 'ten') return VI_TRI_TP[ct.phep][ct.vi_tri];
+    if (ct.kieu === 'so') return soTP(ct)[ct.vi_tri];
+    return soTP(ct)[2];
+  }
+  function deTinhTP(ct) {
+    const a = ct.so[0], b = ct.so[1];
+    if (ct.phep === '+') return 'Tìm tổng, biết hai số hạng là ' + a + ' và ' + b + '.';
+    if (ct.phep === '-') return 'Tìm hiệu, biết số bị trừ là ' + a + ', số trừ là ' + b + '.';
+    if (ct.phep === '×') return 'Tìm tích, biết hai thừa số là ' + a + ' và ' + b + '.';
+    return 'Tìm thương, biết số bị chia là ' + a + ', số chia là ' + b + '.';
+  }
+  function deTP(ct) {
+    if (ct.kieu === 'ten') return 'Trong ' + bieuTP(ct) + ', số ' + soTP(ct)[ct.vi_tri] + ' gọi là gì?';
+    if (ct.kieu === 'so') return 'Trong ' + bieuTP(ct) + ', ' + thuongTP(VI_TRI_TP[ct.phep][ct.vi_tri]) + ' là số nào?';
+    return deTinhTP(ct);
+  }
+  function deDocTP(ct) {
+    if (ct.kieu === 'ten') return 'Trong ' + TEN_PHEP_TP[ct.phep] + ' ' + docBieuTP(ct) + ', số ' + soTP(ct)[ct.vi_tri] + ' gọi là gì?';
+    if (ct.kieu === 'so') return 'Trong ' + TEN_PHEP_TP[ct.phep] + ' ' + docBieuTP(ct) + ', ' + thuongTP(VI_TRI_TP[ct.phep][ct.vi_tri]) + ' là số nào?';
+    return deTinhTP(ct);
+  }
+  function maTP(ct) {
+    const s = soTP(ct);
+    const bt = s[0] + kyHieu(ct.phep, true) + s[1];
+    return ct.kieu === 'tinh' ? 'tinh:' + bt : ct.kieu + ':' + bt + '=' + s[2] + ':' + ct.vi_tri;
+  }
+  function ctPTCua(ct) { return { phep: ct.phep, so: [ct.so[0], ct.so[1]], an: 'ket_qua' }; }
+
+  function nhanBietLoiTP(ct, v) {
+    const d = tinhTP(ct);
+    if (ct.kieu === 'ten') {
+      const x = String(v == null ? '' : v);
+      if (x === d) return [];
+      return TEN_TP[x] ? ['ten-thanh-phan'] : ['khac'];
+    }
+    const n = Number(v);
+    if (n === d) return [];
+    if (ct.kieu === 'so') return soTP(ct).indexOf(n) >= 0 ? ['ten-thanh-phan'] : ['khac'];
+    const a = ct.so[0], b = ct.so[1];
+    const ma = [];
+    const them = function (m) { if (ma.indexOf(m) < 0) ma.push(m); };
+    if (ct.phep === '+' && n === Math.abs(a - b)) them('ten-thanh-phan');
+    if (ct.phep === '-' && n === a + b) them('ten-thanh-phan');
+    if (ct.phep === '×' && n === a + b) { them('ten-thanh-phan'); them('cong-thay-nhan'); }
+    if (ct.phep === ':' && n === a - b) { them('ten-thanh-phan'); them('tru-thay-chia'); }
+    if (ct.phep === ':' && n === a * b) { them('ten-thanh-phan'); them('nhan-thay-chia'); }
+    nhanBietLoiPT(ctPTCua(ct), n).forEach(function (m) { if (m !== 'khac') them(m); });
+    if (!ma.length) ma.push('khac');
+    return ma;
+  }
+
+  function loiNoiTP(ct, v, maLoi) {
+    const m = (maLoi && maLoi[0]) || 'khac';
+    const s = soTP(ct);
+    if (ct.kieu === 'ten') {
+      const n = s[ct.vi_tri];
+      const dau = String(v) === TEN_NHIEU_TP[ct.phep] ? tenTP(v) + ' là kết quả của ' + TEN_PHEP_TP[ct.phep === '+' ? '-' : ct.phep === '-' ? '+' : ct.phep === '×' ? ':' : '×'] + '. ' : '';
+      return dau + 'Số ' + n + ' là ' + moTaViTri(ct.phep, ct.vi_tri) + ', gọi là ' + thuongTP(tinhTP(ct));
+    }
+    if (ct.kieu === 'so') {
+      const i = s.indexOf(Number(v));
+      if (i < 0) return LOI.khac.be;
+      return 'Số ' + v + ' là ' + thuongTP(VI_TRI_TP[ct.phep][i]) + '. ' + tenTP(VI_TRI_TP[ct.phep][ct.vi_tri]) + ' là ' + moTaViTri(ct.phep, ct.vi_tri);
+    }
+    if (m === 'ten-thanh-phan') return tenTP(tenKetQuaTP(ct.phep)) + ' là kết quả của ' + TEN_PHEP_TP[ct.phep] + ': ' + s[0] + ' ' + kyHieu(ct.phep) + ' ' + s[1];
+    return loiNoiPT(ctPTCua(ct), v, maLoi);
+  }
+
+  function goiYTP(ct) {
+    const s = soTP(ct);
+    const kh = kyHieu(ct.phep);
+    const cho = function (i) { return i === 2 ? 'số đứng sau dấu =' : i === 0 ? 'số đứng đầu' : 'số đứng sau dấu ' + kh; };
+    if (ct.kieu === 'ten') {
+      const n = s[ct.vi_tri];
+      return [QUY_TAC_TP[ct.phep], 'Số ' + n + ' là ' + cho(ct.vi_tri) + ' trong ' + bieuTP(ct) + '.', 'Số ' + n + ' là ' + moTaViTri(ct.phep, ct.vi_tri) + '.'];
+    }
+    if (ct.kieu === 'so') {
+      const ten = VI_TRI_TP[ct.phep][ct.vi_tri];
+      return [QUY_TAC_TP[ct.phep], tenTP(ten) + ' là ' + moTaViTri(ct.phep, ct.vi_tri) + '.', 'Nhìn ' + cho(ct.vi_tri) + ' trong ' + bieuTP(ct) + '.'];
+    }
+    const g = goiYPT(ctPTCua(ct));
+    return [tenTP(tenKetQuaTP(ct.phep)) + ' là kết quả của ' + TEN_PHEP_TP[ct.phep] + '.', 'Con tính ' + s[0] + ' ' + kh + ' ' + s[1] + '.', ct.phep === '×' || ct.phep === ':' ? g[2] : g[0]];
+  }
+
+  function cacTenTP(ct) {
+    const s = soTP(ct);
+    if (ct.phep === '+') return s[0] + ' và ' + s[1] + ' là số hạng, ' + s[2] + ' là tổng';
+    if (ct.phep === '×') return s[0] + ' và ' + s[1] + ' là thừa số, ' + s[2] + ' là tích';
+    if (ct.phep === '-') return s[0] + ' là số bị trừ, ' + s[1] + ' là số trừ, ' + s[2] + ' là hiệu';
+    return s[0] + ' là số bị chia, ' + s[1] + ' là số chia, ' + s[2] + ' là thương';
+  }
+
+  /** Sơ đồ như khung kiến thức SGK: phép tính, dưới mỗi số là tên của nó. hienTen: hiện đủ tên (lời giải), không thì chỉ tô số đang hỏi. */
+  function veSoDoTP(ct, hienTen) {
+    const s = soTP(ct);
+    const font = 'Baloo 2, Arial Rounded MT Bold, sans-serif';
+    const xs = [80, 250, 430], xDau = [165, 340];
+    let h = '<svg class="so-do-thanh-phan" viewBox="0 0 520 150" role="img" aria-label="' + esc(bieuTP(ct)) + '" xmlns="http://www.w3.org/2000/svg">';
+    [kyHieu(ct.phep), '='].forEach(function (t, i) {
+      h += '<text x="' + xDau[i] + '" y="62" text-anchor="middle" font-size="42" font-weight="800" fill="#3b2f63" font-family="' + font + '">' + esc(t) + '</text>';
+    });
+    s.forEach(function (n, i) {
+      const hoi = i === ct.vi_tri;
+      if (hoi) h += '<rect x="' + (xs[i] - 46) + '" y="16" width="92" height="62" rx="16" fill="' + (hienTen ? '#06d6a0' : '#ff8a1f') + '"/>';
+      h += '<text x="' + xs[i] + '" y="62" text-anchor="middle" font-size="44" font-weight="800" fill="' + (hoi ? '#fff' : '#221a3b') + '" font-family="' + font + '">' + n + '</text>';
+      if (hienTen || hoi) {
+        h += '<line x1="' + xs[i] + '" y1="84" x2="' + xs[i] + '" y2="104" stroke="#3b2f63" stroke-width="3" stroke-linecap="round"/>';
+        h += '<text x="' + xs[i] + '" y="134" text-anchor="middle" font-size="24" font-weight="800" fill="' + (hoi ? (hienTen ? '#05a57b' : '#e06a00') : '#3b2f63') + '" font-family="' + font + '">' +
+          (hienTen ? esc(tenTP(VI_TRI_TP[ct.phep][i])) : '?') + '</text>';
+      }
+    });
+    return h + '</svg>';
+  }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  function loiGiaiTP(ct) {
+    const d = tinhTP(ct);
+    const s = soTP(ct);
+    if (ct.kieu === 'tinh') {
+      const g = loiGiaiPT(ctPTCua(ct));
+      const r = { ma: g.ma, buoc: [tenTP(tenKetQuaTP(ct.phep)) + ' là kết quả của ' + TEN_PHEP_TP[ct.phep] + ': ' + s[0] + ' ' + kyHieu(ct.phep) + ' ' + s[1]].concat(g.buoc), kq: d };
+      if (g.cot) r.cot = g.cot;
+      return r;
+    }
+    const ten = VI_TRI_TP[ct.phep][ct.vi_tri];
+    const ket = ct.kieu === 'ten' ? 'Vậy số ' + s[ct.vi_tri] + ' gọi là ' + thuongTP(ten) : 'Vậy ' + thuongTP(ten) + ' là ' + s[ct.vi_tri];
+    return { ma: 'ten-thanh-phan', buoc: [bieuTP(ct), cacTenTP(ct), ket], html: veSoDoTP(ct, true), kq: d };
+  }
+  function ketLuanTP(ct) {
+    const s = soTP(ct);
+    const ten = VI_TRI_TP[ct.phep][ct.vi_tri];
+    if (ct.kieu === 'ten') return 'Vậy trong ' + bieuTP(ct) + ', số ' + s[ct.vi_tri] + ' là ' + thuongTP(ten) + '.';
+    if (ct.kieu === 'so') return 'Vậy ' + thuongTP(ten) + ' là ' + s[ct.vi_tri] + '.';
+    return 'Vậy ' + thuongTP(tenKetQuaTP(ct.phep)) + ' là ' + s[2] + ' (' + bieuTP(ct) + ').';
+  }
+
+  /** Chọn tối đa 2 đáp án nhiễu từ ứng viên có trọng số (số nguyên từ 0 đến 100, khác đáp án, không trùng). */
+  function haiNhieuSo(ct, d, ung, rng, nhanBiet) {
+    const daCo = {};
+    const con = [];
+    ung.forEach(function (x) { if (Number.isInteger(x.v) && x.v >= 0 && x.v <= 100 && x.v !== d && !daCo[x.v]) { daCo[x.v] = 1; con.push(x); } });
+    const ra = [];
+    while (ra.length < 2 && con.length) { const x = chonTheoTrongSo(rng, con); ra.push(x.v); con.splice(con.indexOf(x), 1); }
+    for (let k = 2; ra.length < 2 && k < 20; k++) [d + k, d - k].forEach(function (v) { if (ra.length < 2 && v >= 0 && v <= 100 && ra.indexOf(v) < 0) ra.push(v); });
+    return ra.map(function (v) { return { gia_tri: v, loi: nhanBiet(ct, v) }; });
+  }
+
+  function taoNhieuTP(kyNang, ct, rng) {
+    const d = tinhTP(ct);
+    if (ct.kieu === 'ten') {
+      let sai = VI_TRI_TP[ct.phep].filter(function (x, i, a) { return x !== d && a.indexOf(x) === i; });
+      if (sai.length < 2) sai.push(TEN_NHIEU_TP[ct.phep]);
+      return tron(rng, sai.slice(0, 2)).map(function (v) { return { gia_tri: v, loi: nhanBietLoiTP(ct, v) }; });
+    }
+    if (ct.kieu === 'so') {
+      return tron(rng, soTP(ct).filter(function (x) { return x !== d; })).map(function (v) { return { gia_tri: v, loi: nhanBietLoiTP(ct, v) }; });
+    }
+    const a = ct.so[0], b = ct.so[1];
+    const ung = [];
+    if (ct.phep === '+') ung.push({ v: Math.abs(a - b), w: 3 });
+    if (ct.phep === '-') ung.push({ v: a + b, w: 3 });
+    if (ct.phep === '×') { ung.push({ v: a + b, w: 3 }); ung.push({ v: a * (b + 1), w: 1.5 }); ung.push({ v: a * (b - 1), w: 1.5 }); }
+    if (ct.phep === ':') { ung.push({ v: a - b, w: 3 }); ung.push({ v: a * b, w: 1 }); }
+    ung.push({ v: d + 1, w: 1.5 }, { v: d - 1, w: 1.5 });
+    if (d >= 20) ung.push({ v: d + 10, w: 1 }, { v: d - 10, w: 1 });
+    return haiNhieuSo(ct, d, ung, rng, nhanBietLoiTP);
+  }
+
+  function theChuTP(ct) {
+    const s = soTP(ct);
+    if (ct.kieu === 'tinh') {
+      if (ct.phep === '-') return 'Hiệu của ' + s[0] + ' và ' + s[1];
+      if (ct.phep === ':') return 'Thương của ' + s[0] + ' và ' + s[1];
+      return (ct.phep === '+' ? 'Tổng' : 'Tích') + ' của ' + s[0] + ' và ' + s[1];
+    }
+    if (ct.kieu === 'so') return tenTP(VI_TRI_TP[ct.phep][ct.vi_tri]) + ' của ' + bieuTP(ct);
+    return 'Số ' + s[ct.vi_tri] + ' trong ' + bieuTP(ct);
+  }
+
+  dangKyLoai('thanh_phan', {
+    tinh: tinhTP, de: deTP, deDoc: deDocTP, deChuanHoa: maTP, nhanBietLoi: nhanBietLoiTP, loiNoi: loiNoiTP,
+    goiY: goiYTP, loiGiai: loiGiaiTP, ketLuan: ketLuanTP, taoNhieu: taoNhieuTP, theChu: theChuTP,
+    hienGiaTri: function (v) { return TEN_TP[v] || String(v); },
+    veLuaChon: function (ct, v) { return { nhan: TEN_TP[v] || String(v) }; },
+    veHinh: function (ct) { return ct.kieu === 'ten' ? veSoDoTP(ct, false) : ''; },
+    dang: 'chon_dap_an'
+  });
+
+  /** Phép cộng, trừ không nhớ như SGK Bài 3 (6 + 3 = 9, 12 − 2 = 10, 86 − 32 = 54): ba số khác nhau. */
+  function soCongTruTP(rng, p) {
+    for (let thu = 0; thu < 200; thu++) {
+      let a, b;
+      if (rng() < 0.35) {
+        if (p === '+') { a = nn(rng, 2, 8); b = nn(rng, 1, 10 - a); }
+        else { a = nn(rng, 5, 19); b = nn(rng, 1, Math.min(9, a - 1)); if (a >= 10 && dv(b) > dv(a)) continue; }
+      } else {
+        const ct = SINH_PT['cong-tru-khong-nho-100'](rng, { cach: [p === '+' ? 'cong' : 'tru'] });
+        a = ct.so[0]; b = ct.so[1];
+      }
+      const c = tinhPhep(a, p, b);
+      if (a !== b && a !== c && b !== c && c > 0) return [a, b];
+    }
+    return p === '+' ? [6, 3] : [12, 2];
+  }
+  /** Phép nhân, chia như SGK Bài 38, 42 (2 × 6 = 12, 4 × 2 = 8, 20 : 5 = 4, 16 : 8 = 2): ba số khác nhau. */
+  function soNhanChiaTP(rng, p) {
+    for (let thu = 0; thu < 200; thu++) {
+      let a, b;
+      if (p === '×') {
+        if (rng() < 0.7) { const f = chon(rng, [2, 5]), g = nn(rng, 2, 10); if (rng() < 0.5) { a = f; b = g; } else { a = g; b = f; } }
+        else { a = nn(rng, 2, 6); b = nn(rng, 2, 5); if (a * b > 20) continue; }
+      } else if (rng() < 0.75) { b = chon(rng, [2, 5]); a = b * nn(rng, 2, 10); }
+      else { const f = chon(rng, [2, 5]), g = nn(rng, 3, 9); a = f * g; b = g; }
+      const c = tinhPhep(a, p, b);
+      if (a !== b && a !== c && b !== c) return [a, b];
+    }
+    return p === '×' ? [2, 6] : [12, 2];
+  }
+  function sinhThanhPhan(phepMacDinh, soCua) {
+    return function (rng, muc) {
+      const kieu = chonCach(rng, muc, [{ c: 'ten', w: 2 }, { c: 'so', w: 1 }, { c: 'tinh', w: 1 }]);
+      const p = chon(rng, (muc && muc.phep && muc.phep.length) ? muc.phep : phepMacDinh);
+      const so = soCua(rng, p);
+      let vi = nn(rng, 0, 2);
+      // Hỏi "số hạng là số nào" thì có hai đáp án: phép cộng, phép nhân chỉ hỏi tổng, tích
+      if (kieu === 'so' && (p === '+' || p === '×')) vi = 2;
+      const ct = { loai: 'thanh_phan', kieu: kieu, phep: p, so: so };
+      if (kieu !== 'tinh') ct.vi_tri = vi;
+      return ct;
+    };
+  }
+
+  /* ---------------- Quan hệ nhân, chia ---------------- */
+
+  function soLH(ct) { const c = ct.so[0] * ct.so[1]; return { c: c, d: ct.so[ct.chia_cho], q: ct.so[1 - ct.chia_cho] }; }
+  function tinhLH(ct) { const s = soLH(ct); return ct.an === 'so_chia' ? s.d : ct.an === 'so_bi_chia' ? s.c : s.q; }
+  function nhanLH(ct) { return ct.so[0] + ' × ' + ct.so[1] + ' = ' + ct.so[0] * ct.so[1]; }
+  function chiaLH(ct, chuanHoa) {
+    const s = soLH(ct), k = chuanHoa ? ':' : ' : ', b = chuanHoa ? '=' : ' = ';
+    if (ct.an === 'so_chia') return s.c + k + '?' + b + s.q;
+    if (ct.an === 'so_bi_chia') return '?' + k + s.d + b + s.q;
+    return s.c + k + s.d + b + '?';
+  }
+  function deLH(ct) { return 'Từ ' + nhanLH(ct) + ', ta có ' + chiaLH(ct); }
+  function deDocLH(ct) {
+    const s = soLH(ct);
+    const dau = 'Từ ' + ct.so[0] + ' nhân ' + ct.so[1] + ' bằng ' + s.c + ', ta có ';
+    if (ct.an === 'so_chia') return dau + s.c + ' chia mấy bằng ' + s.q + '?';
+    if (ct.an === 'so_bi_chia') return dau + 'số nào chia ' + s.d + ' bằng ' + s.q + '?';
+    return dau + s.c + ' chia ' + s.d + ' bằng mấy?';
+  }
+  function maLH(ct) { return 'lh:' + ct.so[0] + 'x' + ct.so[1] + ':' + chiaLH(ct, true); }
+  function nhanBietLoiLH(ct, v) {
+    const n = Number(v);
+    const d = tinhLH(ct);
+    if (n === d) return [];
+    const s = soLH(ct);
+    const ma = [];
+    const them = function (m) { if (ma.indexOf(m) < 0) ma.push(m); };
+    if (ct.an === 'thuong') {
+      if (n === s.d || n === s.c) them('lien-he-nhan-chia');
+      if (n === s.c - s.d) them('tru-thay-chia');
+      if (n === s.c * s.d) them('nhan-thay-chia');
+    } else if (ct.an === 'so_chia') {
+      if (n === s.q || n === s.c) them('lien-he-nhan-chia');
+      if (n === s.c - s.q) them('tru-thay-chia');
+      if (n === s.c * s.q) them('nhan-thay-chia');
+    } else {
+      if (n === s.d + s.q) them('cong-thay-nhan');
+      if (n === s.d || n === s.q) them('lien-he-nhan-chia');
+      if (n === s.c + s.d || n === s.c - s.d || n === s.c + s.q || n === s.c - s.q) them('o-ben-canh');
+    }
+    if (!ma.length && (n === d + 1 || n === d - 1)) them('dem-lech');
+    if (!ma.length) ma.push('khac');
+    return ma;
+  }
+  function loiNoiLH(ct, v, maLoi) {
+    const m = (maLoi && maLoi[0]) || 'khac';
+    const s = soLH(ct);
+    if (m === 'lien-he-nhan-chia') return 'Từ ' + nhanLH(ct) + ': ' + s.c + ' chia cho ' + s.d + ' thì được ' + s.q;
+    if (m === 'cong-thay-nhan') return 'Số bị chia là tích: ' + s.d + ' × ' + s.q + ', không phải ' + s.d + ' + ' + s.q;
+    if (m === 'o-ben-canh') return 'Số bị chia chính là tích trong phép nhân: ' + s.c;
+    if (m === 'dem-lech') return 'Con nhìn lại phép nhân ' + nhanLH(ct) + ' nhé';
+    return (LOI[m] || LOI.khac).be;
+  }
+  function goiYLH(ct) {
+    const s = soLH(ct);
+    const cuoi = ct.an === 'so_bi_chia' ? 'Số bị chia là tích của hai thừa số: ' + s.d + ' × ' + s.q + ' = ?'
+      : ct.an === 'so_chia' ? s.q + ' là một thừa số, số chia là thừa số còn lại trong ' + nhanLH(ct) + '.'
+        : 'Trong ' + nhanLH(ct) + ', bỏ thừa số ' + s.d + ' đi thì còn thừa số nào?';
+    return ['Từ một phép nhân viết được hai phép chia: ' + nhanLH(ct) + '.', s.c + ' chia cho thừa số này thì được thừa số kia.', cuoi];
+  }
+  function loiGiaiLH(ct) {
+    const s = soLH(ct);
+    return { ma: 'nhan-ra-chia', buoc: [nhanLH(ct), s.c + ' : ' + ct.so[0] + ' = ' + ct.so[1], s.c + ' : ' + ct.so[1] + ' = ' + ct.so[0]], kq: tinhLH(ct) };
+  }
+  function taoNhieuLH(kyNang, ct, rng) {
+    const s = soLH(ct);
+    const d = tinhLH(ct);
+    let ung;
+    if (ct.an === 'thuong') ung = [{ v: s.d, w: 3 }, { v: s.c, w: 1.5 }, { v: s.c - s.d, w: 1 }, { v: d + 1, w: 1 }, { v: d - 1, w: 1 }];
+    else if (ct.an === 'so_chia') ung = [{ v: s.q, w: 3 }, { v: s.c, w: 1.5 }, { v: s.c - s.q, w: 1 }, { v: d + 1, w: 1 }, { v: d - 1, w: 1 }];
+    else ung = [{ v: s.d + s.q, w: 3 }, { v: s.c + s.d, w: 1.5 }, { v: s.c - s.d, w: 1.5 }, { v: s.q, w: 1 }];
+    return haiNhieuSo(ct, d, ung, rng, nhanBietLoiLH);
+  }
+
+  dangKyLoai('lien_he_nhan_chia', {
+    tinh: tinhLH, de: deLH, deDoc: deDocLH, deChuanHoa: maLH, nhanBietLoi: nhanBietLoiLH, loiNoi: loiNoiLH,
+    goiY: goiYLH, loiGiai: loiGiaiLH, taoNhieu: taoNhieuLH,
+    ketLuan: function (ct) { const s = soLH(ct); return 'Vậy ' + s.c + ' : ' + s.d + ' = ' + s.q + '.'; },
+    theChu: function (ct) { return chiaLH(ct) + ' (từ ' + nhanLH(ct) + ')'; },
+    dang: 'chon_dap_an'
+  });
+
+  /** Thừa số có một thừa số là 2 hoặc 5 (bảng nhân 2, 5), thừa số kia từ 2 đến 10 và khác nó; hỏi thương là chính. */
+  function sinhLienHe(rng, muc) {
+    const f = chon(rng, [2, 5]);
+    let g = nn(rng, 2, 10);
+    if (g === f) g = f === 2 ? 3 : 4;
+    const so = rng() < 0.5 ? [f, g] : [g, f];
+    return { loai: 'lien_he_nhan_chia', so: so, chia_cho: nn(rng, 0, 1), an: chonCach(rng, muc, [{ c: 'thuong', w: 2 }, { c: 'so_chia', w: 1 }, { c: 'so_bi_chia', w: 1 }]) };
+  }
+
+  themKyNang('ten-thanh-phan-cong-tru', { noi_dung: '2.14', ten: 'Gọi tên số hạng, tổng, số bị trừ, số trừ, hiệu', kieu: 'K3', giay: 10, gioi_han: 100, loai: 'thanh_phan', sinh: sinhThanhPhan(['+', '-'], soCongTruTP) });
+  themKyNang('ten-thanh-phan-nhan-chia', { noi_dung: '2.23', ten: 'Gọi tên thừa số, tích, số bị chia, số chia, thương', kieu: 'K3', giay: 10, gioi_han: 100, loai: 'thanh_phan', sinh: sinhThanhPhan(['×', ':'], soNhanChiaTP) });
+  themKyNang('nhan-chia-lien-he', { noi_dung: '2.24', ten: 'Từ phép nhân viết hai phép chia', kieu: 'K3', giay: 10, gioi_han: 100, loai: 'lien_he_nhan_chia', sinh: sinhLienHe });
+
   /**
    * Dựng một câu từ kỹ năng và cấu trúc (hoặc sinh mới nếu không có cấu trúc).
    * opts: { dang: 'chon_dap_an' | 'nhap_so' | 'ghep_doi' | 'keo_tha' | 'hai_buoc', muc: cấu hình của màn cho kỹ năng }
@@ -1679,11 +2270,19 @@
   /**
    * Lập danh sách câu cho một ván.
    * man: { cau: [{ ky_nang, ty_le, cach?, chieu?, dang_bai? }], so_cau, tram_dung, dang }
-   * opts: { cauNo: [{ cau, ky_nang, cau_truc }] (câu từng sai chưa sửa, đưa vào đầu), soCau }
+   * opts: { cauNo: [{ cau, ky_nang, cau_truc }] (câu từng sai chưa sửa, đưa vào đầu), soCau,
+   *         mucKy: { ky_nang: 'chua_hoc' | 'lam_quen' | 'dang_luyen' | 'da_thuoc' | 'vung_chac' } (mức thành thạo lúc bắt đầu ván) }
+   * Bộ sinh nhận mức của kỹ năng trong muc.muc_thanh_thao (độ khó theo mức, xem theoDoKho).
    * Trả về [{ ky_nang, cau_truc, dang, on_lai_cua? }]
    */
   function lapDanhSach(man, rng, opts) {
     opts = opts || {};
+    const mucKy = opts.mucKy || null;
+    const mucCho = function (kn, m) {
+      const mk = mucKy && mucKy[kn];
+      const ten = mk && mk.muc ? mk.muc : mk;
+      return ten ? Object.assign({}, m, { muc_thanh_thao: ten }) : m;
+    };
     const n = opts.soCau || man.so_cau || 12;
     const ds = [];
     const daDung = {};
@@ -1700,7 +2299,7 @@
       thu++;
       const muc = chonTheoTrongSo(rng, tron2);
       const kn = muc.ky_nang;
-      const ct = SINH[kn](rng, muc.muc);
+      const ct = SINH[kn](rng, mucCho(kn, muc.muc));
       const m = maCau(kn, ct);
       if (daDung[m]) continue;
       const truoc = ds[ds.length - 1];

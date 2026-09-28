@@ -298,18 +298,30 @@
     try { (chip || PlayersUI.lastFocus).focus(); } catch (e) { /* bỏ qua */ }
   }
 
-  /* ---------- Cổng phụ huynh (câu nhân nhỏ, thay cho window.confirm) ---------- */
-  const Gate = { cb: null, answer: 0, open: false };
+  /* ---------- Cổng phụ huynh (Players.gateQuestion / gateCheck dùng chung với 6 game: phép nhân cỡ người lớn
+     hoặc mã bố mẹ, sai 3 lần liền thì tạm khóa; thay cho window.confirm) ---------- */
+  const Gate = { cb: null, open: false };
+  function askGate() {
+    const q = $('parent-gate-q'), inp = $('parent-gate-input');
+    if (q) q.textContent = P.gateQuestion().text;
+    if (inp) inp.value = '';
+  }
   function adultGate(cb) {
     const g = $('parent-gate');
-    if (!g) { if (window.confirm('Dành cho phụ huynh: tiếp tục?')) cb(); return; }   // dự phòng nếu không có hộp thoại
-    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
-    Gate.cb = cb; Gate.answer = a * b; Gate.open = true;
-    const q = $('parent-gate-q'), inp = $('parent-gate-input');
-    if (q) q.textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
-    if (inp) inp.value = '';
+    if (!g || !P) { if (window.confirm('Dành cho phụ huynh: tiếp tục?')) cb(); return; }   // dự phòng nếu không có hộp thoại
+    if (P.gateLockedSeconds() > 0) { toast(P.gateLockText(), 3200); return; }
+    Gate.cb = cb; Gate.open = true;
+    askGate();
     g.hidden = false;
     focusLater('parent-gate-input');
+  }
+  function submitGate() {
+    const inp = $('parent-gate-input');
+    if (!Gate.open) return;
+    const r = P.gateCheck(inp ? inp.value : '');
+    if (r === 'ok') { const cb = Gate.cb; closeGate(); if (cb) cb(); }
+    else if (r === 'locked') { closeGate(); toast(P.gateLockText(), 3200); focusLater('btn-player-remove'); }
+    else { toast('Chưa đúng, thử lại nhé'); askGate(); focusLater('parent-gate-input'); }
   }
   function closeGate() {
     const g = $('parent-gate');
@@ -384,13 +396,7 @@
         if (P.remove(p.id)) { toast('Đã xóa ' + p.name + ' khỏi danh sách'); focusLater('btn-players-back'); }
       });
     });
-    on('parent-gate-form', 'submit', function (e) {
-      e.preventDefault();
-      const inp = $('parent-gate-input');
-      const v = Number(inp ? inp.value : NaN);
-      if (Gate.open && v === Gate.answer) { const cb = Gate.cb; closeGate(); if (cb) cb(); }
-      else { toast('Chưa đúng, thử lại nhé'); if (inp) inp.value = ''; focusLater('parent-gate-input'); }
-    });
+    on('parent-gate-form', 'submit', function (e) { e.preventDefault(); submitGate(); });
     on('btn-parent-gate-cancel', 'click', function () { closeGate(); focusLater('btn-player-remove'); });
     on('parent-gate', 'click', function (e) { if (e.target === $('parent-gate')) { closeGate(); focusLater('btn-player-remove'); } });
     on('btn-random', 'click', function () { this.setAttribute('href', GAMES[Math.floor(Math.random() * GAMES.length)].id + '/'); });

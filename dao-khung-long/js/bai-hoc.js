@@ -3,6 +3,8 @@
    - phep-nhan (Bài 37): mỗi đĩa 2 quả cam, 3 đĩa: 2 + 2 + 2 = 6 rồi mới 2 × 3 = 6 ("2 được lấy 3 lần").
    - phep-chia (Bài 41): chia đều 6 quả vào 3 đĩa (6 : 3 = 2), chia theo nhóm mỗi đĩa 2 quả (6 : 2 = 3).
    - tram-chuc-don-vi (Bài 48, 51, 52), chuc-don-vi (Bài 1), giai-toan (Bài 9: cho biết gì, hỏi gì, chọn phép tính).
+   - tach-10 (Bài 7, 11): 9 + 5, tách 5 = 1 + 4; 13 − 5, tách 13 = 10 + 3. dat-tinh-co-nho (Bài 19, 22): 35 + 7, 32 − 7 đặt tính
+     cột dọc, "viết 2, nhớ 1". cong-tru-1000 (Bài 59, 60): đặt tính thẳng cột trăm, chục, đơn vị, 346 + 229.
    - Có giọng đọc tiếng Việt và luôn có chữ đi kèm; nút Nghe lại, Bỏ qua. Bước cuối có câu thử (không tính điểm).
    - Ghi sự kiện bai_hoc_xem: mã bài học, số bước đã xem, số lần nghe lại, thời lượng, có bỏ qua không, câu thử.
    API: window.BaiHoc = { BAI, mo(ma, o), coBai(ma) }
@@ -23,6 +25,15 @@
       '<span class="bh-cot"><span class="bh-khoi">' + khoi('kh-dv', u, (tre || 0) + 0.8) + '</span><b>' + u + '</b><small>đơn vị</small></span></div>';
   }
   function pt(t, tre) { return '<p class="bh-pt bh-hien" style="--tre:' + (tre || 0) + 's">' + t + '</p>'; }
+  /** Đặt tính cột dọc bằng hình của màn "Gần đúng rồi" (PhanHoi.cotDoc) để bài học và lời giải trong game giống nhau. */
+  function cot(c, tre) {
+    const h = window.PhanHoi && window.PhanHoi.cotDoc ? window.PhanHoi.cotDoc(c) : esc(c.tren + ' ' + (c.phep === '+' ? '+' : '−') + ' ' + c.duoi);
+    return '<div class="bh-hang bh-hien" style="--tre:' + (tre || 0) + 's">' + h + '</div>';
+  }
+  /** Một khay có hai loại đồ vật (9 bông đỏ và 1 bông vàng gộp thành 10). */
+  function khay(ds, tre) {
+    return '<span class="bh-dia khay" style="--tre:' + (tre || 0) + 's">' + ds.map(function (x) { return lap(x[0], function () { return '<i>' + x[1] + '</i>'; }); }).join('') + '</span>';
+  }
 
   /** Mỗi bước: chu (chữ hiện và đọc), ve() trả về HTML hình minh họa, thu (câu thử ở bước cuối). */
   const BAI = {
@@ -89,6 +100,63 @@
         { chu: 'Số 47 gồm 4 chục và 7 đơn vị. Ta viết 47 = 40 + 7. Đọc là: bốn mươi bảy.', ve: function () {
           return moHinh(null, 4, 7) + pt('47 = 40 + 7', 1.2);
         }, thu: { lua_chon: ['74', '47', '407'], dung: '47', hoi: 'Bốn mươi bảy viết là số nào?', dung_noi: 'Đúng rồi! 4 chục và 7 đơn vị là 47.', sai_noi: 'Bốn mươi bảy gồm 4 chục và 7 đơn vị, viết là 47.' } }
+      ]
+    },
+    'tach-10': {
+      ten: 'Cộng, trừ qua 10',
+      buoc: [
+        { chu: '9 + 5 = ? Có 9 bông hoa đỏ và 5 bông hoa vàng.', ve: function () {
+          return '<div class="bh-hang">' + dia(9, '🌹', 0) + '<b class="bh-bang">+</b>' + dia(5, '🌻', 0.4) + '</div>';
+        } },
+        { chu: 'Tách 5 = 1 + 4. Lấy 1 bông vàng ghép với 9 bông đỏ cho đủ 10.', ve: function () {
+          return '<div class="bh-hang">' + khay([[9, '🌹'], [1, '🌻']], 0) + dia(4, '🌻', 0.4) + '</div>' + pt('5 = 1 + 4', 0.8);
+        } },
+        { chu: '9 + 1 = 10, rồi 10 + 4 = 14. Vậy 9 + 5 = 14.', ve: function () {
+          return pt('9 + 1 = 10', 0) + pt('10 + 4 = 14', 0.5) + '<p class="bh-pt to bh-hien" style="--tre:1s">9 + 5 = 14</p>';
+        } },
+        { chu: 'Phép trừ cũng tách số: 13 − 5. Tách 13 = 10 + 3. Lấy 10 − 5 = 5, rồi 5 + 3 = 8. Vậy 13 − 5 = 8.', ve: function () {
+          return pt('13 = 10 + 3', 0) + pt('10 − 5 = 5', 0.5) + pt('5 + 3 = 8', 1) + '<p class="bh-pt to bh-hien" style="--tre:1.4s">13 − 5 = 8</p>';
+        } },
+        { chu: 'Con thử nhé: 8 + 5 bằng mấy? Tách 5 = 2 + 3 để 8 thành 10.', ve: function () {
+          return '<div class="bh-hang">' + dia(8, '🍎', 0) + '<b class="bh-bang">+</b>' + dia(5, '🍏', 0.3) + '</div>';
+        }, thu: { lua_chon: ['13', '12', '3'], dung: '13', dung_noi: 'Đúng rồi! 8 + 2 = 10, rồi 10 + 3 = 13.', sai_noi: 'Tách 5 = 2 + 3: 8 + 2 = 10, rồi 10 + 3 = 13 nhé.' } }
+      ]
+    },
+    'dat-tinh-co-nho': {
+      ten: 'Đặt tính có nhớ',
+      buoc: [
+        { chu: '35 + 7 = ? Đặt tính: viết các số thẳng cột, đơn vị thẳng đơn vị, chục thẳng chục.', ve: function () {
+          return cot({ tren: 35, duoi: 7, phep: '+', kq: '', nho: false });
+        } },
+        { chu: 'Tính từ hàng đơn vị: 5 cộng 7 bằng 12, viết 2, nhớ 1.', ve: function () {
+          return cot({ tren: 35, duoi: 7, phep: '+', kq: '2', nho: true });
+        } },
+        { chu: '3 thêm 1 bằng 4, viết 4. Vậy 35 + 7 = 42.', ve: function () {
+          return cot({ tren: 35, duoi: 7, phep: '+', kq: 42, nho: true }) + pt('35 + 7 = 42', 0.6);
+        } },
+        { chu: 'Phép trừ 32 − 7: 2 không trừ được 7, lấy 12 trừ 7 bằng 5, viết 5, nhớ 1. 3 trừ 1 bằng 2, viết 2. Vậy 32 − 7 = 25.', ve: function () {
+          return cot({ tren: 32, duoi: 7, phep: '-', kq: 25, nho: false }) + pt('32 − 7 = 25', 0.6);
+        } },
+        { chu: 'Con thử nhé: 47 + 8 bằng mấy?', ve: function () {
+          return cot({ tren: 47, duoi: 8, phep: '+', kq: '', nho: false });
+        }, thu: { lua_chon: ['55', '45', '415'], dung: '55', dung_noi: 'Đúng rồi! 7 cộng 8 bằng 15, viết 5, nhớ 1. 4 thêm 1 bằng 5, viết 5.', sai_noi: '7 cộng 8 bằng 15, viết 5, nhớ 1. 4 thêm 1 bằng 5, viết 5. Vậy 47 + 8 = 55.' } }
+      ]
+    },
+    'cong-tru-1000': {
+      ten: 'Cộng, trừ trong phạm vi 1000',
+      buoc: [
+        { chu: '346 + 229 = ? Đặt tính thẳng cột: trăm thẳng trăm, chục thẳng chục, đơn vị thẳng đơn vị.', ve: function () {
+          return moHinh(3, 4, 6) + cot({ tren: 346, duoi: 229, phep: '+', kq: '', nho: false }, 1);
+        } },
+        { chu: 'Tính từ hàng đơn vị: 6 cộng 9 bằng 15, viết 5, nhớ 1. 4 thêm 1 bằng 5, 5 cộng 2 bằng 7, viết 7. 3 cộng 2 bằng 5, viết 5.', ve: function () {
+          return cot({ tren: 346, duoi: 229, phep: '+', kq: 575, nho: true, vi_tri_nho: 0 }) + pt('346 + 229 = 575', 0.8);
+        } },
+        { chu: 'Phép trừ cũng đặt thẳng cột và trừ từ hàng đơn vị: 586 − 234. 6 trừ 4 bằng 2, 8 trừ 3 bằng 5, 5 trừ 2 bằng 3.', ve: function () {
+          return cot({ tren: 586, duoi: 234, phep: '-', kq: 352, nho: false }) + pt('586 − 234 = 352', 0.8);
+        } },
+        { chu: 'Con thử nhé: 263 + 128 bằng mấy?', ve: function () {
+          return cot({ tren: 263, duoi: 128, phep: '+', kq: '', nho: false });
+        }, thu: { lua_chon: ['391', '381', '491'], dung: '391', dung_noi: 'Đúng rồi! 3 cộng 8 bằng 11, viết 1, nhớ 1. 6 thêm 1 bằng 7, 7 cộng 2 bằng 9. 2 cộng 1 bằng 3.', sai_noi: '3 cộng 8 bằng 11, viết 1, nhớ 1. 6 thêm 1 bằng 7, 7 cộng 2 bằng 9, viết 9. 2 cộng 1 bằng 3. Vậy 263 + 128 = 391.' } }
       ]
     },
     'giai-toan': {

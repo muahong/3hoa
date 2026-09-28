@@ -2642,19 +2642,24 @@
   }
 
   /* ================= CỔNG PHỤ HUYNH ================= */
-  /* Câu nhân đơn giản gõ vào ô trong trang (window.prompt bị chặn khi cài như ứng dụng). */
-  const Gate = { cb: null, answer: 0 };
+  /* Câu hỏi gõ vào ô trong trang (window.prompt bị chặn khi cài như ứng dụng). Câu hỏi và số lần thử do Players
+     (profile.js) giữ, dùng chung mọi game: phép nhân cỡ người lớn hoặc mã bố mẹ, sai thì đổi câu mới,
+     sai 3 lần liền thì cổng tạm khóa. */
+  const Gate = { cb: null };
+  function askGate() {
+    if (ui.gateQ) ui.gateQ.textContent = Players.gateQuestion().text;
+    ui.gateInput.value = '';
+  }
   function adultGate(cb) {
-    if (!ui.parentGate || !ui.gateForm || !ui.gateInput) {
+    if (Players && Players.gateLockedSeconds() > 0) { Sfx.play('wrong'); toast(Players.gateLockText(), 3200); return; }
+    if (!ui.parentGate || !ui.gateForm || !ui.gateInput || !Players) {
       let ok = false;
       try { ok = window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?'); } catch (e) { ok = false; }
       if (ok && cb) cb();
       return;
     }
-    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
-    Gate.cb = cb; Gate.answer = a * b;
-    ui.gateQ.textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
-    ui.gateInput.value = '';
+    Gate.cb = cb;
+    askGate();
     ui.parentGate.classList.remove('hidden');
     setTimeout(function () { try { ui.gateInput.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
@@ -2663,9 +2668,10 @@
     Gate.cb = null;
   }
   function submitGate() {
-    const v = Number(String(ui.gateInput.value).trim());
-    if (v === Gate.answer) { const cb = Gate.cb; closeGate(); Sfx.play('quizok'); if (cb) cb(); }
-    else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); ui.gateInput.value = ''; }
+    const r = Players.gateCheck(ui.gateInput.value);
+    if (r === 'ok') { const cb = Gate.cb; closeGate(); Sfx.play('quizok'); if (cb) cb(); }
+    else if (r === 'locked') { closeGate(); Sfx.play('wrong'); toast(Players.gateLockText(), 3200); }
+    else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); askGate(); }
   }
 
   /* ================= KẾT QUẢ CỦA BÉ (báo cáo cho phụ huynh) ================= */

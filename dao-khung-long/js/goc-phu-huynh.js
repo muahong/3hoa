@@ -18,7 +18,42 @@
 
   let ctx = null;
   let dom = null;
-  const CONG = { hoi: null, nhap: '', sai: 0 };
+  const CONG = { hoi: null, nhap: '', cheDo: 'nhan', hengio: null, sauCong: null };
+  /**
+   * Cổng phụ huynh dùng chung với các nút dành cho phụ huynh trên 3hoa.com (js/profile.js, Players.gate*): cùng khóa, cùng công thức.
+   * '3hoa-ma-bo-me-v1' = { h }: băm FNV-1a 32 bit của '3hoa-pin|' + mã 4 số (8 chữ hex); không có thì hỏi phép nhân.
+   * '3hoa-cong-khoa-v1' = { sai, lan, den }: sai 3 lần liền thì khóa 60 giây × 2^(lan - 1), tối đa 15 phút; trả lời đúng thì xóa.
+   */
+  const KHOA_PIN = '3hoa-ma-bo-me-v1';
+  const KHOA_CONG = '3hoa-cong-khoa-v1';
+  function bamPin(pin) {
+    const x = '3hoa-pin|' + pin;
+    let h = 2166136261;
+    for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h.toString(16).padStart(8, '0');
+  }
+  function docPin() {
+    try { const o = JSON.parse(window.localStorage.getItem(KHOA_PIN)); return o && typeof o.h === 'string' && /^[0-9a-f]{8}$/.test(o.h) ? o.h : null; } catch (e) { return null; }
+  }
+  function datPin(pin) {
+    try { if (pin) window.localStorage.setItem(KHOA_PIN, JSON.stringify({ h: bamPin(pin) })); else window.localStorage.removeItem(KHOA_PIN); } catch (e) { /* bỏ qua */ }
+  }
+  function docKhoaCong() {
+    let o = null;
+    try { o = JSON.parse(window.localStorage.getItem(KHOA_CONG)); } catch (e) { o = null; }
+    const so = function (v, max) { v = Math.floor(Number(v)); return v >= 0 && v <= max ? v : 0; };
+    return { sai: so(o && o.sai, 2), lan: so(o && o.lan, 60), den: o && Number(o.den) > 0 ? Number(o.den) : 0 };
+  }
+  function giayKhoaCong() { const k = docKhoaCong(); return k.den > Date.now() ? Math.ceil((k.den - Date.now()) / 1000) : 0; }
+  /** Ghi một lần trả lời sai. Trả về số giây bị khóa (0 nếu chưa khóa). */
+  function congSai() {
+    const k = docKhoaCong();
+    k.sai++;
+    if (k.sai >= 3) { k.lan++; k.sai = 0; k.den = Date.now() + Math.min(15 * 60000, 60000 * Math.pow(2, k.lan - 1)); }
+    try { window.localStorage.setItem(KHOA_CONG, JSON.stringify(k)); } catch (e) { /* bỏ qua */ }
+    return giayKhoaCong();
+  }
+  function xoaKhoaCong() { try { window.localStorage.removeItem(KHOA_CONG); } catch (e) { /* bỏ qua */ } }
   const TAB = [
     { ma: 'tong_quan', ten: 'Tổng quan', ic: '<path d="M3 11 L12 3 L21 11 V21 H14 V15 H10 V21 H3 Z" fill="currentColor"/>' },
     { ma: 'nhat_ky', ten: 'Nhật ký', ic: '<path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/>' },
@@ -86,11 +121,13 @@
         '<button class="gp-quay gp-quay-cong" type="button" data-hd="thoat" aria-label="Quay lại">' + svg(IC.trai) + '</button>' +
         '<div class="gp-khoa">' + svg(IC.khoa) + '</div>' +
         '<h1>Góc phụ huynh</h1>' +
-        '<p class="gp-phu">Trả lời để vào. Bé lớp 2 chưa làm được phép tính này nên không vào nhầm.</p>' +
+        '<p class="gp-phu" id="gp-cong-phu"></p>' +
         '<p class="gp-hoi" id="gp-hoi" aria-live="polite"></p>' +
         '<div class="gp-o-nhap" id="gp-o" role="status" aria-label="Số đã nhập"></div>' +
+        '<p class="gp-khoa-tb hidden" id="gp-khoa-tb" role="status"></p>' +
         '<div class="gp-ban-phim" id="gp-ban-phim">' + phim + '</div>' +
-        '<p class="gp-phu">Phép tính đổi mỗi lần mở</p>' +
+        '<p class="gp-phu" id="gp-cong-duoi"></p>' +
+        '<button type="button" class="gp-quen hidden" id="gp-quen" data-hd="quen-pin">Quên mã?</button>' +
       '</div>' +
       '<div class="gp-goc hidden" id="gp-goc">' +
         '<header class="gp-dau">' +
@@ -110,25 +147,23 @@
     dom = sec;
     sec.addEventListener('click', bamVao);
     sec.addEventListener('change', doiO);
+    sec.addEventListener('input', goO);
     document.addEventListener('keydown', phimBam);
     return dom;
   }
 
-  /** tab (tùy chọn): mục mở ngay sau cổng, ví dụ 'cai_dat' khi bé hết giờ và nhờ bố mẹ cho chơi thêm. */
-  function mo(ve, c, tab) {
+  /**
+   * tab (tùy chọn): mục mở ngay sau cổng, ví dụ 'cai_dat' khi bé hết giờ và nhờ bố mẹ cho chơi thêm.
+   * sauCong (tùy chọn): chỉ dùng cổng để bố mẹ cho phép một việc (đổi bé, tạo hồ sơ khi có giới hạn giờ); qua cổng thì
+   * gọi sauCong() thay vì mở Góc phụ huynh. lyDo: câu giải thích hiện ở cổng.
+   */
+  function mo(ve, c, tab, sauCong, lyDo) {
     ctx = c;
     S.tabDau = tab === 'cai_dat' || TAB.some(function (t) { return t.ma === tab; }) ? tab : 'tong_quan';
+    CONG.sauCong = sauCong || null;
+    CONG.lyDo = lyDo || null;
     khoiDom();
-    // Phép nhân của người lớn: số có hai chữ số nhân số có một chữ số (bé lớp 2 mới học bảng 2 và 5)
-    let a, b;
-    do { a = 12 + Math.floor(Math.random() * 38); } while (a % 10 === 0 || a % 10 === 1);
-    b = 3 + Math.floor(Math.random() * 7);
-    if (b === 5) b = 7;
-    CONG.hoi = { a: a, b: b };
-    CONG.nhap = '';
-    CONG.sai = 0;
-    $('gp-hoi').textContent = a + ' × ' + b + ' = ?';
-    $('gp-o').textContent = '';
+    datCauHoi(docPin() ? 'pin' : 'nhan');
     $('gp-cong').classList.remove('hidden');
     $('gp-goc').classList.add('hidden');
     dongHopThoai();
@@ -136,22 +171,66 @@
     dom.scrollTop = 0;
   }
 
+  /**
+   * Câu hỏi của cổng. 'pin': mã 4 số của bố mẹ. 'nhan': số có hai chữ số nhân số có một chữ số (bé lớp 2 mới học bảng 2, 5).
+   * 'nhan_kho' (bố mẹ quên mã): hai số có hai chữ số nhân nhau. Câu mới mỗi lần mở và sau mỗi lần sai.
+   */
+  function datCauHoi(cheDo) {
+    CONG.cheDo = cheDo;
+    CONG.nhap = '';
+    let a, b;
+    if (cheDo === 'nhan_kho') {
+      do { a = 13 + Math.floor(Math.random() * 37); b = 13 + Math.floor(Math.random() * 37); } while (a % 10 === 0 || b % 10 === 0);
+    } else {
+      do { a = 12 + Math.floor(Math.random() * 38); } while (a % 10 === 0 || a % 10 === 1);
+      b = 3 + Math.floor(Math.random() * 7);
+      if (b === 5) b = 7;
+    }
+    CONG.hoi = { a: a, b: b };
+    veCong();
+  }
+  function veCong() {
+    const pin = CONG.cheDo === 'pin';
+    $('gp-hoi').textContent = pin ? 'Mã bố mẹ (4 số)' : CONG.hoi.a + ' × ' + CONG.hoi.b + ' = ?';
+    $('gp-o').textContent = pin ? CONG.nhap.replace(/./g, '•') : CONG.nhap;
+    $('gp-cong-phu').textContent = (CONG.lyDo ? CONG.lyDo + ' ' : '') + (pin ? 'Nhập mã bố mẹ đã đặt để vào.' : CONG.cheDo === 'nhan_kho' ? 'Trả lời phép nhân này để vào, rồi đặt lại mã trong Cài đặt.' : 'Trả lời để vào. Bé lớp 2 chưa làm được phép tính này nên không vào nhầm.');
+    $('gp-cong-duoi').textContent = pin ? 'Mã dùng chung cho các nút dành cho phụ huynh trên 3hoa.com (trên máy này)' : 'Phép tính đổi mỗi lần mở. Bố mẹ có thể đặt mã 4 số trong Cài đặt.';
+    $('gp-quen').classList.toggle('hidden', !pin);
+    const g = giayKhoaCong();
+    $('gp-ban-phim').classList.toggle('gp-tam-khoa', !!g);
+    $('gp-khoa-tb').classList.toggle('hidden', !g);
+    $('gp-khoa-tb').textContent = g ? 'Sai nhiều lần nên tạm khóa. Thử lại sau ' + (g >= 60 ? Math.floor(g / 60) + ' phút' + (g % 60 ? ' ' + (g % 60) + ' giây' : '') : g + ' giây') + '.' : '';
+    if (g && !CONG.hengio) CONG.hengio = setInterval(function () { if (!dangMo() || $('gp-cong').classList.contains('hidden')) { clearInterval(CONG.hengio); CONG.hengio = null; return; } veCong(); }, 1000);
+    if (CONG.hengio && CONG.hengio.unref) CONG.hengio.unref(); // chạy kiểm thử bằng Node
+    if (!g && CONG.hengio) { clearInterval(CONG.hengio); CONG.hengio = null; }
+  }
+  function quaCong() {
+    xoaKhoaCong();
+    if (CONG.hengio) { clearInterval(CONG.hengio); CONG.hengio = null; }
+    const f = CONG.sauCong;
+    CONG.sauCong = null;
+    if (f) { f(); return; }
+    moBang();
+  }
+
   function dangMo() { return ctx && ctx.A && dom && !dom.classList.contains('hidden'); }
 
   function congGo(k) {
+    if (giayKhoaCong()) { CONG.nhap = ''; veCong(); return; }
     if (k === 'xoa') CONG.nhap = CONG.nhap.slice(0, -1);
     else if (k === 'xong') {
-      if (CONG.nhap && Number(CONG.nhap) === CONG.hoi.a * CONG.hoi.b) { moBang(); return; }
-      CONG.sai++;
-      CONG.nhap = '';
-      if (CONG.sai >= 3) { CONG.sai = 0; ctx.bao('Góc này dành cho bố mẹ nhé!'); ctx.thoat(); return; }
-      ctx.bao('Chưa đúng. Góc này dành cho bố mẹ nhé!');
+      const dung = CONG.cheDo === 'pin' ? CONG.nhap.length === 4 && bamPin(CONG.nhap) === docPin() : !!CONG.nhap && Number(CONG.nhap) === CONG.hoi.a * CONG.hoi.b;
+      if (dung) { quaCong(); return; }
+      const khoa = congSai();
+      if (CONG.cheDo === 'pin') CONG.nhap = ''; else datCauHoi(CONG.cheDo);
+      ctx.bao(khoa ? 'Sai 3 lần nên góc này tạm khóa. Góc này dành cho bố mẹ nhé!' : 'Chưa đúng. Góc này dành cho bố mẹ nhé!');
     } else if (CONG.nhap.length < 4) CONG.nhap += k;
-    $('gp-o').textContent = CONG.nhap;
+    veCong();
   }
 
   function phimBam(e) {
     if (!dangMo()) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return; // đang gõ mã mới hay tên bé
     if (!$('gp-hop').classList.contains('hidden')) { if (e.key === 'Escape') dongHopThoai(); return; }
     if (!$('gp-cong').classList.contains('hidden')) {
       if (/^[0-9]$/.test(e.key)) congGo(e.key);
@@ -666,7 +745,8 @@
     };
     let h = '<div class="gp-dong-cai gp-dong-cai-cot" id="gp-thoi-gian"><span>Thời gian chơi mỗi ngày<small>' +
       (gh == null ? 'Đang để không giới hạn (mặc định). Con chơi bao lâu tùy bố mẹ.' : 'Hết giờ, con được chơi nốt ván đang dở rồi nghỉ. Bố mẹ cho thêm giờ bất cứ lúc nào ở dưới.') +
-      ' Hôm nay con đã chơi ' + daChoi + ' phút.</small></span>' +
+      ' Hôm nay con đã chơi ' + daChoi + ' phút. Chỉ tính lúc con chơi thật trong Đảo (không tính lúc tạm dừng hay ra khỏi app), kể cả 6 trò cũ mở từ đảo.' +
+      ' Để con không đổi ngày giờ của máy để có thêm giờ, bố mẹ khóa ngày giờ bằng Thời gian sử dụng (Screen Time) của iPad.</small></span>' +
       '<div class="gp-chips" role="group" aria-label="Thời gian chơi mỗi ngày">' + GIOI_HAN.map(function (g) {
         return chip(g === gh, 'cai', 'data-truong="gioi_han_phut" data-gt="' + (g == null ? '' : g) + '"', g == null ? 'Không giới hạn' : g + ' phút');
       }).join('') + '</div>' +
@@ -683,6 +763,8 @@
     const trangThai = hieuLuc == null ? 'Hôm nay: không giới hạn.'
       : 'Hôm nay con được chơi ' + hieuLuc + ' phút' + (them && them.phut ? ' (' + gh + ' + ' + them.phut + ' phút cho thêm)' : '') + ', ' +
         (daChoi >= hieuLuc ? 'đã hết giờ.' : 'còn khoảng ' + (hieuLuc - daChoi) + ' phút.');
+    h += '<div class="gp-dong-cai"><span>Hết giờ thì khóa cả các trò khác<small>Các trò trên trang chủ 3hoa.com (Ninja Toán Học, Cưỡi Hổ…) mở thẳng trên máy này cũng báo hết giờ tới hết hôm đó. Đổi sang bé khác hay tạo hồ sơ mới cũng cần bố mẹ cho phép.</small></span>' +
+      '<label class="gp-cong-tac gp-cong-tac-to"><input type="checkbox" data-hd="khoa-ca-trang"' + (p.khoa_ca_trang ? ' checked' : '') + '><span aria-hidden="true"></span><em>' + (p.khoa_ca_trang ? 'Đang bật' : 'Tắt') + '</em></label></div>';
     h += '<div class="gp-dong-cai gp-dong-cai-cot"><span>Riêng hôm nay<small>' + trangThai + ' Ngày mai tự về ' + gh + ' phút.</small></span>' +
       '<div class="gp-chips" role="group" aria-label="Cho thêm giờ hôm nay">' +
         THEM_HOM_NAY.map(function (m) { return chip(false, 'them-hom-nay', 'data-gt="' + m + '"', 'Cho thêm ' + m + ' phút từ bây giờ'); }).join('') +
@@ -708,6 +790,7 @@
     h += the('', nhan('Thời gian và vùng đất') + veGioiHan() +
       '<div class="gp-dong-cai"><span>Mở khóa mọi vùng<small>Mặc định vùng học kì 2 chờ tới khi con học Bài 37. Bật để con chơi mọi vùng ngay.</small></span>' +
       '<label class="gp-cong-tac gp-cong-tac-to"><input type="checkbox" data-hd="mo-khoa"' + (p.mo_khoa_vung ? ' checked' : '') + '><span aria-hidden="true"></span><em>' + (p.mo_khoa_vung ? 'Đang mở' : 'Tắt') + '</em></label></div>');
+    h += the('', nhan('Cổng vào Góc phụ huynh') + veMaBoMe());
     h += the('', nhan('Sao lưu và giữ dữ liệu') + veLuuTru());
     h += the('', nhan('Dữ liệu trên máy này') +
       '<p class="gp-mo" id="gp-thong-ke">' + esc(thongKe()) + '</p>' +
@@ -756,6 +839,18 @@
         (t.ben === true ? '' : '<button type="button" class="gp-nut-phu" data-hd="luu-ben">Xin lưu bền</button>') +
       '</div>';
     return h;
+  }
+  /** Mã 4 số của bố mẹ (tùy chọn): thay phép nhân ở cổng của đảo và các nút dành cho phụ huynh trên 3hoa.com, trên máy này. */
+  function veMaBoMe() {
+    const co = !!docPin();
+    return '<p class="gp-mo">' + (co
+      ? '<b>Đang dùng mã 4 số của bố mẹ.</b> Mã dùng chung cho góc này và các nút dành cho phụ huynh trên 3hoa.com (xóa tiến trình, mở khóa màn), trên máy này.'
+      : '<b>Đang hỏi một phép nhân.</b> Anh chị lớp 3 trở lên làm được, và bé có thể dùng máy tính. Đặt mã 4 số để chắc hơn; mã dùng chung cho các nút dành cho phụ huynh trên 3hoa.com, trên máy này.') +
+      ' Sai 3 lần liền thì cổng khóa 1 phút, những lần sau lâu gấp đôi.</p>' +
+      '<div class="gp-pin-hang"><label>Mã mới<input type="password" inputmode="numeric" maxlength="4" autocomplete="off" class="gp-o-pin" id="gp-pin-1"></label>' +
+      '<label>Nhập lại<input type="password" inputmode="numeric" maxlength="4" autocomplete="off" class="gp-o-pin" id="gp-pin-2"></label></div>' +
+      '<div class="gp-nut-ds"><button type="button" class="gp-nut-phu" data-hd="dat-pin">' + (co ? 'Đổi mã' : 'Đặt mã') + '</button>' +
+      (co ? '<button type="button" class="gp-nut-phu" data-hd="bo-pin">Bỏ mã, dùng phép nhân</button>' : '') + '</div>';
   }
   function thongKe() {
     return (S.soSuKien == null ? '…' : soDep(S.soSuKien)) + ' sự kiện trong nhật ký gốc · ' + S.be.vanDs.length + ' ván · ' + S.be.cauDs.length + ' câu.';
@@ -894,6 +989,15 @@
       ve(false);
       if (ctx.bao) ctx.bao(sau === 'vo_han' ? 'Hôm nay con chơi không giới hạn' : sau ? 'Con được chơi thêm ' + moi + ' phút từ bây giờ' : 'Hôm nay như mọi ngày');
       return;
+    } else if (truong === 'khoa_ca_trang') {
+      cu = !!p.khoa_ca_trang;
+      if (cu === moi) return;
+      p.khoa_ca_trang = moi;
+      ghi('phu_huynh_cai_dat', { truong: truong, cu: cu, moi: moi });
+      ctx.hoSoDoi(p, true);
+      S.cache = {};
+      ve(false);
+      return;
     } else if (truong === 'mo_khoa_vung') {
       cu = !!p.mo_khoa_vung;
       if (cu === moi) return;
@@ -930,13 +1034,27 @@
     const hop = $('gp-hop');
     hop.innerHTML = '<div class="gp-hop-the"><h2 id="gp-hop-td">Xóa dữ liệu của ' + esc(p.ten) + '?</h2>' +
       '<p>Mọi ván, câu, nhật ký thao tác, quả mọng và hồ sơ của ' + esc(p.ten) + ' trên máy này sẽ bị xóa hẳn. Việc này không hoàn tác được.</p>' +
-      '<div class="gp-nut-ds"><button type="button" class="gp-nut-phu" data-hd="dong-hop">Thôi, giữ lại</button><button type="button" class="gp-nut-xoa gp-nut-xoa-dac" data-hd="xoa-that">Xóa hẳn</button></div></div>';
+      '<label class="gp-xoa-ten">Gõ tên <b>' + esc(p.ten) + '</b> để xác nhận<input type="text" id="gp-xoa-ten" autocomplete="off" autocapitalize="off" spellcheck="false"></label>' +
+      '<div class="gp-nut-ds"><button type="button" class="gp-nut-phu" data-hd="dong-hop">Thôi, giữ lại</button><button type="button" class="gp-nut-xoa gp-nut-xoa-dac" data-hd="xoa-that" disabled>Xóa hẳn</button></div></div>';
     hop.classList.remove('hidden');
-    setTimeout(function () { const b = hop.querySelector('[data-hd="dong-hop"]'); if (b) b.focus(); }, 30);
+    setTimeout(function () { const b = $('gp-xoa-ten'); if (b) b.focus(); }, 30);
+  }
+  /** Tên gõ lại có khớp tên bé không (không phân biệt hoa thường, bỏ khoảng trắng thừa). */
+  function khopTen(v) {
+    const chuan = function (x) { return String(x || '').normalize('NFC').replace(/\s+/g, ' ').trim().toLowerCase(); };
+    return !!S.be && chuan(v) === chuan(S.be.hoSo.ten);
+  }
+  function goO(e) {
+    if (e.target && e.target.id === 'gp-xoa-ten') {
+      const nut = document.querySelector('#gp-hop [data-hd="xoa-that"]');
+      if (nut) nut.disabled = !khopTen(e.target.value);
+    }
   }
   function dongHopThoai() { const h = $('gp-hop'); if (h) { h.classList.add('hidden'); h.innerHTML = ''; } }
   function xoaThat() {
     const p = S.be.hoSo;
+    const o = $('gp-xoa-ten');
+    if (!o || !khopTen(o.value)) return;
     dongHopThoai();
     NK.xoaBe(p.id).then(function () {
       ctx.beBiXoa(p.id);
@@ -1075,6 +1193,25 @@
           ve(false);
         });
         break;
+      case 'quen-pin': datCauHoi('nhan_kho'); ctx.bao('Trả lời phép nhân để vào, rồi đặt lại mã trong Cài đặt.', 4); break;
+      case 'dat-pin': {
+        const a = $('gp-pin-1'), c2 = $('gp-pin-2');
+        const v1 = a ? a.value : '', v2 = c2 ? c2.value : '';
+        if (!/^[0-9]{4}$/.test(v1)) { ctx.bao('Mã gồm đúng 4 chữ số.', 3); break; }
+        if (v1 !== v2) { ctx.bao('Hai lần nhập chưa giống nhau.', 3); break; }
+        const co = !!docPin();
+        datPin(v1);
+        ghi('phu_huynh_cai_dat', { truong: 'ma_bo_me', cu: co, moi: true });
+        ctx.bao('Đã lưu mã bố mẹ. Lần sau vào cổng sẽ hỏi mã này.', 4);
+        ve(false);
+        break;
+      }
+      case 'bo-pin':
+        datPin(null);
+        ghi('phu_huynh_cai_dat', { truong: 'ma_bo_me', cu: true, moi: false });
+        ctx.bao('Đã bỏ mã. Cổng sẽ hỏi phép nhân.', 3);
+        ve(false);
+        break;
       case 'xoa-be': hoiXoa(); break;
       case 'dong-hop': dongHopThoai(); break;
       case 'xoa-that': xoaThat(); break;
@@ -1091,6 +1228,8 @@
       ve(false);
     } else if (hd === 'mo-khoa') {
       doiCaiDat('mo_khoa_vung', !!el.checked);
+    } else if (hd === 'khoa-ca-trang') {
+      doiCaiDat('khoa_ca_trang', !!el.checked);
     } else if (hd === 'sl-du') {
       S.slDu = !!el.checked;
     } else if (hd === 'kem-nk') {
@@ -1103,7 +1242,8 @@
     mo: mo,
     _trangThai: function () { return { S: S, cong: CONG }; },
     /** Dùng cho kiểm thử tự động: vào thẳng sau cổng, rồi điều khiển các màn như khi chạm. */
-    _quaCong: function () { if (CONG.hoi) { CONG.nhap = String(CONG.hoi.a * CONG.hoi.b); congGo('xong'); } },
+    _quaCong: function () { if (CONG.cheDo === 'pin' || giayKhoaCong()) { quaCong(); return; } if (CONG.hoi) { CONG.nhap = String(CONG.hoi.a * CONG.hoi.b); congGo('xong'); } },
+    bamPin: bamPin,
     _dieuKhien: {
       congGo: congGo,
       moTab: moTab,

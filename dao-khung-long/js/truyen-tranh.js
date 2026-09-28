@@ -146,6 +146,8 @@
       case 'chia_nhom': v1 = vat(q, x); v2 = nhom(q, y, 1); break;
       default: v1 = vat(q, x); v2 = vat(q, y);
     }
+    // Đề nói số bé trước ("Bể nhỏ có {y} con cá. Bể to có {x} con cá."): tranh khung 1, 2 đi theo lời kể
+    if (q.mau.so_be_truoc) { const t = v1; v1 = v2; v2 = t; }
     const nen = s.o.nen;
     const khung = [
       { hinh: hinhA, vat: v1, chu: q.khung[0] },

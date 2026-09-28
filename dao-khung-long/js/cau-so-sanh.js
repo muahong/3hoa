@@ -3,9 +3,12 @@
    Cắm vào NganHang bằng dangKyLoai, dùng cho Chém Trái Cây, Bắn Thiên Thạch, Mê Cung, Cưỡi Hổ và Đấu Trường.
    - Loại 'so_sanh': kieu 'dau' (45 ? 54, đáp án '<' '>' '='), 'lon_nhat', 'be_nhat' (chọn một số),
      'xep' (xếp 4 số, đáp án '26,60,62,66'), 'giua' (47 < ? < 49).
+     kieu 'dau_bt' (so sánh biểu thức với một số như SGK Bài 10, 14: 9 + 5 ? 13; { phep, so: [9, 5], b: 13 }), do bộ sinh
+     cong-qua-10, tru-qua-10 dựng khi mục câu của màn có cach 'so_sanh' (ngan-hang.js).
    - Loại 'tia_so': kieu 'tia' (tia số có vạch, số ở chỗ dấu ?), 'day' (dãy đếm thêm, đếm lùi).
    Mã lỗi theo 03a mục 2.1, 2.2, 2.6: so-chu-so (so hàng đơn vị trước, không đếm số chữ số), chieu-dau
-   (dấu ngược, xếp ngược chiều), thieu-0 (coi 500 = 50, vạch 10 coi là 1), dem-lech, qua-chuc.
+   (dấu ngược, xếp ngược chiều), thieu-0 (coi 500 = 50, vạch 10 coi là 1), dem-lech, qua-chuc; chua-tinh (so biểu thức
+   khi chưa tính: lấy số đầu của biểu thức so với số kia).
    ============================================================ */
 (function () {
   'use strict';
@@ -46,8 +49,14 @@
 
   /* ---------------- Loại 'so_sanh' ---------------- */
 
+  NH.themLoi('chua-tinh', { be: 'Tính kết quả phép tính trước rồi mới so sánh nhé', mo_ta: 'So sánh biểu thức với một số khi chưa tính: lấy số đầu tiên của biểu thức so với số kia (9 + 5 ? 13 điền < vì 9 < 13)', ngan: 'Con hay so sánh khi chưa tính' });
+
+  function giaTriBT(ct) { return ct.phep === '+' ? ct.so[0] + ct.so[1] : ct.so[0] - ct.so[1]; }
+  function bieuBT(ct) { return ct.so[0] + ' ' + (ct.phep === '+' ? '+' : NH.TRU) + ' ' + ct.so[1]; }
+
   function tinhSS(ct) {
     if (ct.kieu === 'dau') return dau(ct.a, ct.b);
+    if (ct.kieu === 'dau_bt') return dau(giaTriBT(ct), ct.b);
     if (ct.kieu === 'lon_nhat') return Math.max.apply(null, ct.ds);
     if (ct.kieu === 'be_nhat') return Math.min.apply(null, ct.ds);
     if (ct.kieu === 'giua') return (ct.a + ct.b) / 2;
@@ -56,6 +65,7 @@
 
   function deSS(ct) {
     if (ct.kieu === 'dau') return ct.a + ' ? ' + ct.b;
+    if (ct.kieu === 'dau_bt') return bieuBT(ct) + ' ? ' + ct.b;
     if (ct.kieu === 'lon_nhat') return 'Số nào lớn nhất: ' + ct.ds.join(', ') + '?';
     if (ct.kieu === 'be_nhat') return 'Số nào bé nhất: ' + ct.ds.join(', ') + '?';
     if (ct.kieu === 'giua') return ct.a + ' < ? < ' + ct.b;
@@ -64,6 +74,10 @@
 
   function deDocSS(ct) {
     if (ct.kieu === 'dau') return 'So sánh ' + ct.a + ' và ' + ct.b + '. ' + ct.a + ' lớn hơn, bé hơn hay bằng ' + ct.b + '?';
+    if (ct.kieu === 'dau_bt') {
+      const doc = ct.so[0] + (ct.phep === '+' ? ' cộng ' : ' trừ ') + ct.so[1];
+      return 'So sánh ' + doc + ' với ' + ct.b + '. ' + doc + ' lớn hơn, bé hơn hay bằng ' + ct.b + '?';
+    }
     if (ct.kieu === 'lon_nhat') return 'Trong các số ' + ct.ds.join(', ') + ', số nào lớn nhất?';
     if (ct.kieu === 'be_nhat') return 'Trong các số ' + ct.ds.join(', ') + ', số nào bé nhất?';
     if (ct.kieu === 'giua') return 'Số nào lớn hơn ' + ct.a + ' và bé hơn ' + ct.b + '?';
@@ -72,6 +86,7 @@
 
   function maSS(ct) {
     if (ct.kieu === 'dau') return 'dau:' + ct.a + ',' + ct.b;
+    if (ct.kieu === 'dau_bt') return 'dau_bt:' + ct.so[0] + (ct.phep === '+' ? '+' : '-') + ct.so[1] + ',' + ct.b;
     if (ct.kieu === 'giua') return 'giua:' + ct.a + ',' + ct.b;
     if (ct.kieu === 'xep') return 'xep-' + (ct.chieu === 'giam' ? 'giam' : 'tang') + ':' + ct.ds.join(',');
     return (ct.kieu === 'lon_nhat' ? 'lon' : 'be') + ':' + ct.ds.join(',');
@@ -94,6 +109,16 @@
 
   function nhanBietLoiSS(ct, v) {
     const d = tinhSS(ct);
+    if (ct.kieu === 'dau_bt') {
+      const x = chuanDau(v);
+      if (x === d) return [];
+      if (x !== '<' && x !== '>' && x !== '=') return ['khac'];
+      const ma = [];
+      if (x === dau(ct.so[0], ct.b)) ma.push('chua-tinh');
+      if (x === '=' && Math.abs(giaTriBT(ct) - ct.b) === 1) ma.push('dem-lech');
+      if (d !== '=' && x === nguoc(d)) ma.push('chieu-dau');
+      return ma.length ? ma : ['khac'];
+    }
     if (ct.kieu === 'dau') {
       const x = chuanDau(v);
       if (x === d) return [];
@@ -127,6 +152,12 @@
 
   function loiNoiSS(ct, v, maLoi) {
     const m = (maLoi && maLoi[0]) || 'khac';
+    if (ct.kieu === 'dau_bt') {
+      if (m === 'chua-tinh') return 'Tính ' + bieuBT(ct) + ' = ' + giaTriBT(ct) + ' trước, rồi mới so sánh với ' + ct.b;
+      if (m === 'dem-lech') return 'Con tính lại ' + bieuBT(ct) + ' nhé';
+      if (m === 'chieu-dau') return 'Dấu mở miệng về phía số lớn hơn';
+      return 'Chưa đúng rồi';
+    }
     const soCs = String(Math.max(ct.a || 0, ct.b || 0, Math.max.apply(null, ct.ds || [0]))).length;
     if (m === 'so-chu-so') return soCs >= 3 ? 'So hàng trăm trước, rồi hàng chục, hàng đơn vị so sau cùng' : 'So hàng chục trước, hàng chục bằng nhau mới so hàng đơn vị';
     if (m === 'chieu-dau') return ct.kieu === 'dau' ? 'Dấu mở miệng về phía số lớn hơn' : ct.kieu === 'xep' ? 'Con xếp ngược chiều rồi' : 'Con chọn ngược rồi: đề hỏi số ' + (ct.kieu === 'lon_nhat' ? 'lớn nhất' : 'bé nhất');
@@ -151,6 +182,7 @@
   }
 
   function goiYSS(ct) {
+    if (ct.kieu === 'dau_bt') return ['Tính ' + bieuBT(ct) + ' trước.', bieuBT(ct) + ' = ' + giaTriBT(ct) + '.', 'So sánh ' + giaTriBT(ct) + ' với ' + ct.b + '. Dấu mở miệng về phía số lớn hơn.'];
     if (ct.kieu === 'dau') {
       const soCs = String(Math.max(ct.a, ct.b)).length;
       return [
@@ -171,6 +203,7 @@
   function loiGiaiSS(ct) {
     const d = tinhSS(ct);
     if (ct.kieu === 'dau') return { ma: 'so-sanh-hang', buoc: cachSo(ct.a, ct.b).concat(['Vậy ' + ct.a + ' ' + d + ' ' + ct.b]), kq: d };
+    if (ct.kieu === 'dau_bt') return { ma: 'so-sanh-bieu-thuc', buoc: [bieuBT(ct) + ' = ' + giaTriBT(ct), giaTriBT(ct) + ' ' + d + ' ' + ct.b, 'Vậy ' + bieuBT(ct) + ' ' + d + ' ' + ct.b], kq: d };
     if (ct.kieu === 'giua') return { ma: 'so-o-giua', buoc: [ct.a + ', ' + d + ', ' + ct.b + ' là ba số liền nhau', ct.a + ' < ' + d + ' < ' + ct.b], kq: d };
     if (ct.kieu === 'xep') {
       const x = xepDung(ct.ds, ct.chieu);
@@ -184,6 +217,7 @@
   function ketLuanSS(ct) {
     const d = tinhSS(ct);
     if (ct.kieu === 'dau') return 'Vậy ' + ct.a + ' ' + d + ' ' + ct.b + ' (' + ct.a + ' ' + tenDau(d) + ' ' + ct.b + ')';
+    if (ct.kieu === 'dau_bt') return 'Vậy ' + bieuBT(ct) + ' ' + d + ' ' + ct.b + ' (vì ' + giaTriBT(ct) + ' ' + tenDau(d) + ' ' + ct.b + ')';
     if (ct.kieu === 'xep') return 'Vậy xếp được: ' + xepDung(ct.ds, ct.chieu).join(', ');
     if (ct.kieu === 'giua') return 'Vậy ' + ct.a + ' < ' + d + ' < ' + ct.b;
     return 'Vậy số ' + (ct.kieu === 'lon_nhat' ? 'lớn' : 'bé') + ' nhất là ' + d;
@@ -192,7 +226,7 @@
   function taoNhieuSS(kyNang, ct, rng) {
     const d = tinhSS(ct);
     let ds;
-    if (ct.kieu === 'dau') ds = ['<', '>', '='].filter(function (x) { return x !== d; });
+    if (ct.kieu === 'dau' || ct.kieu === 'dau_bt') ds = ['<', '>', '='].filter(function (x) { return x !== d; });
     else if (ct.kieu === 'lon_nhat' || ct.kieu === 'be_nhat') ds = ct.ds.filter(function (x) { return x !== d; });
     else if (ct.kieu === 'giua') ds = [ct.a, ct.b + 1].filter(function (x) { return x !== d; });
     else {

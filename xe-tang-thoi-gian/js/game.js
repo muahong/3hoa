@@ -2383,10 +2383,14 @@
   }
 
   /* ================= PHỤ HUYNH ================= */
-  function openParent() {
-    G.parentA = rnd(6, 9); G.parentB = rnd(6, 9);
-    ui.parentQ.textContent = G.parentA + ' × ' + G.parentB + ' = ?';
+  /** Bảng phụ huynh (mở khóa màn) dùng chung cổng với adultGate: câu hỏi, số lần thử, tạm khóa do Players giữ. */
+  function askParent() {
+    ui.parentQ.textContent = Players.gateQuestion().text;
     ui.parentInput.value = '';
+  }
+  function openParent() {
+    if (Players.gateLockedSeconds() > 0) { Sfx.play('wrong'); toast(Players.gateLockText(), 3200); return; }
+    askParent();
     ui.parentGate.hidden = false;
     ui.parentBody.hidden = true;
     ui.resetConfirm.hidden = true;
@@ -2395,13 +2399,18 @@
     setTimeout(function () { try { ui.parentInput.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
   function checkParent() {
-    if (Number(ui.parentInput.value) === G.parentA * G.parentB) {
+    const r = Players.gateCheck(ui.parentInput.value);
+    if (r === 'ok') {
       ui.parentGate.hidden = true;
       ui.parentBody.hidden = false;
       ui.parentInput.blur();
+    } else if (r === 'locked') {
+      closeParent();
+      Sfx.play('wrong');
+      toast(Players.gateLockText(), 3200);
     } else {
       toast('Chưa đúng, thử lại nhé!');
-      ui.parentInput.value = '';
+      askParent();
     }
   }
   /** Đóng bảng phụ huynh: lần mở sau phải trả lời câu hỏi mới */
@@ -2422,22 +2431,28 @@
     toast('Đã xóa tiến trình của ' + name);
   }
 
-  /** Cổng phụ huynh dùng chung (xóa tiến trình, xóa người chơi): câu nhân trong trang – không dùng window.prompt/confirm. */
-  const Gate = { cb: null, answer: 0 };
-  function adultGate(cb) {
-    if (!ui.gate) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
-    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
-    Gate.cb = cb; Gate.answer = a * b;
-    $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
+  /** Cổng phụ huynh dùng chung (xóa tiến trình, xóa người chơi): câu hỏi trong trang – không dùng window.prompt/confirm.
+      Câu hỏi và số lần thử do Players (profile.js) giữ, dùng chung mọi game: phép nhân cỡ người lớn hoặc mã bố mẹ,
+      sai thì đổi câu mới, sai 3 lần liền thì cổng tạm khóa. */
+  const Gate = { cb: null };
+  function askGate() {
+    $('parent-gate-q').textContent = Players.gateQuestion().text;
     $('parent-gate-input').value = '';
+  }
+  function adultGate(cb) {
+    if (Players && Players.gateLockedSeconds() > 0) { Sfx.play('wrong'); toast(Players.gateLockText(), 3200); return; }
+    if (!ui.gate || !Players) { if (window.confirm('Dành cho phụ huynh, thầy cô. Tiếp tục?')) cb(); return; }   // dự phòng khi thiếu HTML
+    Gate.cb = cb;
+    askGate();
     ui.gate.classList.remove('hidden');
     setTimeout(function () { try { $('parent-gate-input').focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
   function closeGate() { ui.gate.classList.add('hidden'); Gate.cb = null; }
   function submitGate() {
-    const v = Number($('parent-gate-input').value);
-    if (v === Gate.answer) { const cb = Gate.cb; closeGate(); Sfx.play('correct'); if (cb) cb(); }
-    else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); $('parent-gate-input').value = ''; }
+    const r = Players.gateCheck($('parent-gate-input').value);
+    if (r === 'ok') { const cb = Gate.cb; closeGate(); Sfx.play('correct'); if (cb) cb(); }
+    else if (r === 'locked') { closeGate(); Sfx.play('wrong'); toast(Players.gateLockText(), 3200); }
+    else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); askGate(); }
   }
 
   /* ================= NGƯỜI CHƠI (hồ sơ dùng chung giữa các game) ================= */

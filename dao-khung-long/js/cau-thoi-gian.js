@@ -471,7 +471,13 @@
   function chuViec(ma) { return VIEC[ma] ? VIEC[ma].ten : ma; }
   function chuThuTu(v) { return docDsViec(v).map(chuViec).join(' → '); }
   /** "Ăn sáng lúc 6 giờ 30 phút sáng". */
-  function viecLuc(ma) { const x = VIEC[ma]; return x.ten + ' lúc ' + chuGio12(x.h, x.m); }
+  /** "Đạp xe lúc 3 giờ 30 phút chiều"; tên việc đã có tên buổi ("Ăn cơm trưa") thì không nói lại buổi. */
+  function viecLuc(ma) {
+    const x = VIEC[ma];
+    const buoi = TEN_BUOI[buoiCua(x.h)];
+    const coBuoi = x.ten.toLowerCase().slice(-(buoi.length + 1)) === ' ' + buoi;
+    return x.ten + ' lúc ' + (coBuoi ? chuGio(h12(x.h), x.m) : chuGio12(x.h, x.m));
+  }
 
   function laGio(ct) { return ct.kieu === 'doi_24' || ct.kieu === 'doi_12' || ct.kieu === 'dong_ho_buoi'; }
 

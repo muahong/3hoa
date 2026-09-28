@@ -2193,20 +2193,25 @@
     Voice.say('Chào ' + Players.active().name + '!');
   }
 
-  /* ================= CỔNG PHỤ HUYNH ================= */
-  const Gate = { cb: null, answer: 0 };
+  /* ================= CỔNG PHỤ HUYNH =================
+     Câu hỏi và số lần thử do Players (profile.js) giữ, dùng chung mọi game: phép nhân cỡ người lớn hoặc mã bố mẹ,
+     sai thì đổi câu mới, sai 3 lần liền thì cổng tạm khóa. */
+  const Gate = { cb: null };
+  function askGate() {
+    $('parent-gate-q').textContent = Players.gateQuestion().text;
+    $('parent-gate-input').value = '';
+  }
   function adultGate(cb) {
-    const a = 2 + Math.floor(Math.random() * 8), b = 2 + Math.floor(Math.random() * 8);
-    if (!ui.gate || !$('parent-gate-q') || !$('parent-gate-input')) {
+    if (Players && Players.gateLockedSeconds() > 0) { Sfx.play('wrong'); toast(Players.gateLockText(), 3200); return; }
+    if (!ui.gate || !$('parent-gate-q') || !$('parent-gate-input') || !Players) {
       // Dự phòng khi không dựng được cổng trong trang (thiếu phần tử): hỏi bằng hộp thoại của trình duyệt
       let ok = false;
       try { ok = window.confirm('Dành cho phụ huynh, thầy cô. Bấm OK để tiếp tục.'); } catch (e) { ok = false; }
       if (ok && cb) cb();
       return;
     }
-    Gate.cb = cb; Gate.answer = a * b;
-    $('parent-gate-q').textContent = 'Dành cho phụ huynh, thầy cô. Để tiếp tục, hãy trả lời: ' + a + ' × ' + b + ' = ?';
-    $('parent-gate-input').value = '';
+    Gate.cb = cb;
+    askGate();
     openOverlay('gate');
     focusEl('parent-gate-input');
   }
@@ -2358,9 +2363,10 @@
     $('parent-gate-form').addEventListener('submit', function (e) {
       e.preventDefault();
       Sfx.unlock();
-      const v = Number($('parent-gate-input').value);
-      if (v === Gate.answer) { const cb = Gate.cb; closeGate(); Sfx.play('correct'); if (cb) cb(); }
-      else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); $('parent-gate-input').value = ''; focusEl('parent-gate-input'); }
+      const r = Players.gateCheck($('parent-gate-input').value);
+      if (r === 'ok') { const cb = Gate.cb; closeGate(); Sfx.play('correct'); if (cb) cb(); }
+      else if (r === 'locked') { closeGate(); Sfx.play('wrong'); toast(Players.gateLockText(), 3200); }
+      else { Sfx.play('wrong'); toast('Chưa đúng, thử lại nhé'); askGate(); focusEl('parent-gate-input'); }
     });
     click('btn-parent-gate-cancel', function () { closeGate(); });
     if (Players) {

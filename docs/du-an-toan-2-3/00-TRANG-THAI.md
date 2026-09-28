@@ -1,6 +1,6 @@
 # Trạng thái bộ tài liệu dự án Toán lớp 2 và 3
 
-Cập nhật: 2026-09-10 (tạm dừng vì hết quota, tiếp tục sau).
+Cập nhật: 2026-09-10 (tạm dừng vì hết quota, tiếp tục sau); 2026-09-28 thêm `de-xuat-hoc-la-choi.md`.
 
 ## Đã có
 
@@ -11,6 +11,7 @@ Cập nhật: 2026-09-10 (tạm dừng vì hết quota, tiếp tục sau).
 | `02-nhan-vat-ao.md` | 5 bé, 3 phụ huynh, 4 giáo viên hàng đầu, 1 chuyên gia marketing, kèm câu hỏi review và giọng nói để nhập vai |
 | `spec/03a-chuong-trinh-lop-2.md`, `spec/03b-chuong-trinh-lop-3.md` | Yêu cầu cần đạt, tiên quyết, ngưỡng thành thạo, lỗi thường gặp, ví dụ bài, ưu tiên cho từng nội dung |
 | `templates/` | Mẫu ADR, mẫu spec, mẫu thiết kế game |
+| `de-xuat-hoc-la-choi.md` | Đề xuất cải tiến Đảo Khủng Long theo bài "10 Best Learning Games" của Yu-kai Chou (Octalysis): chấm 8 Core Drive, 24 việc chia 4 đợt, cách đo; kèm 3 lỗi nên sửa trước (mất màn ăn mừng khi bỏ dở ván, bài đang học không tự tăng, nguồn ván ghi gộp) |
 
 ## Còn thiếu (theo thứ tự làm tiếp)
 

@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PHIEN_BAN = '3.0.2';
+  const PHIEN_BAN = '3.1.0';
   const ANH = 'assets/img/';
   const LAN = ['lan_trai', 'lan_giua', 'lan_phai'];
   const NK = window.NhatKy, NH = window.NganHang, HT = window.HocTap, DAO = window.Dao, HS = window.HoSo, AT = window.AmThanh, PH = window.PhanHoi;
@@ -74,6 +74,35 @@
   function gioiHanHomNay() { return A.hoSo ? HS.gioiHanHomNay(A.hoSo, homNay()) : null; }
   function duPhutHomNay() { const g = gioiHanHomNay(); return g != null && phutHomNay() >= g; }
   function troChoi(g) { return (window.DaoTroChoi || {})[g] || null; }
+
+  /*
+   * Mốc hết giờ của máy (localStorage '3hoa-het-gio-v1' = { be, ngay, khoa_ca_trang }): ghi khi bé có giới hạn đã chơi đủ giờ.
+   * Trong ngày đó, đổi sang bé khác hay tạo hồ sơ mới phải qua cổng phụ huynh (không lách giờ bằng hồ sơ khác); nếu bố mẹ bật
+   * khoa_ca_trang thì các trò trên trang chủ 3hoa.com mở thẳng cũng báo hết giờ (js/profile.js đọc mốc này).
+   * Bố mẹ cho thêm giờ hay đổi giới hạn thì mốc được xóa.
+   */
+  const KHOA_HET_GIO = '3hoa-het-gio-v1';
+  function docHetGio() {
+    try { const o = JSON.parse(window.localStorage.getItem(KHOA_HET_GIO)); return o && o.ngay === homNay() && typeof o.be === 'string' ? o : null; } catch (e) { return null; }
+  }
+  function ghiHetGio() {
+    const p = A.hoSo;
+    if (!p) return;
+    try { window.localStorage.setItem(KHOA_HET_GIO, JSON.stringify({ be: p.id, ngay: homNay(), khoa_ca_trang: !!p.khoa_ca_trang })); } catch (e) { /* bỏ qua */ }
+  }
+  function xoaHetGio(be) {
+    const o = docHetGio();
+    if (o && be && o.be !== be) return;
+    try { window.localStorage.removeItem(KHOA_HET_GIO); } catch (e) { /* bỏ qua */ }
+  }
+  /** Hôm nay bé đang chơi đủ giờ thì ghi mốc (gọi ở các chỗ bé có thể thấy mình hết giờ). */
+  function kiemTraHetGio() { if (duPhutHomNay()) ghiHetGio(); }
+  /** Máy có bé nào đang được đặt giới hạn giờ chơi không. */
+  function coGioiHan() { return A.dsBe.some(function (p) { return HS.sachGioiHan(p.gioi_han_phut) != null; }); }
+  /** Việc cần bố mẹ cho phép: qua cổng phụ huynh (mã hay phép nhân) rồi mới làm. */
+  function xinBoMe(ve, lyDo, viec) {
+    window.GocPhuHuynh.mo(ve, ctxPhuHuynh(ve), null, viec, lyDo);
+  }
   /** Số phút đã chơi hôm nay (tính từ tóm tắt ván). */
   function phutHomNay() {
     const nay = homNay();
@@ -393,6 +422,7 @@
   function vaoDao(loiChao) {
     const p = A.hoSo;
     if (!p) { moChonBe(); return; }
+    kiemTraHetGio();
     veBanDo(loiChao);
     hien('man-ban-do');
   }
@@ -629,6 +659,7 @@
   /** Hộp "Hôm nay con chơi đủ giờ rồi" (chỉ có khi phụ huynh đặt giới hạn), kèm nút để bố mẹ cho chơi thêm. */
   function moHetGio() {
     const p = A.hoSo;
+    ghiHetGio();
     $('hg-hinh').src = hinh(hinhKhungLong(p, p.khung_long.muc === 'trung' || p.khung_long.muc === 'lay_dong' ? 'trung' : 'an'));
     $('hg-loi').textContent = 'Hôm nay con đã chơi ' + Math.round(phutHomNay()) + ' phút, đủ ' + gioiHanHomNay() + ' phút bố mẹ cho rồi. ' +
       tenKhungLong(p) + ' cũng cần nghỉ. Mai mình chơi tiếp nhé!';
@@ -911,6 +942,7 @@
     $('kt-tt-nut').textContent = b.nut + ' ›';
     // Hết giờ bố mẹ đặt: thêm nút để bố mẹ cho chơi thêm (qua cổng phép tính của Góc phụ huynh)
     $('kt-tt-them').classList.toggle('hidden', b.loai !== 'nghi');
+    if (b.loai === 'nghi') ghiHetGio();
     // Khi bước tiếp theo đã là về đảo thì bỏ nút Về đảo thứ hai
     $('kt-tiep').classList.toggle('hidden', !b.man);
   }
@@ -1125,6 +1157,7 @@
        */
       hoSoDoi: function (p, giuNhiemVu) {
         if (!giuNhiemVu) p.nhiem_vu = null;
+        else xoaHetGio(p.id); // đổi giới hạn, cho thêm giờ, khóa cả các trò khác: tính lại mốc hết giờ khi về đảo
         const i = A.dsBe.findIndex(function (x) { return x.id === p.id; });
         if (i >= 0) A.dsBe[i] = p;
         if (A.hoSo && A.hoSo.id === p.id) A.hoSo = p;
@@ -1181,7 +1214,18 @@
       const b = e.target.closest('button');
       if (!b) return;
       AT.bat('cham');
-      if (b.id === 'cb-them') moTaoHoSo(); else chonBe(b.getAttribute('data-id'));
+      // Bố mẹ vừa cho phép đổi bạn (qua cổng từ bản đồ) thì lần chọn này không hỏi lại
+      const hg = A.boMeChoPhep ? null : docHetGio();
+      const choPhep = A.boMeChoPhep;
+      A.boMeChoPhep = false;
+      if (b.id === 'cb-them') {
+        // Máy có bé bị đặt giới hạn giờ (hay hôm nay có bé đã hết giờ): tạo hồ sơ mới cần bố mẹ cho phép
+        if (!choPhep && (coGioiHan() || hg)) xinBoMe('chon-be', 'Tạo hồ sơ mới cần bố mẹ cho phép.', moTaoHoSo); else moTaoHoSo();
+        return;
+      }
+      const id = b.getAttribute('data-id');
+      if (hg && hg.be !== id) xinBoMe('chon-be', 'Hôm nay một bạn đã chơi đủ giờ. Đổi sang bạn khác cần bố mẹ cho phép.', function () { chonBe(id); });
+      else chonBe(id);
     });
     $('cb-bo-me').addEventListener('click', function () { moPhuHuynh('chon-be'); });
     $('cb-khoi-phuc').addEventListener('click', chonTepKhoiPhuc);
@@ -1247,7 +1291,12 @@
       if (i >= 0) choiNhiemVu(i); else chayBuoc(A.buocBanDo);
     });
     $('bd-cach-choi').addEventListener('click', function () { AT.bat('cham'); moHuongDan(null); });
-    $('bd-chip').addEventListener('click', function () { AT.bat('cham'); moChonBe(); });
+    $('bd-chip').addEventListener('click', function () {
+      AT.bat('cham');
+      // Hết giờ rồi thì đổi bé cần bố mẹ cho phép (không lách giờ bằng hồ sơ của anh chị hay hồ sơ mới)
+      if (duPhutHomNay()) xinBoMe('ban-do', 'Hôm nay con chơi đủ giờ rồi. Đổi bạn cần bố mẹ cho phép.', function () { moChonBe(); A.boMeChoPhep = true; });
+      else moChonBe();
+    });
     $('bd-bo-me').addEventListener('click', function () { moPhuHuynh('ban-do'); });
     $('bd-am').addEventListener('click', function () { AT.datTieng(!AT.co.tieng); this.textContent = 'Âm thanh: ' + (AT.co.tieng ? 'Bật' : 'Tắt'); });
     $('bd-meo-dong').addEventListener('click', function () {

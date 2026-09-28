@@ -532,7 +532,8 @@ test('ngân hàng GĐ 2: câu số, phép nhân từ tổng, bài toán có lờ
         assert.equal(new Set(b1).size, b1.length);
         for (const x of q.buoc1.lua_chon) {
           deq(x.loi, NH.nhanBietLoi(q.cau_truc, x.gia_tri, 1));
-          if (x.gia_tri !== q.buoc1.dap_an) assert.ok(x.loi.includes('sai-phep') || x.loi.includes('dao-thu-tu'), q.de + ' → ' + x.gia_tri + ' ' + x.loi);
+          // Nhóm D (2026-09-28): phép trừ có thêm thẻ lấy số bé trừ số lớn, mang lỗi be-tru-lon
+          if (x.gia_tri !== q.buoc1.dap_an) assert.ok(x.loi.includes('sai-phep') || x.loi.includes('dao-thu-tu') || x.loi.includes('be-tru-lon'), q.de + ' → ' + x.gia_tri + ' ' + x.loi);
         }
         assert.equal(q.goi_y_buoc2.length, 3);
         if (q.cau_truc.phep === '-') assert.ok(q.cau_truc.so[0] > q.cau_truc.so[1]);

@@ -371,7 +371,9 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     await page.keyboard.press('Enter');
     await sleep(page, 200);
     assert.ok(await shown(page, '#parent-gate'), 'sai → vẫn ở cổng');
-    await page.fill('#parent-gate-input', String(Number(gq[1]) * Number(gq[2])));
+    const gq2 = /(\d+) × (\d+)/.exec(await page.$eval('#parent-gate-q', (e) => e.textContent));
+    assert.ok(gq && gq2 && Number(gq2[1]) >= 12, 'sai thì hỏi câu mới cỡ người lớn');
+    await page.fill('#parent-gate-input', String(Number(gq2[1]) * Number(gq2[2])));
     await page.keyboard.press('Enter');
     await sleep(page, 300);
     assert.equal(await shown(page, '#parent-gate'), false, 'đúng → qua cổng');

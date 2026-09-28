@@ -291,7 +291,7 @@
     if (k === 'be_nhat') return 'Tờ tiền nào có giá trị bé nhất?';
     if (k === 'dem_loai') return 'Có mấy tờ ' + dong(ct.gia) + '?';
     if (k === 'may_to') return 'Tờ ' + dong(ct.tu) + ' đổi được mấy tờ ' + dong(ct.sang) + '?';
-    if (k === 'tra') return hoa(monCua(ct.mon).ten) + ' giá ' + dong(ct.gia) + '. Con trả bằng những tờ nào?';
+    if (k === 'tra') return hoa(monCua(ct.mon).ten) + ' giá ' + dong(ct.gia) + '. Con trả vừa đủ bằng những tờ nào?';
     if (k === 'doi') return 'Đổi tờ ' + dong(ct.tu) + ' thành ' + (ct.sang ? 'các tờ ' + dong(ct.sang) : 'các tờ tiền nhỏ hơn');
     if (k === 'thua') return hoa(monCua(ct.mon).ten) + ' giá ' + dong(ct.gia) + ', khách đưa ' + dong(ct.dua) + '. Trả lại khách bao nhiêu tiền?';
     return '';
@@ -302,7 +302,7 @@
     if (k === 'chon_to') return 'Chọn tờ ' + docTien(ct.gia) + '.';
     if (k === 'dem_loai') return 'Có mấy tờ ' + docTien(ct.gia) + '?';
     if (k === 'may_to') return 'Tờ ' + docTien(ct.tu) + ' đổi được mấy tờ ' + docTien(ct.sang) + '?';
-    if (k === 'tra') return hoa(monCua(ct.mon).ten) + ' giá ' + docTien(ct.gia) + '. Con trả bằng những tờ nào?';
+    if (k === 'tra') return hoa(monCua(ct.mon).ten) + ' giá ' + docTien(ct.gia) + '. Con trả vừa đủ bằng những tờ nào?';
     if (k === 'doi') return 'Đổi tờ ' + docTien(ct.tu) + ' thành ' + (ct.sang ? 'các tờ ' + docTien(ct.sang) : 'các tờ tiền nhỏ hơn') + '.';
     if (k === 'thua') return hoa(monCua(ct.mon).ten) + ' giá ' + docTien(ct.gia) + ', khách đưa ' + docTien(ct.dua) + '. Trả lại khách bao nhiêu tiền?';
     return deTien(ct);

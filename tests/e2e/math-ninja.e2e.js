@@ -154,7 +154,9 @@ async function findWrongValue(page, ms) {
   return null;
 }
 async function answerGate(page, hook) {
-  const v = await hook('X.Gate.answer');
+  // câu hỏi do Players.gateQuestion giữ (không lộ đáp án): đọc phép nhân trên màn hình
+  const m = /(\d+) × (\d+) = \?/.exec(await page.textContent('#parent-gate-q'));
+  const v = Number(m[1]) * Number(m[2]);
   await page.fill('#parent-gate-input', String(v));
   await page.click('#parent-gate-form button[type="submit"]');
   await page.waitForTimeout(200);

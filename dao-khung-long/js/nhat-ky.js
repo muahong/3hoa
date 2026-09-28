@@ -19,7 +19,8 @@
   const KHOA_DON = 'dkl-don-nhat-ky-v1'; // ngày dọn nhật ký gốc gần nhất (mỗi ngày dọn một lần, không chờ lúc mở app)
   const KHOA_DANG_MO = 'dkl-phien-mo-v1';
   const KHOA_THE = 'dkl-the-dang-mo-v1'; // thẻ (cửa sổ) đang giữ đảo: { id, luc }; thẻ khác thấy mã lạ thì nhường
-  const KHOA_SAO_LUU = 'dkl-sao-luu-v1'; // lúc sao lưu gần nhất trên máy này (ISO)
+  const KHOA_SAO_LUU = 'dkl-sao-luu-v1';
+  const KHOA_LUC_CUOI = 'dkl-luc-cuoi-v1'; // lúc ghi sự kiện gần nhất (ms), để đồng hồ máy bị chỉnh nhảy xa không làm dọn mất nhật ký // lúc sao lưu gần nhất trên máy này (ISO)
   const TOI_DA_BO_DEM = 50000; // ghi hỏng mãi thì bộ đệm không lớn vô hạn (bỏ sự kiện cũ nhất)
   const DINH_DANG_SAO_LUU = 'dao-khung-long-sao-luu'; // dấu phiên đang mở (localStorage, ghi đồng bộ) để đóng phiên dở khi app bị tắt ngang
 
@@ -323,7 +324,8 @@
     daXinBen: false,
     theId: null, // mã thẻ này khi đã giữ đảo (giuThe), null khi chưa (kiểm thử)
     nhuong: false, // thẻ này đã nhường cho cửa sổ khác: không ghi gì nữa
-    onNhuong: null
+    onNhuong: null,
+    lucCuoiTruoc: null // lúc ghi sự kiện gần nhất của lần chạy trước (đọc lúc khởi động)
   };
 
   /* ---------------- Một cửa sổ giữ đảo ---------------- */
@@ -362,10 +364,31 @@
       if (!st.phien || !st.be) { window.localStorage.removeItem(KHOA_DANG_MO); return; }
       window.localStorage.setItem(KHOA_DANG_MO, JSON.stringify({
         be: st.be, phien: st.phien.id, phienBatDau: st.phien.batDau, cuoi: st.cuoi,
-        van: st.van ? { id: st.van.id, game: st.van.game, vung: st.van.vung, man: st.van.man, batDau: st.van.batDau, dem: st.van.dem, cauCuoi: st.van.cauCuoi, quaMong: st.van.quaMong || 0 } : null,
+        van: st.van ? { id: st.van.id, game: st.van.game, vung: st.van.vung, man: st.van.man, batDau: st.van.batDau, dem: st.van.dem, cauCuoi: st.van.cauCuoi, quaMong: st.van.quaMong || 0, choiMs: Math.round(msChoi()) } : null,
         cau: st.cau ? { id: st.cau.id, batDau: st.cau.batDau, maCau: st.cau.maCau } : null
       }));
     } catch (e) { /* bỏ qua: localStorage đầy hoặc bị chặn */ }
+  }
+
+  function trangAn() { try { return window.document.visibilityState === 'hidden'; } catch (e) { return false; } }
+  /**
+   * Thời gian chơi thật của ván: đồng hồ perf (không đổi khi chỉnh giờ máy), trừ lúc tạm dừng (nút, menu) và lúc app ở nền.
+   * Gọi mỗi khi tamNut hay tamAn đổi.
+   */
+  function capNhatDung() {
+    const v = st.van;
+    if (!v) return;
+    const dung = v.tamNut || v.tamAn;
+    const t = st.dongHo.perf();
+    if (dung && v.dungTu == null) v.dungTu = t;
+    else if (!dung && v.dungTu != null) { v.msDung += Math.max(0, t - v.dungTu); v.dungTu = null; }
+  }
+  function msChoi() {
+    const v = st.van;
+    if (!v) return 0;
+    const t = st.dongHo.perf();
+    const dung = v.msDung + (v.dungTu != null ? Math.max(0, t - v.dungTu) : 0);
+    return Math.max(0, t - v.t0 - dung);
   }
 
   function demMoi() { return { so_cau: 0, dung_ngay: 0, dung_sau_goi_y: 0, dung_lan_2: 0, sai: 0, sua_duoc: 0 }; }
@@ -433,7 +456,7 @@
     if (!st.boDem.length) return Promise.resolve();
     // Chuẩn hóa qua JSON: kho bộ nhớ và IndexedDB lưu giống hệt nhau, và một giá trị lạ không làm hỏng cả lô (DataCloneError)
     const lo = st.boDem.splice(0, st.boDem.length).map(saoAnToan).filter(Boolean);
-    st.dangGhi = kho.datNhieu('su_kien', lo).then(function () { st.loiGhi = null; }, function (e) {
+    st.dangGhi = kho.datNhieu('su_kien', lo).then(function () { st.loiGhi = null; ghiLucCuoi(); }, function (e) {
       st.loiGhi = e || new Error('loi_ghi');
       st.boDem = lo.concat(st.boDem);
       if (st.boDem.length > TOI_DA_BO_DEM) st.boDem.splice(0, st.boDem.length - TOI_DA_BO_DEM);
@@ -447,6 +470,13 @@
     }).then(function () { st.dangGhi = null; }, function () { st.dangGhi = null; });
     return st.dangGhi;
   }
+  function ghiLucCuoi() {
+    try {
+      const cu = Number(window.localStorage.getItem(KHOA_LUC_CUOI)) || 0;
+      const now = st.dongHo.now();
+      if (now > cu) window.localStorage.setItem(KHOA_LUC_CUOI, String(now));
+    } catch (e) { /* bỏ qua */ }
+  }
   function henGhiLai() {
     if (st.hengio) return;
     st.hengio = setTimeout(function () { st.hengio = null; xa(); }, GHI_MOI_MS * 3);
@@ -457,7 +487,14 @@
    * nên chỉ cần xóa theo khoảng khóa nhỏ hơn mốc 0 giờ của ngày giữ lại xa nhất.
    */
   function donNhatKyCu(ngay) {
-    const d = new Date(st.dongHo.now() - (ngay == null ? GIU_NHAT_KY_NGAY : ngay) * 86400000);
+    // Tính mốc từ lúc ghi gần nhất của lần chạy trước (cộng 1 ngày) nếu đồng hồ máy đang chạy trước nó: bé chỉnh ngày
+    // sang năm sau thì không dọn mất nhật ký thật. Đồng hồ bị lùi về trước lần ghi đó thì lần này không dọn.
+    let goc = st.dongHo.now();
+    if (st.lucCuoiTruoc) {
+      if (goc < st.lucCuoiTruoc - 86400000) return Promise.resolve(0);
+      goc = Math.min(goc, st.lucCuoiTruoc + 86400000);
+    }
+    const d = new Date(goc - (ngay == null ? GIU_NHAT_KY_NGAY : ngay) * 86400000);
     d.setHours(0, 0, 0, 0);
     return kho.xoaKhoaDuoi('su_kien', ulidMoc(d.getTime())).catch(function () { return 0; });
   }
@@ -524,7 +561,8 @@
       const dem = Object.assign(demMoi(), d.van.dem || {});
       day(taoSuKien('van_ket_thuc', Object.assign(dem, {
         bo_do: true, ly_do: 'dong_app', sao: 0, qua_mong: qua,
-        giay: Math.max(0, Math.round((luc - (d.van.batDau || luc)) / 100) / 10),
+        giay: typeof d.van.choiMs === 'number' ? Math.max(0, Math.round(d.van.choiMs / 100) / 10) : Math.max(0, Math.round((luc - (d.van.batDau || luc)) / 100) / 10),
+        giay_tong: Math.max(0, Math.round((luc - (d.van.batDau || luc)) / 100) / 10),
         cau_cuoi: d.van.cauCuoi || null
       }), Object.assign({ van: d.van.id, cau: null, game: d.van.game, vung: d.van.vung, man: d.van.man, ms: Math.max(0, luc - (d.van.batDau || luc)) }, ctx)));
     }
@@ -540,7 +578,8 @@
     if (st.van) ketThucVan({ bo_do: true, ly_do: 'mo_van_moi' });
     const now = st.dongHo.now();
     kiemTraNghi(now);
-    st.van = { id: 'va_' + ulid(now), t0: st.dongHo.perf(), batDau: now, game: o.game, vung: o.vung, man: o.man, dem: demMoi(), cauCuoi: null };
+    st.van = { id: 'va_' + ulid(now), t0: st.dongHo.perf(), batDau: now, game: o.game, vung: o.vung, man: o.man, dem: demMoi(), cauCuoi: null,
+      msDung: 0, dungTu: null, tamNut: false, tamAn: trangAn() };
     st.suKienVan = [];
     ghi('van_bat_dau', {
       nguon: o.nguon || 'tu_chon',
@@ -586,7 +625,9 @@
     if (st.cau) cauKetThuc({ ket_qua: 'bo_qua', tong_giay: Math.round((st.dongHo.perf() - st.cau.t0) / 100) / 10, ly_do: 'thoat_van' });
     const now = st.dongHo.now();
     const dl = Object.assign(demMoi(), st.van.dem, {
-      giay: Math.round((now - st.van.batDau) / 100) / 10,
+      // giay: thời gian chơi thật (không tính tạm dừng, lúc ở nền), dùng cho giới hạn phút và báo cáo; giay_tong: từ lúc mở tới lúc xong
+      giay: Math.round(msChoi() / 100) / 10,
+      giay_tong: Math.max(0, Math.round((now - st.van.batDau) / 100) / 10),
       cau_cuoi: st.van.cauCuoi
     }, duLieu || {});
     if (dl.bo_do == null) dl.bo_do = false;
@@ -616,7 +657,9 @@
     daGanSuKienTrang = true;
     try {
       window.document.addEventListener('visibilitychange', function () {
-        if (window.document.visibilityState === 'hidden') { ghiDauMo(); xa(); }
+        const an = window.document.visibilityState === 'hidden';
+        if (st.van) { st.van.tamAn = an; capNhatDung(); }
+        if (an) { ghiDauMo(); xa(); }
         else if (st.be) kiemTraNghi(st.dongHo.now());
       });
       window.addEventListener('pagehide', function () { ghiDauMo(); xa(); });
@@ -650,6 +693,7 @@
       opts = opts || {};
       st.phienBanApp = String(opts.phienBanApp || st.phienBanApp);
       ganSuKienTrang();
+      try { st.lucCuoiTruoc = Number(window.localStorage.getItem(KHOA_LUC_CUOI)) || null; } catch (e) { st.lucCuoiTruoc = null; }
       const p = opts.khongDungIndexedDB ? Promise.resolve(kho) : moKho();
       return p.then(function () {
         api.kho = bocGhi(kho);
@@ -828,8 +872,10 @@
     goiY: function (cap, ma, them) { return ghi('goi_y', Object.assign({ cap: cap, ma: ma || null }, them || {})); },
     traLoi: function (duLieu) { return ghi('tra_loi', duLieu); },
     phanHoiXem: function (duLieu) { return ghi('phan_hoi_xem', duLieu); },
-    tamDung: function (nguon) { return ghi('tam_dung', { nguon: nguon || 'nut' }); },
-    tiepTuc: function (nguon) { return ghi('tiep_tuc', { nguon: nguon || 'nut' }); },
+    tamDung: function (nguon) { if (st.van) { st.van.tamNut = true; capNhatDung(); } return ghi('tam_dung', { nguon: nguon || 'nut' }); },
+    tiepTuc: function (nguon) { if (st.van) { st.van.tamNut = false; capNhatDung(); } return ghi('tiep_tuc', { nguon: nguon || 'nut' }); },
+    /** Mili giây chơi thật của ván đang mở (không tính tạm dừng và lúc ở nền). */
+    msChoi: msChoi,
 
     xa: xa,
     ketThucPhien: function (lyDo) { ketThucPhien(lyDo || 'dong_app'); return xa(); },

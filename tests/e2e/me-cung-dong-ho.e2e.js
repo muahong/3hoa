@@ -304,7 +304,9 @@ async function run1() {
     assert.ok(await H.visible('#parent-gate'), 'sai thì cổng vẫn mở');
     assert.ok((await page.textContent('#toast')).includes('Chưa đúng'));
     assert.equal(await hook('X.Store.p().unlocked'), 2);
-    await page.fill('#parent-gate-input', String(Number(m[1]) * Number(m[2])));
+    const m2 = /(\d+) × (\d+)/.exec(await page.textContent('#parent-gate-q'));
+    assert.notEqual(m2[0], m[0], 'sai thì hỏi câu mới');
+    await page.fill('#parent-gate-input', String(Number(m2[1]) * Number(m2[2])));
     await page.keyboard.press('Enter');
     await page.waitForTimeout(150);
     assert.ok(!(await H.visible('#parent-gate')));

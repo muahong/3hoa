@@ -439,7 +439,8 @@ async function profiles() {
     await page.fill('#parent-gate-input', '1');
     await page.click('#parent-gate-form button[type=submit]');
     ok(await page.isVisible('#parent-gate'), 'trả lời sai thì cổng phụ huynh vẫn đóng');
-    const answer = await hook('X.Gate.answer');
+    const gm = /(\d+) × (\d+) = \?/.exec(await page.textContent('#parent-gate-q'));
+    const answer = Number(gm[1]) * Number(gm[2]);   // câu mới sau lần sai
     await page.fill('#parent-gate-input', String(answer));
     await page.click('#parent-gate-form button[type=submit]');
     await page.waitForTimeout(200);

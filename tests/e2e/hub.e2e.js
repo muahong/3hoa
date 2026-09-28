@@ -226,7 +226,11 @@ async function run(label, viewport, reduced) {
     await page.waitForTimeout(100);
     ok(await page.evaluate(() => !document.getElementById('parent-gate').hidden), 'sai → cổng vẫn mở');
     eq(await page.$$eval('.player-item', (els) => els.length), 3, 'sai → chưa xóa');
-    await page.fill('#parent-gate-input', String(Number(m[1]) * Number(m[2])));
+    const q2 = await text(page, '#parent-gate-q');
+    ok(q2 !== q, 'sai → hỏi câu mới (câu nhân cỡ người lớn, dùng chung Players.gateQuestion)');
+    const m2 = q2.match(/(\d+)\s*×\s*(\d+)/);
+    ok(m2 && Number(m2[1]) >= 12, 'câu hỏi cổng cỡ người lớn: ' + q2);
+    await page.fill('#parent-gate-input', String(Number(m2[1]) * Number(m2[2])));
     await page.press('#parent-gate-input', 'Enter');
     await page.waitForTimeout(150);
     ok(await page.evaluate(() => document.getElementById('parent-gate').hidden), 'đúng → cổng đóng');

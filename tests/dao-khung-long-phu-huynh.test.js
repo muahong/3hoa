@@ -712,9 +712,30 @@ test('giao diện: cổng phép tính, mọi màn vẽ được không có "unde
   G.mo('ban-do', c);
   const hoi = els['gp-hoi'].textContent;
   assert.match(hoi, /^\d\d × \d = \?$/, 'phép nhân của người lớn');
-  // 3 lần sai thì thoát
-  for (let i = 0; i < 3; i++) { G._dieuKhien.congGo('1'); G._dieuKhien.congGo('xong'); }
-  assert.equal(thoat, 1);
+  // Sai thì đổi câu mới; 3 lần sai liền thì cổng khóa tạm 60 giây (không thoát), bàn phím mờ, mở lại vẫn khóa
+  const cauHoi = new Set([hoi]);
+  for (let i = 0; i < 3; i++) { G._dieuKhien.congGo('1'); G._dieuKhien.congGo('xong'); cauHoi.add(els['gp-hoi'].textContent); }
+  assert.equal(thoat, 0);
+  assert.ok(cauHoi.size >= 2, 'câu mới sau mỗi lần sai');
+  const khoa = JSON.parse(w.localStorage.getItem('3hoa-cong-khoa-v1'));
+  assert.equal(khoa.lan, 1);
+  assert.ok(khoa.den - Date.now() > 55000 && khoa.den - Date.now() <= 60000, 'khóa 60 giây');
+  assert.match(els['gp-khoa-tb'].textContent, /tạm khóa/);
+  G.mo('ban-do', c);
+  assert.match(els['gp-khoa-tb'].textContent, /tạm khóa/, 'mở lại vẫn khóa');
+  // Mã bố mẹ: cổng hỏi mã thay cho phép nhân (băm FNV-1a của '3hoa-pin|' + mã, chung với js/profile.js)
+  w.localStorage.removeItem('3hoa-cong-khoa-v1');
+  w.localStorage.setItem('3hoa-ma-bo-me-v1', JSON.stringify({ h: G.bamPin('2468') }));
+  G.mo('ban-do', c);
+  assert.equal(els['gp-hoi'].textContent, 'Mã bố mẹ (4 số)');
+  let vao = 0;
+  G.mo('ban-do', c, null, () => { vao++; }, 'Đổi bạn cần bố mẹ cho phép.');
+  '2468'.split('').forEach((k) => G._dieuKhien.congGo(k));
+  assert.equal(els['gp-o'].textContent, '••••', 'mã hiện bằng chấm');
+  G._dieuKhien.congGo('xong');
+  assert.equal(vao, 1, 'đúng mã thì làm việc bố mẹ cho phép, không mở góc');
+  assert.equal(G.bamPin('2468'), (() => { let h = 2166136261; for (const ch of '3hoa-pin|2468') { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16).padStart(8, '0'); })());
+  w.localStorage.removeItem('3hoa-ma-bo-me-v1');
   G.mo('ban-do', c);
   G._quaCong();
   await cho(); await cho();

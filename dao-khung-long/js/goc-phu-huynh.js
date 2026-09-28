@@ -708,6 +708,7 @@
     h += the('', nhan('Thời gian và vùng đất') + veGioiHan() +
       '<div class="gp-dong-cai"><span>Mở khóa mọi vùng<small>Mặc định vùng học kì 2 chờ tới khi con học Bài 37. Bật để con chơi mọi vùng ngay.</small></span>' +
       '<label class="gp-cong-tac gp-cong-tac-to"><input type="checkbox" data-hd="mo-khoa"' + (p.mo_khoa_vung ? ' checked' : '') + '><span aria-hidden="true"></span><em>' + (p.mo_khoa_vung ? 'Đang mở' : 'Tắt') + '</em></label></div>');
+    h += the('', nhan('Sao lưu và giữ dữ liệu') + veLuuTru());
     h += the('', nhan('Dữ liệu trên máy này') +
       '<p class="gp-mo" id="gp-thong-ke">' + esc(thongKe()) + '</p>' +
       '<div class="gp-nut-ds">' +
@@ -717,6 +718,43 @@
         '<button type="button" class="gp-nut-xoa" data-hd="xoa-be">Xóa dữ liệu của ' + esc(p.ten) + '</button>' +
       '</div>' +
       '<p class="gp-rieng">' + svg(IC.khoa) + 'Dữ liệu chỉ nằm trên máy này, không gửi đi đâu. Tên của con không có trong nhật ký (chỉ có mã bé).</p>');
+    return h;
+  }
+  /**
+   * Tình trạng lưu trữ và sao lưu: cảnh báo khi máy không lưu được, lưu bền (Safari tự xóa sau 7 ngày không mở),
+   * lần sao lưu gần nhất, nút sao lưu cả máy và khôi phục từ tệp (đổi máy, chuyển sang đảo ở màn hình chính).
+   */
+  function veLuuTru() {
+    const t = NK.trangThaiKho();
+    const tb = NK.thietBi();
+    let h = '';
+    if (t.loai !== 'indexeddb') {
+      h += '<p class="gp-co gp-co-lon"><b>Máy đang không cho lưu dữ liệu.</b> Có thể trình duyệt đang ở chế độ duyệt riêng tư hoặc chặn bộ nhớ của trang' +
+        (t.loi_mo ? ' (' + esc(t.loi_mo) + ')' : '') + '. Tiến trình của con sẽ mất khi đóng trang.</p>';
+    } else if (t.loi_ghi) {
+      h += '<p class="gp-co gp-co-lon"><b>Lần ghi gần nhất bị lỗi</b> (' + esc(t.loi_ghi) + '). Đảo tự thử lại; nếu máy gần đầy bộ nhớ, hãy giải phóng bớt rồi sao lưu.</p>';
+    }
+    if (t.ben === true) h += '<p class="gp-mo">Trình duyệt đã cho <b>lưu bền</b>: dữ liệu không bị tự xóa khi máy thiếu chỗ.</p>';
+    else {
+      h += '<p class="gp-mo">Chưa được lưu bền. Safari trên iPad có thể <b>tự xóa dữ liệu của trang nếu 7 ngày không mở</b>. ' +
+        'Giữ chắc nhất: thêm đảo vào màn hình chính (nút Chia sẻ, Thêm vào MH chính) và sao lưu thường xuyên.</p>';
+    }
+    let sl = 'Chưa sao lưu lần nào trên máy này.';
+    if (t.sao_luu_luc) {
+      const ngay = String(t.sao_luu_luc).slice(0, 10);
+      const truoc = window.HocTap.soNgay(homNay()) - window.HocTap.soNgay(ngay);
+      sl = 'Lần sao lưu gần nhất: ' + BC.ngayNgan(ngay) + '/' + ngay.slice(0, 4) + (truoc > 0 ? ' (' + truoc + ' ngày trước)' : ' (hôm nay)') + '.';
+    }
+    h += '<p class="gp-mo"><b>' + esc(sl) + '</b> Tệp sao lưu gồm hồ sơ, quả mọng, mọi câu và ván của mọi bé trên máy.</p>';
+    if (tb.loai === 'ipad' || tb.loai === 'iphone') {
+      h += '<p class="gp-mo gp-nho">Lưu ý: đảo mở từ màn hình chính và đảo mở trong Safari có bộ nhớ riêng. Muốn chuyển sang (hoặc đổi máy), sao lưu ở nơi cũ rồi khôi phục ở nơi mới.</p>';
+    }
+    h += '<label class="gp-hop-chon"><input type="checkbox" data-hd="sl-du"' + (S.slDu ? ' checked' : '') + '><span>Kèm toàn bộ nhật ký gốc<small>Mặc định chỉ kèm 14 ngày gần nhất để tệp nhỏ; tóm tắt câu và ván luôn đủ</small></span></label>' +
+      '<div class="gp-nut-ds">' +
+        '<button type="button" class="gp-nut-chinh" data-hd="sao-luu">' + svg(IC.tai) + 'Sao lưu cả máy</button>' +
+        '<button type="button" class="gp-nut-phu" data-hd="khoi-phuc">Khôi phục từ tệp</button>' +
+        (t.ben === true ? '' : '<button type="button" class="gp-nut-phu" data-hd="luu-ben">Xin lưu bền</button>') +
+      '</div>';
     return h;
   }
   function thongKe() {
@@ -1009,11 +1047,34 @@
         ctx.tinhLai(id).then(function (r) {
           if (!r) return;
           ghi('phu_huynh_cai_dat', { truong: 'tinh_lai', cu: null, moi: { so_van: r.so_van, so_cau: r.so_cau, khop: r.khop } });
-          ctx.bao('Đã tính lại ' + r.so_van + ' ván, ' + r.so_cau + ' câu từ ' + r.so_su_kien + ' sự kiện' + (r.khop ? '. Khớp với bản đang lưu.' : '. Đã cập nhật bản lưu.'), 4);
+          ctx.bao('Đã tính lại ' + (r.so_van - (r.so_van_giu || 0)) + ' ván từ ' + r.so_su_kien + ' sự kiện' + (r.so_van_giu ? ', giữ nguyên ' + r.so_van_giu + ' ván cũ đã hết hạn nhật ký' : '') + (r.khop ? '. Khớp với bản đang lưu.' : '. Đã cập nhật bản lưu.'), 4);
           return taiBe(id);
         });
         break;
       }
+      case 'sao-luu': {
+        b.disabled = true;
+        NK.saoLuu({ ngayNhatKy: S.slDu ? null : 14 }).then(function (g) {
+          const txt = JSON.stringify(g);
+          taiTep(txt, 'dao-khung-long-sao-luu-' + homNay() + '.json', 'application/json');
+          NK.daSaoLuu();
+          const kb = Math.round(txt.length / 1024);
+          ghi('phu_huynh_cai_dat', { truong: 'sao_luu', cu: null, moi: { so_be: g.be.length, kb: kb, toan_bo_nhat_ky: !!S.slDu } });
+          ctx.bao('Đã tạo tệp sao lưu ' + g.be.length + ' bé (' + soDep(kb) + ' KB). Hãy cất tệp vào ứng dụng Tệp hoặc gửi cho chính mình.', 5);
+          ve(false);
+        }, function (e) {
+          b.disabled = false;
+          ctx.bao('Chưa sao lưu được: ' + ((e && e.message) || e), 4);
+        });
+        break;
+      }
+      case 'khoi-phuc': if (ctx.chonTepKhoiPhuc) ctx.chonTepKhoiPhuc(); break;
+      case 'luu-ben':
+        NK.xinLuuBen().then(function (ok) {
+          ctx.bao(ok ? 'Đã bật lưu bền cho đảo trên máy này.' : 'Trình duyệt chưa cho lưu bền. Hãy thêm đảo vào màn hình chính rồi thử lại, và nhớ sao lưu.', 5);
+          ve(false);
+        });
+        break;
       case 'xoa-be': hoiXoa(); break;
       case 'dong-hop': dongHopThoai(); break;
       case 'xoa-that': xoaThat(); break;
@@ -1030,6 +1091,8 @@
       ve(false);
     } else if (hd === 'mo-khoa') {
       doiCaiDat('mo_khoa_vung', !!el.checked);
+    } else if (hd === 'sl-du') {
+      S.slDu = !!el.checked;
     } else if (hd === 'kem-nk') {
       S.xuat.kem = !!el.checked;
       taoGoi();

@@ -44,6 +44,7 @@
     <h1 id="cb-tieu-de" class="tieu-de-lon">Con là ai?</h1>
     <p class="phu-de" id="cb-phu-de">Chạm vào tên của con để lên đảo</p>
     <div class="the-be-luoi" id="cb-luoi"></div>
+    <button class="nut-bo-me hidden" id="cb-khoi-phuc" type="button">Bố mẹ: khôi phục từ tệp sao lưu</button>
     <button class="nut-bo-me" id="cb-bo-me" type="button" aria-label="Góc phụ huynh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg>Bố mẹ</button>
   </section>
 
@@ -455,6 +456,16 @@
 
 <div id="thong-bao" class="thong-bao hidden" role="status" aria-live="polite"></div>
 <!-- Hết giờ chơi trong ngày: chỉ có khi phụ huynh đặt giới hạn (mặc định không giới hạn) -->
+<div class="lop-phu lop-het-gio lop-nhuong hidden" id="lop-nhuong" role="dialog" aria-modal="true" aria-labelledby="nh-tieu-de">
+  <div class="the hg-the">
+    <h2 id="nh-tieu-de">Đảo đang mở ở cửa sổ khác</h2>
+    <p>Để tiến trình của con không bị ghi đè, mỗi lúc chỉ một cửa sổ được chơi. Cửa sổ này đã dừng lại.</p>
+    <div class="nut-hang">
+      <button class="nut nut-cam" id="nh-choi-day" type="button">Chơi ở cửa sổ này</button>
+    </div>
+  </div>
+</div>
+
 <div class="lop-phu lop-het-gio hidden" id="lop-het-gio" role="dialog" aria-modal="true" aria-labelledby="hg-tieu-de">
   <div class="the hg-the">
     <img id="hg-hinh" alt="" class="hg-hinh">

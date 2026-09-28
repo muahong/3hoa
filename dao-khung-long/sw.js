@@ -1,6 +1,6 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Khi cập nhật game, đổi số phiên bản CACHE để máy nhận bản mới. */
-const CACHE = 'dao-khung-long-v5';
+const CACHE = 'dao-khung-long-v6';
 const CORE = [
   './',
   './index.html',

@@ -369,6 +369,8 @@
     else if (qm.loai === 'nho_goi_y') { Q.nho_goi_y += qm.qua_mong; Q.so_nho_goi_y++; }
     if (qm.them_sua) { Q.sua_duoc += qm.them_sua; Q.so_sua_duoc++; }
     Q.tong = Q.tu_lam + Q.vung_chac + Q.nho_goi_y + Q.sua_duoc;
+    // App bị tắt ngang giữa ván thì lần mở sau vẫn cộng số quả mọng này cho bé
+    if (this.nk.quaMongVan) this.nk.quaMongVan(Q.tong);
     return qm.qua_mong + qm.them_sua;
   };
 

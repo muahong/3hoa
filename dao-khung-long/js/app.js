@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PHIEN_BAN = '3.0.1';
+  const PHIEN_BAN = '3.0.2';
   const ANH = 'assets/img/';
   const LAN = ['lan_trai', 'lan_giua', 'lan_phai'];
   const NK = window.NhatKy, NH = window.NganHang, HT = window.HocTap, DAO = window.Dao, HS = window.HoSo, AT = window.AmThanh, PH = window.PhanHoi;
@@ -103,10 +103,14 @@
   function khoiDong() {
     window.addEventListener('error', function (e) { console.error('Lỗi:', e && e.message); });
     window.addEventListener('unhandledrejection', function (e) { console.error('Lỗi hứa:', e && e.reason); });
-    document.addEventListener('pointerdown', function () { NK.cham(); AT.mo(); }, { passive: true });
+    document.addEventListener('pointerdown', function () { NK.cham(); AT.mo(); NK.xinLuuBenLanDau(); }, { passive: true });
     ganSuKien();
     ['bg-race-track', 'bg-island-map', 'berry', 'the-lung', 'ic-truyen-tranh', 'ic-lat-the', 'ic-xep-hinh', 'ic-xuong-do-luong', 'ic-cho', 'ic-cau-ca', 'ic-rung-hinh', 'ic-lat-lich', 'ic-dau-truong'].forEach(taiAnh);
-    NK.khoiDong({ phienBanApp: PHIEN_BAN }).then(function () {
+    // Mỗi lúc chỉ một cửa sổ ghi dữ liệu: mở đảo ở cửa sổ khác thì cửa sổ này dừng (hai cửa sổ ghi đè hồ sơ của nhau)
+    NK.giuThe(nhuongCuaSo).then(function () {
+      return NK.khoiDong({ phienBanApp: PHIEN_BAN });
+    }).then(function () {
+      if (NK.kho.loai !== 'indexeddb') bao('Máy đang không cho lưu dữ liệu (có thể đang duyệt riêng tư). Tiến trình sẽ mất khi đóng trang.', 9);
       return tomTatVanDo();
     }).then(function () {
       return HS.taiDanhSach();
@@ -124,18 +128,79 @@
     }
   }
 
+  /** Cửa sổ khác vừa mở đảo: dừng hẳn ở đây (không ghi gì nữa), bé bấm Chơi ở cửa sổ này thì tải lại để giữ đảo. */
+  function nhuongCuaSo() {
+    AT.dungDoc();
+    if (window.DuaXe && A.man === 'man-dua-xe') window.DuaXe.dung();
+    $('lop-nhuong').classList.remove('hidden');
+  }
+
+  /**
+   * Khôi phục từ tệp sao lưu (Góc phụ huynh, hoặc màn đầu khi máy chưa có bé): đọc tệp, hỏi lại, gộp vào máy rồi tải lại trang.
+   * Trả về Promise<boolean> (đã khôi phục).
+   */
+  function khoiPhucTep(tep) {
+    if (!tep) return Promise.resolve(false);
+    const doc = tep.text ? tep.text() : new Promise(function (ok, loi) {
+      const r = new FileReader();
+      r.onload = function () { ok(r.result); };
+      r.onerror = function () { loi(r.error); };
+      r.readAsText(tep);
+    });
+    let goi = null;
+    return doc.then(function (txt) {
+      try { goi = JSON.parse(txt); } catch (e) { goi = null; }
+      return NK.kiemTraSaoLuu(goi);
+    }).then(function (kt) {
+      if (!kt.hop_le) { bao(kt.loi, 5); return false; }
+      const ds = kt.be.map(function (b) { return b.ten + ' (' + b.so_cau + ' câu' + (b.da_co ? ', gộp với hồ sơ đang có' : '') + ')'; }).join(', ');
+      const ngay = kt.tao_luc ? ' ngày ' + kt.tao_luc.slice(8, 10) + '/' + kt.tao_luc.slice(5, 7) + '/' + kt.tao_luc.slice(0, 4) : '';
+      if (!window.confirm('Khôi phục tệp sao lưu' + ngay + ': ' + ds + '?\nDữ liệu đang có trên máy vẫn được giữ, chỉ gộp thêm.')) return false;
+      return NK.khoiPhuc(goi, HS.TOI_DA_BE).then(function (r) {
+        NK.ghi('ho_so_doi', { truong: 'khoi_phuc_sao_luu', moi: { so_be: r.so_be, so_cau: r.so_cau, so_van: r.so_van } }, { game: 'trang-chu' });
+        return NK.xa().then(function () {
+          window.alert('Đã khôi phục ' + r.so_be + ' bé, ' + r.so_cau + ' câu, ' + r.so_van + ' ván.' + (r.bo_qua.length ? ' Không đủ chỗ cho: ' + r.bo_qua.join(', ') + ' (tối đa ' + HS.TOI_DA_BE + ' bé).' : ''));
+          window.location.reload();
+          return true;
+        });
+      });
+    }).catch(function (e) {
+      bao('Chưa khôi phục được: ' + ((e && e.message) || e), 5);
+      return false;
+    });
+  }
+  function chonTepKhoiPhuc() {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.json,application/json';
+    inp.style.display = 'none';
+    inp.addEventListener('change', function () { khoiPhucTep(inp.files && inp.files[0]); inp.remove(); });
+    document.body.appendChild(inp);
+    inp.click();
+  }
+
   function tenManNgan(m) { return m ? (m.cup ? m.ten : 'màn ' + m.so + ' (' + m.ten.toLowerCase() + ')') : null; }
 
-  /** Ván bỏ dở vì app bị tắt ngang: tóm tắt từ nhật ký gốc, và bỏ hồ sơ học tập cũ để tính lại. */
+  /**
+   * Ván bỏ dở vì app bị tắt ngang: tóm tắt từ nhật ký gốc, cộng quả mọng bé đã kiếm trong ván đó vào hồ sơ,
+   * và bỏ hồ sơ học tập cũ để tính lại.
+   */
   function tomTatVanDo() {
     const ds = NK.layVanDongDo();
     return ds.reduce(function (p, x) {
-      return p.then(function () { return NK.docVan(x.van); }).then(function (evs) {
+      return p.then(function () { return Promise.all([NK.docVan(x.van), x.qua_mong ? HS.lay(x.be) : null]); }).then(function (r) {
+        const evs = r[0], hs = r[1];
         const vanT = HT.tomTatVan(evs, tenManNgan(DAO.man(x.man)));
+        let luuHs = null;
+        if (hs && hs.khung_long) {
+          hs.khung_long.qua_mong = (hs.khung_long.qua_mong || 0) + x.qua_mong;
+          luuHs = HS.luu(hs);
+        }
         return Promise.all([
           kho().datNhieu('tom_tat_cau', HT.tomTatCacCau(evs)),
           vanT ? kho().dat('tom_tat_van', vanT) : null,
-          kho().xoa('ho_so_hoc_tap', x.be)
+          kho().xoa('ho_so_hoc_tap', x.be),
+          luuHs
         ]);
       });
     }, Promise.resolve()).catch(function (e) { console.error(e); });
@@ -159,6 +224,7 @@
     $('cb-tieu-de').textContent = A.dsBe.length ? 'Con là ai?' : 'Chào mừng con đến Đảo Khủng Long!';
     $('cb-phu-de').textContent = A.dsBe.length ? 'Chạm vào tên của con để lên đảo' : 'Chạm “Thêm bạn” để có quả trứng khủng long đầu tiên';
     $('cb-bo-me').classList.toggle('hidden', !A.dsBe.length);
+    $('cb-khoi-phuc').classList.toggle('hidden', !!A.dsBe.length);
     hien('man-chon-be');
   }
 
@@ -1020,7 +1086,10 @@
       const ds = r[0], cu = r[1];
       const theoVan = {};
       ds.forEach(function (e) { if (e.van) (theoVan[e.van] = theoVan[e.van] || []).push(e); });
-      const cauDs = [], vanDs = [];
+      // Ván cũ hơn thời hạn giữ nhật ký (120 ngày) không còn nhật ký gốc: giữ nguyên tóm tắt của chúng, chỉ dựng lại các ván còn nhật ký
+      const cauDs = cu.cauDs.filter(function (c) { return !c.van || !theoVan[c.van]; });
+      const vanDs = cu.vanDs.filter(function (v) { return !theoVan[v.van]; });
+      const soGiu = vanDs.length;
       Object.keys(theoVan).forEach(function (v) {
         const evs = theoVan[v];
         const goc = evs[0];
@@ -1034,7 +1103,7 @@
       const khop = JSON.stringify(hocTap) === JSON.stringify(HT.hoSoHocTap(id, cu.cauDs, cu.vanDs, homNay()));
       if (A.hoSo && A.hoSo.id === id) { A.cauDs = cauDs; A.vanDs = vanDs; A.hocTap = hocTap; }
       return Promise.all([kho().datNhieu('tom_tat_cau', cauDs), kho().datNhieu('tom_tat_van', vanDs), kho().dat('ho_so_hoc_tap', hocTap)]).then(function () {
-        return { so_van: vanDs.length, so_cau: cauDs.length, so_su_kien: ds.length, khop: khop };
+        return { so_van: vanDs.length, so_cau: cauDs.length, so_su_kien: ds.length, khop: khop, so_van_giu: soGiu };
       });
     });
   }
@@ -1047,6 +1116,7 @@
       bao: bao, hien: hien, tenManNgan: tenManNgan,
       taiDuLieuBe: taiDuLieuBe,
       tinhLai: tinhLai,
+      chonTepKhoiPhuc: chonTepKhoiPhuc,
       /** Quay về: bản đồ nếu vào từ bản đồ và còn bé đang chơi, không thì màn Con là ai. */
       thoat: function () { if (ve === 'ban-do' && A.hoSo) vaoDao(); else moChonBe(); },
       /**
@@ -1114,6 +1184,8 @@
       if (b.id === 'cb-them') moTaoHoSo(); else chonBe(b.getAttribute('data-id'));
     });
     $('cb-bo-me').addEventListener('click', function () { moPhuHuynh('chon-be'); });
+    $('cb-khoi-phuc').addEventListener('click', chonTepKhoiPhuc);
+    $('nh-choi-day').addEventListener('click', function () { window.location.reload(); });
 
     // Tạo hồ sơ
     $('th-ten').addEventListener('input', function () { hienBuocTao(); });
@@ -1240,7 +1312,7 @@
   }
 
   /** Dùng cho kiểm thử tự động và gỡ lỗi. */
-  window.__DKL = { A: A, batDauMan: batDauMan, vaoMan: vaoMan, moVung: moVung, vaoDao: vaoDao, chonBe: chonBe, tinhLai: tinhLai, moPhuHuynh: moPhuHuynh, taiDuLieuBe: taiDuLieuBe, moHuongDan: moHuongDan };
+  window.__DKL = { A: A, batDauMan: batDauMan, vaoMan: vaoMan, moVung: moVung, vaoDao: vaoDao, chonBe: chonBe, tinhLai: tinhLai, moPhuHuynh: moPhuHuynh, taiDuLieuBe: taiDuLieuBe, moHuongDan: moHuongDan, khoiPhucTep: khoiPhucTep };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', khoiDong);
   else khoiDong();

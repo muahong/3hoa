@@ -16,6 +16,7 @@
   const NGHI_MS = 10 * 60 * 1000; // quay lại sau 10 phút không chạm là phiên mới
   const GHI_MOI_MS = 2000;
   const GIU_NHAT_KY_NGAY = 120;
+  const KHOA_DON = 'dkl-don-nhat-ky-v1'; // ngày dọn nhật ký gốc gần nhất (mỗi ngày dọn một lần, không chờ lúc mở app)
   const KHOA_DANG_MO = 'dkl-phien-mo-v1'; // dấu phiên đang mở (localStorage, ghi đồng bộ) để đóng phiên dở khi app bị tắt ngang
 
   const KHO = {
@@ -51,6 +52,11 @@
       xoaNeu: function (ten, dk) {
         let n = 0;
         bang[ten].forEach(function (o, k) { if (dk(o)) { bang[ten].delete(k); n++; } });
+        return Promise.resolve(n);
+      },
+      xoaKhoaDuoi: function (ten, khoa) {
+        let n = 0;
+        bang[ten].forEach(function (o, k) { if (k < khoa) { bang[ten].delete(k); n++; } });
         return Promise.resolve(n);
       }
     };
@@ -143,6 +149,15 @@
             tx.onerror = function () { loi(tx.error); };
           });
         });
+      },
+      /** Xóa mọi bản ghi có khóa chính nhỏ hơn khoa bằng một lệnh theo khoảng (không duyệt từng bản ghi). Trả về số bản ghi đã xóa. */
+      xoaKhoaDuoi: function (ten, khoa) {
+        return gd(ten, 'readwrite', function (st) {
+          const r = IDBKeyRange.upperBound(khoa, true);
+          const dem = st.count(r);
+          st.delete(r);
+          return boc(dem);
+        });
       }
     };
   }
@@ -188,6 +203,13 @@
     for (let i = 0; i < 10; i++) { s = B32[x % 32] + s; x = Math.floor(x / 32); }
     for (let i = 0; i < 16; i++) s += B32[ulidR[i]];
     return s;
+  }
+  /** ULID nhỏ nhất của một mốc thời gian (không đổi trạng thái của ulid()): mọi sự kiện trước mốc có mã nhỏ hơn. */
+  function ulidMoc(ms) {
+    let s = '';
+    let x = Math.max(0, Math.floor(ms));
+    for (let i = 0; i < 10; i++) { s = B32[x % 32] + s; x = Math.floor(x / 32); }
+    return s + '0000000000000000';
   }
 
   /* ---------------- Thời gian ---------------- */
@@ -332,10 +354,25 @@
     return st.dangGhi;
   }
 
-  /** Xóa nhật ký gốc cũ hơn số ngày cho trước (tóm tắt câu, ván vẫn giữ). */
+  /**
+   * Xóa nhật ký gốc cũ hơn số ngày cho trước (tóm tắt câu, ván vẫn giữ). Mã sự kiện là ULID tăng theo thời gian,
+   * nên chỉ cần xóa theo khoảng khóa nhỏ hơn mốc 0 giờ của ngày giữ lại xa nhất.
+   */
   function donNhatKyCu(ngay) {
-    const moc = ngayDiaPhuong(st.dongHo.now() - (ngay == null ? GIU_NHAT_KY_NGAY : ngay) * 86400000);
-    return kho.xoaNeu('su_kien', function (o) { return String(o.luc).slice(0, 10) < moc; }).catch(function () { return 0; });
+    const d = new Date(st.dongHo.now() - (ngay == null ? GIU_NHAT_KY_NGAY : ngay) * 86400000);
+    d.setHours(0, 0, 0, 0);
+    return kho.xoaKhoaDuoi('su_kien', ulidMoc(d.getTime())).catch(function () { return 0; });
+  }
+
+  /** Dọn nhật ký gốc cũ mỗi ngày một lần, chạy nền sau khi app đã mở (không bắt bé chờ). */
+  function donNhatKyMoiNgay() {
+    const nay = ngayDiaPhuong(st.dongHo.now());
+    try { if (window.localStorage.getItem(KHOA_DON) === nay) return; } catch (e) { /* bỏ qua */ }
+    setTimeout(function () {
+      donNhatKyCu().then(function () {
+        try { window.localStorage.setItem(KHOA_DON, nay); } catch (e) { /* bỏ qua */ }
+      });
+    }, 3000);
   }
 
   /* ---------------- Phiên ---------------- */
@@ -511,8 +548,9 @@
         dongPhienDo();
         return xa();
       }).then(function () {
-        return donNhatKyCu();
-      }).then(function () { return kho; });
+        donNhatKyMoiNgay();
+        return kho;
+      });
     },
 
     /** Đổi bé đang chơi: đóng phiên của bé cũ, mở phiên cho bé mới. */

@@ -223,7 +223,7 @@
     if (s.cong) {
       s.cong.z -= s.v * dt;
       if (!s.cong.daQua && s.cong.z <= hh.zXe) quaCong();
-      if (s.cong && s.cong.daQua && s.cong.z < Z_GAN) { s.cong = null; s.cho = 0.45; }
+      if (s.cong && s.cong.daQua && s.cong.z < Z_GAN) { s.cho = s.cong.cho || 0.45; s.cong = null; }
     }
     // Trạm dừng
     if (s.tram) {
@@ -337,6 +337,8 @@
     an(dom.lao, true);
     if (c.q.stt >= 2) { s.lanDauHuongDan = false; an(dom.huongDan, true); }
     const chon = c.q.lua_chon[s.lan];
+    // Bé không đổi làn, không lao tới mà xe tự vào cổng sai: bé chưa chọn, không gán lỗi cho bé
+    if (!c.chuDong && window.NganHang.nhanBietLoi(c.q.cau_truc, chon.gia_tri).length) { tuVaoCong(c, chon); return; }
     const kq = s.van.traLoi(chon.gia_tri, { lan: LAN[s.lan], chu_dong: c.chuDong });
     const xX = hh.W / 2 + s.xeX * hh.laneW;
     if (kq.dung) {
@@ -367,8 +369,33 @@
       window.AmThanh.bat('sai');
       khoi(xX, hh.yXe - hh.xeW * 0.1);
       s.heSo = Math.min(1.6, s.heSo * 1.15);
-      setTimeout(function () { if (s && s.dangChay) moPhanHoi(c.q, chon.gia_tri, kq); }, 650);
+      const s0 = s;
+      setTimeout(function () {
+        if (s !== s0 || !s.dangChay) return;
+        // Bé tạm dừng (hoặc app ra nền) trong lúc chờ: mở lời giải khi bé bấm Chơi tiếp
+        if (s.giaiDoan === 'tam_dung') s.phCho = { q: c.q, giaTri: chon.gia_tri, kq: kq };
+        else moPhanHoi(c.q, chon.gia_tri, kq);
+      }, 650);
     }
+  }
+
+  /** Xe tự vào cổng sai khi bé chưa chọn: câu tính là hết giờ (không có lỗi của bé), quay lại sau như câu sai. */
+  function tuVaoCong(c, chon) {
+    c.dung = false;
+    c.cho = 2.4; // chờ lâu hơn trước câu sau để bé kịp nghe lời nhắc
+    const lai = s.van.seOnLai();
+    s.van.thaoTac('tu_vao_cong', { gia_tri_duoi_xe: chon.gia_tri, lan: LAN[s.lan] });
+    s.van.hetGio();
+    ghiMoc();
+    s.cham = 0.8;
+    s.tangToc = 0;
+    an(dom.tangToc, true);
+    s.heSo = Math.min(1.6, s.heSo * 1.15);
+    window.AmThanh.bat('cham');
+    const loi = 'Xe tự chạy vào cổng rồi. Con chạm bên trái, bên phải để chọn cổng nhé!' + (lai ? ' Câu này sẽ quay lại.' : '');
+    chu(dom.gyChu, loi);
+    an(dom.gyBong, false);
+    window.AmThanh.doc(loi);
   }
 
   /** Mốc thời gian hoàn thành từng câu mới của ván (để dựng bóng kỷ lục lần sau). */
@@ -389,7 +416,7 @@
     an(dom.phQue, true);
     an(dom.phQueNut, !qt);
     chu(dom.phQueNut, 'Xem bằng que tính');
-    chu(dom.phNote, q.lanOnLai < 2 ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!');
+    chu(dom.phNote, s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!');
     an(dom.ph, false);
     an(dom.gyBong, true);
     window.AmThanh.doc((kq.loi && kq.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (kq.loiNoi || ''));
@@ -503,6 +530,9 @@
     s.giaiDoan = s.giaiTruoc || 'chay';
     an(dom.tam, true);
     s.tCuoi = performance.now();
+    const cho = s.phCho;
+    s.phCho = null;
+    if (cho) moPhanHoi(cho.q, cho.giaTri, cho.kq);
   }
   function thoat() {
     if (!s) return;
@@ -563,14 +593,14 @@
   /* ---------------- HUD ---------------- */
 
   function capNhatHud(tatCa) {
-    const van = s.van;
-    const tong = van.soCauDuKien();
-    const moiLan = Math.max(1, Math.ceil(tong / 3));
-    const vong = Math.min(3, 1 + Math.floor(van.dem.moi / moiLan));
+    // Tính cả câu sai quay lại, để cờ đích và vòng 3/3 không tới trước khi hết câu
+    const td = s.van.tienDo();
+    const tong = td.tong;
+    const vong = Math.min(3, 1 + Math.floor(td.xong * 3 / tong));
     chu(dom.diem, s.diem.toLocaleString('vi-VN'));
     chu(dom.vong, 'Vòng ' + vong + '/3');
     chu(dom.gio, dongHo(s.t));
-    let p = van.dem.moi / Math.max(1, tong);
+    let p = td.xong / tong;
     if (s.cong && !s.cong.daQua) p += (1 - (s.cong.z - hh.zXe) / (s.cong.z0 - hh.zXe)) / tong;
     const w = Math.round(gioi(p, 0, 1) * 1000) / 10 + '%';
     if (dom.tienDo.style.width !== w) dom.tienDo.style.width = w;

@@ -991,8 +991,9 @@
   /** Dấu chân trên đường rừng: mỗi câu mới một bước. */
   function veDauChan() {
     if (!s) return;
-    const n = Math.max(1, s.van.soCauDuKien());
-    const xong = s.van.dem.moi;
+    const td = s.van.tienDo();
+    const n = td.tong;
+    const xong = td.xong;
     let h = '';
     for (let i = 0; i < n; i++) h += '<li class="' + (i < xong ? 'xong' : i === xong ? 'dang' : '') + '"></li>';
     dom.dauChan.innerHTML = h;

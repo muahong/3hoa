@@ -14,6 +14,8 @@
   const DOI_Y = { doi_lan: 1, bo_chon: 1, doi_cot: 1, xoa: 1, bo_ra: 1 };
   const SAU_CAU = 2; // câu sai quay lại sau 2 câu
   const TOI_DA_ON_LAI = 2; // một câu quay lại tối đa 2 lần trong ván
+  /** Câu sai quay lại thêm tối đa chừng này câu mỗi ván (một phần ba số câu, ít nhất 3), để bé yếu không phải làm gấp ba số câu. */
+  function soCauThem(n) { return Math.max(3, Math.ceil(n / 3)); }
   /** Số lần thử của một câu theo dạng (bài hai bước: mỗi bước tính riêng). */
   const LAN_THU = { chon_dap_an: 1, nhap_so: 2, ghep_doi: 2, keo_tha: 2, hai_buoc: 2, sap_xep: 2, thao_tac_hinh: 2, doc_va_chon: 1 };
 
@@ -30,6 +32,10 @@
     this.ds = window.NganHang.lapDanhSach(o.man, this.rng, { cauNo: o.cauNo || [], soCau: o.soCau });
     this.hang = this.ds.slice();
     this.choOnLai = [];
+    // Đấu trường không giới hạn: ván dừng khi hạ trùm, số câu đã cân theo câu sai quay lại (xem kiểm thử cân bằng)
+    this.toiDaCau = o.man && o.man.dau_truong ? Infinity : this.ds.length + soCauThem(this.ds.length);
+    this.soXong = 0; // số câu đã kết thúc (kể cả câu sai quay lại)
+    this.choHien = 0; // câu đã dựng sẵn (bàn Lật Thẻ, cầu nối) nhưng chưa hiện
     this.lanGap = Object.assign({}, o.lanGap || {});
     this.q = null;
     this.stt = 0;
@@ -52,6 +58,24 @@
   VanChoi.prototype.soCauMoiDaXong = function () { return this.dem.moi; };
   VanChoi.prototype.conCau = function () { return !!(this.hang.length || this.choOnLai.length || (this.q && !this.q.xong)); };
 
+  /**
+   * Tiến độ để hiện cho bé: { xong, tong, dang, onLai }. tong gồm cả câu sai sẽ quay lại (tăng lên khi bé sai),
+   * nên thanh tiến độ không đầy trước khi hết câu. onLai: câu đang hiện là câu sai quay lại trong ván.
+   */
+  VanChoi.prototype.tienDo = function () {
+    const dang = this.q && !this.q.xong ? 1 : 0;
+    return {
+      xong: this.soXong, dang: dang, onLai: !!(dang && this.q.goc === false),
+      tong: Math.max(1, this.soXong + dang + this.choHien + this.hang.length + this.choOnLai.length)
+    };
+  };
+
+  /** Câu đang hiện, nếu sai hẳn, có quay lại trong ván không (để màn "Gần đúng rồi" nói đúng). */
+  VanChoi.prototype.seOnLai = function () {
+    const q = this.q;
+    if (!q || q.xong || q.lanOnLai >= TOI_DA_ON_LAI) return false;
+    return this.soXong + 1 + this.choHien + this.hang.length + this.choOnLai.length < this.toiDaCau;
+  };
   /** Dạng của câu kế tiếp (không lấy ra): 'chon_dap_an' | 'nhap_so' | … | null khi hết câu. */
   VanChoi.prototype.dangKeTiep = function () {
     const den = this.choOnLai.find(function (x) { return x.con <= 0; });
@@ -75,7 +99,8 @@
   };
 
   /** Trả một mục về đầu hàng đợi (dùng khi dựng bàn Lật Thẻ gặp hai câu cùng đáp án). */
-  VanChoi.prototype._traMuc = function (muc) {
+  VanChoi.prototype._traMuc = function (muc, q) {
+    if (q && q.choHien) { q.choHien = false; this.choHien = Math.max(0, this.choHien - 1); }
     if (muc.laOnLaiTrongVan) this.choOnLai.unshift({ ky_nang: muc.ky_nang, cau_truc: muc.cau_truc, dang: muc.dang, cau: muc.on_lai_cua, con: 0, lanOnLai: muc.lanOnLai });
     else this.hang.unshift(muc);
   };
@@ -86,6 +111,8 @@
     q.on_lai_cua = muc.on_lai_cua || null;
     q.lanOnLai = muc.lanOnLai || 0;
     q.goc = !muc.laOnLaiTrongVan; // câu trong danh sách của ván (kể cả câu nợ hôm trước); câu sai quay lại trong ván thì không
+    q.choHien = true;
+    this.choHien++;
     return q;
   };
 
@@ -96,6 +123,7 @@
   VanChoi.prototype.hienCau = function (q, luaChon) {
     if (this.q && !this.q.xong) throw new Error('Câu trước chưa kết thúc');
     const NH = window.NganHang;
+    if (q.choHien) { q.choHien = false; this.choHien = Math.max(0, this.choHien - 1); }
     this.lanGap[q.ma_cau] = (this.lanGap[q.ma_cau] || 0) + 1;
     const viTri = this.o.viTri || [];
     const du = {
@@ -148,11 +176,11 @@
     while (ra.length < n && (muc = this._layMuc())) {
       const q = this._taoQ(muc);
       const k = String(q.dap_an);
-      if (daCo[k]) { traLai.push(muc); continue; }
+      if (daCo[k]) { traLai.push([muc, q]); continue; }
       daCo[k] = 1;
       ra.push(q);
     }
-    for (let i = traLai.length - 1; i >= 0; i--) this._traMuc(traLai[i]);
+    for (let i = traLai.length - 1; i >= 0; i--) this._traMuc(traLai[i][0], traLai[i][1]);
     return ra;
   };
 
@@ -308,7 +336,7 @@
     const suaDuoc = dung && q.on_lai_cua;
     if (suaDuoc) du.sua_duoc_cau = q.on_lai_cua;
     let seOnLai = false;
-    if ((kq === 'sai' || kq === 'het_gio') && q.lanOnLai < TOI_DA_ON_LAI) {
+    if ((kq === 'sai' || kq === 'het_gio') && this.seOnLai()) {
       seOnLai = true;
       du.se_on_lai_sau_cau = SAU_CAU;
     }
@@ -319,6 +347,7 @@
     }
     this.nk.cauKetThuc(du);
     q.xong = true;
+    this.soXong++;
     q.ketQua = kq;
 
     if (q.goc) {

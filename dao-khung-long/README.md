@@ -21,7 +21,7 @@ Kế hoạch và mockup: artifact “Đảo Khủng Long” bản 2. Spec: `docs
 ### Đua Xe
 
 - Ba làn, ba cổng đáp án. Chạm nửa trái hoặc nửa phải màn hình (hoặc phím mũi tên) để đổi làn; nút “Lao tới!” (phím mũi tên lên, phím cách) để về cổng nhanh.
-- Cổng đúng: cộng điểm, 3 câu đúng liền thì TĂNG TỐC. Cổng sai: xe chậm lại (không đâm), màn “Gần đúng rồi!” gọi tên lỗi, đặt tính cột dọc hoặc tách 10 như SGK, nút xem bằng que tính. Câu sai quay lại sau 2 câu (tối đa 2 lần trong ván).
+- Cổng đúng: cộng điểm, 3 câu đúng liền thì TĂNG TỐC. Cổng sai: xe chậm lại (không đâm), màn “Gần đúng rồi!” gọi tên lỗi, đặt tính cột dọc hoặc tách 10 như SGK, nút xem bằng que tính. Câu sai quay lại sau 2 câu (tối đa 2 lần trong ván). Bé không chạm gì mà xe tự vào cổng sai thì câu tính là hết giờ (không gán lỗi), khủng long nhắc cách đổi làn và câu quay lại; bé tạm dừng lúc lời giải sắp mở thì lời giải mở khi bé bấm Chơi tiếp.
 - Gợi ý 3 cấp (cấp 3 gạch bớt một cổng sai); câu dùng gợi ý không tính là tự làm.
 - Màn có trạm dừng (vùng 4 màn 2, màn 5 và hai cúp): câu 4, 8, 12 bắt tự gõ đáp án, được thử 2 lần.
 - Đua với bóng kỷ lục của chính mình; thời gian xem lời giải và gõ ở trạm dừng không tính vào thời gian đua.
@@ -29,7 +29,7 @@ Kế hoạch và mockup: artifact “Đảo Khủng Long” bản 2. Spec: `docs
 
 ### Quả mọng và mức lớn
 
-- Câu tự làm đúng +3 (kỹ năng đã Vững chắc +1), đúng nhờ gợi ý hoặc lần 2 +1, sửa được câu từng sai +2 thêm, sai 0 (không bao giờ bị trừ). Kỹ năng lên Đã thuộc +50, xong cả 3 nhiệm vụ trong ngày +20. Bỏ dở vẫn giữ quả mọng đã có.
+- Câu tự làm đúng +3 (kỹ năng đã Vững chắc +1), đúng nhờ gợi ý hoặc lần 2 +1, sửa được câu từng sai +2 thêm, sai 0 (không bao giờ bị trừ). Kỹ năng lên Đã thuộc +50 (mỗi kỹ năng một lần, `ho_so.thuong_da_thuoc`), xong cả 3 nhiệm vụ trong ngày +20. Bỏ dở vẫn giữ quả mọng đã có.
 - Mức lớn: Trứng, Trứng lay động, Sơ sinh, Nhí (500), Thiếu niên (1 200 và 3 nội dung đã thuộc), Trưởng thành (2 500 và 8 đã thuộc), Huyền thoại (5 000 và 1 đấu trường).
 - Khác với kế hoạch: trứng đầu tiên nở khi bé đua xong ván đầu tiên (thay vì mốc 100 quả mọng) để bé thấy trứng nở ngay buổi đầu. Các con số nằm ở `HocTap.MUC_LON`, chỉnh sau khi thử với bé thật.
 - Trứng của vùng nở khi mọi kỹ năng của các màn đang chơi được trong vùng đạt Đã thuộc (ở giai đoạn này chưa tính màn Truyện Tranh của vùng 2).
@@ -215,7 +215,7 @@ IndexedDB `dao-khung-long`:
 | Kho | Khóa | Nội dung |
 |---|---|---|
 | `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, cài đặt của phụ huynh `gioi_han_phut` (null là không giới hạn), `them_hom_nay`, `mo_khoa_vung`, `ke_hoach_tuan`, trang Cách chơi và thẻ cách chơi đã xem `huong_dan`) |
-| `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện (cả của sáu game cũ khi chơi trong đảo); giữ 120 ngày |
+| `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện (cả của sáu game cũ khi chơi trong đảo); giữ 120 ngày (dọn nền mỗi ngày một lần, khóa `dkl-don-nhat-ky-v1`) |
 | `tom_tat_cau` | `cau` | Tóm tắt từng câu |
 | `tom_tat_van` | `van` | Tóm tắt từng ván, có câu mô tả tiếng Việt |
 | `ho_so_hoc_tap` | `be` | Hồ sơ học tập tính từ hai kho trên |
@@ -226,7 +226,7 @@ Tên bé không đi vào nhật ký (chỉ có mã `be_…`), không vào gói x
 
 ## Sự kiện ghi
 
-Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, các lựa chọn kèm vị trí và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), các `thao_tac` của thể loại đó (`doi_lan`, `lat`, `chon`, `bo_chon`, `go_so`, `xoa`, `tha`, `keo`, `dat`, `bo_ra`, `rot`, `keo_thuoc`, `cau`, `dem`, `boc`, `ve`, `noi`, `xoay`, `lat_trang`, `di_chuyen`, `doi_cot`, `xoay_nong`, `ban`, `vuot`, `cham`, `nghe_lai`), `goi_y`, `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, trường riêng của game như `to_tien`, `tong`), `phan_hoi_xem`, `cau_ket_thuc` (`dung_ngay`, `dung_sau_goi_y`, `dung_lan_2`, `sai`, `het_gio`, `bo_qua`). Quanh ván: `phien_bat_dau`, `van_bat_dau`, `van_ket_thuc` (đấu trường thêm `thang`, `mau_con_lai`), `thanh_thao_doi`, `thuong` (thêm `thang_dau_truong`), `cam_xuc`, `tam_dung`, `tiep_tuc`, `bai_hoc_xem`, `ho_so_doi`. Góc phụ huynh chỉ ghi `phu_huynh_*`. Đổi ý tính các thao tác `doi_lan`, `bo_chon`, `doi_cot`, `xoa`, `bo_ra` và lần `chon` thứ hai trở đi.
+Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, các lựa chọn kèm vị trí và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), các `thao_tac` của thể loại đó (`doi_lan`, `lat`, `chon`, `bo_chon`, `go_so`, `xoa`, `tha`, `keo`, `dat`, `bo_ra`, `rot`, `keo_thuoc`, `cau`, `dem`, `boc`, `ve`, `noi`, `xoay`, `lat_trang`, `di_chuyen`, `doi_cot`, `xoay_nong`, `ban`, `vuot`, `cham`, `nghe_lai`), `goi_y`, `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, trường riêng của game như `to_tien`, `tong`), `phan_hoi_xem`, `cau_ket_thuc` (`dung_ngay`, `dung_sau_goi_y`, `dung_lan_2`, `sai`, `het_gio`, `bo_qua`). Quanh ván: `phien_bat_dau`, `van_bat_dau`, `van_ket_thuc` (đấu trường thêm `thang`, `mau_con_lai`), `thanh_thao_doi`, `thuong` (thêm `thang_dau_truong`), `cam_xuc`, `tam_dung`, `tiep_tuc`, `bai_hoc_xem`, `ho_so_doi`. Góc phụ huynh chỉ ghi `phu_huynh_*`. Đua Xe ghi thêm `thao_tac` kiểu `tu_vao_cong` khi xe tự vào cổng. Đổi ý tính các thao tác `doi_lan`, `bo_chon`, `doi_cot`, `xoa`, `bo_ra` và lần `chon` thứ hai trở đi.
 
 ## Kiểm thử
 
@@ -234,9 +234,18 @@ Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu,
 node tests/run.js
 ```
 
-442 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/dao-khung-long-huong-dan.test.js` (bước tiếp theo, còn thiếu gì để Đã thuộc, cách chơi đủ mọi thể loại và chế độ, 10 chương dựng được), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`).
+450 kiểm thử logic của cả repo. Riêng đảo: `tests/dao-khung-long.test.js` (nhật ký, ngân hàng, phát lại ván, tính lại khớp từng byte, mức thành thạo, nhiệm vụ, bài học), `tests/dao-khung-long-gd345.test.js` (đủ 12 thể loại, cả 10 vùng và 2 đấu trường chơi được, mỗi vùng ít nhất 2 thể loại, mọi màn dựng đủ câu, câu chọn đáp án có đúng một lựa chọn đúng, 43 mã nội dung thuộc đúng một vùng, nhiệm vụ theo kế hoạch tuần, mở màn học kì 2), `tests/dao-khung-long-<game>.test.js` cho từng game mới và Góc phụ huynh (mỗi tệp sinh vài trăm câu cho mỗi kỹ năng, kiểm từng công thức lỗi và phát lại một ván qua VanChoi, NhatKy, mọi sự kiện hợp lệ lược đồ), `tests/dao-khung-long-cau-noi.test.js` (hợp đồng cầu nối), `tests/dao-khung-long-huong-dan.test.js` (bước tiếp theo, còn thiếu gì để Đã thuộc, cách chơi đủ mọi thể loại và chế độ, 10 chương dựng được), `tests/<game cũ>-dao.test.js` (chế độ đảo của từng game cũ, và game giữ nguyên khi không có `?dao=1`), `tests/dao-khung-long-sua-loi.test.js` (các lỗi sửa sau lần rà soát 2026-09-28).
 
 Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở gốc repo (máy chủ tĩnh có hàng đợi lớn), rồi `node scripts/dkl-cdp.js --kich-ban <tệp.js>` (Chrome headless, không cần Playwright; đọc phần đầu tệp). Trong bảng điều khiển có `window.__DKL` (`batDauMan(id)`, `moPhuHuynh`, `tinhLai`), `window.DaoTroChoi`, `CauNoi._trangThai()`, và `_trangThai()` của từng game.
+
+## Sửa sau lần rà soát 2026-09-28
+
+- Bài đang học: nguồn `uoc_luong_theo_ngay` thì tự tăng theo lịch năm học mỗi khi chọn bé và mỗi ngày mới (ghi `ho_so_doi`, trường `bai_dang_hoc`); phụ huynh đã chỉnh thì giữ nguyên, năm học mới thì hỏi lên lớp trước. Trước đây bài đứng yên từ lúc tạo hồ sơ nên vùng học kì 2 không bao giờ mở.
+- Hồ sơ học tập đã lưu chỉ dùng trong ngày nó được tính; mở app hôm sau (hay để app qua nửa đêm) thì tính lại, và mức trước ván được tính theo hôm nay để không có `thanh_thao_doi` giả.
+- Câu sai quay lại: mỗi ván thêm tối đa một phần ba số câu (ít nhất 3, `VanChoi.toiDaCau`), riêng Đấu Trường không giới hạn vì số câu đã cân theo luật cũ. Thanh tiến độ, nhãn "Câu x/y", vòng và cờ đích của Đua Xe, dấu chân Rừng Hình Khối tính cả câu quay lại (`VanChoi.tienDo()`), câu quay lại có nhãn "Làm lại"; màn "Gần đúng rồi" chỉ hứa câu quay lại khi thật sự còn chỗ (`VanChoi.seOnLai()`).
+- Mức thành thạo: Đã thuộc chỉ tụt về Đang luyện khi có từ 2 câu nợ hoặc một câu nợ để quá 3 ngày (vẫn tụt khi tự làm đúng dưới 85%). Vững chắc cần 4 buổi ôn đạt, từ ngày 1, 3, 7, 14 sau ngày thuộc và mỗi buổi cách buổi đạt trước ít nhất 1, 2, 4, 7 ngày; hạn ôn tính theo cả hai.
+- Nhật ký gốc cũ hơn 120 ngày được dọn mỗi ngày một lần, chạy nền 3 giây sau khi mở app, bằng một lệnh xóa theo khoảng mã ULID (trước đây duyệt cả kho mỗi lần mở app và bắt bé chờ).
+- Nội dung: Bài 9 (thêm, bớt) chỉ trừ không qua 10; màn bài toán có lời văn vùng 4 mở từ Bài 23; Đấu Trường chỉ lấy kỹ năng của bài đã học tới hoặc đã luyện (thiếu thì thêm bài gần nhất cho đủ 4), mỗi vùng ít nhất một kỹ năng, bằng trọng số thì trộn theo ngày thay vì theo bảng chữ cái.
 
 ## Việc của các giai đoạn sau
 

@@ -311,7 +311,7 @@
     an(dom.phQue, true);
     an(dom.phQueNut, !que);
     dom.phQueNut.textContent = 'Xem bằng que tính';
-    dom.phNote.textContent = q.lanOnLai < 2 ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!';
+    dom.phNote.textContent = s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!';
     an(dom.ph, false);
     AT().doc((k.loi && k.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (k.loiNoi || ''));
     setTimeout(function () { try { dom.phTiep.focus(); } catch (e) { /* bỏ qua */ } }, 50);

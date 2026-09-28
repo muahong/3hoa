@@ -84,7 +84,7 @@
     { id: 'v4-m3', so: 3, ten: 'Nhẩm số tròn chục', bai: 'Bài 21', bai_dau: 21, game: 'dua-xe', ky_nang_chinh: 'nham-tron-chuc', cau: [{ ky_nang: 'nham-tron-chuc' }], so_cau: 12 },
     { id: 'v4-m4', so: 4, ten: 'Trừ có nhớ: 2 chữ số − 1 chữ số', bai: 'Bài 22', bai_dau: 22, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-1cs', cau: [{ ky_nang: 'tru-nho-2cs-1cs' }], so_cau: 12 },
     { id: 'v4-m5', so: 5, ten: 'Trừ có nhớ: 2 chữ số − 2 chữ số', bai: 'Bài 23', bai_dau: 23, game: 'dua-xe', ky_nang_chinh: 'tru-nho-2cs-2cs', cau: [{ ky_nang: 'tru-nho-2cs-2cs' }], so_cau: 12, tram_dung: true },
-    { id: 'v4-m6', so: 6, ten: 'Bài toán có lời văn', bai: 'Bài 19 đến 23', bai_dau: 20, game: 'truyen-tranh', ky_nang_chinh: 'toan-loi-van-100', cau: [{ ky_nang: 'toan-loi-van-100' }], so_cau: 8 },
+    { id: 'v4-m6', so: 6, ten: 'Bài toán có lời văn', bai: 'Bài 19 đến 23', bai_dau: 23, game: 'truyen-tranh', ky_nang_chinh: 'toan-loi-van-100', cau: [{ ky_nang: 'toan-loi-van-100' }], so_cau: 8 },
     { id: 'v4-m7', so: 7, ten: 'Cặp tấm thẻ anh em', bai: 'Bài 24', bai_dau: 24, game: 'lat-the', luyen_tap: true, so_cau: 12,
       cau: [{ ky_nang: 'tru-nho-2cs-1cs', ty_le: 1 }, { ky_nang: 'tru-nho-2cs-2cs', ty_le: 1 }, { ky_nang: 'nham-tron-chuc', ty_le: 0.5 }] },
     { id: 'v4-m8', so: 8, ten: 'Bắn thiên thạch: cộng, trừ có nhớ', bai: 'Bài 22, 23', bai_dau: 23, game: 'ban-thien-thach', luyen_tap: true, dang: 'nhap_so', so_cau: 12,
@@ -321,14 +321,37 @@
    * Danh sách câu của một đấu trường, lập theo hồ sơ học tập: ưu tiên kỹ năng bé đang yếu (Cần giúp, tự làm đúng thấp,
    * còn câu nợ) và kỹ năng đã thuộc tới hạn ôn; kỹ năng chưa học có trọng số nhỏ. Bỏ bài toán hai bước (Truyện Tranh có
    * đấu trường riêng của nó là các màn cúp) để mọi câu hỏi được ở dạng chọn đáp án.
-   * coKyNang(kn) (tùy chọn): lọc thêm kỹ năng mà ngân hàng câu hiện có. Trả về [{ ky_nang, ty_le }] (tối đa 10).
+   * coKyNang(kn) (tùy chọn): lọc thêm kỹ năng mà ngân hàng câu hiện có.
+   * hoSo (tùy chọn): bé lớp 2 chỉ gặp kỹ năng của bài đã học tới (bai_dang_hoc) hoặc đã từng luyện; ít quá thì thêm các
+   * bài gần nhất cho đủ 4. Mỗi vùng có ít nhất một kỹ năng khi còn chỗ; bằng trọng số thì xếp ngẫu nhiên theo ngày
+   * (không theo bảng chữ cái). Trả về [{ ky_nang, ty_le }] (tối đa 10), trọng số giảm dần.
    */
-  function cauDauTruong(m, hocTap, homNay, coKyNang) {
+  function cauDauTruong(m, hocTap, homNay, coKyNang, hoSo) {
     const muc = {};
     ((hocTap && hocTap.ky_nang) || []).forEach(function (k) { muc[k.ky_nang] = k; });
+    const lop = (hoSo && hoSo.lop) || 2;
+    const bai = hoSo && lop === 2 && !hoSo.mo_khoa_vung ? (hoSo.bai_dang_hoc || 1) : Infinity;
+    const vungCua = {};
+    const baiDau = {};
+    const tatCa = [];
+    m.dau_truong.vung.forEach(function (so) {
+      const v = vung(so);
+      if (!v) return;
+      kyNangCuaVung(v).forEach(function (kn) {
+        if (vungCua[kn] != null || (coKyNang && !coKyNang(kn))) return;
+        vungCua[kn] = so;
+        const mc = manTheoKyNang(kn);
+        baiDau[kn] = mc ? mc.bai_dau : 1;
+        tatCa.push(kn);
+      });
+    });
+    let chon = tatCa.filter(function (kn) { return baiDau[kn] <= bai || (muc[kn] && muc[kn].so_cau > 0); });
+    if (chon.length < 4) {
+      chon = chon.concat(tatCa.filter(function (kn) { return chon.indexOf(kn) < 0; })
+        .sort(function (a, b) { return baiDau[a] - baiDau[b]; }).slice(0, 4 - chon.length));
+    }
     const ds = [];
-    kyNangCacVung(m.dau_truong.vung).forEach(function (kn) {
-      if (coKyNang && !coKyNang(kn)) return;
+    chon.forEach(function (kn) {
       const k = muc[kn];
       let w;
       if (!k || !k.so_cau) w = 0.3;
@@ -341,8 +364,22 @@
       }
       ds.push({ ky_nang: kn, ty_le: w });
     });
-    ds.sort(function (a, b) { return b.ty_le - a.ty_le || (a.ky_nang < b.ky_nang ? -1 : 1); });
-    return ds.slice(0, 10);
+    const tron = {};
+    ds.forEach(function (x) { tron[x.ky_nang] = bam(String(homNay || '') + '|' + x.ky_nang); });
+    const theoTrongSo = function (a, b) { return b.ty_le - a.ty_le || tron[a.ky_nang] - tron[b.ky_nang] || (a.ky_nang < b.ky_nang ? -1 : 1); };
+    ds.sort(theoTrongSo);
+    // Mỗi vùng một kỹ năng nặng nhất trước, rồi lấp chỗ còn lại theo trọng số
+    const ra = [];
+    const coVung = {};
+    ds.forEach(function (x) { if (!coVung[vungCua[x.ky_nang]]) { coVung[vungCua[x.ky_nang]] = true; ra.push(x); } });
+    ds.forEach(function (x) { if (ra.indexOf(x) < 0) ra.push(x); });
+    return ra.slice(0, 10).sort(theoTrongSo);
+  }
+  /** Băm chuỗi thành số (FNV-1a), dùng để xếp ngẫu nhiên mà vẫn cố định trong một ngày. */
+  function bam(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h;
   }
 
   /* ---------------- Nhiệm vụ hôm nay ---------------- */

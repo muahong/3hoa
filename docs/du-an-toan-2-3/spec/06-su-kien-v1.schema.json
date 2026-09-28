@@ -70,7 +70,7 @@
             "type": "object",
             "required": ["kieu"],
             "properties": {
-              "kieu": { "enum": ["cham", "vuot", "keo", "tha", "go_so", "xoa", "doi_lan", "doi_cot", "chon", "bo_chon", "nghe_lai", "lat", "xoay_nong", "ban", "rot", "keo_thuoc", "cau", "dem", "ve", "noi", "xoay", "boc", "lat_trang", "dat", "bo_ra", "di_chuyen", "nhay", "ngam", "tro"] },
+              "kieu": { "enum": ["cham", "vuot", "keo", "tha", "go_so", "xoa", "doi_lan", "doi_cot", "chon", "bo_chon", "nghe_lai", "lat", "xoay_nong", "ban", "rot", "keo_thuoc", "cau", "dem", "ve", "noi", "xoay", "boc", "lat_trang", "dat", "bo_ra", "di_chuyen", "nhay", "ngam", "tro", "tu_vao_cong"] },
               "doi_tuong": { "type": "string" },
               "gia_tri": {},
               "tu": { "type": "string" },

@@ -397,7 +397,7 @@
     cham: 'chạm', vuot: 'vuốt', keo: 'kéo', tha: 'thả', go_so: 'gõ số', xoa: 'xóa', doi_lan: 'đổi làn', doi_cot: 'đổi cột', chon: 'chọn',
     bo_chon: 'lấy ra', nghe_lai: 'nghe lại đề', lat: 'lật thẻ', xoay_nong: 'xoay nòng', ban: 'bắn', rot: 'rót', keo_thuoc: 'kéo thước',
     cau: 'câu', dem: 'đếm', ve: 'vẽ', noi: 'nối', xoay: 'xoay', boc: 'bốc', lat_trang: 'lật trang', dat: 'đặt', bo_ra: 'bỏ ra',
-    di_chuyen: 'di chuyển', nhay: 'nhảy', ngam: 'ngắm', tro: 'chỉ'
+    di_chuyen: 'di chuyển', nhay: 'nhảy', ngam: 'ngắm', tro: 'chỉ', tu_vao_cong: 'xe tự vào cổng'
   };
   function tenVat(x) {
     if (x == null || x === '') return '';
@@ -428,6 +428,10 @@
     const noi = function (x) { return tenVat(x); };
     let s;
     switch (k) {
+      case 'tu_vao_cong': {
+        s = 'Con chưa chọn cổng nên xe tự chạy vào ' + (du.lan ? 'làn ' + (TEN_LAN[du.lan] || du.lan) : 'cổng') + (coGT(du.gia_tri_duoi_xe) ? ' (cổng ' + H(du.gia_tri_duoi_xe) + ')' : '');
+        break;
+      }
       case 'doi_lan': {
         const v = du.gia_tri_duoi_xe;
         const den = du.den;

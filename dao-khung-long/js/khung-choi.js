@@ -115,11 +115,10 @@
 
   function tienDo() {
     if (!s) return;
-    const van = s.van;
-    const tong = Math.max(1, van.soCauDuKien());
-    const xong = Math.min(tong, van.dem.moi);
-    dom.tienDo.style.width = Math.round(xong / tong * 1000) / 10 + '%';
-    chu(dom.cauSo, 'Câu ' + Math.min(tong, xong + (van.q && !van.q.xong ? 1 : 0) || 1) + '/' + tong);
+    // Tính cả câu sai quay lại: thanh không đầy trước khi hết câu, câu quay lại có nhãn riêng
+    const td = s.van.tienDo();
+    dom.tienDo.style.width = Math.round(td.xong / td.tong * 1000) / 10 + '%';
+    chu(dom.cauSo, (td.onLai ? 'Làm lại · ' : '') + 'Câu ' + Math.min(td.tong, td.xong + td.dang || 1) + '/' + td.tong);
   }
 
   /** Cộng điểm; x, y (tùy chọn) là tọa độ trên màn hình để hiện chữ bay. */
@@ -248,7 +247,7 @@
     const que = window.PhanHoi.queTinh(qHien.cau_truc && !qHien.cau_truc.loai ? qHien.cau_truc : null);
     hienPhanHoi({
       html: html, que: que,
-      note: q && q.lanOnLai < 2 ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!',
+      note: q && s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!',
       doc: (kq.loi && kq.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (kq.loiNoi || '')
     }, function (giay, nut) {
       s.van.phanHoiXem(giay, nut, them);

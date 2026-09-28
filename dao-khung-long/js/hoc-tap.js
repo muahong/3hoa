@@ -12,6 +12,10 @@
   const TEN_MUC = { chua_hoc: 'Chưa học', lam_quen: 'Làm quen', dang_luyen: 'Đang luyện', da_thuoc: 'Đã thuộc', vung_chac: 'Vững chắc' };
   const KET_QUA_DUNG = { dung_ngay: 1, dung_sau_goi_y: 1, dung_lan_2: 1 };
   const MOC_ON = [1, 3, 7, 14, 30];
+  /** Khoảng cách tối thiểu (ngày) từ buổi ôn đạt trước đó tới buổi ôn thứ i: 1, 2, 4, 7, 16 (đúng hẹn thì rơi vào ngày 1, 3, 7, 14, 30). */
+  function khoangOn(i) { const k = Math.min(i, MOC_ON.length - 1); return MOC_ON[k] - (k ? MOC_ON[k - 1] : 0); }
+  /** Đã thuộc chỉ tụt về Đang luyện vì câu nợ khi có từ chừng này câu nợ, hoặc có câu nợ để quá chừng này ngày. */
+  const TUT_NO = { so_cau: 2, so_ngay: 3 };
   /** Điều kiện Đã thuộc trong cửa sổ 14 ngày: tự làm (không gợi ý) từ 20 câu, đúng ngay từ 90%, ở ít nhất 2 ngày, không còn câu sai chưa sửa. */
   const DK_THUOC = { tu_lam: 20, ti_le: 0.9, so_ngay: 2 };
   /** Tỉ lệ câu mới làm đúng ngay để được 3 sao, 2 sao (dưới nữa là 1 sao). */
@@ -279,6 +283,8 @@
 
     let muc;
     let ngayThuoc = null;
+    let soOn = 0; // số buổi ôn đạt sau ngày thuộc
+    let onCuoi = null; // ngày thuộc hoặc buổi ôn đạt gần nhất
     if (!cauDs.length) muc = 'chua_hoc';
     else if (cauDs.length < 10) muc = 'lam_quen';
     else {
@@ -292,24 +298,26 @@
         const coNo = cs.some(function (c) { return c.ket_qua === 'sai' && !daSua[c.cau]; });
         if (dieuKienThuoc(cs, coNo)) ngayThuoc = n;
       }
-      // Đã thuộc rồi thì giữ, chỉ về Đang luyện khi có dấu hiệu quên: còn câu nợ, hoặc tự làm đúng dưới 85% (từ 5 câu)
+      // Đã thuộc rồi thì giữ, chỉ về Đang luyện khi có dấu hiệu quên: từ 2 câu nợ (hoặc một câu nợ để quá 3 ngày),
+      // hoặc tự làm đúng dưới 85% (từ 5 câu). Một câu sai vừa xảy ra thì chưa tụt, bé còn làm lại được trong ván sau
+      const quenVi = no.length >= TUT_NO.so_cau || no.some(function (c) { return soNgay(homNay) - soNgay(c.ngay) > TUT_NO.so_ngay; });
       const thuocBayGio = ngayThuoc
-        ? no.length === 0 && (tuLam14.length < 5 || tiLe >= 0.85)
+        ? !quenVi && (tuLam14.length < 5 || tiLe >= 0.85)
         : dieuKienThuoc(cuaSo14, no.length > 0);
       if (thuocBayGio) {
         muc = 'da_thuoc';
-        // Vững chắc: vẫn đúng từ 85% ở các lần ôn sau 1, 3, 7, 14 ngày
-        let moc = 0;
-        let lanOn = 0;
+        // Vững chắc: đúng từ 85% ở 4 buổi ôn, từ ngày 1, 3, 7, 14 sau ngày thuộc và mỗi buổi cách buổi ôn đạt trước đó
+        // ít nhất 1, 2, 4, 7 ngày (nghỉ lâu rồi chơi dồn mấy ngày liền thì không đủ)
+        onCuoi = ngayThuoc || cauDs[cauDs.length - 1].ngay;
         cacNgay.forEach(function (n) {
-          if (!ngayThuoc || moc >= 4 || n <= ngayThuoc) return;
-          if (soNgay(n) - soNgay(ngayThuoc) < MOC_ON[moc]) return;
+          if (!ngayThuoc || soOn >= 4 || n <= ngayThuoc) return;
+          if (soNgay(n) - soNgay(ngayThuoc) < MOC_ON[soOn] || soNgay(n) - soNgay(onCuoi) < khoangOn(soOn)) return;
           const trongNgay = cauDs.filter(function (c) { return c.ngay === n && c.goi_y_cap === 0; });
           if (trongNgay.length < 3) return;
           const d = trongNgay.filter(function (c) { return c.ket_qua === 'dung_ngay'; }).length;
-          if (d / trongNgay.length >= 0.85) { moc++; lanOn++; }
+          if (d / trongNgay.length >= 0.85) { soOn++; onCuoi = n; }
         });
-        if (lanOn >= 4) muc = 'vung_chac';
+        if (soOn >= 4) muc = 'vung_chac';
       } else muc = 'dang_luyen';
     }
 
@@ -319,11 +327,12 @@
     let onLai = null;
     const lanCuoi = cauDs.length ? cauDs[cauDs.length - 1].ngay : null;
     if (muc === 'da_thuoc' || muc === 'vung_chac') {
-      // Ôn cách quãng 1, 3, 7, 14, 30 ngày sau ngày thuộc; mốc nào đã có buổi ôn thì sang mốc sau
+      // Ôn cách quãng: mốc 1, 3, 7, 14, 30 ngày sau ngày thuộc, và cách buổi ôn đạt gần nhất 1, 2, 4, 7, 16 ngày;
+      // buổi ôn chưa đạt thì ôn lại hôm sau
       const goc = ngayThuoc || lanCuoi;
-      let k = 0;
-      cauDs.forEach(function (c) { if (k < MOC_ON.length - 1 && soNgay(c.ngay) - soNgay(goc) >= MOC_ON[k]) k++; });
-      onLai = congNgay(goc, MOC_ON[k]);
+      const theoMoc = congNgay(goc, MOC_ON[Math.min(soOn, MOC_ON.length - 1)]);
+      const theoKhoang = congNgay(onCuoi || goc, khoangOn(soOn));
+      onLai = theoMoc > theoKhoang ? theoMoc : theoKhoang;
       if (onLai <= lanCuoi) onLai = congNgay(lanCuoi, 1);
     } else if (muc === 'dang_luyen' || muc === 'lam_quen') onLai = congNgay(lanCuoi, 1);
 

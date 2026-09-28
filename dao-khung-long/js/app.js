@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PHIEN_BAN = '3.0.0';
+  const PHIEN_BAN = '3.0.1';
   const ANH = 'assets/img/';
   const LAN = ['lan_trai', 'lan_giua', 'lan_phai'];
   const NK = window.NhatKy, NH = window.NganHang, HT = window.HocTap, DAO = window.Dao, HS = window.HoSo, AT = window.AmThanh, PH = window.PhanHoi;
@@ -80,6 +80,23 @@
     return A.vanDs.reduce(function (t, v) { return t + (v.ngay === nay ? (v.giay || 0) : 0); }, 0) / 60;
   }
   function kho() { return NK.kho; }
+  /** Hồ sơ học tập đã lưu chỉ dùng được trong ngày nó được tính (cửa sổ 14 ngày, câu nợ, hạn ôn đều theo ngày). */
+  function hocTapHomNay(ht, be, cauDs, vanDs) {
+    const nay = homNay();
+    return ht && ht.ngay === nay ? ht : HT.hoSoHocTap(be, cauDs, vanDs, nay);
+  }
+  /**
+   * Bài đang học ước lượng theo ngày thì tự tăng theo lịch năm học (năm học mới thì hỏi lên lớp trước, phụ huynh đã
+   * chỉnh bài thì giữ nguyên). Trả về true khi có đổi (người gọi tự lưu hồ sơ).
+   */
+  function capNhatBaiTheoNgay(p) {
+    if (!p || p.bai_nguon !== 'uoc_luong_theo_ngay' || HS.canHoiLenLop(p)) return false;
+    const moi = DAO.uocLuongBai(new Date());
+    if (!(moi > (p.bai_dang_hoc || 0))) return false;
+    NK.ghi('ho_so_doi', { truong: 'bai_dang_hoc', cu: p.bai_dang_hoc || null, moi: moi, nguon: 'uoc_luong_theo_ngay' }, { game: 'trang-chu' });
+    p.bai_dang_hoc = moi;
+    return true;
+  }
 
   /* ---------------- Khởi động ---------------- */
 
@@ -151,6 +168,7 @@
       A.hoSo = p;
       HS.datBeDangChoi(id);
       NK.datBe(id);
+      if (capNhatBaiTheoNgay(p)) HS.luu(p);
       return taiHocTap().then(function () {
         if (HS.canHoiLenLop(p)) moLenLop(); else vaoDao();
       });
@@ -162,7 +180,7 @@
     return Promise.all([kho().theoBe('tom_tat_cau', be), kho().theoBe('tom_tat_van', be), kho().lay('ho_so_hoc_tap', be)]).then(function (r) {
       A.cauDs = r[0].sort(function (a, b) { return a.luc < b.luc ? -1 : 1; });
       A.vanDs = r[1].sort(function (a, b) { return a.luc < b.luc ? -1 : 1; });
-      A.hocTap = r[2] || HT.hoSoHocTap(be, A.cauDs, A.vanDs, homNay());
+      A.hocTap = hocTapHomNay(r[2], be, A.cauDs, A.vanDs);
     });
   }
 
@@ -297,6 +315,9 @@
     const p = A.hoSo;
     const nay = homNay();
     if (!p.nhiem_vu || p.nhiem_vu.ngay !== nay) {
+      // Sang ngày mới (kể cả khi app mở qua nửa đêm): tính lại bài đang học và hồ sơ học tập theo hôm nay
+      capNhatBaiTheoNgay(p);
+      A.hocTap = hocTapHomNay(A.hocTap, p.id, A.cauDs, A.vanDs);
       p.nhiem_vu = { ngay: nay, ds: DAO.lapNhiemVu(p, A.hocTap, nay, DAO.lichSuTheLoai(A.cauDs)), thuong: false };
       HS.luu(p);
     }
@@ -575,7 +596,7 @@
 
   /** Màn đấu trường: danh sách câu lập theo hồ sơ học tập (kỹ năng yếu, tới hạn ôn), chỉ kỹ năng hỏi được ở dạng chọn đáp án. */
   function manDauTruong(m) {
-    const cau = DAO.cauDauTruong(m, A.hocTap, homNay(), function (kn) { return !!NH.KY_NANG[kn] && NH.loaiKyNang(kn) !== 'loi_van'; });
+    const cau = DAO.cauDauTruong(m, A.hocTap, homNay(), function (kn) { return !!NH.KY_NANG[kn] && NH.loaiKyNang(kn) !== 'loi_van'; }, A.hoSo);
     return Object.assign({}, m, { cau: cau.map(function (x) { return { ky_nang: x.ky_nang, ty_le: x.ty_le, dang: 'chon_dap_an' }; }) });
   }
 
@@ -650,6 +671,8 @@
     const nay = homNay();
     const evs = kq.suKien || [];
     const tenMan = tenManNgan(m);
+    // Mức trước ván tính theo hôm nay, để chỗ khác nhau với sau ván chỉ do chính ván này
+    const truoc = HT.bangMuc(hocTapHomNay(A.hocTap, be, A.cauDs, A.vanDs));
     const cauMoi = HT.tomTatCacCau(evs);
     const vanT = HT.tomTatVan(evs, tenMan);
     const theoMa = {};
@@ -657,10 +680,15 @@
     cauMoi.forEach(function (c) { if (theoMa[c.cau] != null) A.cauDs[theoMa[c.cau]] = c; else A.cauDs.push(c); });
     if (vanT) A.vanDs.push(vanT);
 
-    const truoc = HT.bangMuc(A.hocTap);
     A.hocTap = HT.hoSoHocTap(be, A.cauDs, A.vanDs, nay);
     const sau = HT.bangMuc(A.hocTap);
     const thuong = [];
+    // Mỗi kỹ năng chỉ được thưởng Đã thuộc một lần (tụt về Đang luyện rồi thuộc lại thì không thưởng nữa).
+    // Hồ sơ cũ chưa có sổ này: coi các kỹ năng đang thuộc là đã thưởng.
+    if (!p.thuong_da_thuoc) {
+      p.thuong_da_thuoc = {};
+      Object.keys(truoc).forEach(function (k) { if (truoc[k].muc === 'da_thuoc' || truoc[k].muc === 'vung_chac') p.thuong_da_thuoc[k] = truoc[k].ngay_thuoc || nay; });
+    }
     Object.keys(sau).forEach(function (k) {
       const cu = truoc[k] ? truoc[k].muc : 'chua_hoc';
       const moi = sau[k].muc;
@@ -670,7 +698,8 @@
           bang_chung: { so_cau: sau[k].so_cau, tu_lam_14_ngay: sau[k].tu_lam_14_ngay, tu_lam_dung_14_ngay: sau[k].tu_lam_dung_14_ngay }
         });
       }
-      if ((moi === 'da_thuoc' || moi === 'vung_chac') && !(cu === 'da_thuoc' || cu === 'vung_chac')) {
+      if ((moi === 'da_thuoc' || moi === 'vung_chac') && !(cu === 'da_thuoc' || cu === 'vung_chac') && !p.thuong_da_thuoc[k]) {
+        p.thuong_da_thuoc[k] = nay;
         thuong.push({ qua_mong: HT.THUONG.ky_nang_da_thuoc, ly_do: 'ky_nang_da_thuoc', ky_nang: k, loi: 'Thuộc ' + NH.KY_NANG[k].ten.toLowerCase() });
       }
     });
@@ -972,11 +1001,14 @@
 
   /** Đọc dữ liệu của một bé (không đổi bé đang chơi, không ghi nhật ký): hồ sơ, tóm tắt câu, tóm tắt ván, hồ sơ học tập. */
   function taiDuLieuBe(id) {
-    if (A.hoSo && A.hoSo.id === id) return Promise.resolve({ hoSo: A.hoSo, cauDs: A.cauDs, vanDs: A.vanDs, hocTap: A.hocTap });
+    if (A.hoSo && A.hoSo.id === id) {
+      A.hocTap = hocTapHomNay(A.hocTap, id, A.cauDs, A.vanDs);
+      return Promise.resolve({ hoSo: A.hoSo, cauDs: A.cauDs, vanDs: A.vanDs, hocTap: A.hocTap });
+    }
     return Promise.all([HS.lay(id), kho().theoBe('tom_tat_cau', id), kho().theoBe('tom_tat_van', id), kho().lay('ho_so_hoc_tap', id)]).then(function (r) {
       const cauDs = r[1].sort(function (a, b) { return a.luc < b.luc ? -1 : 1; });
       const vanDs = r[2].sort(function (a, b) { return a.luc < b.luc ? -1 : 1; });
-      return { hoSo: r[0], cauDs: cauDs, vanDs: vanDs, hocTap: r[3] || HT.hoSoHocTap(id, cauDs, vanDs, homNay()) };
+      return { hoSo: r[0], cauDs: cauDs, vanDs: vanDs, hocTap: hocTapHomNay(r[3], id, cauDs, vanDs) };
     });
   }
 

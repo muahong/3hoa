@@ -1218,6 +1218,11 @@
         if (r < 0.8) { const x = nn(rng, 2, 8); return [x, 10 - x]; }
         const x2 = nn(rng, 11, 16); return [x2, nn(rng, 2, 9 - dv(x2))];
       }
+      // Bài 9 (thêm, bớt) học trước trừ qua 10 (Bài 11): chỉ trừ không qua 10 như SGK (10 − 3, 15 − 5, 14 − 3)
+      if (kn === 'toan-them-bot') {
+        if (r < 0.4) return [10, nn(rng, 2, 8)];
+        const x4 = nn(rng, 12, 19); return [x4, rng() < 0.5 ? dv(x4) : nn(rng, 1, dv(x4) - 1)];
+      }
       if (r < 0.6) { const t = chon(rng, CAP_TRU_QUA_10); return [t[0], t[1]]; }
       if (r < 0.8) { const x3 = nn(rng, 12, 19); return [x3, rng() < 0.5 ? dv(x3) : nn(rng, 1, dv(x3) - 1)]; }
       return [10, nn(rng, 2, 8)];
@@ -1235,7 +1240,7 @@
     }
     if (kn === 'toan-kg-lit') {
       // Bài 15 đến 18 học trước cộng, trừ có nhớ trong 100: số trong 20 qua 10, hoặc số có hai chữ số không nhớ (như SGK)
-      if (rng() < 0.45) return soLoiVan('toan-them-bot', mau, rng);
+      if (rng() < 0.45) return soLoiVan('toan-nhieu-it', mau, rng);
       return soLoiVan('toan-hon-kem', mau, rng);
     }
     if (kn === 'toan-tien') {

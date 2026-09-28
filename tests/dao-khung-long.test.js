@@ -358,10 +358,20 @@ test('thành thạo: chưa học, làm quen, đang luyện, đã thuộc, vững
   assert.equal(muc(nhoGoiY).muc, 'dang_luyen');
   // vững chắc: ôn đạt sau 1, 3, 7, 14 ngày
   const on = [];
-  ['2026-10-12', '2026-10-14', '2026-10-18', '2026-10-25'].forEach((n) => { for (let i = 0; i < 4; i++) on.push(cau(n, 'dung_ngay')); });
-  assert.equal(muc(haiNgay.concat(on), '2026-10-25').muc, 'da_thuoc', 'mới ôn đạt sau 1, 3, 7 ngày');
+  ['2026-10-12', '2026-10-13', '2026-10-15', '2026-10-19'].forEach((n) => { for (let i = 0; i < 4; i++) on.push(cau(n, 'dung_ngay')); });
+  const baMoc = muc(haiNgay.concat(on), '2026-10-25');
+  assert.equal(baMoc.muc, 'da_thuoc', 'mới ôn đạt sau 1, 3, 7 ngày');
+  assert.equal(baMoc.on_lai_ke_tiep, '2026-10-26', 'hẹn ôn mốc 14 ngày');
   on.push(cau('2026-10-26', 'dung_ngay'), cau('2026-10-26', 'dung_ngay'), cau('2026-10-26', 'dung_ngay'));
   assert.equal(muc(haiNgay.concat(on), '2026-10-26').muc, 'vung_chac', 'ôn đạt cả mốc 14 ngày');
+  // nghỉ lâu rồi ôn dồn bốn ngày liền: các buổi ôn phải cách nhau 1, 2, 4, 7 ngày nên chưa vững chắc
+  const don = [];
+  ['2026-10-27', '2026-10-28', '2026-10-29', '2026-10-30'].forEach((n) => { for (let i = 0; i < 4; i++) don.push(cau(n, 'dung_ngay')); });
+  assert.equal(muc(haiNgay.concat(don), '2026-10-30').muc, 'da_thuoc', 'ôn dồn không tính đủ bốn mốc');
+  // đã thuộc rồi: một câu sai mới (chưa kịp làm lại) chưa làm tụt mức; hai câu nợ, hoặc câu nợ để quá 3 ngày, thì về đang luyện
+  assert.equal(muc(haiNgay.concat([cau('2026-10-14', 'dung_ngay'), cau('2026-10-14', 'sai')]), '2026-10-14').muc, 'da_thuoc', 'một câu nợ mới');
+  assert.equal(muc(haiNgay.concat([cau('2026-10-14', 'sai'), cau('2026-10-14', 'sai')]), '2026-10-14').muc, 'dang_luyen', 'hai câu nợ');
+  assert.equal(muc(haiNgay.concat([cau('2026-10-14', 'dung_ngay'), cau('2026-10-14', 'sai')]), '2026-10-18').muc, 'dang_luyen', 'câu nợ quá 3 ngày');
   // ôn ít câu nhưng vẫn đúng thì không tụt mức; quên (đúng dưới 85%) thì về đang luyện
   assert.equal(muc(haiNgay.concat([cau('2026-11-05', 'dung_ngay')]), '2026-11-05').muc, 'da_thuoc');
   const quen = haiNgay.concat(Array.from({ length: 6 }, (_, i) => cau('2026-11-05', i < 3 ? 'dung_ngay' : 'sai')), Array.from({ length: 3 }, () => cau('2026-11-05', 'dung_ngay', { on_lai: true })));

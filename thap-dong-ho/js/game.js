@@ -2739,7 +2739,7 @@
       return '<div class="report-row">' + (t ? K.svg(t, { size: 56, badge: false }) : '') +
         '<span class="t">' + esc(describeReview(it)) + (t ? '<span class="rv-explain">' + esc(K.explainShort(t)) + '</span>' : '') + '</span>' +
         '<span>✖ ' + it.n + '</span></div>';
-    }).join('') : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+    }).join('') : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>';
     if (ui.reportReset) ui.reportReset.textContent = '🗑 Xóa tiến trình của ' + name;
   }
 

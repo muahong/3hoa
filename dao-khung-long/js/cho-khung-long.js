@@ -39,10 +39,10 @@
     return r.width > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
   }
   function rung(el) { if (!el) return; el.classList.remove('rung'); void el.offsetWidth; el.classList.add('rung'); }
-  /** Hẹn giờ gắn với ván đang chơi: bé thoát rồi vào ván khác thì hẹn giờ cũ không chạy. */
+  /** Hẹn giờ gắn với ván đang chơi: bé thoát rồi vào ván khác thì hẹn giờ cũ không chạy; bé đang tạm dừng thì chờ bé chơi tiếp. */
   function hen(fn, ms) {
     const phien = s;
-    return setTimeout(function () { if (s && s === phien) fn(); }, ms);
+    return setTimeout(function () { if (s && s === phien) K().khiChoi(function () { if (s && s === phien) fn(); }); }, ms);
   }
 
   const HTML =

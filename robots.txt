@@ -1,3 +1,7 @@
 User-agent: *
+Disallow: /docs/
+Disallow: /tests/
+Disallow: /scripts/
+Disallow: /out/
 Allow: /
 Sitemap: https://3hoa.com/sitemap.xml

@@ -1,9 +1,109 @@
-"""Apply the self-contained game shell consistently; assets remain inside each PWA."""
+"""Apply the self-contained game shell consistently; assets remain inside each PWA.
+
+Also writes the shared part of every game's sw.js (SW_SHARED below) and a content stamp
+(`// noi-dung: <hash>`) of the files each service worker precaches. When the stamp or the
+shared part changes, CACHE is bumped, so a deploy never keeps serving old files.
+Run after changing any game file:  python scripts/refresh-games.py
+tests/consistency.test.js fails when the stamp no longer matches the files.
+"""
 from pathlib import Path
+import hashlib
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMES = ['math-ninja', 'cuu-chuong', 'me-cung-dong-ho', 'thap-dong-ho', 'xe-tang-thoi-gian', 'cuoi-ho']
+SW_GAMES = GAMES + ['dao-khung-long']
+SW_MARKER = '/* ===== Phần dùng chung: sinh từ scripts/refresh-games.py, đừng sửa tay ===== */'
+TEXT_EXT = {'.html', '.css', '.js', '.json', '.svg', '.txt', '.md'}
+# Shared service worker logic (raw string: copied byte for byte after SW_MARKER in each sw.js).
+# Each sw.js only declares CACHE, the stamp, CORE (install fails if one is missing) and OPTIONAL (best effort).
+SW_SHARED = r'''/* Phông Baloo 2 tự lưu ở ../fonts: lưu sẵn để chơi ngoại tuyến vẫn đúng phông. */
+const FONTS = [
+  '../fonts/baloo-2.css',
+  '../fonts/baloo-2-vietnamese.woff2',
+  '../fonts/baloo-2-latin-ext.woff2',
+  '../fonts/baloo-2-latin.woff2'
+];
+const NET_TIMEOUT = 3000;   // ms: mạng chậm quá thì dùng bản đã lưu (nếu có)
+const PREFIX = CACHE.replace(/v\d+$/, '');
+const STATIC = /\.(png|jpe?g|webp|gif|svg|ico|woff2?|mp3|ogg|wav|m4a)$/i;   // ảnh, phông, âm thanh: ít đổi
+const hasCaches = typeof caches !== 'undefined';
+
+/** Tải thẳng từ máy chủ, bỏ qua bộ nhớ đệm HTTP (max-age=600), để một bản cài không trộn JS cũ với JS mới. */
+const fresh = (u) => new Request(u, { cache: 'reload' });
+
+self.addEventListener('install', (event) => {
+  if (!hasCaches) { self.skipWaiting(); return; }
+  event.waitUntil(
+    caches.open(CACHE)
+      // Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ nguyên bản cũ đang chạy tốt
+      .then((cache) => cache.addAll(CORE.map(fresh)).then(() =>
+        // Tệp phụ và phông chữ: cố gắng lưu, thiếu thì lúc chơi sẽ tải sau
+        Promise.allSettled(OPTIONAL.concat(FONTS).map((u) =>
+          fetch(fresh(u)).then((res) => { if (res && res.ok) return cache.put(u, res); })))))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  if (!hasCaches) { self.clients.claim(); return; }
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf(PREFIX) === 0).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+/** Tìm trong bộ nhớ đệm của bản này. Trang (nav) bỏ qua ?dao=1&man=... và có index.html dự phòng. */
+function fromCache(key, nav) {
+  return caches.open(CACHE)
+    .then((cache) => cache.match(key, { ignoreSearch: nav }).then((hit) => hit || (nav ? cache.match('./index.html') : undefined)))
+    .catch(() => undefined);
+}
+
+/** Lưu bản mới (chỉ phản hồi OK, không lưu lỗi 404/5xx hay phản hồi mờ). */
+function keep(key, res) {
+  if (!res || !res.ok) return Promise.resolve();
+  const copy = res.clone();
+  return caches.open(CACHE).then((cache) => cache.put(key, copy)).catch(() => {});
+}
+
+/** Mạng trước, chờ tối đa NET_TIMEOUT: quá hạn hoặc mất mạng thì dùng bản đã lưu; lỗi 404/5xx cũng ưu tiên bản đã lưu. */
+function networkFirst(event, req, key, nav) {
+  const net = fetch(req, { cache: 'no-cache' });
+  event.waitUntil(net.then((res) => keep(key, res), () => {}));
+  return new Promise((resolve) => {
+    let over = false;
+    const give = (res) => { if (!over && res) { over = true; resolve(res); } };
+    const timer = setTimeout(() => { fromCache(key, nav).then(give); }, NET_TIMEOUT);   // không có bản lưu thì chờ mạng tiếp
+    net.then((res) => {
+      clearTimeout(timer);
+      if (res && res.ok) { give(res); return; }
+      fromCache(key, nav).then((hit) => give(hit || res));
+    }, () => {
+      clearTimeout(timer);
+      fromCache(key, nav).then((hit) => give(hit || Response.error()));
+    });
+  });
+}
+
+/** Ảnh, phông, âm thanh: bộ nhớ đệm trước (mỗi bản CACHE mới tải lại hết), chưa có thì tải và lưu. */
+function cacheFirst(req) {
+  return fromCache(req, false).then((hit) => hit || fetch(req, { cache: 'no-cache' }).then((res) => keep(req, res).then(() => res)));
+}
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET' || !hasCaches) return;
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
+  if (url.origin !== self.location.origin) return;   // chỉ lo tệp cùng tên miền
+  const nav = req.mode === 'navigate';
+  if (!nav && STATIC.test(url.pathname)) { event.respondWith(cacheFirst(req)); return; }
+  // Trang lưu một bản theo đường dẫn không kèm ?..., JS/CSS/JSON lưu theo đúng yêu cầu
+  event.respondWith(networkFirst(event, req, nav ? url.origin + url.pathname : req, nav));
+});
+'''
 BENEFITS = {
     'math-ninja': ['Luyện tính nhẩm', 'Vuốt để chém', 'Chơi theo sức bé'],
     'cuu-chuong': ['Bảng nhân & chia', 'Gõ số để bắn', 'Luyện từng bảng'],
@@ -89,12 +189,57 @@ def apply():
             end = html.index('</h2>', start) + 5
             html = html[:end] + '\n      <p class="hub-return"><a class="hub-home" id="pause-home" href="../">← Trang chủ 3hoa.com</a></p>' + html[end:]
             (folder / 'index.html').write_text(html, encoding='utf-8')
-        (folder / 'game-shell.css').write_text(CSS, encoding='utf-8')
+        if read_text(folder / 'game-shell.css') != CSS:
+            (folder / 'game-shell.css').write_text(CSS, encoding='utf-8')
         sw = (folder / 'sw.js').read_text(encoding='utf-8')
         if './game-shell.css' not in sw:
-            sw = re.sub(r"(const CACHE = '[a-z-]+-v)(\d+)", lambda m: m[1] + str(int(m[2]) + 1), sw)
             sw = sw.replace("'./style.css',", "'./style.css',\n  './game-shell.css',")
             (folder / 'sw.js').write_text(sw, encoding='utf-8')
+    for game in SW_GAMES:
+        refresh_sw(ROOT / game)
+
+
+def read_text(path):
+    return path.read_text(encoding='utf-8') if path.exists() else None
+
+
+def precached(sw):
+    """Every path listed in CORE, OPTIONAL and FONTS, relative to the game folder ('./' is index.html)."""
+    out = []
+    for m in re.finditer(r"const (?:CORE|OPTIONAL|FONTS) = \[([\s\S]*?)\];", sw):
+        for p in re.findall(r"'([^']+)'", m[1]):
+            p = p[2:] if p.startswith('./') else p
+            out.append(p or 'index.html')
+    return sorted(set(out))
+
+
+def content_stamp(folder, sw):
+    """sha256 over path + bytes of every precached file (text files with LF line ends, as git stores them).
+    Mirrored by stamp() in tests/consistency.test.js."""
+    h = hashlib.sha256()
+    for rel in precached(sw):
+        data = (folder / rel).read_bytes()
+        if Path(rel).suffix.lower() in TEXT_EXT:
+            data = data.replace(b'\r\n', b'\n')
+        h.update(rel.encode('utf-8') + b'\0' + data + b'\0')
+    return h.hexdigest()[:16]
+
+
+def refresh_sw(folder):
+    """Write SW_SHARED after SW_MARKER and the content stamp; bump CACHE only when the output changes."""
+    old = (folder / 'sw.js').read_text(encoding='utf-8')
+    if SW_MARKER not in old:
+        raise SystemExit(folder.name + '/sw.js: thiếu dòng đánh dấu phần dùng chung')
+    head = old[:old.index(SW_MARKER)]
+    sw = head + SW_MARKER + '\n' + SW_SHARED
+    stamp = content_stamp(folder, sw)
+    sw = re.sub(r'// noi-dung: \w*', '// noi-dung: ' + stamp, sw, count=1)
+    if sw == old:
+        return
+    sw = re.sub(r"(const CACHE = '[a-z-]+-v)(\d+)", lambda m: m[1] + str(int(m[2]) + 1), sw, count=1)
+    (folder / 'sw.js').write_text(sw, encoding='utf-8')
+    print(folder.name + '/sw.js: ' + re.search(r"const CACHE = '([^']+)'", sw)[1] + ', noi-dung ' + stamp)
+
 
 if __name__ == '__main__':
     apply()

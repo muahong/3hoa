@@ -1,0 +1,25 @@
+/* Góc phụ huynh, sửa nhóm F của lần rà soát 2026-09-28 (nạp sau css/goc-phu-huynh.css).
+   - Ô bản đồ kỹ năng có tên ngắn dễ đọc, mã nhỏ ở dưới (trước đây chỉ có mã như "2.11").
+   - Ô câu hỏi mẫu cho trợ lý AI (hiện khi máy không cho sao chép tự động).
+   Mọi lớp bắt đầu bằng .gp- */
+
+.gp-o-ds .gp-o-kn {
+  width: auto; min-width: 92px; max-width: 150px; height: auto; min-height: 52px;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 6px 9px; line-height: 1.15; text-align: center;
+}
+.gp-o-kn .gp-o-ten { font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.gp-o-kn .gp-o-ma { font-size: 11px; font-weight: 700; opacity: .7; }
+@media (max-width: 560px) {
+  .gp-o-ds { gap: 6px; }
+  .gp-o-ds .gp-o-kn { min-width: calc(50% - 3px); max-width: none; flex: 1 1 calc(50% - 3px); }
+}
+
+.gp-o-cau-hoi {
+  width: 100%; min-height: 160px; resize: vertical; border: 1.5px solid var(--duong); border-radius: 12px;
+  padding: 10px 12px; font: 13px/1.45 ui-monospace, "SF Mono", Consolas, monospace; color: var(--ink); background: #fff;
+  -webkit-user-select: text; user-select: text;
+}
+.gp-xuat .gp-rieng p { margin: 0 0 4px; }
+.gp-ds-goi { margin: 0 0 8px; padding-left: 18px; }
+.gp-ds-goi li { margin: 1px 0; }

@@ -18,8 +18,11 @@
 .cc-nuoc::after { width: 90px; height: 22px; right: 16%; bottom: 18%; }
 .cc-gai { position: absolute; z-index: 2; left: 0; bottom: 4px; height: 72%; max-height: 260px; pointer-events: none; filter: drop-shadow(0 6px 8px rgba(0,0,0,.25)); }
 
-.cc-ca { position: absolute; width: 76px; height: 58px; margin: -29px 0 0 -38px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: none; filter: drop-shadow(0 5px 3px rgba(0,50,110,.25)); }
-.cc-ca-boi { display: block; width: 100%; height: 100%; pointer-events: none; animation: ccBoi var(--t, 7s) ease-in-out var(--tre, 0s) infinite; }
+/* Bóng cá là một hình elip đi theo con cá (không dùng filter: drop-shadow trên phần tử cha của thứ đang chuyển động:
+   24 đến 35 con cá mỗi khung hình vẽ lại bóng mờ, iPad cũ bị giật) */
+.cc-ca { position: absolute; width: 76px; height: 58px; margin: -29px 0 0 -38px; padding: 0; border: 0; background: none; cursor: pointer; touch-action: none; }
+.cc-ca-boi { position: relative; display: block; width: 100%; height: 100%; pointer-events: none; will-change: transform; animation: ccBoi var(--t, 7s) ease-in-out var(--tre, 0s) infinite; }
+.cc-ca-boi::after { content: ""; position: absolute; z-index: -1; left: 20%; right: 20%; bottom: -3px; height: 9px; border-radius: 50%; background: rgba(0,50,110,.2); }
 .cc-ca-boi svg { animation: ccHuong var(--t, 7s) linear var(--tre, 0s) infinite; }
 .cc-ca.da-bat { visibility: hidden; pointer-events: none; }
 .cc-ca:active .cc-ca-boi { animation-play-state: paused; }

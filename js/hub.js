@@ -1,8 +1,11 @@
 /* ============================================================
    hub.js – Trang chủ 3hoa.com
    - Chip người chơi + hộp thoại "👋 Ai đang chơi?" dùng window.Players (js/profile.js, nạp trước tệp này)
-   - Đọc localStorage của 6 game (cùng tên miền) để hiện sao / màn / kỷ lục của bé đang chơi
-   - CHỈ ĐỌC: không bao giờ ghi vào khóa của game; hồ sơ chỉ ghi qua Players (khóa riêng 3hoa-players-v1)
+   - Đọc localStorage của 6 game (cùng tên miền) để hiện sao / màn / kỷ lục của bé đang chơi,
+     và bản tóm tắt nhỏ của Đảo Khủng Long (dkl-tom-tat-v1) để hiện tiến trình trên thẻ đảo
+   - CHỈ ĐỌC khi vẽ: không ghi vào khóa của game; hồ sơ chỉ ghi qua Players (khóa riêng 3hoa-players-v1).
+     Ngoại lệ duy nhất: phụ huynh xóa một bạn (sau cổng phụ huynh) thì xóa players[<id>] trong khóa của 6 game
+   - Đăng ký service worker của trang chủ (sw-home.js, phạm vi '/'; bỏ qua mọi đường dẫn của game)
    - Mọi văn bản động đi qua textContent hoặc Players.esc trước khi vào innerHTML
    - Móc gỡ lỗi chỉ đọc: window.__Hub (dùng cho kiểm thử tự động)
    ============================================================ */
@@ -41,11 +44,18 @@
   GAMES.forEach(function (g) { Object.freeze(g.units); Object.freeze(g); });
   Object.freeze(GAMES);
 
+  /* Đảo Khủng Long giữ hồ sơ bé riêng trong IndexedDB; đảo ghi thêm một bản tóm tắt nhỏ vào localStorage để trang chủ đọc:
+     dkl-tom-tat-v1 = { v: 1, luc: ISO, be: [{ ten, qua_mong, man_xong, sao }] }. Trang chủ chỉ đọc khóa này. */
+  const ISLAND = Object.freeze({ id: 'dao-khung-long', key: 'dkl-tom-tat-v1', name: 'Đảo Khủng Long' });
+  /* Mọi trò mở được từ "Chơi tiếp" / "Chơi ngẫu nhiên" (6 game + đảo) */
+  const PLAYABLE = Object.freeze(GAMES.map(function (g) { return g.id; }).concat([ISLAND.id]));
+
   /* ---------- Đọc tiến trình (an toàn, chỉ đọc) ---------- */
   function reviver(k, v) { return (k === '__proto__' || k === 'constructor' || k === 'prototype') ? undefined : v; }
   function isObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
   function num(v, lo, hi) { v = Number(v); if (!Number.isFinite(v)) return lo; return Math.min(hi, Math.max(lo, Math.round(v))); }
   function fmt(n) { return String(num(n, 0, 1e9)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  const MAX_DATE = 4102444800000;   // 2100-01-01
   function gameById(id) { for (let i = 0; i < GAMES.length; i++) if (GAMES[i].id === id || GAMES[i].key === id) return GAMES[i]; return null; }
 
   /** Đọc thô khóa của một game. Dữ liệu hỏng / không phải object → null ("chưa chơi"). */
@@ -112,7 +122,7 @@
       });
       Object.keys(per).forEach(function (u) { out.stars += per[u]; if (per[u] > 0) out.done++; });
     }
-    if (isObj(b.stats)) { out.last = num(b.stats.last, 0, 4102444800000); out.seconds = num(b.stats.seconds, 0, 1e8); }
+    if (isObj(b.stats)) { out.last = num(b.stats.last, 0, MAX_DATE); out.seconds = num(b.stats.seconds, 0, 1e8); }
     return out;
   }
   function summarizeAll(pid) { pid = pid || activePlayer().id; return GAMES.map(function (g) { return summarize(g, pid); }); }
@@ -123,6 +133,54 @@
       if (s.total && s.done === s.total) a.badges.push('🏆 ' + s.name);
       return a;
     }, { stars: 0, max: 0, seconds: 0, badges: [] });
+  }
+
+  /* ---------- Đảo Khủng Long: bản tóm tắt (an toàn, chỉ đọc) ---------- */
+  /** So tên không phân biệt hoa thường, dấu, khoảng trắng thừa ("  Tí " = "ti", "Đan" = "dan"). */
+  function nameKey(s) {
+    return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd')
+      .replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+  function cleanName(s) {
+    if (typeof s !== 'string') return '';
+    return s.replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  }
+  function isoTime(v) {
+    if (typeof v !== 'string' || v.length > 40) return 0;
+    const t = Date.parse(v);
+    return Number.isFinite(t) && t > 0 && t < MAX_DATE ? t : 0;
+  }
+  /** Đọc dkl-tom-tat-v1 → { luc, be: [{ ten, qua_mong, man_xong, sao, last }] }, hoặc null nếu không có / hỏng. */
+  function readIsland() {
+    if (readCache && Object.prototype.hasOwnProperty.call(readCache, ISLAND.key)) return readCache[ISLAND.key];
+    let d = null;
+    try {
+      const raw = window.localStorage.getItem(ISLAND.key);
+      if (raw && raw.length < 100000) d = JSON.parse(raw, reviver);
+    } catch (e) { d = null; }
+    let out = null;
+    if (isObj(d) && d.v === 1 && Array.isArray(d.be)) {
+      const luc = isoTime(d.luc);
+      const be = [];
+      d.be.slice(0, 50).forEach(function (k) {
+        if (!isObj(k)) return;
+        const ten = cleanName(k.ten);
+        if (!ten) return;
+        be.push({ ten: ten, qua_mong: num(k.qua_mong, 0, 1e6), man_xong: num(k.man_xong, 0, 1e4), sao: num(k.sao, 0, 1e5), last: isoTime(k.luc) || luc });
+      });
+      out = { luc: luc, be: be };
+    }
+    if (readCache) readCache[ISLAND.key] = out;
+    return out;
+  }
+  /** Bé trên đảo có tên trùng với name (tên bé đang chơi ở trang chủ), hoặc null. */
+  function islandFor(name) {
+    const d = readIsland();
+    if (!d) return null;
+    const k = nameKey(name);
+    if (!k) return null;
+    for (let i = 0; i < d.be.length; i++) if (nameKey(d.be[i].ten) === k) return d.be[i];
+    return null;
   }
 
   /* ---------- Thông báo nhỏ ---------- */
@@ -167,12 +225,40 @@
     card.classList.add('played');
   }
 
+  /** Thẻ đảo: tiến trình của bé trùng tên; nếu không có thì số bé đang nuôi khủng long; nếu không nữa thì câu giới thiệu. */
+  const ISLAND_NOTE = 'Bố mẹ xem được con vướng ở đâu, tới từng thao tác';
+  function renderIsland() {
+    const card = document.querySelector('article[data-island="' + ISLAND.id + '"]');
+    if (!card) return;
+    const p = card.querySelector('[data-island-progress]');
+    if (!p) return;
+    const d = readIsland(), me = islandFor(activePlayer().name);
+    let text = ISLAND_NOTE, played = false;
+    if (me) {
+      const parts = ['⭐ ' + fmt(me.sao) + ' sao', fmt(me.man_xong) + ' màn xong'];
+      if (me.qua_mong > 0) parts.push('🫐 ' + fmt(me.qua_mong) + ' quả mọng');
+      text = parts.join(' · ');
+      played = me.sao > 0 || me.man_xong > 0 || me.qua_mong > 0;
+    } else if (d && d.be.length) {
+      text = '🦖 ' + d.be.length + ' bé đang nuôi khủng long';
+    }
+    p.textContent = text;
+    if (played) card.classList.add('played'); else card.classList.remove('played');
+  }
+  /** Mục "Chơi tiếp" của đảo cho bé đang chơi (cùng dạng với summarize), hoặc null. */
+  function islandContinue() {
+    const me = islandFor(activePlayer().name);
+    if (!me || !(me.man_xong > 0 || me.qua_mong > 0 || me.sao > 0)) return null;
+    return { id: ISLAND.id, name: ISLAND.name, played: true, last: me.last, stars: me.sao };
+  }
+
   function renderHero(list) {
     const act = activePlayer();
     const nameEl = $('hero-name');
     if (nameEl) nameEl.textContent = act.name;
     const agg = aggregate(list);
-    const cont = list.filter(function (s) { return s.played; }).sort(function (a, b) { return b.last - a.last || b.stars - a.stars; })[0];
+    const isl = islandContinue();
+    const cont = list.concat(isl ? [isl] : []).filter(function (s) { return s.played; }).sort(function (a, b) { return b.last - a.last || b.stars - a.stars; })[0];
     const play = $('hero-play'), sub = $('hero-sub');
     if (play) {
       if (cont) {
@@ -191,7 +277,7 @@
         if (mins > 0) h += '<li>⏱ ' + mins + ' phút luyện tập</li>';
         agg.badges.forEach(function (b) { h += '<li class="badge">' + esc(b) + '</li>'; });
         achv.innerHTML = h;
-      } else achv.innerHTML = '<li class="empty">🌱 Chưa có sao nào — chơi để nhận sao nhé!</li>';
+      } else achv.innerHTML = '<li class="empty">🌱 Chưa có sao nào, chơi để nhận sao nhé!</li>';
     }
   }
 
@@ -200,6 +286,7 @@
     try {
       const list = summarizeAll(activePlayer().id);
       list.forEach(renderCard);
+      renderIsland();
       renderHero(list);
     } catch (e) { onFatal(e && e.message); } finally { endRead(); }
   }
@@ -306,11 +393,13 @@
     if (q) q.textContent = P.gateQuestion().text;
     if (inp) inp.value = '';
   }
-  function adultGate(cb) {
+  function adultGate(cb, what) {
     const g = $('parent-gate');
-    if (!g || !P) { if (window.confirm('Dành cho phụ huynh: tiếp tục?')) cb(); return; }   // dự phòng nếu không có hộp thoại
+    if (!g || !P) { if (window.confirm((what ? what + '\n\n' : '') + 'Dành cho phụ huynh: tiếp tục?')) cb(); return; }   // dự phòng nếu không có hộp thoại
     if (P.gateLockedSeconds() > 0) { toast(P.gateLockText(), 3200); return; }
     Gate.cb = cb; Gate.open = true;
+    const w = $('parent-gate-what');
+    if (w) { w.textContent = what || ''; w.hidden = !what; }
     askGate();
     g.hidden = false;
     focusLater('parent-gate-input');
@@ -328,6 +417,26 @@
     if (!g || !Gate.open) return;
     g.hidden = true;
     Gate.cb = null; Gate.open = false;
+  }
+
+  /* ---------- Xóa tiến trình của một bạn trong 6 game (chỉ gọi sau cổng phụ huynh) ----------
+     Đọc, sửa, ghi lại từng khóa: chỉ bỏ players[<id>], giữ nguyên các bé khác và thiết lập thiết bị ở gốc.
+     Khóa hỏng / không có players / không có bé này thì để nguyên. Trả về số game đã xóa. */
+  function purgeProgress(pid) {
+    let n = 0;
+    if (typeof pid !== 'string' || !pid || pid === '__proto__' || pid === 'constructor' || pid === 'prototype') return 0;
+    GAMES.forEach(function (g) {
+      try {
+        const raw = window.localStorage.getItem(g.key);
+        if (!raw) return;
+        const d = JSON.parse(raw, reviver);
+        if (!isObj(d) || !isObj(d.players) || !Object.prototype.hasOwnProperty.call(d.players, pid)) return;
+        delete d.players[pid];
+        window.localStorage.setItem(g.key, JSON.stringify(d));
+        n++;
+      } catch (e) { /* bỏ qua game này (hết chỗ, dữ liệu hỏng...), vẫn xóa ở các game khác */ }
+    });
+    return n;
   }
 
   /* Giữ phím Tab trong hộp thoại đang mở */
@@ -392,14 +501,19 @@
       if (!P) return;
       const p = P.active();
       adultGate(function () {
-        // Chỉ bỏ tên khỏi danh sách; tiến trình trong từng game vẫn còn cho tới khi phụ huynh xóa trong game
-        if (P.remove(p.id)) { toast('Đã xóa ' + p.name + ' khỏi danh sách'); focusLater('btn-players-back'); }
-      });
+        // Bỏ tên khỏi danh sách rồi xóa tiến trình của bạn đó trong 6 game; hồ sơ trên Đảo Khủng Long là riêng, xóa trong đảo
+        if (P.remove(p.id)) {
+          purgeProgress(p.id);
+          renderAll();
+          toast('Đã xóa ' + p.name + ' và tiến trình trong 6 trò chơi', 3000);
+          focusLater('btn-players-back');
+        }
+      }, 'Xóa ' + p.name + ': xóa tên và tiến trình của bạn này trong 6 trò chơi trên máy này, không lấy lại được. Hồ sơ trên Đảo Khủng Long vẫn giữ (xóa trong Góc phụ huynh của đảo).');
     });
     on('parent-gate-form', 'submit', function (e) { e.preventDefault(); submitGate(); });
     on('btn-parent-gate-cancel', 'click', function () { closeGate(); focusLater('btn-player-remove'); });
     on('parent-gate', 'click', function (e) { if (e.target === $('parent-gate')) { closeGate(); focusLater('btn-player-remove'); } });
-    on('btn-random', 'click', function () { this.setAttribute('href', GAMES[Math.floor(Math.random() * GAMES.length)].id + '/'); });
+    on('btn-random', 'click', function () { this.setAttribute('href', PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)] + '/'); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         if (Gate.open) { e.preventDefault(); closeGate(); focusLater('btn-player-remove'); return; }
@@ -412,15 +526,28 @@
     // đã đọc lại nhưng không gọi onChange) → vẽ lại chip và danh sách
     window.addEventListener('storage', function (e) {
       if (!e) return;
-      if (GAMES.some(function (g) { return g.key === e.key; })) renderAll();
+      if (e.key === ISLAND.key || GAMES.some(function (g) { return g.key === e.key; })) renderAll();
       else if (P && e.key === P.KEY) { renderChip(); renderPlayers(); }
     });
-    // Quay lại từ một game (Back / page cache trên iPad Safari): bé có thể đã đổi ngay trong game — cùng tab nên
+    // Quay lại từ một game (Back / page cache trên iPad Safari): bé có thể đã đổi ngay trong game, cùng tab nên
     // KHÔNG có sự kiện storage → phải đọc lại hồ sơ từ localStorage rồi vẽ lại chip, danh sách và thẻ
     window.addEventListener('pageshow', function (e) { if (e && e.persisted) refresh(); else renderAll(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
     window.addEventListener('error', function (e) { onFatal(e && e.message); });
     window.addEventListener('unhandledrejection', function (e) { onFatal(e && e.reason && e.reason.message); });
+  }
+
+  /* ---------- Service worker của trang chủ: mở được trang chủ khi ngoại tuyến (iPad, thêm vào màn hình chính).
+     sw-home.js chỉ trả lời tệp của trang chủ; mọi đường dẫn của game đi thẳng ra mạng, và service worker riêng của
+     từng game (phạm vi dài hơn, ví dụ /math-ninja/) vẫn làm chủ thư mục của nó. ---------- */
+  function registerSw() {
+    try {
+      const sw = window.navigator && window.navigator.serviceWorker;
+      if (!sw || typeof sw.register !== 'function') return;
+      const loc = window.location;
+      if (loc.protocol !== 'https:' && loc.hostname !== 'localhost' && loc.hostname !== '127.0.0.1') return;
+      sw.register('sw-home.js', { scope: './' }).catch(function () { /* bỏ qua */ });
+    } catch (e) { /* bỏ qua */ }
   }
 
   function boot() {
@@ -429,10 +556,12 @@
     renderAll();
     bind();
     firstVisitHint();
+    registerSw();
   }
   if (document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);
 
   // Móc gỡ lỗi chỉ đọc (kiểm thử): không cho phép ghi
-  window.__Hub = Object.freeze({ GAMES: GAMES, readGame: readGame, summarize: summarize, summarizeAll: summarizeAll, aggregate: aggregate, render: renderAll, version: 1 });
+  window.__Hub = Object.freeze({ GAMES: GAMES, ISLAND: ISLAND, PLAYABLE: PLAYABLE, readGame: readGame, readIsland: readIsland, islandFor: islandFor, nameKey: nameKey,
+    summarize: summarize, summarizeAll: summarizeAll, aggregate: aggregate, render: renderAll, version: 2 });
 })();

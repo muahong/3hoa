@@ -12,7 +12,7 @@
      Sai hẳn (can_phan_hoi): hổ nhảy qua vòng sai, vòng đúng sáng xanh, rồi màn "Gần đúng rồi" của đảo (phanHoi); bé đóng thì chạy tiếp.
      Không có hết giờ, không mất tim, không bảng kết quả: cauTiep() trả null thì cụm "?" cuối nổ pháo hoa, hổ về đích, ketThuc().
    - Gợi ý 💡: DaoCauNoi.goiY(); cấp 3 tắt một vòng sai (ghi loai_bo) nếu còn ít nhất hai vòng sai.
-   - Tạm dừng: tamDung('nut' | 'an_tab'), tiepTuc('nut'); bảng tạm dừng chỉ còn "Chơi tiếp" và "Về đảo" (veDao).
+   - Tạm dừng: tamDung('nut' | 'an_tab'), tiepTuc('nut'); bảng tạm dừng chỉ còn "▶ Chơi tiếp", "🔊 Âm thanh" và "🏝️ Về đảo" (veDao).
    - Âm thanh theo đảo: thongTin().am_thanh.tieng bật tắt hiệu ứng và nhạc, .giong bật tắt giọng đọc
      (máy không có giọng Việt thì nhờ giọng của đảo: DaoCauNoi.doc). Không ghi localStorage của game (Store.save tắt).
    Hook trong game.js: các dòng "if (DAO ..." có chú thích "Chế độ đảo".
@@ -95,6 +95,12 @@
     if (veDau) veDau.addEventListener('click', function () { sfx('click'); veDao(); });
     const veTam = $('btn-dao-ve');
     if (veTam) veTam.addEventListener('click', function () { sfx('click'); veDao(); });
+    // Bảng tạm dừng: "🔊 Âm thanh" (s.am.tieng, như apDungAmThanh) + "🏝️ Về đảo"
+    hangTamDung(veTam, function () { return s.am.tieng; }, function (bat) {
+      s.am.tieng = bat;
+      window.Sfx.setEnabled(bat);
+      window.Music.setEnabled(bat);
+    });
     an($('dao-start'), false);
     s.giaiDoan = 'bat_dau';
     setTimeout(function () { try { if (nut) nut.focus(); } catch (e) { /* bỏ qua */ } }, 80);
@@ -354,6 +360,54 @@
 
   function quaTiep() { s.qua = true; try { N.skipLearn(); } finally { s.qua = false; } }
   function duocQua() { return s.qua; }
+
+  /* ==== Bảng tạm dừng trên đảo: khối này giống hệt nhau ở 6 game (tests/games-nhom-g-dao.test.js) ==== */
+  const AM_BAT = '🔊 Âm thanh: Bật', AM_TAT = '🔇 Âm thanh: Tắt';
+  let daDungHangTamDung = false;
+  /** Ngay dưới "▶ Chơi tiếp": một hàng "🔊 Âm thanh" + "🏝️ Về đảo" (nutVe). Nút âm thanh bật / tắt hiệu ứng và nhạc
+      của game như thiết lập "tieng" của đảo, chỉ trong ván này (không lưu): tieng() cho biết đang bật, datTieng(bat) áp dụng. */
+  function hangTamDung(nutVe, tieng, datTieng) {
+    if (daDungHangTamDung) return null;
+    daDungHangTamDung = true;
+    const nut = document.createElement('button');
+    nut.type = 'button';
+    nut.id = 'dao-nut-am-thanh';
+    const ve = function () {
+      const bat = !!tieng();
+      nut.textContent = bat ? AM_BAT : AM_TAT;
+      nut.className = 'btn ghost dao-nut-am-thanh ' + (bat ? 'on' : 'off');
+      nut.setAttribute('aria-pressed', String(bat));
+    };
+    nut.addEventListener('click', function () {
+      const bat = !tieng();
+      try { datTieng(bat); if (bat) { window.Sfx.unlock(); window.Sfx.play('click'); } } catch (e) { /* bỏ qua */ }
+      ve();
+    });
+    ve();
+    const hang = document.createElement('div');
+    hang.className = 'btn-row dao-hang-tam-dung';
+    hang.appendChild(nut);
+    if (nutVe) {
+      const cu = nutVe.parentNode;
+      nutVe.textContent = '🏝️ Về đảo';
+      nutVe.hidden = false;
+      if (nutVe.classList) { nutVe.classList.remove('big', 'small', 'ghost'); nutVe.classList.add('teal'); }
+      hang.appendChild(nutVe);
+      // Hàng cũ của nút "Về đảo" chỉ còn các nút đã ẩn trên đảo: ẩn luôn cho khỏi hở một khoảng trống
+      if (cu && cu.children) {
+        const conHien = Array.prototype.some.call(cu.children, function (el) {
+          return !el.hidden && window.getComputedStyle(el).display !== 'none';
+        });
+        if (!conHien) cu.hidden = true;
+      }
+    }
+    const tiep = document.getElementById('btn-resume');
+    const hangTiep = tiep && tiep.parentNode;
+    const panel = document.querySelector('#pause .panel');
+    if (panel && panel.insertBefore) panel.insertBefore(hang, hangTiep && hangTiep.parentNode === panel ? hangTiep.nextSibling : null);
+    return { nut: nut, ve: ve };
+  }
+  /* ==== hết khối bảng tạm dừng ==== */
 
   /* ---------------- Gợi ý, tạm dừng, kết thúc ---------------- */
 

@@ -85,6 +85,8 @@
     return c.ket_qua === 'sai' || c.ket_qua === 'het_gio' || saiCua(c).length > 0 || (c.loi && c.loi.length > 0);
   }
   function laKetQuaSai(c) { return c.ket_qua === 'sai' || c.ket_qua === 'het_gio'; }
+  /** Thời gian chơi thật của một ván (giây), không âm (dữ liệu cũ lúc đồng hồ máy bị lùi). */
+  function giayVan(v) { return Math.max(0, Number(v && v.giay) || 0); }
 
   /* ---------------- Tên hiển thị ---------------- */
 
@@ -102,6 +104,24 @@
     return k ? k.ten : String(kn || '');
   }
   function tenNoiDung(ma) { return NH().NOI_DUNG[ma] || NOI_DUNG_LOP_1[ma] || String(ma || ''); }
+  /**
+   * Tên ngắn (vài chữ) của 43 nội dung lớp 2 cho ô bản đồ kỹ năng và chip lọc trên điện thoại; tên đầy đủ ở tenNoiDung.
+   */
+  const TEN_NGAN_NOI_DUNG = {
+    '2.1': 'Số đến 100', '2.2': 'So sánh số đến 100', '2.3': 'Trăm, chục, đơn vị', '2.4': 'Đọc, viết số đến 1000',
+    '2.5': 'Số liền trước, liền sau', '2.6': 'So sánh số đến 1000', '2.7': 'Ước lượng theo chục', '2.8': 'Cộng qua 10',
+    '2.9': 'Trừ qua 10', '2.10': 'Cộng, trừ không nhớ', '2.11': 'Cộng, trừ có nhớ', '2.12': 'Cộng, trừ đến 1000',
+    '2.13': 'Nhẩm số tròn chục, tròn trăm', '2.14': 'Số hạng, tổng, hiệu', '2.15': 'Tìm số chưa biết', '2.16': 'Tính có hai dấu',
+    '2.17': 'Nhiều hơn, ít hơn', '2.18': 'Toán có lời văn', '2.19': 'Ý nghĩa phép nhân', '2.20': 'Bảng nhân 2, 5',
+    '2.21': 'Ý nghĩa phép chia', '2.22': 'Bảng chia 2, 5', '2.23': 'Thừa số, tích, thương', '2.24': 'Nhân và chia',
+    '2.25': 'Một phần hai, một phần năm', '2.26': 'Toán lời văn nhân, chia',
+    'B2.1': 'Đoạn thẳng, đường gấp khúc', 'B2.2': 'Ba điểm thẳng hàng', 'B2.3': 'Hình tứ giác', 'B2.4': 'Khối trụ, khối cầu',
+    'B2.5': 'Lắp ghép hình', 'B2.6': 'cm, dm, m, km', 'B2.7': 'Đo độ dài', 'B2.8': 'Độ dài gấp khúc', 'B2.9': 'Ki-lô-gam',
+    'B2.10': 'Lít', 'B2.11': 'Xem đồng hồ', 'B2.12': 'Ngày và giờ', 'B2.13': 'Xem lịch', 'B2.14': 'Tiền Việt Nam',
+    'C2.1': 'Kiểm đếm số liệu', 'C2.2': 'Biểu đồ tranh', 'C2.3': 'Chắc chắn, có thể'
+  };
+  /** "Cộng, trừ có nhớ" cho mã 2.11; mã chưa có tên ngắn thì dùng tên đầy đủ. */
+  function tenNganNoiDung(ma) { return TEN_NGAN_NOI_DUNG[ma] || tenNoiDung(ma); }
   function loiCua(ma) { return NH().LOI[ma] || null; }
   /** "Quên nhớ 1", "Nhầm ô bên cạnh" (nhãn chip). */
   function tenLoi(ma) {
@@ -226,7 +246,7 @@
     const trong = function (x) { return x.ngay >= tu && x.ngay <= den; };
     const cauTuan = cauDs.filter(trong);
     const vanTuan = vanDs.filter(trong);
-    const giay = vanTuan.reduce(function (s, v) { return s + (v.giay || 0); }, 0);
+    const giay = vanTuan.reduce(function (s, v) { return s + giayVan(v); }, 0);
     const ngayChoi = motLan(vanTuan.map(function (v) { return v.ngay; }).concat(cauTuan.map(function (c) { return c.ngay; }))).sort();
     const tl = tiLeTuLam(cauTuan);
     const hs = hoSoTai(du, moc);
@@ -321,7 +341,7 @@
     return {
       van: v.van, luc: v.luc, gio: gioPhut(v.luc), ngay: v.ngay, game: v.game, ten_game: tenGame(v.game),
       man: v.man, ten_man_ngan: tenManNgan(v.man), ten_man: m ? m.ten : '', nguon: v.nguon,
-      so_cau: v.so_cau, giay: v.giay, phut_chu: phutChu(v.giay), cam_xuc: v.cam_xuc, ten_cam_xuc: v.cam_xuc ? TEN_CAM_XUC[v.cam_xuc] : null,
+      so_cau: v.so_cau, giay: giayVan(v), phut_chu: phutChu(giayVan(v)), cam_xuc: v.cam_xuc, ten_cam_xuc: v.cam_xuc ? TEN_CAM_XUC[v.cam_xuc] : null,
       dung_ngay: v.dung_ngay, dung_sau_goi_y: v.dung_sau_goi_y, dung_lan_2: v.dung_lan_2,
       sai: saiDs.length, sai_da_sua: saiDs.filter(function (c) { return daSua[c.cau]; }).length,
       bo_do: !!v.bo_do, sao: v.sao, mo_ta: v.mo_ta
@@ -355,7 +375,7 @@
       });
       const n = ngay[v.ngay] = ngay[v.ngay] || { ngay: v.ngay, thu: thuNgay(v.ngay), so_van: 0, giay: 0, van: [] };
       n.so_van++;
-      n.giay += v.giay || 0;
+      n.giay += giayVan(v);
       const hang = cau.filter(function (c) { return khopLoc(c, loc); }).map(function (c) { return dongCau(c, daSua); });
       if (loc.loai && loc.loai !== 'tat_ca' && !hang.length) return;
       const t = tomTatVanChoNhatKy(v, cau, daSua);
@@ -369,7 +389,7 @@
     return {
       tu: tu, den: den, loc: loc, ngay: ds, so_cau: soCau, so_sai: soSai, so_khop: khop,
       so_van: vanTrong.length,
-      chip_noi_dung: Object.keys(demNd).sort(soSanhMaNoiDung).map(function (m) { return { ma: m, ten: tenNoiDung(m), so: demNd[m] }; }),
+      chip_noi_dung: Object.keys(demNd).sort(soSanhMaNoiDung).map(function (m) { return { ma: m, ten: tenNoiDung(m), ten_ngan: tenNganNoiDung(m), so: demNd[m] }; }),
       chip_loi: Object.keys(demLoi).sort(function (a, b) { return demLoi[b] - demLoi[a] || (a < b ? -1 : 1); }).map(function (m) { return { ma: m, ten: tenLoi(m), so: demLoi[m] }; })
     };
   }
@@ -793,7 +813,7 @@
           let muc = ds.length ? MUC[Math.min.apply(null, ds.map(function (k) { return MUC.indexOf(k.muc); }))] : 'chua_hoc';
           if (!muc) muc = 'chua_hoc';
           return {
-            ma: ma, ten: tenNoiDung(ma), muc: muc, ten_muc: TEN_MUC[muc], can_giup: ds.some(function (k) { return k.can_giup; }),
+            ma: ma, ten: tenNoiDung(ma), ten_ngan: tenNganNoiDung(ma), muc: muc, ten_muc: TEN_MUC[muc], can_giup: ds.some(function (k) { return k.can_giup; }),
             ky_nang: ds.map(function (k) { return { ky_nang: k.ky_nang, muc: k.muc, can_giup: !!k.can_giup, so_cau: k.so_cau }; })
           };
         })
@@ -1147,7 +1167,7 @@
   }
 
   const HOP_DONG_DAU_RA = {
-    mo_ta: 'Trả về đúng một đối tượng JSON theo khuôn dưới đây, không kèm chữ nào khác. Game kiểm tra từng giá trị trước khi dùng; sai khuôn thì game bỏ đề xuất và dùng bộ lập kế hoạch có sẵn.',
+    mo_ta: 'Tùy chọn, chỉ sau phần trả lời bằng chữ cho phụ huynh: ở cuối có thể thêm một khối JSON (trong ```json ... ```) theo khuôn dưới đây. Game kiểm tra từng giá trị trước khi dùng; sai khuôn thì game bỏ đề xuất và dùng bộ lập kế hoạch có sẵn.',
     khuon: {
       nhan_xet_cho_phu_huynh: 'chuỗi tiếng Việt, tối đa 600 ký tự',
       nhiem_vu_de_xuat: [{ noi_dung: 'mã nội dung', ky_nang: 'mã kỹ năng', game: 'mã game', che_do: 'mã chế độ (tùy chọn)', so_cau: 'số nguyên 5 đến 30', ly_do: 'chuỗi ngắn' }],
@@ -1171,10 +1191,57 @@
     ]
   };
 
+  /** Mục "be" của gói: bí danh, tuổi (bỏ khi o.boTuoi), lớp, bài đang học, phong cách khủng long. */
+  function beCuaGoi(hoSo, biDanh, o) {
+    const be = { bi_danh: biDanh };
+    if (!o.boTuoi) be.tuoi = o.tuoi != null ? o.tuoi : (hoSo.tuoi_khi_nhap || null);
+    be.lop = hoSo.lop || null;
+    be.bai_dang_hoc = hoSo.bai_dang_hoc || null;
+    be.phong_cach = hoSo.phong_cach || null;
+    return be;
+  }
+
+  /**
+   * Liệt kê đúng những gì gói xuất có (cho phụ huynh đọc trước khi sao chép), theo tùy chọn o: { boTuoi, kemNhatKy }.
+   * Trả về { co: [chuỗi], khong: [chuỗi] }.
+   */
+  function noiDungGoi(o) {
+    o = o || {};
+    const co = [
+      'bí danh be_1 thay cho tên',
+      o.boTuoi ? null : 'tuổi của con',
+      'lớp, bài đang học, phong cách khủng long con chọn (dũng mãnh hay dễ thương)',
+      'mức thành thạo và tỉ lệ tự làm đúng của từng kỹ năng, lỗi hay gặp, ngày luyện gần nhất',
+      'số ngày chơi, số phút trung bình mỗi ngày, khung giờ con hay chơi, trò con hay chọn, tỉ lệ ván con chọn Vui',
+      'xu hướng 4 tuần và tổng số ván, số câu, quả mọng',
+      'tối đa 20 ván gần nhất, kèm ngày giờ chơi',
+      'tối đa 30 câu sai tiêu biểu trong 4 tuần: đề, đáp án con chọn, ngày, thời gian làm và các thao tác của con',
+      o.kemNhatKy ? 'nhật ký từng thao tác của 7 ngày gần nhất, có giờ bắt đầu từng ván' : null,
+      'lúc tạo gói, kèm múi giờ của máy'
+    ].filter(Boolean);
+    const khong = ['tên của con', 'tên khủng long', 'ngày sinh', 'mã bé', 'mã thiết bị, loại máy'];
+    if (o.boTuoi) khong.splice(1, 0, 'tuổi');
+    return { co: co, khong: khong };
+  }
+
+  /**
+   * Câu hỏi mẫu để dán vào trợ lý AI, đi trước gói (chuoiGoi). Trả lời trước bằng chữ cho phụ huynh, JSON (nếu có) để cuối.
+   */
+  function cauHoiMau(chuoiGoi) {
+    return 'Tôi là phụ huynh của một bé học Toán lớp 2 (SGK Kết nối tri thức với cuộc sống). Dưới đây là gói dữ liệu 4 tuần con chơi game học Toán Đảo Khủng Long, đã ẩn tên.\n' +
+      'Hãy trả lời bằng tiếng Việt dễ hiểu, câu ngắn, không dùng mã hay thuật ngữ:\n' +
+      '1. Con đang làm tốt điều gì?\n' +
+      '2. Tuần tới con nên luyện gì, vì sao (con hay sai ở đâu)?\n' +
+      '3. Gợi ý 2 đến 3 hoạt động cụ thể tôi làm cùng con ở nhà, mỗi hoạt động khoảng 10 phút, dùng đồ vật sẵn có.\n' +
+      '4. Một câu khích lệ ngắn cho con.\n' +
+      'Không cần viết JSON. Không chê con, không so sánh với bạn khác.\n\n' +
+      (chuoiGoi ? chuoiGoi + '\n' : '');
+  }
+
   /**
    * Gói xuất "dao-khung-long/ho-so-hoc-tap" phiên bản 1 (spec 06 mục 5.9).
-   * du: { hoSo, cauDs, vanDs, hocTap }; evs: nhật ký gốc của bé (để dựng câu thao tác; có thể rỗng).
-   * o: { homNay, taoLuc (ISO có múi giờ), tuoi, kemNhatKy, biDanh }.
+   * du: { hoSo, cauDs, vanDs, hocTap }; evs: nhật ký gốc của bé (để dựng câu thao tác; có thể rỗng, chỉ cần 28 ngày gần nhất).
+   * o: { homNay, taoLuc (ISO có múi giờ), tuoi, boTuoi (không ghi tuổi), kemNhatKy, biDanh }.
    * Không có tên thật, tên khủng long, mã bé, mã thiết bị. Cùng đầu vào thì cùng chuỗi JSON.
    * Trả về { goi, chuoi, token, so_byte, da_rut_gon }.
    */
@@ -1281,13 +1348,16 @@
         loai_goi: 'dao-khung-long/ho-so-hoc-tap',
         phien_ban: 1,
         tao_luc: o.taoLuc || null,
-        be: { bi_danh: biDanh, tuoi: o.tuoi != null ? o.tuoi : (hoSo.tuoi_khi_nhap || null), lop: hoSo.lop || null, bai_dang_hoc: hoSo.bai_dang_hoc || null, phong_cach: hoSo.phong_cach || null },
+        be: beCuaGoi(hoSo, biDanh, o),
         huong_dan: 'Bạn là trợ lý giúp phụ huynh của một bé học Toán lớp 2 theo SGK Kết nối tri thức với cuộc sống. Gói này tóm tắt 4 tuần bé chơi game Đảo Khủng Long: ' +
           'ho_so.ky_nang là từng kỹ năng với mức thành thạo (tu_dien.muc, từ thấp tới cao), tỉ lệ tự làm đúng 14 ngày (câu đúng ngay, không gợi ý, chia cho câu không gợi ý), ' +
           'lỗi hay gặp kèm ví dụ thật "đề→bé chọn"; van_gan_day là 20 ván gần nhất; cau_sai_tieu_bieu là các câu sai có lỗi lặp lại, kèm câu mô tả thao tác của bé. ' +
           'Mọi mã có giải nghĩa trong tu_dien; tu_dien.tien_quyet cho biết nội dung nào là nền của nội dung nào. ' +
-          'Hãy: (1) nhận xét cho phụ huynh ngắn gọn, cụ thể: con vững gì, lỗi chính là gì và vì sao (dựa vào thao tác), (2) đề xuất nhiệm vụ tuần tới, ưu tiên sửa lỗi lặp lại và ôn nội dung nền, ' +
-          '(3) một lời nhắn khích lệ cho bé. Dạy đúng cách của SGK (đặt tính, que tính, tách để làm tròn 10). Không chê, không so sánh với bạn khác. Trả lời bằng JSON đúng hop_dong_dau_ra.',
+          'Hãy trả lời trước hết bằng tiếng Việt dễ hiểu cho phụ huynh (không dùng mã, không dùng thuật ngữ, câu ngắn): (1) con đang làm tốt điều gì; ' +
+          '(2) con nên luyện gì tuần tới và vì sao, dựa vào lỗi lặp lại và thao tác của con, ưu tiên ôn nội dung nền; ' +
+          '(3) 2 đến 3 hoạt động cụ thể bố mẹ làm cùng con ở nhà, mỗi hoạt động khoảng 10 phút, dùng đồ vật sẵn có (que tính, đồ chơi, tiền, lịch); ' +
+          '(4) một câu khích lệ ngắn cho con. Dạy đúng cách của SGK (đặt tính, que tính, tách để làm tròn 10). Không chê, không so sánh với bạn khác. ' +
+          'Chỉ sau phần chữ đó, nếu muốn, thêm ở cuối một khối JSON tùy chọn theo hop_dong_dau_ra.',
         tu_dien: { noi_dung: noiDung, ky_nang: tenKy, loi: loi, game: game, muc: MUC.slice(), tien_quyet: tienQuyet },
         ho_so: {
           ngay: homNay,
@@ -1377,6 +1447,10 @@
     uocLuongToken: uocLuongToken,
     thaoTacNgan: thaoTacNgan,
     chonCauSai: chonCauSai,
-    goiXuat: goiXuat
+    goiXuat: goiXuat,
+    noiDungGoi: noiDungGoi,
+    cauHoiMau: cauHoiMau,
+    tenNganNoiDung: tenNganNoiDung,
+    giayVan: giayVan
   };
 })();

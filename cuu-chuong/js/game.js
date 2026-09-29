@@ -2316,7 +2316,7 @@
         ? pool.slice(0, 12).map(function (it) {
           return '<div class="report-row"><span class="t">' + reviewHtml(it) + '</span><span>✖ ' + it.n + '</span></div>';
         }).join('')
-        : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>');
+        : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>');
   }
 
   /** Mở báo cáo và nhớ nơi đã mở (menu hay màn "Ai đang chơi?") để quay lại đúng chỗ. */

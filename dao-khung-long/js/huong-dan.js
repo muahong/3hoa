@@ -392,6 +392,7 @@
           tieu_de: 'Khi chơi một màn',
           y: [
             ['<span class="hd-i-loa">' + SVG_LOA + '</span>', 'Đọc đề ở trên cùng. Chạm <b>cái loa</b> để nghe đọc lại.'],
+            ['<span class="hd-i-loa">' + SVG_LOA + '</span>', 'Thẻ có chữ và lời giải cũng có <b>loa nhỏ</b>: chạm loa để nghe đọc, không tính là chọn.'],
             [NUT_TRON(SVG_DEN), 'Bí thì chạm <b>bóng đèn</b> để xem gợi ý. Câu nhờ gợi ý được ít quả mọng hơn.'],
             ['🙂', 'Sai cũng không sao! Con xem lời giải, câu đó <b>quay lại sau 2 câu</b> để con làm lại.'],
             ['📘', 'Gặp bài mới, con xem <b>Bài học 30 giây</b> trước khi chơi.'],

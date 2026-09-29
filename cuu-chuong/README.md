@@ -32,6 +32,7 @@ Không cần cơ sở dữ liệu. Điểm cao và bảng vàng được lưu ng
 | `js/game.js` | Bộ máy trò chơi: thiên thạch, pháo laser, khiên, điểm, combo, bảng vàng, ôn lại thông minh, báo cáo cho phụ huynh |
 | `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (`?dao=1` trong iframe của đảo): lấy câu từ ngân hàng của đảo, ghi mọi thao tác vào nhật ký của đảo |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Các màn chơi
 
@@ -56,7 +57,7 @@ Luật chơi: mỗi ván 1, 1,5 hoặc 2 phút, có 3 khiên 🛡️. Thiên th�
 
 Màn **📖 Bảng cửu chương** ở menu chính cho bé xem bảng nhân và bảng chia từ 2 đến 9, chạm vào từng dòng để nghe đọc, hoặc bấm **🔊 Đọc cả bảng** (đọc lần lượt cả bảng nhân rồi bảng chia). Bấm **🚀 Luyện bảng này** ở cuối màn để vào chơi ngay bảng đang xem.
 
-Hết khiên hoặc còn câu làm sai, màn kết quả hiện thêm nút **📖 Xem bảng N** để bé ôn lại đúng bảng vừa gặp khó rồi thử lại — không phải quay về menu tìm lại.
+Hết khiên hoặc còn câu làm sai, màn kết quả hiện thêm nút **📖 Xem bảng N** để bé ôn lại đúng bảng vừa gặp khó rồi thử lại, không phải quay về menu tìm lại.
 Câu của lớp 2 (bảng 2, bảng 5) luôn giữ đúng thứ tự của bảng (`2 × 7`, không đảo thành `7 × 2`); lớp 3 mới đảo thừa số để bé quen tính giao hoán. Màn có câu 3 chữ số (Nhân chia số lớn, Siêu Vệ Binh) và màn Tìm thừa số cho thiên thạch rơi chậm hơn để bé kịp tính.
 
 ## Nút 💡 Gợi ý 💡
@@ -84,7 +85,7 @@ Câu nào bé trả lời sai (hoặc để thiên thạch chạm khiên) sẽ �
 
 ## Kết quả của bé (cho phụ huynh) 📊
 
-Nút **📊 Kết quả** ở màn chọn màn chơi và ở menu chính (hoặc biểu tượng 📊 ở màn người chơi) hiện: số ván đã chơi, tỉ lệ đúng, số phút luyện tập, tổng sao (dạng `n/45`), dòng **Cần luyện thêm** (màn đã làm ≥ 5 câu mà đúng dưới 70%, tối đa 3 màn — chưa đủ dữ liệu thì ẩn), kỷ lục và tỉ lệ đúng từng bảng (kèm nhãn **✅ Đã thuộc** khi bé đúng ≥ 90% trên ít nhất 20 câu, nhãn **⚠️ Cần luyện thêm** ở dòng còn yếu) và mục **📝 Cần ôn lại**.
+Nút **📊 Kết quả** ở màn chọn màn chơi và ở menu chính (hoặc biểu tượng 📊 ở màn người chơi) hiện: số ván đã chơi, tỉ lệ đúng, số phút luyện tập, tổng sao (dạng `n/45`), dòng **Cần luyện thêm** (màn đã làm ≥ 5 câu mà đúng dưới 70%, tối đa 3 màn; chưa đủ dữ liệu thì ẩn), kỷ lục và tỉ lệ đúng từng bảng (kèm nhãn **✅ Đã thuộc** khi bé đúng ≥ 90% trên ít nhất 20 câu, nhãn **⚠️ Cần luyện thêm** ở dòng còn yếu) và mục **📝 Cần ôn lại**.
 Mỗi dòng chỉ nói về đúng màn đó: màn luyện bảng cộng dồn mọi câu của bảng ấy, màn thử thách có sổ riêng, màn chưa chơi ghi **chưa chơi**.
 Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân dành cho người lớn (không dùng hộp thoại của trình duyệt).
 
@@ -92,7 +93,7 @@ Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân d�
 
 - Nút **✨ Hiệu ứng: Nhiều / Ít** cạnh các nút âm thanh: giảm hạt, tắt rung và chớp màn hình. Máy đã bật *Giảm chuyển động* (prefers-reduced-motion) được tự động dùng chế độ ít hiệu ứng.
 - Mọi thẻ màn chơi, dòng bảng cửu chương bấm được bằng phím **Tab + Enter**, có viền tiêu điểm rõ ràng; vùng chạm tối thiểu 44 px; nút bật/tắt có `aria-pressed`.
-- Bảng điều khiển mở ra bằng hiệu ứng nhẹ, ngôi sao ở màn kết quả hiện lần lượt, pháo giấy chúc mừng khi lập kỷ lục hoặc đạt từ 2 sao — tất cả đều tắt khi chọn *Hiệu ứng: Ít*.
+- Bảng điều khiển mở ra bằng hiệu ứng nhẹ, ngôi sao ở màn kết quả hiện lần lượt, pháo giấy chúc mừng khi lập kỷ lục hoặc đạt từ 2 sao. Tất cả đều tắt khi chọn *Hiệu ứng: Ít*.
 - Ba bông hoa trên hành tinh đung đưa theo gió và reo lên mỗi lần bé bắn trúng (đứng yên ở chế độ ít hiệu ứng).
 - Ở màn hình chờ game chỉ vẽ 30 hình/giây, thân thiên thạch và dải màu đuôi lửa được dựng sẵn một lần nên máy đỡ nóng, đỡ tốn pin.
 
@@ -103,7 +104,7 @@ Nút **🗑 Xóa tiến trình** được bảo vệ bằng một phép nhân d�
 - **Lời mách và lời giải thích**: hàm `hintFor()` và `explainFor()` trong `js/tables.js` (không dùng dấu `?` và chỉ dùng dấu `:` làm dấu chia để máy đọc đúng).
 - **Ngưỡng sao**: hàm `starThresholds` và bảng `STAR_FACTOR` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuu-chuong-v2` → `cuu-chuong-v3`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 - **`js/profile.js` là tệp dùng chung**: khi sửa, phải sao chép y nguyên sang tất cả các game (kiểm thử `tests/consistency.test.js` sẽ báo lỗi nếu khác nhau).
 
 ## Chế độ Đảo Khủng Long 🏝️
@@ -121,7 +122,7 @@ Chế độ này chỉ bật khi có đủ ba điều: `?dao=1`, trang nằm tro
 - Sai hết lượt: đảo hiện màn "Gần đúng rồi" đè lên game, bé đóng màn thì chơi tiếp (câu đó quay lại sau 2 câu).
 - 💡 Gợi ý ba cấp của đảo; ở câu chọn số, cấp 3 bỏ bớt một thiên thạch sai.
 - Nhật ký: `go_so` (mỗi chữ số, kèm số đang gõ), `xoa`, `ban` (số đã bắn, vị trí, thứ tự), `cham` (chạm thiên thạch), rồi `traLoi` mỗi lần chốt; tạm dừng ghi nguồn `nut`, `phim`, `an_tab`.
-- Bảng tạm dừng có nút **🏝️ Về đảo** (ván ghi là bỏ dở, quả mọng đã có vẫn giữ).
+- Bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và **🏝️ Về đảo** (ván ghi là bỏ dở, quả mọng đã có vẫn giữ), giống nhau ở 6 game.
 
 Móc trong `js/game.js` là các dòng có chú thích "Móc đảo".
 

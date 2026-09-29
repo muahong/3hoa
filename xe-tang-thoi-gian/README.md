@@ -41,6 +41,7 @@ Không cần cơ sở dữ liệu. Tiến trình (màn đã mở khóa, sao, đi
 | `js/game.js` | Bộ máy trò chơi: xe tăng, robot, đạn, hiệu ứng, điểm, combo, hỏi đáp, lưu tiến trình, ôn lại thông minh, bảng kết quả |
 | `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chạy trong iframe của `dao-khung-long/`), xem mục dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Các màn chơi
 
@@ -76,7 +77,7 @@ Nút **✨ Hiệu ứng: Nhiều/Ít** (cạnh các nút âm thanh) giảm rung 
 - **Không thua**: không tim, không tuyến phòng thủ; robot đi dạo chậm lên xuống giữa thẻ câu hỏi và xe tăng, không bao giờ chạm xe tăng, không hết giờ.
 - **Bắn**: đạn trúng robot nào thì `traLoi(giá trị, { vi_tri, cach, so_phat_ban })`. Đúng: nổ, khen, điểm, `+quả mọng` (chip quả mọng thay chỗ tim). Sai mà còn lượt (`thu_lai`): robot bị gạch, bảng đọc lời của đảo. Sai hẳn (`can_phan_hoi`): robot bị gạch, 0,7 giây sau màn "Gần đúng rồi" của đảo hiện đè lên, đóng màn đó thì hỏi câu sau.
 - **Gợi ý 💡**: ba cấp của đảo (`goiY`), lời gợi ý hiện trong bảng đọc (robot đứng yên); cấp 3 cho một robot sai bay đi (`{ loai_bo }`) khi còn ít nhất hai robot sai.
-- **Nhật ký** (`thaoTac`): `xoay_nong` khi bé chọn xong mục tiêu (chạm robot, hoặc dừng phím mũi tên 0,7 giây; một lần mỗi robot), `ban` khi đạn rời nòng, `cham` robot đã gạch / phóng to hình, `nghe_lai`, `di_chuyen` xe tăng khi nhấc tay. Tạm dừng `tamDung('nut' | 'an_tab')`, chơi tiếp `tiepTuc('nut')`, bảng tạm dừng có **🏝️ Về đảo** (`veDao`). Hết câu: màn "Hoàn thành!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc của nó.
+- **Nhật ký** (`thaoTac`): `xoay_nong` khi bé chọn xong mục tiêu (chạm robot, hoặc dừng phím mũi tên 0,7 giây; một lần mỗi robot), `ban` khi đạn rời nòng, `cham` robot đã gạch / phóng to hình, `nghe_lai`, `di_chuyen` xe tăng khi nhấc tay. Tạm dừng `tamDung('nut' | 'an_tab')`, chơi tiếp `tiepTuc('nut')`, bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và 🏝️ Về đảo, giống nhau ở 6 game (`veDao`). Hết câu: màn "Hoàn thành!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc của nó.
 - Không menu, chọn màn, bài học, hỏi đáp, bảng kết quả; không ghi localStorage của game; âm thanh và giọng đọc theo `thongTin().am_thanh` của đảo.
 - Câu đảo gửi mà không có lựa chọn (dạng `thao_tac_hinh`, `keo_tha`, `sap_xep`, `nhap_so`) là cấu hình màn chưa đúng: game ghi lỗi (`XeTangDao._trangThai().loi`), đóng câu bằng `hetGio` và hỏi câu sau để ván không kẹt.
 
@@ -93,7 +94,7 @@ Kiểm thử: `node --test tests/xe-tang-thoi-gian-dao.test.js` (cầu nối gi�
 - **Thưởng tim**: hàm `gainHeart` và điều kiện `G.perfect % 5` trong `js/game.js`.
 - **Điểm khi đã xem gợi ý**: hằng số `HINT_POINTS` trong `js/game.js` (mặc định 20).
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `xe-tang-thoi-gian-v3`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 
 ## Kiểm thử
 

@@ -769,6 +769,54 @@
     return true;
   }
 
+  /* ==== Bảng tạm dừng trên đảo: khối này giống hệt nhau ở 6 game (tests/games-nhom-g-dao.test.js) ==== */
+  const AM_BAT = '🔊 Âm thanh: Bật', AM_TAT = '🔇 Âm thanh: Tắt';
+  let daDungHangTamDung = false;
+  /** Ngay dưới "▶ Chơi tiếp": một hàng "🔊 Âm thanh" + "🏝️ Về đảo" (nutVe). Nút âm thanh bật / tắt hiệu ứng và nhạc
+      của game như thiết lập "tieng" của đảo, chỉ trong ván này (không lưu): tieng() cho biết đang bật, datTieng(bat) áp dụng. */
+  function hangTamDung(nutVe, tieng, datTieng) {
+    if (daDungHangTamDung) return null;
+    daDungHangTamDung = true;
+    const nut = document.createElement('button');
+    nut.type = 'button';
+    nut.id = 'dao-nut-am-thanh';
+    const ve = function () {
+      const bat = !!tieng();
+      nut.textContent = bat ? AM_BAT : AM_TAT;
+      nut.className = 'btn ghost dao-nut-am-thanh ' + (bat ? 'on' : 'off');
+      nut.setAttribute('aria-pressed', String(bat));
+    };
+    nut.addEventListener('click', function () {
+      const bat = !tieng();
+      try { datTieng(bat); if (bat) { window.Sfx.unlock(); window.Sfx.play('click'); } } catch (e) { /* bỏ qua */ }
+      ve();
+    });
+    ve();
+    const hang = document.createElement('div');
+    hang.className = 'btn-row dao-hang-tam-dung';
+    hang.appendChild(nut);
+    if (nutVe) {
+      const cu = nutVe.parentNode;
+      nutVe.textContent = '🏝️ Về đảo';
+      nutVe.hidden = false;
+      if (nutVe.classList) { nutVe.classList.remove('big', 'small', 'ghost'); nutVe.classList.add('teal'); }
+      hang.appendChild(nutVe);
+      // Hàng cũ của nút "Về đảo" chỉ còn các nút đã ẩn trên đảo: ẩn luôn cho khỏi hở một khoảng trống
+      if (cu && cu.children) {
+        const conHien = Array.prototype.some.call(cu.children, function (el) {
+          return !el.hidden && window.getComputedStyle(el).display !== 'none';
+        });
+        if (!conHien) cu.hidden = true;
+      }
+    }
+    const tiep = document.getElementById('btn-resume');
+    const hangTiep = tiep && tiep.parentNode;
+    const panel = document.querySelector('#pause .panel');
+    if (panel && panel.insertBefore) panel.insertBefore(hang, hangTiep && hangTiep.parentNode === panel ? hangTiep.nextSibling : null);
+    return { nut: nut, ve: ve };
+  }
+  /* ==== hết khối bảng tạm dừng ==== */
+
   /* ---------------- Mở đầu, tạm dừng, kết thúc ---------------- */
 
   function an(el, b) { if (el) el.hidden = !!b; }
@@ -894,6 +942,12 @@
       const tt = goi('sanSang');
       st.info = tt || null;
       apDungAmThanh(tt);
+      // Bảng tạm dừng: "🔊 Âm thanh" (st.tieng, như apDungAmThanh) + "🏝️ Về đảo"
+      hangTamDung(st.dom.ve, function () { return st.tieng; }, function (bat) {
+        st.tieng = bat;
+        window.Sfx.setEnabled(bat);
+        window.Music.setEnabled(bat);
+      });
       taiAnhBe((tt && tt.be) || {});
       hienMoDau(tt);
     },

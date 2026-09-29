@@ -600,6 +600,37 @@
     return ra('ve_dao', null, 'Về đảo chọn trò con thích', 'Con đã chơi hết các màn đang mở rồi. Giỏi quá!', 'Về đảo');
   }
 
+  /**
+   * Tóm tắt nhỏ cho trang chủ 3hoa.com (localStorage 'dkl-tom-tat-v1', trang chủ chỉ đọc):
+   * { v: 1, luc: ISO, be: [{ ten, qua_mong, man_xong, sao }] } cho mọi bé trên máy.
+   * man_xong: số màn đã chơi xong ít nhất một lần (ky_luc có lan_choi), sao: tổng sao tốt nhất của các màn.
+   */
+  function tomTatTrangChu(dsBe, luc) {
+    return {
+      v: 1,
+      luc: new Date(luc != null ? luc : Date.now()).toISOString(),
+      be: (dsBe || []).filter(function (p) { return p && p.ten; }).map(function (p) {
+        const kl = p.ky_luc || {};
+        let manXong = 0, sao = 0;
+        Object.keys(kl).forEach(function (id) {
+          const k = kl[id];
+          if (!k || !(k.lan_choi > 0)) return;
+          manXong++;
+          sao += Math.max(0, Math.min(3, Math.round(k.sao || 0)));
+        });
+        return { ten: String(p.ten), qua_mong: Math.max(0, Math.round((p.khung_long && p.khung_long.qua_mong) || 0)), man_xong: manXong, sao: sao };
+      })
+    };
+  }
+
+  /** Câu ngắn đọc to ở màn kết thúc: "Con được 2 sao, 42 quả mọng". */
+  function loiKetThuc(sao, qua) {
+    const phan = [];
+    if (sao > 0) phan.push(sao + ' sao');
+    if (qua > 0) phan.push(qua + ' quả mọng');
+    return phan.length ? 'Con được ' + phan.join(', ') + '!' : 'Con chơi xong màn này rồi!';
+  }
+
   window.Dao = {
     VUNG: VUNG,
     HINH: HINH,
@@ -629,6 +660,8 @@
     vungCuaNoiDung: vungCuaNoiDung,
     lapNhiemVu: lapNhiemVu,
     tenManNgan: tenManNgan,
-    buocTiep: buocTiep
+    buocTiep: buocTiep,
+    tomTatTrangChu: tomTatTrangChu,
+    loiKetThuc: loiKetThuc
   };
 })();

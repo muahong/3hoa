@@ -216,7 +216,7 @@
 .vg-dau-chu { flex: 1; min-width: 0; }
 .nut-hoi { flex: none; width: 56px; height: 56px; border-radius: 50%; border: 0; background: #fff; color: var(--cam); font-size: 32px; font-weight: 800; line-height: 1; box-shadow: var(--bong); }
 .nut-hoi:active { transform: scale(.94); }
-.vg-trung-hoi { border: 0; background: var(--tim-nhat); color: var(--tim); border-radius: 99px; padding: 6px 14px; margin-top: 6px; font-size: 15px; font-weight: 800; min-height: 40px; }
+.vg-trung-hoi { border: 0; background: var(--tim-nhat); color: var(--tim); border-radius: 99px; padding: 6px 14px; margin-top: 6px; font-size: 15px; font-weight: 800; min-height: 44px; }
 
 /* ---------- Màn kết thúc: kỹ năng còn thiếu, bước tiếp theo ---------- */
 .kt-sao-meo { font-size: 15px; font-weight: 700; color: var(--ink-2); margin-top: -4px; }
@@ -227,8 +227,8 @@
 .kt-kn-dau b { min-width: 0; }
 .kt-kn-dau .chip-muc { font-size: 13px; flex: none; }
 .kt-kn-dau > small { font-size: 14px; font-weight: 700; color: var(--ink-2); }
-/* Có hàng kỹ năng thì hình khủng long ăn nhỏ lại để cả thẻ vừa màn iPad 1024 × 768 */
-.kt-the.co-kn .kt-an { width: 130px; max-height: 136px; }
+/* Có hàng kỹ năng (đang mở chi tiết) thì hình khủng long ăn nhỏ lại để cả thẻ vừa màn iPad 1024 × 768 */
+.kt-the.co-kn.mo-chi-tiet .kt-an, .kt-the.co-kn:not(.kt-gon) .kt-an { width: 130px; max-height: 136px; }
 .kt-kn-ds { flex: 1 1 360px; list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 16px; font-weight: 700; line-height: 1.2; }
 .kt-kn-ds li { display: flex; align-items: center; gap: 6px; }
 .kt-kn-ds i { width: 22px; height: 22px; border-radius: 50%; border: 3px solid #cfc8e6; background: #fff; display: grid; place-items: center; flex: none; font-style: normal; font-size: 13px; font-weight: 800; }
@@ -238,7 +238,9 @@
 .kt-kn-trung { width: 100%; display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; background: #fff; border-radius: 14px; padding: 4px 8px; text-align: left; }
 .kt-kn-trung img { width: 30px; height: 30px; object-fit: contain; flex: none; }
 .kt-kn-trung span { flex: 1; }
-.kt-hoi-nho { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid #e2dbf6; background: #fff; color: var(--tim); font-size: 17px; font-weight: 800; line-height: 1; padding: 0; }
+.kt-hoi-nho { position: relative; width: 32px; height: 32px; flex: none; border-radius: 50%; border: 2px solid #e2dbf6; background: #fff; color: var(--tim); font-size: 17px; font-weight: 800; line-height: 1; padding: 0; }
+/* Nút ? nhỏ nhưng vùng chạm đủ 44 px */
+.kt-hoi-nho::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
 .kt-hoi-nho:active { background: var(--tim-nhat); }
 .kt-lon .kt-lon-dau { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .kt-tiep-theo { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; background: linear-gradient(90deg, #fff1e6, #fff8e6); border: 3px solid #ffd2b8; border-radius: 24px; padding: 8px 12px 8px 10px; }
@@ -248,6 +250,15 @@
 .kt-tt-chu b { font-size: clamp(18px, 2.2vw, 23px); }
 .kt-tt-chu span { font-size: 15px; font-weight: 600; color: var(--ink-2); }
 .kt-tt-nut { flex: none; }
+/* Màn kết thúc gọn cho bé (mặc định): chi tiết nằm sau nút "Xem chi tiết" (app.js moChiTietKetThuc) */
+.kt-xem-chi-tiet { align-self: flex-start; min-height: 44px; border: 0; border-radius: 99px; background: var(--tim-nhat); color: var(--tim); font-size: 17px; font-weight: 800; padding: 6px 18px; }
+.kt-xem-chi-tiet:active { transform: translateY(2px); }
+.kt-gon:not(.mo-chi-tiet) .kt-so, .kt-gon:not(.mo-chi-tiet) .kt-sao-meo, .kt-gon:not(.mo-chi-tiet) .kt-chi-tiet,
+.kt-gon:not(.mo-chi-tiet) .kt-kn, .kt-gon:not(.mo-chi-tiet) .kt-kn-trung, .kt-gon:not(.mo-chi-tiet) .kt-tiep-theo:not(.nghi) #kt-tt-ly-do { display: none !important; }
+.kt-gon:not(.mo-chi-tiet) .kt-trai { justify-content: center; }
+.kt-gon:not(.mo-chi-tiet) .kt-sao { font-size: 84px; }
+.kt-gon:not(.mo-chi-tiet) .kt-qua { font-size: 36px; }
+.kt-gon:not(.mo-chi-tiet) .kt-qua img { width: 50px; }
 @media (prefers-reduced-motion: no-preference) {
   .kt-tt-nut { animation: hdNut 2.2s ease-in-out 1.5s infinite; }
   @keyframes hdNut { 0%, 70%, 100% { transform: none; } 80% { transform: translateY(-4px); } 90% { transform: translateY(1px); } }
@@ -290,6 +301,7 @@
 }
 @media (max-height: 640px) and (orientation: landscape) {
   .kt-sao { font-size: 44px; }
+  .kt-gon:not(.mo-chi-tiet) .kt-sao { font-size: 60px; }
   .hd-trang { padding: 14px 18px; }
   .hd-y li { font-size: 17px; }
   .hd-mo { font-size: 18px; }

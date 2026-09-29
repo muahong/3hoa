@@ -125,7 +125,7 @@ test('clock: clockQuestion(n) has exactly one correct option among 3 unique text
   }
 });
 
-test('clock: quizFor(n, mistakes) — 3 questions, missed clocks come back, no duplicate options (300 per level)', () => {
+test('clock: quizFor(n, mistakes): 3 questions, missed clocks come back, no duplicate options (300 per level)', () => {
   for (let n = 1; n <= 8; n++) {
     for (let i = 0; i < 300; i++) {
       const a = K.genFor(n), b = K.genFor(n);
@@ -230,7 +230,7 @@ test('clock: CONCEPT / LESSONS / LEVELS are well-formed', () => {
   assert.equal(K.levelByN(9), null);
 });
 
-test('clock: SVG — badge/digital drawn before the hands, kém ring labels anchored outside, aria-label', () => {
+test('clock: SVG: badge/digital drawn before the hands, kém ring labels anchored outside, aria-label', () => {
   const s = K.svg(K.mk24(18, 0, 7), { badge: true });
   assert.ok(s.indexOf('fill="#8a5a00"') >= 0 && s.indexOf('fill="#8a5a00"') < s.indexOf('class="hand hour"'), 'badge before hands');
   assert.ok(/y="108"/.test(s), 'badge sits below the dial');
@@ -412,7 +412,7 @@ test('store: legacy progress still migrates when the saved object already carrie
   assert.equal(both.rec('L1').best, 0);
 });
 
-test('gameplay: newLabel keeps a board readable — ≤ 1 pair within 2 minutes, Siêu Tháp always mixes sub-levels (C1)', () => {
+test('gameplay: newLabel keeps a board readable: ≤ 1 pair within 2 minutes, Siêu Tháp always mixes sub-levels (C1)', () => {
   const { X } = loadStore(null);
   const K2 = X.K;
   const makeBoard = (level) => {
@@ -445,7 +445,7 @@ test('gameplay: newLabel keeps a board readable — ≤ 1 pair within 2 minutes,
   assert.ok(single8 / R <= 0.05, 'màn 8: ' + (single8 / R * 100).toFixed(1) + '% bảng chỉ một kiểu bài (yêu cầu ≤ 5%)');
 });
 
-test('clock: ring labels stay readable on screen — rendered font size ≥ 11 px at every call site', () => {
+test('clock: ring labels stay readable on screen, rendered font size ≥ 11 px at every call site', () => {
   const fs = require('fs');
   const path = require('path');
   const css = fs.readFileSync(path.join(__dirname, '..', 'thap-dong-ho', 'style.css'), 'utf8');

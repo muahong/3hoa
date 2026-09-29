@@ -2308,7 +2308,7 @@
     const pool = Store.reviewPool();
     $('report-review').innerHTML = pool.length
       ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
-      : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+      : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>';
     $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name;
   }
 
@@ -2542,7 +2542,7 @@
     click('btn-again', function () { const l = G.level; if (l) startGame(l); });
     click('btn-next', function () { if (G.nextLevel) startGame(G.nextLevel); });
     click('btn-easier', function () { if (G.easierLevel) startGame(G.easierLevel); });
-    // 💡 Gợi ý theo yêu cầu: đánh dấu quả đúng, đọc đáp án — đổi lại câu này chỉ được 50 điểm
+    // 💡 Gợi ý theo yêu cầu: đánh dấu quả đúng, đọc đáp án; đổi lại câu này chỉ được 50 điểm
     click('btn-hint', function () {
       if (Dao) { Dao.goiY(); return; }        // [Đảo] gợi ý 3 cấp của đảo (cấp 3 bỏ bớt một quả sai)
       if (G.state !== 'playing' || !G.wave || G.wave.resolved || G.wave.hint) return;

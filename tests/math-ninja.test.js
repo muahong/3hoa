@@ -674,7 +674,7 @@ test('explain(q): không dạy mẹo "10 − 10 = 0" ở màn lớp 1', () => {
   for (const lvl of MG.ANSWER_LEVELS) {
     for (let i = 0; i < N; i++) {
       const s = MG.explain(lvl.gen());
-      assert.doesNotMatch(s, /= 0,/, lvl.id + ': lời giải thích đi qua số 0 — "' + s + '"');
+      assert.doesNotMatch(s, /= 0,/, lvl.id + ': lời giải thích đi qua số 0: "' + s + '"');
     }
   }
   // Quét màn a1 (lớp 1): mọi câu dạng 10 − b đều im lặng
@@ -769,7 +769,7 @@ test('style.css: dải gợi ý xuống dòng được và mưa giấy màu tắ
 /* ---------------- 11b. Tương phản màu (C4/C9/C10) ----------------
    Chữ trắng nằm ở GIỮA nút, nên phải kiểm cả điểm giữa dải màu chứ không chỉ mốc đậm.
    Và vì nhãn nút thu xuống 15–17 px ở khổ điện thoại (không còn là "chữ to" theo WCAG),
-   ngưỡng phải là 4.5:1 chứ không phải ngoại lệ 3:1 — nếu không phép thử chỉ đạt ở khổ màn hình thuận lợi. */
+   ngưỡng phải là 4.5:1 chứ không phải ngoại lệ 3:1, nếu không phép thử chỉ đạt ở khổ màn hình thuận lợi. */
 const srgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 function lum(hex) {
   const v = srgb(hex).map((x) => {
@@ -897,7 +897,7 @@ test('style.css: mọi vùng chạm (nút, chip, thẻ) đều ≥ 44 px ở m�
     seen++;
     assert.ok(Number(mh[1]) >= 44, sel + ': min-height ' + mh[1] + 'px < 44px (SPEC §4)');
   }
-  assert.ok(seen >= 10, 'chỉ tìm thấy ' + seen + ' quy tắc vùng chạm — biểu thức lọc có vấn đề');
+  assert.ok(seen >= 10, 'chỉ tìm thấy ' + seen + ' quy tắc vùng chạm, biểu thức lọc có vấn đề');
 });
 
 test('style.css: mưa giấy màu rơi phía sau bảng kết quả', () => {

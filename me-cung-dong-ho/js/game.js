@@ -2260,7 +2260,7 @@
     const pool = Store.reviewPool();
     $('report-review').innerHTML = pool.length
       ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
-      : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+      : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>';
     $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name;
   }
   function openReport(from) {

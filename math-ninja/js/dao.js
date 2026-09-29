@@ -137,7 +137,7 @@
         '<p class="dao-mo-cach">Đọc đề ở trên, rồi <b>vuốt ngón tay</b> chém quả mang <b>đáp án đúng</b>. Quả rơi mất thì sẽ bay lại, ' +
           (be.ten ? E(be.ten) : 'con') + ' cứ bình tĩnh nhé!</p>' +
         '<div class="btn-row"><button type="button" class="btn big green dao-nut-to" id="dao-nut-bat-dau">▶ Bắt đầu</button></div>' +
-        '<div class="btn-row"><button type="button" class="btn ghost small" id="dao-nut-ve">Về đảo</button></div>' +
+        '<div class="btn-row"><button type="button" class="btn ghost small" id="dao-nut-ve">🏝️ Về đảo</button></div>' +
       '</div>';
     if (app && app.appendChild) app.appendChild(the);
     dom.the = the;
@@ -159,12 +159,17 @@
     if (phai && phai.insertBefore) phai.insertBefore(kl, phai.firstChild);
     dom.klHop = kl;
 
-    // Bảng tạm dừng: nút "Về đảo"
-    const pausePanel = document.querySelector('#pause .panel');
-    const hang = document.createElement('div');
-    hang.className = 'btn-row dao-hang-ve';
-    hang.innerHTML = '<button type="button" class="btn ghost" id="dao-nut-ve-dao">Về đảo</button>';
-    if (pausePanel && pausePanel.appendChild) pausePanel.appendChild(hang);
+    // Bảng tạm dừng: "🔊 Âm thanh" + "🏝️ Về đảo" dưới "▶ Chơi tiếp"
+    const nutVeDao = document.createElement('button');
+    nutVeDao.type = 'button';
+    nutVeDao.className = 'btn teal';
+    nutVeDao.id = 'dao-nut-ve-dao';
+    hangTamDung(nutVeDao, function () { return nb.Store.data.sound !== false; }, function (bat) {
+      nb.Store.data.sound = bat;          // chỉ trong bộ nhớ, như apDungAmThanh (Store.save không ghi gì trên đảo)
+      nb.Store.data.music = bat;
+      nb.Sfx.setEnabled(bat);
+      nb.Music.setEnabled(bat);
+    });
     const nutChoiLai = $('btn-restart');
     if (nutChoiLai && nutChoiLai.parentNode && nutChoiLai.parentNode.classList) nutChoiLai.parentNode.hidden = true;   // hàng "Chơi lại", "Menu"
 
@@ -606,6 +611,54 @@
       c.fillText(bc.dong[i], f.x, y0 + i * cao);
     }
   }
+
+  /* ==== Bảng tạm dừng trên đảo: khối này giống hệt nhau ở 6 game (tests/games-nhom-g-dao.test.js) ==== */
+  const AM_BAT = '🔊 Âm thanh: Bật', AM_TAT = '🔇 Âm thanh: Tắt';
+  let daDungHangTamDung = false;
+  /** Ngay dưới "▶ Chơi tiếp": một hàng "🔊 Âm thanh" + "🏝️ Về đảo" (nutVe). Nút âm thanh bật / tắt hiệu ứng và nhạc
+      của game như thiết lập "tieng" của đảo, chỉ trong ván này (không lưu): tieng() cho biết đang bật, datTieng(bat) áp dụng. */
+  function hangTamDung(nutVe, tieng, datTieng) {
+    if (daDungHangTamDung) return null;
+    daDungHangTamDung = true;
+    const nut = document.createElement('button');
+    nut.type = 'button';
+    nut.id = 'dao-nut-am-thanh';
+    const ve = function () {
+      const bat = !!tieng();
+      nut.textContent = bat ? AM_BAT : AM_TAT;
+      nut.className = 'btn ghost dao-nut-am-thanh ' + (bat ? 'on' : 'off');
+      nut.setAttribute('aria-pressed', String(bat));
+    };
+    nut.addEventListener('click', function () {
+      const bat = !tieng();
+      try { datTieng(bat); if (bat) { window.Sfx.unlock(); window.Sfx.play('click'); } } catch (e) { /* bỏ qua */ }
+      ve();
+    });
+    ve();
+    const hang = document.createElement('div');
+    hang.className = 'btn-row dao-hang-tam-dung';
+    hang.appendChild(nut);
+    if (nutVe) {
+      const cu = nutVe.parentNode;
+      nutVe.textContent = '🏝️ Về đảo';
+      nutVe.hidden = false;
+      if (nutVe.classList) { nutVe.classList.remove('big', 'small', 'ghost'); nutVe.classList.add('teal'); }
+      hang.appendChild(nutVe);
+      // Hàng cũ của nút "Về đảo" chỉ còn các nút đã ẩn trên đảo: ẩn luôn cho khỏi hở một khoảng trống
+      if (cu && cu.children) {
+        const conHien = Array.prototype.some.call(cu.children, function (el) {
+          return !el.hidden && window.getComputedStyle(el).display !== 'none';
+        });
+        if (!conHien) cu.hidden = true;
+      }
+    }
+    const tiep = document.getElementById('btn-resume');
+    const hangTiep = tiep && tiep.parentNode;
+    const panel = document.querySelector('#pause .panel');
+    if (panel && panel.insertBefore) panel.insertBefore(hang, hangTiep && hangTiep.parentNode === panel ? hangTiep.nextSibling : null);
+    return { nut: nut, ve: ve };
+  }
+  /* ==== hết khối bảng tạm dừng ==== */
 
   /* ---------------- Tạm dừng, về đảo, kết thúc ---------------- */
 

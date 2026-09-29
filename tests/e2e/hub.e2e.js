@@ -69,14 +69,14 @@ async function run(label, viewport, reduced) {
     ok((await page.getAttribute('#hero-play', 'href')).endsWith('cuoi-ho/'), 'hero-play → cuoi-ho');
     ok((await text(page, '#hero-play')).indexOf('Cưỡi Hổ') >= 0, 'hero-play tên game');
     const achv = await text(page, '#achv');
-    ok(achv.indexOf('21/195') >= 0, 'achv sao: ' + achv);
+    ok(achv.indexOf('21/210') >= 0, 'achv sao: ' + achv);
     ok(achv.indexOf('15 phút') >= 0, 'achv phút: ' + achv);
 
     // 3. Thẻ game
     await page.waitForTimeout(700);   // thanh sao có transition 0.4s
     eq(await progress(page, 'cuoi-ho'), '⭐ 9/27 sao · 3/9 màn', 'cuoi-ho');
     eq(await progress(page, 'thap-dong-ho'), '⭐ 5/24 sao · 2/8 màn', 'thap (dạng cũ)');
-    eq(await progress(page, 'math-ninja'), '⭐ 4/48 sao · 2/16 màn', 'ninja (dạng cũ)');
+    eq(await progress(page, 'math-ninja'), '⭐ 4/63 sao · 2/21 màn', 'ninja (dạng cũ)');
     eq(await progress(page, 'cuu-chuong'), 'Chưa chơi', 'cuu-chuong');
     eq(await progress(page, 'me-cung-dong-ho'), '⭐ 3/24 sao · 0/8 màn', 'me-cung (độc hại)');
     eq(await progress(page, 'xe-tang-thoi-gian'), 'Chưa chơi', 'xe-tang (hỏng)');
@@ -96,13 +96,14 @@ async function run(label, viewport, reduced) {
     await page.screenshot({ path: require('path').join(__dirname, 'out', 'root', 'hub-' + label + '-full.png'), fullPage: true });
 
     // 5. Bảo mật / markup
-    eq(await page.evaluate(() => document.querySelectorAll('[onclick],[onload],[onerror],script:not([src])').length), 0, 'không inline handler / inline script');
+    eq(await page.evaluate(() => document.querySelectorAll('[onclick],[onload],[onerror],script:not([src]):not([type="application/ld+json"])').length), 0, 'không inline handler / inline script (JSON-LD là dữ liệu)');
     ok(await page.evaluate(() => !!document.querySelector('meta[http-equiv="Content-Security-Policy"]')), 'có CSP');
     eq(await page.evaluate(() => (document.querySelector('meta[name="referrer"]') || {}).content), 'no-referrer', 'referrer meta');
     eq(await page.evaluate(() => document.querySelectorAll('a[href^="javascript:"]').length), 0, 'không javascript: href');
     const hrefs = await page.$$eval('article .btn', (els) => els.map((a) => a.getAttribute('href')));
-    ok(hrefs.length === 6 && hrefs.every((h, i) => h === DIRS[i] + '/'), 'href thẻ game: ' + hrefs.join(','));
-    for (const p of DIRS.map((d) => d + '/').concat(['css/main.css', 'js/hub.js', 'js/profile.js', 'manifest.json', 'images/favicon.svg', 'images/favicon-32.png', 'images/apple-touch-icon.png', 'images/icon-192.png', 'images/icon-512.png', 'images/icon-512-maskable.png', 'images/og.jpg', '404.html', 'robots.txt', 'sitemap.xml'])) {
+    const CARDS = ['dao-khung-long'].concat(DIRS);
+    ok(hrefs.length === 7 && hrefs.every((h, i) => h === CARDS[i] + '/'), 'href thẻ game: ' + hrefs.join(','));
+    for (const p of DIRS.map((d) => d + '/').concat(['css/main.css', 'js/hub.js', 'js/profile.js', 'manifest.json', 'images/favicon.svg', 'images/favicon-32.png', 'images/apple-touch-icon.png', 'images/icon-192.png', 'images/icon-512.png', 'images/icon-512-maskable.png', 'images/og.jpg', '404.html', 'robots.txt', 'sitemap.xml', 'sw-home.js', 'rieng-tu/', 'fonts/baloo-2.css'].concat(CARDS.map((d) => 'images/the-' + d + '.webp')))) {
       const r = await page.request.get(url + p);
       eq(r.status(), 200, 'GET ' + p);
     }
@@ -114,7 +115,8 @@ async function run(label, viewport, reduced) {
     await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll('article img')).map((img) => { img.scrollIntoView(); return img.complete ? null : new Promise((r) => { img.addEventListener('load', r, { once: true }); img.addEventListener('error', r, { once: true }); }); })));
     await page.evaluate(() => window.scrollTo(0, 0));
     const imgs = await page.$$eval('article img', (els) => els.map((i) => ({ src: i.getAttribute('src'), nw: i.naturalWidth, w: i.getAttribute('width'), h: i.getAttribute('height') })));
-    ok(imgs.length === 6 && imgs.every((i) => /icon-192\.png$/.test(i.src) && i.nw === 192 && i.w === '192' && i.h === '192'), 'ảnh thẻ: ' + JSON.stringify(imgs));
+    // hình thẻ là WebP nhỏ trong images/ (không dùng thẳng PNG lớn trong thư mục game), kích thước khai báo đúng kích thước thật
+    ok(imgs.length === 7 && imgs.every((i, k) => i.src === 'images/the-' + CARDS[k] + '.webp' && i.nw > 0 && String(i.nw) === i.w && i.w === i.h), 'ảnh thẻ: ' + JSON.stringify(imgs));
     const perf = await page.evaluate(() => {
       const res = performance.getEntriesByType('resource').filter((e) => e.name.indexOf(location.origin) === 0);
       const nav = performance.getEntriesByType('navigation')[0];
@@ -126,7 +128,7 @@ async function run(label, viewport, reduced) {
     // 7. Không cuộn ngang; điện thoại: trang ngắn, 3 thẻ đầu trong 2 màn hình
     const dims = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth, h: document.documentElement.scrollHeight, cards: Array.from(document.querySelectorAll('article')).slice(0, 3).map((a) => Math.round(a.getBoundingClientRect().top)) }));
     ok(dims.sw <= dims.iw, 'cuộn ngang: ' + dims.sw + ' > ' + dims.iw);
-    if (viewport.width <= 480) { ok(dims.h < 2600, 'trang điện thoại quá dài: ' + dims.h); ok(dims.cards.every((y) => y < viewport.height * 2), 'ba thẻ đầu trong 2 màn hình: ' + dims.cards.join(',')); }
+    if (viewport.width <= 480) { ok(dims.h < 3300,   /* 7 thẻ + mục phụ huynh */ 'trang điện thoại quá dài: ' + dims.h); ok(dims.cards.every((y) => y < viewport.height * 2), 'ba thẻ đầu trong 2 màn hình: ' + dims.cards.join(',')); }
     summary.imgBytes = perf.img; summary.allBytes = perf.all; summary.requests = perf.n; summary.docH = dims.h;
 
     // 8. Bàn phím: liên kết "bỏ qua" hiện ra khi focus và cao ≥ 44px; Tab tới nút .btn và thấy viền focus
@@ -290,9 +292,9 @@ async function run(label, viewport, reduced) {
       await page.mouse.click(5, 5);
       await page.waitForTimeout(100);
       ok(await page.evaluate(() => document.getElementById('players').hidden), 'bấm nền đóng hộp thoại');
-      // 13. Nút chơi ngẫu nhiên đổi href sang một trong 6 game
+      // 13. Nút chơi ngẫu nhiên đổi href sang một trong 7 trò (6 game + Đảo Khủng Long)
       const rnd = await page.evaluate(() => { const a = document.getElementById('btn-random'); a.addEventListener('click', (e) => e.preventDefault(), { once: true }); a.click(); return a.getAttribute('href'); });
-      ok(DIRS.some((d) => rnd === d + '/'), 'href ngẫu nhiên: ' + rnd);
+      ok(DIRS.concat(['dao-khung-long']).some((d) => rnd === d + '/'), 'href ngẫu nhiên: ' + rnd);
       // Không có script inline nào cần 'unsafe-inline'; văn bản độc hại trong tên được escape
       await page.evaluate(() => { window.Players.rename('p1', '<img src=x onerror=alert(1)>'); });
       await page.waitForTimeout(100);
@@ -351,7 +353,7 @@ async function run(label, viewport, reduced) {
       const r404 = await p404.evaluate(() => ({ links: document.querySelectorAll('a.btn').length, small: Array.from(document.querySelectorAll('a.btn')).filter((a) => a.getBoundingClientRect().height < 44).length, csp: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]'), inline: document.querySelectorAll('script,[onclick]').length }));
       await p404.screenshot({ path: require('path').join(__dirname, 'out', 'root', 'hub-404.png') });
       await p404.close();
-      ok(r404.links === 7 && r404.small === 0 && r404.csp && r404.inline === 0 && errs404.length === 0, '404.html: ' + JSON.stringify(r404) + ' ' + errs404.join(';'));
+      ok(r404.links === 8 && r404.small === 0 && r404.csp && r404.inline === 0 && errs404.length === 0, '404.html: ' + JSON.stringify(r404) + ' ' + errs404.join(';'));
     }
   }, { viewport, initScript, reducedMotion: reduced ? 'reduce' : 'no-preference' });
   const clean = assertClean(log, 'hub ' + label);

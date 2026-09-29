@@ -183,7 +183,7 @@
     dom.dung.classList.remove('hidden');
     AT().doc(NH().docSo(v));
     ve();
-    setTimeout(cauMoi, 1900);
+    K().hen(cauMoi, 1900);
   }
 
   function goiY() {

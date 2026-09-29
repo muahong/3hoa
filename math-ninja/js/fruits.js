@@ -457,7 +457,7 @@
   }
 
   /* ---------------- Kho nửa quả đã nướng sẵn ---------------- */
-  // Vẽ nửa quả phải clip() từng khung hình — thao tác canvas đắt nhất của game.
+  // Vẽ nửa quả phải clip() từng khung hình: thao tác canvas đắt nhất của game.
   // Nướng sẵn một lần vào canvas ngoài màn hình rồi dùng lại như sprite thường.
   // Mọi ô trong kho có cùng kích thước (theo quả có viền rộng nhất) nên dùng lẫn được.
   const HALF_POOL_MAX = 16;
@@ -546,7 +546,7 @@
 
     /**
      * Nướng sẵn một nửa quả (đường cắt cố định) vào canvas ngoài màn hình.
-     * Trả về sprite dùng được với draw(), hoặc null khi kho đã đầy — khi đó
+     * Trả về sprite dùng được với draw(), hoặc null khi kho đã đầy; khi đó
      * gọi drawHalf() như cũ, chỉ mất phần tăng tốc chứ không sai hình.
      * Nhớ trả ô về kho bằng freeHalf() khi nửa quả biến mất.
      */

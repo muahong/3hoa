@@ -3,6 +3,8 @@
    câu hỏi ở trên, điểm bên trái, gợi ý và tạm dừng bên phải, thanh tiến độ, bóng gợi ý của khủng long,
    màn "Gần đúng rồi" (ghi phan_hoi_xem rồi đóng câu sai), tạm dừng (ghi tam_dung, tiep_tuc), pháo giấy.
    Mỗi game chỉ vẽ phần chơi ở giữa (#kc-san) và gọi các hàm dưới đây.
+   Thêm: loa nhỏ trên lựa chọn bằng chữ (chạm để nghe), loa trên thẻ lời giải (đọc tên lỗi, các bước, "Vậy..."),
+   menu Tạm dừng có hình, hỏi lại trước khi về đảo khi ván đã có câu trả lời, hẹn giờ biết tạm dừng (KhungChoi.hen).
    API: window.KhungChoi
    ============================================================ */
 (function () {
@@ -18,21 +20,201 @@
   function chu(el, t) { if (el && el.textContent !== String(t)) el.textContent = String(t); }
   function AT() { return window.AmThanh; }
 
+  /* ---------------- Dùng chung với Đua Xe: nút có hình, loa trên thẻ lời giải, hỏi lại trước khi về đảo ---------------- */
+
+  const LOA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+  const ICON = {
+    tiep: '<svg viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    cach_choi: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M9.3 9.4a2.8 2.8 0 1 1 4 2.5c-.8.4-1.3 1-1.3 1.9v.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.5" fill="currentColor"/></svg>',
+    bai_hoc: '<svg viewBox="0 0 24 24"><path d="M12 6.2C9.3 4.6 6.3 4.3 3 5.3v13.3c3.3-1 6.3-.7 9 .9 2.7-1.6 5.7-1.9 9-.9V5.3c-3.3-1-6.3-.7-9 .9zM12 6.2v13.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>',
+    am: '<svg viewBox="0 0 24 24"><path d="M3.5 9h4l5-4v14l-5-4h-4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.6 8.6 0 0 1 0 12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>',
+    am_tat: '<svg viewBox="0 0 24 24"><path d="M3.5 9h4l5-4v14l-5-4h-4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    giong: '<svg viewBox="0 0 24 24"><path d="M4 4.5h16v11H10.5L5.5 19.5v-4H4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 8.5h8M8 11.5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    giong_tat: '<svg viewBox="0 0 24 24"><path d="M4 4.5h16v11H10.5L5.5 19.5v-4H4z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M3 21L21 3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    ve_dao: '<svg viewBox="0 0 24 24"><path d="M3 11.5L12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h13V10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M10 19.5v-5h4v5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>'
+  };
+
+  /** Gắn hình cho một nút chữ (menu Tạm dừng): <span hình><span chữ>. */
+  function nutCoHinh(btn, hinh, t) {
+    if (!btn) return;
+    if (!btn.querySelector('.nut-chu')) btn.innerHTML = '<span class="nut-icon" aria-hidden="true"></span><span class="nut-chu"></span>';
+    btn.classList.add('co-icon');
+    datNut(btn, hinh, t);
+  }
+  function datNut(btn, hinh, t) {
+    if (!btn) return;
+    const c = btn.querySelector('.nut-chu');
+    if (!c) { chu(btn, t); return; }
+    chu(c, t);
+    const i = btn.querySelector('.nut-icon');
+    if (i && i.getAttribute('data-hinh') !== hinh) { i.innerHTML = ICON[hinh] || ''; i.setAttribute('data-hinh', hinh); }
+  }
+  /** Menu Tạm dừng giống nhau ở mọi thể loại của đảo: mỗi nút có hình. n: { tiep, cachChoi, baiHoc, am, giong, veDao } */
+  function trangTriTamDung(n) {
+    nutCoHinh(n.tiep, 'tiep', 'Chơi tiếp');
+    nutCoHinh(n.cachChoi, 'cach_choi', 'Cách chơi');
+    nutCoHinh(n.baiHoc, 'bai_hoc', 'Xem lại bài học');
+    nutCoHinh(n.am, 'am', 'Âm thanh: Bật');
+    nutCoHinh(n.giong, 'giong', 'Giọng đọc: Bật');
+    nutCoHinh(n.veDao, 've_dao', 'Về đảo');
+  }
+  /** Chữ và hình của hai nút Âm thanh, Giọng đọc theo cài đặt hiện tại. */
+  function nutAm(am, giong) {
+    const A = AT();
+    datNut(am, A.co.tieng ? 'am' : 'am_tat', 'Âm thanh: ' + (A.co.tieng ? 'Bật' : 'Tắt'));
+    datNut(giong, A.co.giong && A.coGiong() ? 'giong' : 'giong_tat', 'Giọng đọc: ' + (A.co.giong ? 'Bật' : 'Tắt'));
+    if (giong) giong.disabled = !A.coGiong();
+  }
+
+  /** Nút loa trên thẻ lời giải (thẻ .ph-the trong lớp phủ lopPhu): chạm để nghe lại cả lời giải. layDoc() trả về các câu. */
+  function ganLoaLoiGiai(lopPhu, layDoc, ghi) {
+    const the = lopPhu && lopPhu.querySelector('.ph-the');
+    if (!the || the.querySelector('.ph-loa')) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'dx-loa ph-loa';
+    b.setAttribute('aria-label', 'Nghe lời giải');
+    b.innerHTML = LOA;
+    b.addEventListener('click', function () {
+      const ds = layDoc();
+      if (!ds || !ds.length) return;
+      if (ghi) ghi();
+      AT().docChuoi(ds);
+    });
+    the.insertBefore(b, the.firstChild);
+  }
+
+  /**
+   * Hỏi lại trước khi rời ván đang dở (bấm Về đảo trong menu Tạm dừng): thẻ lớn hai nút, "Chơi tiếp" là nút chính.
+   * man: màn chứa lớp phủ; o: { hinh (url khủng long), onChoiTiep(), onVeDao() }
+   */
+  function hoiVeDao(man, o) {
+    if (!man) { if (o.onVeDao) o.onVeDao(); return; }
+    let h = man._hoiVeDao;
+    if (!h) {
+      const el = document.createElement('div');
+      el.className = 'lop-phu hidden hoi-ve-dao';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', 'Về đảo?');
+      el.innerHTML = '<div class="the tam-the hoi-ve-the"><img class="hoi-ve-hinh" alt="">' +
+        '<h2>Con muốn về đảo?</h2><p class="hoi-ve-phu">Ván này chưa xong đâu.</p>' +
+        '<button class="nut nut-cam nut-to" type="button" data-hoi="tiep"></button>' +
+        '<button class="nut nut-trang" type="button" data-hoi="ve"></button></div>';
+      man.appendChild(el);
+      h = man._hoiVeDao = { el: el, o: null };
+      nutCoHinh(el.querySelector('[data-hoi="tiep"]'), 'tiep', 'Chơi tiếp');
+      nutCoHinh(el.querySelector('[data-hoi="ve"]'), 've_dao', 'Về đảo');
+      el.addEventListener('click', function (e) {
+        const b = e.target.closest('[data-hoi]');
+        if (!b) return;
+        const oo = h.o;
+        dongHoiVeDao(man);
+        AT().bat('cham');
+        if (!oo) return;
+        if (b.getAttribute('data-hoi') === 'tiep') { if (oo.onChoiTiep) oo.onChoiTiep(); } else if (oo.onVeDao) oo.onVeDao();
+      });
+    }
+    h.o = o;
+    const img = h.el.querySelector('.hoi-ve-hinh');
+    if (img) { img.src = o.hinh || ''; an(img, !o.hinh); }
+    an(h.el, false);
+    AT().bat('cham');
+    AT().doc('Con muốn về đảo? Ván này chưa xong đâu.');
+    setTimeout(function () { try { h.el.querySelector('[data-hoi="tiep"]').focus(); } catch (e) { /* bỏ qua */ } }, 50);
+  }
+  function dongHoiVeDao(man) {
+    const h = man && man._hoiVeDao;
+    if (!h) return false;
+    const mo = !h.el.classList.contains('hidden');
+    an(h.el, true);
+    h.o = null;
+    return mo;
+  }
+
+  /*
+   * Loa nhỏ trên các lựa chọn bằng chữ ("Chắc chắn", "hai trăm linh năm", "5 kg"…) của mọi thể loại dùng khung chung:
+   * bé chưa đọc được chữ chạm loa để nghe (không tính là chọn), chạm phần còn lại của thẻ để chọn như cũ.
+   * Chỉ gắn cho thẻ có chữ cái (thẻ chỉ có số, phép tính thì bé đọc được), thẻ tranh, đồng hồ thì không.
+   */
+  const LUA_CHON_CHU = '.lt-the-kq, .lt-the-phep.lat, .tt-the, .cc-chon, .cc-kn-nut, .cc-ul-nut, .dt-lc, .ck-nut-chon, .ll2-the, .xd-lc-nut, .rh-the';
+  const CO_CHU_CAI = /[A-Za-zÀ-ɏḀ-ỿ][^]*[A-Za-zÀ-ɏḀ-ỿ]/;
+  /** Chữ bé nhìn thấy trên một thẻ (bỏ hình, số thứ tự, loa). */
+  function chuThe(b) {
+    const c = b.cloneNode(true);
+    c.querySelectorAll('.kc-loa-lc, [aria-hidden="true"], img, svg, .hidden, .ll2-the-so, .lt-sau').forEach(function (x) { x.remove(); });
+    return String(c.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+  function ganLoaLuaChon(goc) {
+    if (!goc || !goc.querySelectorAll) return;
+    goc.querySelectorAll(LUA_CHON_CHU).forEach(function (b) {
+      const co = b.querySelector('.kc-loa-lc');
+      const can = !b.disabled && CO_CHU_CAI.test(chuThe(b));
+      if (can && !co) {
+        const l = document.createElement('span');
+        l.className = 'kc-loa-lc';
+        l.setAttribute('aria-hidden', 'true');
+        l.innerHTML = LOA;
+        try { if (window.getComputedStyle(b).position === 'static') b.classList.add('kc-co-loa'); } catch (e) { /* bỏ qua */ }
+        b.appendChild(l);
+      } else if (!can && co) co.remove();
+    });
+  }
+  /** Chạm loa: đọc chữ của thẻ, chặn không cho sự kiện tới game (không tính là chọn). */
+  function chanLoa(e) {
+    const l = e.target && e.target.closest && e.target.closest('.kc-loa-lc');
+    if (!l) return;
+    e.stopPropagation();
+    // Không chặn mặc định của touchstart, pointerdown: iPad sẽ không phát click nữa
+    if (e.type !== 'click') return;
+    e.preventDefault();
+    const b = l.parentNode;
+    const t = b ? chuThe(b) : '';
+    if (!t || !s || dangKhoa()) return;
+    if (s.van && s.van.q && !s.van.q.xong) s.van.thaoTac('nghe_lai', { doi_tuong: 'lua_chon', gia_tri: t });
+    AT().doc(t);
+  }
+  function theoDoiLuaChon() {
+    const san = dom.san;
+    if (!san || san._loaLuaChon) return;
+    san._loaLuaChon = true;
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(function (k) { san.addEventListener(k, chanLoa, true); });
+    if (typeof window.MutationObserver === 'function') {
+      let cho = false;
+      new window.MutationObserver(function () {
+        if (cho) return;
+        cho = true;
+        Promise.resolve().then(function () { cho = false; ganLoaLuaChon(san); });
+      }).observe(san, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'disabled'] });
+    }
+  }
+
   function khoiDom() {
     if (dom) return dom;
     dom = {};
     ['man-choi', 'kc-nen', 'kc-diem', 'kc-cau-so', 'kc-phu', 'kc-cau', 'kc-de', 'kc-nghe', 'kc-goi-y', 'kc-tam-dung', 'kc-tien-do',
       'kc-san', 'kc-goi-y-bong', 'kc-goi-y-hinh', 'kc-goi-y-chu', 'kc-bay', 'kc-bao', 'kc-phan-hoi', 'kc-ph-hinh', 'kc-ph-noi-dung',
-      'kc-ph-que', 'kc-ph-note', 'kc-ph-que-nut', 'kc-ph-tiep', 'kc-tam', 'kc-tiep', 'kc-bai-hoc', 'kc-am', 'kc-giong', 'kc-ve-dao'].forEach(function (id) {
+      'kc-ph-que', 'kc-ph-note', 'kc-ph-que-nut', 'kc-ph-tiep', 'kc-tam', 'kc-tiep', 'kc-cach-choi', 'kc-bai-hoc', 'kc-am', 'kc-giong', 'kc-ve-dao'].forEach(function (id) {
       dom[id.replace(/^kc-/, '').replace(/-([a-z])/g, function (m, c) { return c.toUpperCase(); })] = $(id);
     });
     dom.man = dom.manChoi;
     dom.goiYBtn = dom.goiY;
+    trangTriTamDung({ tiep: dom.tiep, cachChoi: dom.cachChoi, baiHoc: dom.baiHoc, am: dom.am, giong: dom.giong, veDao: dom.veDao });
+    ganLoaLoiGiai(dom.phanHoi, function () { return s && s.phMo ? s.phDoc : null; }, function () {
+      if (s && s.van && s.van.q && !s.van.q.xong) s.van.thaoTac('nghe_lai', { doi_tuong: 'loi_giai' });
+    });
+    theoDoiLuaChon();
     dom.nghe.addEventListener('click', function () { ngheLai(); });
     dom.goiYBtn.addEventListener('click', function () { if (s && s.o.onGoiY && !dangKhoa()) s.o.onGoiY(); });
     dom.tamDung.addEventListener('click', function () { tamDung('nut'); });
     dom.tiep.addEventListener('click', function () { tiepTuc('nut'); });
-    dom.veDao.addEventListener('click', function () { thoat(); });
+    dom.veDao.addEventListener('click', function () {
+      if (!s) return;
+      // Ván đã có câu trả lời: hỏi lại cho chắc (bé hay chạm nhầm); chưa làm gì thì về luôn
+      if (s.van && s.van.coTienTrinh && s.van.coTienTrinh()) {
+        an(dom.tam, true);
+        hoiVeDao(dom.man, { hinh: s.o.hinhGoiY, onChoiTiep: function () { tiepTuc('nut'); }, onVeDao: thoat });
+      } else thoat();
+    });
     dom.baiHoc.addEventListener('click', function () {
       if (!s || !s.o.xemBaiHoc) return;
       an(dom.tam, true);
@@ -56,11 +238,7 @@
     return dom;
   }
 
-  function capNhatNutAm() {
-    chu(dom.am, 'Âm thanh: ' + (AT().co.tieng ? 'Bật' : 'Tắt'));
-    chu(dom.giong, 'Giọng đọc: ' + (AT().co.giong ? 'Bật' : 'Tắt'));
-    dom.giong.disabled = !AT().coGiong();
-  }
+  function capNhatNutAm() { nutAm(dom.am, dom.giong); }
 
   /**
    * Mở khung cho một ván.
@@ -69,7 +247,8 @@
    */
   function mo(o) {
     khoiDom();
-    s = { o: o, van: o.van, diem: 0, tamDung: false, phMo: false, dangMo: true, doc: null };
+    s = { o: o, van: o.van, diem: 0, tamDung: false, phMo: false, dangMo: true, doc: null, hoan: [] };
+    dongHoiVeDao(dom.man);
     dom.man.setAttribute('data-game', o.game);
     dom.nen.style.backgroundImage = o.nen ? 'url(' + o.nen + ')' : '';
     dom.nen.style.setProperty('--phu', o.phu || 'rgba(40,20,90,.45)');
@@ -91,6 +270,20 @@
   }
 
   function dangKhoa() { return !s || !s.dangMo || s.tamDung || s.phMo; }
+
+  /**
+   * Hẹn giờ của ván đang chơi (thay cho setTimeout trần trong các game): ván đổi hay đã đóng thì bỏ,
+   * bé đang tạm dừng thì chờ bé bấm Chơi tiếp mới chạy (không mở lời giải, không sang câu mới dưới menu Tạm dừng).
+   */
+  function hen(fn, ms) {
+    const phien = s;
+    return setTimeout(function () { if (s && s === phien && s.dangMo) khiChoi(fn); }, ms);
+  }
+  /** Chạy fn ngay, hoặc chờ tới khi bé chơi tiếp nếu đang tạm dừng (dùng trong hẹn giờ riêng của từng game). */
+  function khiChoi(fn) {
+    if (s && s.dangMo && s.tamDung) { s.hoan.push(fn); return; }
+    fn();
+  }
 
   /** Đặt đề trên thanh câu hỏi. doc: câu để đọc (mặc định đọc đúng chữ trên thanh). */
   function de(chuDe, doc, tuyChon) {
@@ -196,10 +389,11 @@
   /* ---------------- Màn phản hồi ---------------- */
 
   /**
-   * Mở màn phản hồi với nội dung tùy ý. p: { html, que (html bảng que tính hoặc null), note, doc }
-   * onDong(giayXem, nut) được gọi khi bé đóng màn.
+   * Mở màn phản hồi với nội dung tùy ý. p: { html, que (html bảng que tính hoặc null), note, doc (một câu hoặc mảng câu đọc nối tiếp) }
+   * onDong(giayXem, nut) được gọi khi bé đóng màn. Nút loa trên thẻ đọc lại cả doc.
    */
   function hienPhanHoi(p, onDong) {
+    s.phDoc = p.doc ? (Array.isArray(p.doc) ? p.doc : [p.doc]) : [];
     s.phMo = true;
     s.phLuc = performance.now();
     s.phNut = 'choi_tiep';
@@ -212,7 +406,7 @@
     chu(dom.phNote, p.note || '');
     an(dom.phanHoi, false);
     anGoiY();
-    if (p.doc) AT().doc(p.doc);
+    if (s.phDoc.length) AT().docChuoi(s.phDoc);
     setTimeout(function () { try { dom.phTiep.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
 
@@ -248,7 +442,8 @@
     hienPhanHoi({
       html: html, que: que,
       note: q && s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!',
-      doc: (kq.loi && kq.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (kq.loiNoi || '')
+      // Đọc cả tên lỗi, từng bước và câu "Vậy..." để bé chưa đọc được chữ vẫn nghe đủ lời giải
+      doc: window.PhanHoi.loiDoc(qHien, giaTri, kq)
     }, function (giay, nut) {
       s.van.phanHoiXem(giay, nut, them);
       s.van.ketThucCauSai();
@@ -273,14 +468,20 @@
     s.tamDung = false;
     window.NhatKy.tiepTuc(nguon);
     an(dom.tam, true);
+    dongHoiVeDao(dom.man);
     if (s.o.onTiepTuc) s.o.onTiepTuc();
+    // Các hẹn giờ tới lúc bé đang tạm dừng: chạy bây giờ
+    const hoan = s.hoan.splice(0);
+    hoan.forEach(function (fn) { if (s && s.dangMo && !s.tamDung) fn(); else if (s) s.hoan.push(fn); });
   }
   function thoat() {
     if (!s) return;
     an(dom.tam, true);
+    dongHoiVeDao(dom.man);
     const o = s.o;
     s.tamDung = false;
     s.dangMo = false;
+    s.hoan = [];
     window.NhatKy.tiepTuc('thoat');
     AT().dungDoc();
     if (o.onThoat) o.onThoat();
@@ -304,6 +505,15 @@
     phanHoiCau: phanHoiCau,
     tamDung: tamDung,
     dangKhoa: dangKhoa,
+    hen: hen,
+    khiChoi: khiChoi,
+    // Dùng chung với Đua Xe (màn riêng): menu Tạm dừng có hình, loa trên thẻ lời giải, hỏi lại trước khi về đảo
+    trangTriTamDung: trangTriTamDung,
+    nutAm: nutAm,
+    ganLoaLoiGiai: ganLoaLoiGiai,
+    hoiVeDao: hoiVeDao,
+    dongHoiVeDao: dongHoiVeDao,
+    ganLoaLuaChon: ganLoaLuaChon,
     san: function () { khoiDom(); return dom.san; },
     _trangThai: function () { return s; }
   };

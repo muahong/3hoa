@@ -23,8 +23,6 @@ html.dao-mode #btn-quit { display: none !important; }
 .dao-luat li > span + span { flex: 1 1 auto; min-width: 0; }
 .dao-luat b { color: var(--orange-ink); }
 .dao-nut-bat-dau { min-width: 240px; }
-.dao-hang-ve { margin-top: 12px; }
-.dao-nut-ve { min-height: 56px; font-size: 22px; }
 
 /* ---------- Thẻ câu hỏi (thay thẻ "Mục tiêu") ---------- */
 html.dao-mode .target-card { max-width: min(96vw, 940px); }
@@ -63,3 +61,7 @@ html.dao-mode .target-clock.dao-hinh svg { display: block; max-width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .dao-hinh-game svg { animation: none; } }
 .lite-fx .dao-hinh-game svg { animation: none; }
+
+/* Bảng tạm dừng trên đảo (giống nhau ở 6 game): "▶ Chơi tiếp", rồi "🔊 Âm thanh" và "🏝️ Về đảo" cùng một hàng, cùng cỡ */
+.dao-hang-tam-dung { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+.dao-hang-tam-dung .btn { min-width: 210px; min-height: 58px; font-size: 21px; padding: 10px 20px; }

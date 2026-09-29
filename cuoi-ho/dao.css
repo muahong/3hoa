@@ -91,3 +91,7 @@ html.dao .question-card.dao-hinh-vuong.zoomed .q-visual .clock { width: min(280p
 
 @media (prefers-reduced-motion: reduce) { .dao-qua-mong.nay { animation: none; } }
 .lite-fx .dao-qua-mong.nay { animation: none; }
+
+/* Bảng tạm dừng trên đảo (giống nhau ở 6 game): "▶ Chơi tiếp", rồi "🔊 Âm thanh" và "🏝️ Về đảo" cùng một hàng, cùng cỡ */
+.dao-hang-tam-dung { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+.dao-hang-tam-dung .btn { min-width: 210px; min-height: 58px; font-size: 21px; padding: 10px 20px; }

@@ -204,7 +204,7 @@ body::before {
 .achv li.empty { background: var(--paper-soft); color: var(--ink-soft); }
 .btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .btn-row.mt { margin-top: 14px; }
-#games:focus { outline: none; }
+#games:focus, #noi-dung:focus { outline: none; }
 h2 {
   color: #fff;
   font-size: clamp(22px, 3.5vw, 30px);
@@ -216,7 +216,20 @@ h2 {
 .parents h2 { color: var(--ink); text-shadow: none; margin: 0 0 8px; }
 .parents p { color: var(--ink-soft); font-weight: 600; font-size: 17px; margin: 0; }
 .parents b { color: var(--purple-dark); }
+.parents p.mt { margin-top: 10px; }
+.parents a { color: var(--blue-dark); font-weight: 800; }
+/* trang văn bản (rieng-tu/): bảng trắng, chữ canh trái, dễ đọc */
+.doc { text-align: left; max-width: 820px; margin: 0 auto; }
+.doc h2 { color: var(--ink); text-shadow: none; margin: 22px 0 8px; font-size: clamp(21px, 3vw, 26px); }
+.doc h2:first-child { margin-top: 0; }
+.doc p, .doc li { color: var(--ink-soft); font-weight: 600; font-size: 17px; line-height: 1.5; }
+.doc p { margin: 0 0 10px; }
+.doc ul { margin: 0 0 10px; padding-left: 22px; }
+.doc li { margin: 0 0 6px; }
+.doc b { color: var(--purple-dark); }
+.doc a { color: var(--blue-dark); font-weight: 800; }
 footer p { color: rgba(255, 255, 255, 0.75); font-weight: 600; text-align: center; margin: 28px 0 0; font-size: 15px; }
+footer a { color: var(--yellow); font-weight: 800; display: inline-block; padding: 12px 4px; }   /* vùng chạm ≥ 44px (padding + dòng chữ) */
 
 /* ---------- Nút tròn có bóng 3D (độ tương phản an toàn: mực trên vàng, trắng trên tím đậm) ---------- */
 .btn {

@@ -36,6 +36,7 @@
     // Đấu trường không giới hạn: ván dừng khi hạ trùm, số câu đã cân theo câu sai quay lại (xem kiểm thử cân bằng)
     this.toiDaCau = o.man && o.man.dau_truong ? Infinity : this.ds.length + soCauThem(this.ds.length);
     this.soXong = 0; // số câu đã kết thúc (kể cả câu sai quay lại)
+    this.soTraLoi = 0; // số lần bé chốt một đáp án (để hỏi lại khi bé bấm Về đảo giữa ván đang dở)
     this.choHien = 0; // câu đã dựng sẵn (bàn Lật Thẻ, cầu nối) nhưng chưa hiện
     this.lanGap = Object.assign({}, o.lanGap || {});
     this.q = null;
@@ -56,6 +57,8 @@
   };
 
   VanChoi.prototype.soCauDuKien = function () { return this.ds.length; };
+  /** Ván đã có tiến trình (ít nhất một câu trả lời hay một câu đã xong): bấm Về đảo thì hỏi lại trước. */
+  VanChoi.prototype.coTienTrinh = function () { return this.soTraLoi > 0 || this.soXong > 0; };
   VanChoi.prototype.soCauMoiDaXong = function () { return this.dem.moi; };
   VanChoi.prototype.conCau = function () { return !!(this.hang.length || this.choOnLai.length || (this.q && !this.q.xong)); };
 
@@ -225,6 +228,7 @@
     const NH = window.NganHang;
     const loi = NH.nhanBietLoi(q.cau_truc, giaTri);
     const dung = loi.length === 0;
+    this.soTraLoi++;
     this.nk.traLoi(Object.assign({
       gia_tri: giaTri, dung: dung, loi: loi, lan_thu: q.lan_thu,
       so_lan_doi_y: q.doiY, goi_y_cap: q.goiYCap
@@ -265,6 +269,7 @@
     const loi = NH.nhanBietLoi(q.cau_truc, giaTri, 1);
     const dung = loi.length === 0;
     q.lanThuB1 = q.lanThuB1 || 1;
+    this.soTraLoi++;
     this.nk.traLoi(Object.assign({
       gia_tri: giaTri, dung: dung, loi: loi, lan_thu: q.lanThuB1, buoc: 1,
       so_lan_doi_y: q.doiY, goi_y_cap: q.goiYBuoc[1]
@@ -293,6 +298,7 @@
     const loi = NH.nhanBietLoi(q.cau_truc, giaTri, 2);
     const dung = loi.length === 0;
     q.lanThuB2 = q.lanThuB2 || 1;
+    this.soTraLoi++;
     this.nk.traLoi(Object.assign({
       gia_tri: giaTri, dung: dung, loi: loi, lan_thu: q.lanThuB2, buoc: 2,
       so_lan_doi_y: q.doiY, goi_y_cap: q.goiYBuoc[2]

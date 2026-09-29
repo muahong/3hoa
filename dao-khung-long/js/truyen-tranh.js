@@ -189,7 +189,7 @@
       if (el) el.classList.add('dung');
       AT().bat('dung');
       s.khoa = true;
-      setTimeout(function () { if (s) { s.khoa = false; moBuoc2(); } }, 550);
+      K().hen(function () { if (s) { s.khoa = false; moBuoc2(); } }, 550);
       return;
     }
     AT().bat('sai');
@@ -209,9 +209,11 @@
       '<div class="ph-giai"><ol class="ph-buoc">' + s.q.khung.map(function (k) { return '<li>' + boiSo(k) + '</li>'; }).join('') + '</ol></div>' +
       '<p class="ph-loi">' + esc(kq.loiNoi) + '.</p>' +
       '<p class="ph-ket">Phép tính đúng: ' + esc(NH().hienGiaTri(kq.dapAn)) + '</p>';
-    setTimeout(function () {
+    // Đọc đủ như trên thẻ: bé chọn gì, lời kể của truyện, vì sao, phép tính đúng
+    const doc = ['Con chọn ' + NH().hienGiaTri(v) + '. Mình đọc lại truyện nhé.'].concat(s.q.khung, [kq.loiNoi + '.', 'Phép tính đúng: ' + NH().hienGiaTri(kq.dapAn)]);
+    K().hen(function () {
       if (!s) return;
-      K().hienPhanHoi({ html: html, note: 'Bây giờ con tính kết quả nhé', doc: kq.loiNoi }, function (giay, nut) {
+      K().hienPhanHoi({ html: html, note: 'Bây giờ con tính kết quả nhé', doc: doc }, function (giay, nut) {
         s.van.phanHoiXem(giay, nut, { buoc: 1, ma_loi_giai: 'chon-phep' });
         s.khoa = false;
         moBuoc2();
@@ -266,7 +268,9 @@
     AT().bat('sai');
     if (kq.thuLai) {
       dom.o.classList.add('sai');
-      K().bao('Chưa đúng, con tính lại nhé', 'sai');
+      // Gọi tên lỗi như các thể loại khác (quên nhớ, nhầm dấu…) và đọc to
+      K().bao((kq.loiNoi || 'Chưa đúng') + '. Con tính lại nhé', 'sai', 3.2);
+      AT().doc((kq.loiNoi || 'Chưa đúng') + '. Con tính lại nhé');
       s.nhap = '';
       setTimeout(function () { if (s) dom.o.textContent = ''; }, 500);
       return;
@@ -287,7 +291,7 @@
     dom.giaiNd.innerHTML = '<p class="tt-giai-nhan">Bài giải</p><p>' + esc(b[0]) + '</p><p class="tt-giai-phep">' + esc(b[1]) + '</p><p class="tt-giai-dap">' + esc(b[2]) + '</p>';
     dom.giai.classList.remove('hidden');
     s.choTiep = true;
-    AT().doc(b[2]);
+    AT().docChuoi(['Bài giải', b[0], b[1], b[2]]);
     setTimeout(function () { try { dom.giaiTiep.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
 

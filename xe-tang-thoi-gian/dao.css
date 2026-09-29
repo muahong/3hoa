@@ -32,7 +32,6 @@
 .dao-mode #btn-pause-lesson,
 .dao-mode #btn-restart,
 .dao-mode #btn-quit { display: none !important; }
-#btn-dao-ve { min-height: 62px; font-size: 24px; }
 
 /* ---------- HUD: thẻ câu hỏi rộng hơn (câu của đảo dài, có hình), quả mọng thay tim (không có tim, không thua) ---------- */
 @media (min-width: 901px) {
@@ -82,3 +81,7 @@
 @media (prefers-reduced-motion: reduce) {
   .dao-be, .dao-berry.nhun { animation: none !important; }
 }
+
+/* Bảng tạm dừng trên đảo (giống nhau ở 6 game): "▶ Chơi tiếp", rồi "🔊 Âm thanh" và "🏝️ Về đảo" cùng một hàng, cùng cỡ */
+.dao-hang-tam-dung { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+.dao-hang-tam-dung .btn { min-width: 210px; min-height: 58px; font-size: 21px; padding: 10px 20px; }

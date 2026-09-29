@@ -1,7 +1,7 @@
 'use strict';
 // Fresh contexts; real pointer/keyboard inputs. Debug objects are read only.
 const fs = require('fs'), path = require('path'), http = require('http');
-let pw; try { pw = require('playwright'); } catch { pw = require('C:/Users/son.nguyen/AppData/Roaming/Python/Python312/site-packages/playwright/driver/package'); }
+const pw = require(path.join(__dirname, 'lib', 'playwright.js'));
 const root = path.resolve(__dirname, '../..');
 const out = path.join(__dirname, 'out/gauntlet/baseline-three'); fs.mkdirSync(out, { recursive: true });
 const server = http.createServer((req,res) => { let p = decodeURIComponent(req.url.split('?')[0]); if(p.endsWith('/')) p+='index.html'; const f=path.join(root,p); fs.readFile(f,(e,b)=>{res.writeHead(e?404:200,{'Content-Type': ({'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css'})[path.extname(f)] || 'application/octet-stream'});res.end(e?'Not found':b);}); });
@@ -17,7 +17,8 @@ const server = http.createServer((req,res) => { let p = decodeURIComponent(req.u
  record.cards=await page.locator('.level-card').allTextContents();
  await page.locator('.level-card').first().click();
  if(game==='thap-dong-ho') {await page.waitForTimeout(300);await shot('lesson');await page.locator('#btn-lesson-start').click();}
- await page.waitForTimeout(4100);
+ // chờ vào ván và đọc xong câu đầu (thay cho chờ cố định 4,1 giây)
+ await page.waitForFunction(()=>{const x=window.__NinjaToan||window.__CuuChuong||window.__ThapDongHo;return !!x&&x.G.state==='playing'&&!(x.G.readLeft>0)},null,{timeout:15000});
  record.text=await page.locator('body').innerText(); await shot('gameplay');
  record.geometry=await page.evaluate(()=>({w:innerWidth,h:innerHeight,scrollW:document.documentElement.scrollWidth,small:[...document.querySelectorAll('button,a')].filter(e=>e.getClientRects().length && getComputedStyle(e).visibility!=='hidden').map(e=>{const r=e.getBoundingClientRect();return {id:e.id,text:e.textContent.trim().slice(0,40),w:r.width,h:r.height}}).filter(x=>x.w<44||x.h<44)}));
  if(game==='math-ninja') {

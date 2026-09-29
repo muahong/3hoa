@@ -115,5 +115,21 @@
     return h;
   }
 
-  window.PhanHoi = { cotDoc: cotDoc, queTinh: queTinh, khoiSo: khoiSo, noiDung: noiDung, esc: esc };
+  /**
+   * Các câu để đọc to lời giải, cùng thứ tự với thẻ noiDung: tên lỗi, từng bước, câu "Vậy...".
+   * Đọc nối tiếp bằng AmThanh.docChuoi để bé chưa đọc được chữ vẫn nghe đủ lời giải.
+   */
+  function loiDoc(q, giaTri, kq) {
+    kq = kq || {};
+    const coTen = kq.loi && kq.loi.length && kq.loi[0] !== 'khac';
+    const lg = (q && q.loi_giai) || {};
+    const ds = [];
+    const loiNoi = String(kq.loiNoi || '').replace(/[.!\s]+$/, '');
+    ds.push((coTen ? 'Gần đúng rồi. ' : '') + (loiNoi ? loiNoi + '.' : ''));
+    (lg.buoc || []).forEach(function (b) { if (b != null && String(b).trim()) ds.push(String(b)); });
+    if (q) ds.push(q.ket_luan || ('Vậy ' + String(q.de || '').replace('?', String(q.dap_an))));
+    return ds.filter(function (x) { return String(x).trim(); });
+  }
+
+  window.PhanHoi = { cotDoc: cotDoc, queTinh: queTinh, khoiSo: khoiSo, noiDung: noiDung, loiDoc: loiDoc, esc: esc };
 })();

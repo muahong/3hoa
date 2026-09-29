@@ -1328,7 +1328,7 @@
     c.beginPath(); c.moveTo(x - r * 0.45, gr + 2); c.lineTo(x - r * 0.2, gr - r * 0.22); c.lineTo(x + r * 0.2, gr - r * 0.22); c.lineTo(x + r * 0.45, gr + 2); c.closePath(); c.fill();
     c.fillStyle = '#ffd166';
     c.beginPath(); c.arc(x, topY - r * 0.28, r * 0.28, 0, TAU); c.fill();
-    // Số thứ tự cụm ở chân cột — vẽ TRƯỚC các vòng, để trên máy hẹp nó không đè lên mặt đồng hồ nhỏ
+    // Số thứ tự cụm ở chân cột: vẽ TRƯỚC các vòng, để trên máy hẹp nó không đè lên mặt đồng hồ nhỏ
     c.fillStyle = '#ffd166';
     c.beginPath(); c.arc(x, gr - r * 0.5, r * 0.3, 0, TAU); c.fill();
     c.font = '800 ' + Math.round(r * 0.34) + 'px ' + FONT;
@@ -2205,7 +2205,7 @@
 
   /* ================= GHI NHỚ ================= */
   function renderNotes() {
-    // Phần kiến thức bé đang sai nhiều được gắn 📝 và xếp lên đầu — mở Ghi nhớ ra là thấy ngay thứ cần ôn
+    // Phần kiến thức bé đang sai nhiều được gắn 📝 và xếp lên đầu: mở Ghi nhớ ra là thấy ngay thứ cần ôn
     const missed = Store.p().missed;
     const need = Object.create(null);
     Object.keys(missed).forEach(function (k) {
@@ -2225,7 +2225,7 @@
   function readNotes() {
     if (!Voice.available) { toast('Thiết bị chưa có giọng đọc tiếng Việt 🙁'); return; }
     if (G.reading) { G.reading = false; Voice.stop(); return; }   // bấm lần 2: dừng đọc
-    Voice.stop();          // hủy lời đang đọc trước — Voice.onstop sẽ xóa cờ, nên phải bật cờ SAU khi hủy
+    Voice.stop();          // hủy lời đang đọc trước; Voice.onstop sẽ xóa cờ, nên phải bật cờ SAU khi hủy
     G.reading = true;
     const lines = ui.notesList.querySelectorAll('.note-line');
     lines.forEach(function (el, i) {
@@ -2526,7 +2526,7 @@
     const pool = Store.reviewPool();
     $('report-review').innerHTML = pool.length
       ? pool.slice(0, 12).map(function (it) { return '<div class="report-row"><span class="t">' + esc(describeReview(it)) + '</span><span>✖ ' + it.n + '</span></div>'; }).join('')
-      : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+      : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>';
     $('btn-report-reset').textContent = '🗑 Xóa tiến trình của ' + p.name;
   }
 

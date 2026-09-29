@@ -3,6 +3,7 @@
    - Tên (1 đến 16 ký tự), tuổi (5 đến 11), lớp gợi ý từ tuổi và năm học rồi xác nhận.
    - Phong cách khủng long: dung_manh (Rex) hoặc de_thuong (Mây).
    - Lưu ở kho ho_so của IndexedDB (qua NhatKy.kho). Bé đang chơi nhớ ở localStorage.
+   - Tên gợi ý đọc từ hồ sơ chung của trang chủ, bỏ tên của bé đã bị xóa khỏi đảo (anGoiY, khóa 'dkl-an-goi-y').
    - Thời gian chơi: mặc định không giới hạn. Chỉ khi phụ huynh đặt gioi_han_phut thì mới có giới hạn mỗi ngày;
      them_hom_nay ({ ngay, phut } hoặc { ngay, khong_gioi_han: true }) là giờ cho thêm riêng hôm đó, qua ngày tự hết.
    API: window.HoSo
@@ -13,6 +14,7 @@
   const TEN_TOI_DA = 16;
   const TOI_DA_BE = 8;
   const KHOA_BE = 'dkl-be-dang-choi-v1';
+  const KHOA_AN_GOI_Y = 'dkl-an-goi-y'; // dấu (băm) tên của các bé bị xóa khỏi đảo: không gợi ý lại
   const HOI_LAI_SAU_MS = 12 * 3600 * 1000;
   /** Phụ huynh chọn số phút mỗi ngày trong khoảng này, bước 5 phút (null là không giới hạn, mặc định). */
   const GIOI_HAN = { toi_thieu: 5, toi_da: 240, buoc: 5 };
@@ -142,16 +144,43 @@
     return !o || !(o.luc > 0) || (now == null ? Date.now() : now) - o.luc > HOI_LAI_SAU_MS;
   }
 
-  /** Tên gợi ý: tên các bé trong hồ sơ chung của 3hoa.com (chỉ đọc). */
+  /**
+   * Dấu của một tên: băm FNV-1a 32 bit của tên đã chuẩn hóa (không phân biệt hoa thường, dạng Unicode, khoảng trắng thừa).
+   * Danh sách ẩn chỉ giữ dấu, không giữ tên của bé đã bị xóa.
+   */
+  function dauTen(t) {
+    const x = 'dkl-ten|' + sachTen(t).normalize('NFC').toLowerCase();
+    let h = 2166136261;
+    for (let i = 0; i < x.length; i++) { h ^= x.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h.toString(16).padStart(8, '0');
+  }
+  function docAnGoiY() {
+    try {
+      const d = JSON.parse(window.localStorage.getItem(KHOA_AN_GOI_Y));
+      return Array.isArray(d) ? d.filter(function (x) { return typeof x === 'string' && /^[0-9a-f]{8}$/.test(x); }) : [];
+    } catch (e) { return []; }
+  }
+  /**
+   * Không gợi ý các tên này nữa (bé đã bị xóa khỏi đảo). Chỉ ghi dấu của tên vào 'dkl-an-goi-y' (tối đa 40),
+   * không đụng hồ sơ chung của trang chủ.
+   */
+  function anGoiY(ten) {
+    const ds = docAnGoiY();
+    (Array.isArray(ten) ? ten : [ten]).forEach(function (t) { if (!sachTen(t)) return; const d = dauTen(t); if (ds.indexOf(d) < 0) ds.push(d); });
+    try { window.localStorage.setItem(KHOA_AN_GOI_Y, JSON.stringify(ds.slice(-40))); } catch (e) { /* bỏ qua */ }
+  }
+
+  /** Tên gợi ý: tên các bé trong hồ sơ chung của 3hoa.com (chỉ đọc), trừ tên của bé đã bị xóa khỏi đảo. */
   function tenGoiY() {
     try {
       const s = window.localStorage.getItem('3hoa-players-v1');
       const d = s ? JSON.parse(s) : null;
       if (!d || !Array.isArray(d.players)) return [];
+      const an = docAnGoiY();
       const ra = [];
       d.players.forEach(function (p) {
         const t = sachTen(p && p.name);
-        if (t && t !== 'Bé' && ra.indexOf(t) < 0) ra.push(t);
+        if (t && t !== 'Bé' && ra.indexOf(t) < 0 && an.indexOf(dauTen(t)) < 0) ra.push(t);
       });
       return ra.slice(0, 6);
     } catch (e) { return []; }
@@ -175,6 +204,8 @@
     beDangChoi: beDangChoi,
     datBeDangChoi: datBeDangChoi,
     canHoiLaiBe: canHoiLaiBe,
-    tenGoiY: tenGoiY
+    tenGoiY: tenGoiY,
+    anGoiY: anGoiY,
+    KHOA_AN_GOI_Y: KHOA_AN_GOI_Y
   };
 })();

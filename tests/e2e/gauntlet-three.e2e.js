@@ -2,7 +2,7 @@
 /* Actual pointer/key/DOM input only. Debug state is read to locate rendered targets and
    assert outcomes. Seed controls RNG, never scores/wins. Timed rounds run in real time. */
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),http=require('http');
-let pw;try{pw=require('playwright')}catch{pw=require('C:/Users/son.nguyen/AppData/Roaming/Python/Python312/site-packages/playwright/driver/package')}
+const pw = require(path.join(__dirname, 'lib', 'playwright.js'));
 const root=path.resolve(__dirname,'../..'),out=path.join(__dirname,'out/gauntlet/three-package');fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{let p=decodeURIComponent(req.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';const f=path.join(root,p);if(!f.startsWith(root+path.sep)){res.writeHead(403);res.end();return}fs.readFile(f,(e,b)=>{res.writeHead(e?404:200,{'Content-Type':({'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml'})[path.extname(f)]||'application/octet-stream'});res.end(e?'404':b)})});
 const views={phone:[390,844],desktop:[1180,820],tablet:[820,1180],landscape:[844,390]};

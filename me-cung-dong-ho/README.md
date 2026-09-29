@@ -38,6 +38,7 @@ Không cần cơ sở dữ liệu. Tiến độ (màn đã mở khóa), điểm 
 | `js/game.js` | Bộ máy trò chơi: di chuyển trên lưới, AI ma, sao sức mạnh, mục tiêu, mạng, hỏi đáp, mở khóa, lưu tiến độ theo từng bé, ôn lại thông minh, báo cáo |
 | `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chỉ bật khi game mở trong iframe của đảo, xem mục bên dưới); các móc trong `game.js` ghi chú `[ĐẢO]` |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Các màn chơi (mở khóa lần lượt)
 
@@ -76,7 +77,7 @@ Game **chào bé theo tên** (chữ và giọng đọc) ở lần chạm đầu 
 
 - Không menu, chọn màn, tim, bài học, hỏi đáp, bảng kết quả; không ghi localStorage của game. Thẻ "Bắt đầu" (tên màn, Cú Tí) mở âm thanh trên iPad; âm thanh và giọng đọc theo cài đặt của đảo.
 - Mỗi câu của đảo là một lượt trong mê cung gọn 9 × 13: ba ô đích mang ba lựa chọn (`cauTiep({ so_lua_chon: 3, vi_tri })`, vị trí đặt tên theo vùng màn hình như `tren_trai`, `giua`, `duoi_phai`). Cú Tí tới ô nào là trả lời ô đó. Lựa chọn là biển chữ (số, độ dài, giờ; chữ dài tự thu nhỏ và xuống dòng), đồng hồ vẽ bằng bộ vẽ của game (`dong_ho`), hoặc hình nhỏ. Thẻ câu hỏi hiện đề (dấu `?` chỗ cần điền tô cam) và hình của đề (cắt lề trống cho to, đọc rõ số đo).
-- Ma chỉ đuổi khi bé di chuyển; ma chạm vào thì Cú Tí "vèo" về chỗ xuất phát, không mất gì, không tính là trả lời. Sai hẳn: game đứng yên, đảo hiện màn "Gần đúng rồi", đóng lại thì sang câu mới. Nút 💡 là ba cấp gợi ý của đảo (cấp 3 làm một đích sai tan thành khói). Tạm dừng có nút "Về đảo".
+- Ma chỉ đuổi khi bé di chuyển; ma chạm vào thì Cú Tí "vèo" về chỗ xuất phát, không mất gì, không tính là trả lời. Sai hẳn: game đứng yên, đảo hiện màn "Gần đúng rồi", đóng lại thì sang câu mới. Nút 💡 là ba cấp gợi ý của đảo (cấp 3 làm một đích sai tan thành khói). Tạm dừng: bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và 🏝️ Về đảo, giống nhau ở 6 game.
 - Nhật ký (qua đảo): `chon` khi chạm một ô đích mới (chạm đích khác là đổi ý), `cham` ô đường đi, chạm lại đích cũ, chạm Cú Tí để dừng, ma chạm; `di_chuyen` mỗi đoạn thẳng (`tu`, `den`, `huong`, `so_o`, `cach`: cham, vuot, phim, nut; `gan`: đích đi ngang sát bên), tối đa 40 đoạn mỗi câu; `nghe_lai`; `tra_loi` kèm `vi_tri`, ô, số đoạn, số ô đã đi, số lần ma chạm, các đích đã ghé qua.
 - Kiểm thử: `node --test tests/me-cung-dong-ho-dao.test.js` (cầu nối giả theo kịch bản và cầu nối, ván chơi, nhật ký thật của đảo).
 
@@ -87,7 +88,7 @@ Game **chào bé theo tên** (chữ và giọng đọc) ở lần chạm đầu 
 - **Mê cung**: `RAW` trong `js/mazes.js` (ký hiệu ghi ở đầu tệp). Ô tối thiểu `MIN_CELL` trong `js/game.js` quyết định khi nào dùng mê cung nhỏ hơn.
 - **Tốc độ Cú Tí, thời gian ma buồn ngủ, điểm**: `PLAYER_SPEED`, `FRIGHT_TIME`, `POINTS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `me-cung-dong-ho-v2`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 
 ## Kiểm thử
 

@@ -40,6 +40,7 @@ Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao v�
 | `js/game.js` | Bộ máy trò chơi: bảng 4 cột × 6 hàng, đồng hồ rơi, tháp đá, điểm, combo, bài học, hỏi đáp, mở khóa màn |
 | `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (thể loại "Tháp Xếp Hình" trong đảo), xem mục bên dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Chơi trong Đảo Khủng Long
 
@@ -49,7 +50,7 @@ Không cần cơ sở dữ liệu. Tiến trình mở khóa màn, điểm cao v�
 - Bé đưa khối sang cột (◀ ▶, chạm cột, kéo, phím ← → hoặc 1–4) rồi thả (⬇ THẢ, chạm cột lần nữa, Space/Enter/↓). Khối chạm đáy cột nào thì trả lời bằng giá trị của cột đó. Nhật ký: `doi_cot` (gộp các bước liền nhau, có `tu`, `den`, `buoc`, `cach`), `tha`, rồi `tra_loi` kèm `vi_tri`, `cot_dau`, `so_cot`.
 - **Không hết giờ, không thua**: khối dừng lơ lửng một hàng trên chỗ đáp chờ bé; cột đá cao gần đỉnh thì tự dọn. Bảng 5 hàng, đĩa đáp án cao hơn để vẽ hình và đồng hồ.
 - Sai: khối hóa đá, cột đúng sáng lên ("Đây!"), rồi đảo hiện màn "Gần đúng rồi" (`phanHoi`), câu sai quay lại sau 2 câu. Câu được thử 2 lần (`thu_lai`): khối bật lên, cột vừa chọn bị gạch.
-- 💡 (hoặc phím H): ba cấp gợi ý của ngân hàng (`goiY`), cấp 3 gạch một cột sai (`loai_bo`). 🔊 đọc lại đề (`nghe_lai`). ⏸ / Esc: `tamDung`, màn tạm dừng chỉ có "Chơi tiếp" và "Về đảo" (`veDao`).
+- 💡 (hoặc phím H): ba cấp gợi ý của ngân hàng (`goiY`), cấp 3 gạch một cột sai (`loai_bo`). 🔊 đọc lại đề (`nghe_lai`). ⏸ / Esc: `tamDung`, bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và 🏝️ Về đảo, giống nhau ở 6 game (`veDao`).
 - Không menu, bài học, hỏi đáp, bảng kết quả, và không ghi `localStorage`: hết câu thì hiệu ứng "HOÀN THÀNH!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc riêng. Âm thanh và giọng đọc theo cài đặt của đảo (`thongTin().am_thanh`); khủng long của bé (ảnh của đảo) đứng cạnh tháp thay bạn cú.
 - Câu không có lựa chọn (màn để dạng mặc định "quay kim" của kỹ năng): game xin đáp án nhiễu từ `NganHang` của đảo và ghi các lựa chọn đã hiện bằng thao tác `tro`.
 
@@ -76,7 +77,7 @@ Luật chơi: mỗi màn cần thả đúng một số đồng hồ nhất đị
 - **Bài học và câu hỏi**: sửa `LESSONS` và `CONCEPT` trong `js/clock.js`.
 - **Kích thước bảng**: `COLS`, `ROWS` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (hiện là `thap-dong-ho-v9`, lần sau đổi thành `thap-dong-ho-v10`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 - **Ít hiệu ứng**: nút ✨ Hiệu ứng: Nhiều/Ít trên trang chính (và tự động khi hệ thống bật "giảm chuyển động") giảm hạt, tắt rung/chớp màn hình, tắt pháo giấy.
 - **Điện thoại dựng đứng**: cụm ◀ ⬇ ▶ được thu gọn còn mỗi nút 💡 đặt bên lề trái (chạm thẳng vào cột để đưa đồng hồ tới, chạm lần nữa để thả) – nhờ vậy ô bảng rộng thêm khoảng 30 % và chữ trên đĩa đáp án đọc được. Máy tính bảng và máy tính vẫn có đủ bốn nút.
 

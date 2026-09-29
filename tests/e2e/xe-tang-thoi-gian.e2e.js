@@ -176,7 +176,7 @@ const LEGACY = { sound: true, music: false, voice: true, progress: { l1: { best:
     assert.equal(await page.$eval('.level-card[data-id="l2"]', (c) => c.getAttribute('tabindex')), '0');
     assert.ok((await page.$eval('.level-card[data-id="l1"] .num', (e) => e.textContent)).indexOf('✅') >= 0, 'l1 đánh dấu đã qua');
     assert.equal(await page.$eval('.level-card[data-id="l1"] .quiz-best', (e) => e.textContent), '🧠 4/4', 'thẻ màn hiện điểm hỏi đáp');
-    assert.equal(await page.$eval('.level-card[data-id="l2"] .best', (e) => e.textContent), '🏆 —', 'chưa chơi thì hiện dấu —');
+    assert.equal(await page.$eval('.level-card[data-id="l2"] .best', (e) => e.textContent), '🏆 –', 'chưa chơi thì hiện dấu –');
     await checkLevelHead(page, 'ngang 1180×820');
     await shot('levels-landscape');
     // Bàn phím: Enter trên thẻ màn

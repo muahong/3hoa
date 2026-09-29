@@ -660,7 +660,7 @@
         s += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="15" fill="none" stroke="#ef476f" stroke-width="3"/>';
       });
     }
-    // Kim: vẽ TẤT CẢ quầng sáng trước, rồi kim giờ (có viền trắng), rồi kim phút —
+    // Kim: vẽ TẤT CẢ quầng sáng trước, rồi kim giờ (có viền trắng), rồi kim phút,
     // nếu không, quầng của kim phút sẽ phủ lên kim giờ và bé tưởng kim giờ ngắn hơn thật.
     if (!c.noHands) {
       const hourMin = ((h % 12) + m / 60) * 5;
@@ -690,7 +690,7 @@
   }
   /** Phép tính viết to (thay cho emoji "🌇 ➕ 12" khó đọc): "5 + 12 = 17". */
   function mathHtml(str) { return '<div class="math-art">' + esc(str) + '</div>'; }
-  /** Băng 24 giờ: hàng trên 1…12 (buổi sáng), hàng dưới 13…24 — thấy ngay "số dưới = số trên + 12". */
+  /** Băng 24 giờ: hàng trên 1…12 (buổi sáng), hàng dưới 13…24: thấy ngay "số dưới = số trên + 12". */
   function h24StripHtml() {
     let top = '', bot = '';
     for (let i = 1; i <= 12; i++) {

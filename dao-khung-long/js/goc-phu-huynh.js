@@ -2,7 +2,9 @@
    goc-phu-huynh.js – Góc phụ huynh (mockup 17 đến 22): cổng phép tính của người lớn, rồi
    Tổng quan tuần · Nhật ký chi tiết · Xem lại một câu · Bản đồ kỹ năng · Kế hoạch tuần tới · Cài đặt · Xuất cho trợ lý AI.
    Mọi con số tính ở js/bao-cao.js (hàm thuần) từ ba lớp tóm tắt; chỉ màn Xem lại một câu đọc nhật ký gốc của một ván
-   (NhatKy.docVan), gói xuất đọc nhật ký gốc của bé khi phụ huynh bấm tạo gói.
+   (NhatKy.docVan), gói xuất đọc nhật ký gốc 28 ngày gần nhất của bé khi phụ huynh bấm tạo gói.
+   Cài đặt có: giọng đọc tiếng Việt của máy, mục Nâng cao (tải nhật ký, tính lại, số sự kiện), xóa một bé, xóa mọi dữ liệu
+   của đảo trên máy (gõ XÓA), liên kết Quyền riêng tư.
    Tự dựng giao diện trong <section id="man-phu-huynh"> (section tự cuộn dọc). Chỉ ghi phu_huynh_mo, phu_huynh_cai_dat (YC-09),
    và chỉ khi bé đang xem chính là bé đang chơi (nhật ký luôn gắn với một bé; không ghi mã của bé này vào nhật ký bé khác).
    API: window.GocPhuHuynh = { mo(ve, ctx, tab) } (tab: mục mở ngay sau cổng, ví dụ cai_dat)
@@ -77,7 +79,9 @@
     nk: { ngay: null, caTuan: false, loc: { loai: 'tat_ca' } },
     kn: null, // mã nội dung đang xem ở bản đồ kỹ năng
     kh: { bo: {} }, // mục kế hoạch phụ huynh bỏ ra
-    xuat: { kem: false, kq: null, dang: false },
+    xuat: { kem: false, boTuoi: false, kq: null, dang: false, hienCauHoi: false },
+    nangCao: false, // mục Nâng cao của Cài đặt đang mở
+    giongCho: false, // đã chờ danh sách giọng đọc (voiceschanged) chưa
     nhatKyGoc: {}, // van -> sự kiện (đã đọc cho màn Xem lại)
     cache: {},
     soSuKien: null
@@ -253,7 +257,8 @@
     S.nk = { ngay: null, caTuan: false, loc: { loai: 'tat_ca' } };
     S.kn = null;
     S.kh = { bo: {} };
-    S.xuat = { kem: false, kq: null, dang: false };
+    S.xuat = { kem: false, boTuoi: false, kq: null, dang: false, hienCauHoi: false };
+    S.nangCao = false;
     if (!dau) {
       S.beId = null; S.be = null;
       $('gp-be').innerHTML = '<div><b>Góc phụ huynh</b><span>Chưa có hồ sơ bé nào trên máy này</span></div>';
@@ -361,7 +366,7 @@
     const k = 'tq:' + S.tuan;
     const t = S.cache[k] || (S.cache[k] = BC.tongQuanTuan(S.be, S.tuan, homNay()));
     const phu = (t.la_tuan_nay ? 'Tuần này, ' : 'Tuần ') + BC.khoangTuan(t.tu) + ' · đang học Bài ' + esc(p.bai_dang_hoc);
-    let h = tieuDe('Tổng quan tuần', phu, dieuHuongTuan());
+    let h = tieuDe('Tổng quan tuần', phu, dieuHuongTuan()) + veNenLuyen();
     if (t.chua_choi) {
       return h + the('gp-trong', '<img src="' + esc(ctx.hinh(ctx.hinhKhungLong(p, 'goi_y'))) + '" alt=""><h2>Con chưa chơi ván nào</h2><p>Khi ' + esc(p.ten) + ' chơi xong ván đầu tiên, báo cáo tuần sẽ hiện ở đây: phút chơi, số câu, con giỏi gì, đang luyện gì và chỗ nào cần bố mẹ giúp.</p>');
     }
@@ -414,6 +419,16 @@
     h += '<div class="gp-luoi"><div class="gp-cot">' + trai + '</div><div class="gp-cot">' + phai + '</div></div>';
     return h;
   }
+  /** Một câu dễ đọc ở đầu Tổng quan: mục đầu tiên của kế hoạch tuần (không có thì câu mặc định). */
+  function veNenLuyen() {
+    let m = null;
+    try { m = keHoach().muc[0] || null; } catch (e) { m = null; }
+    const thuong = function (x) { x = String(x || ''); return x.charAt(0).toLowerCase() + x.slice(1); };
+    const chu = m
+      ? 'Tuần này nên luyện: <b>' + esc(m.tieu_de) + '</b>' + (m.loai !== 'hoc_moi' && m.ly_do ? ' (' + esc(thuong(m.ly_do)) + ')' : '') + '. Chơi ' + esc(m.choi) + '.'
+      : 'Tuần này nên luyện: con cứ chơi theo nhiệm vụ hằng ngày trên đảo. Sau vài ván, gợi ý cụ thể sẽ hiện ở đây.';
+    return '<div class="gp-bang-tin" id="gp-nen-luyen"><span>' + chu + '</span>' + (m ? '<button type="button" class="gp-lien-ket" data-hd="tab" data-tab="ke_hoach">Xem kế hoạch ›</button>' : '') + '</div>';
+  }
   function kpi(so, chu, aria, loc) {
     return '<button type="button" class="gp-the gp-kpi-o" data-hd="nk-tuan"' + (loc ? ' data-loc="' + loc + '"' : '') + ' aria-label="' + esc(aria) + '"><b>' + esc(so) + '</b><span>' + esc(chu) + '</span></button>';
   }
@@ -448,7 +463,7 @@
     const loc = S.nk.loc;
     const nk = BC.nhatKy(S.be, { tu: kh.tu, den: kh.den, loc: loc });
     const tongVan = nk.so_van;
-    const giay = S.be.vanDs.filter(function (v) { return v.ngay >= kh.tu && v.ngay <= kh.den; }).reduce(function (s, v) { return s + (v.giay || 0); }, 0);
+    const giay = S.be.vanDs.filter(function (v) { return v.ngay >= kh.tu && v.ngay <= kh.den; }).reduce(function (s, v) { return s + BC.giayVan(v); }, 0);
     const phu = (kh.caTuan ? 'Tuần ' + BC.khoangTuan(kh.tuanTu) : BC.thuNgay(kh.tu)) + ' · ' + tongVan + ' ván · ' + BC.phutChu(giay);
     let h = tieuDe('Nhật ký chi tiết', phu, dieuHuongTuan());
     // Chọn ngày
@@ -468,12 +483,12 @@
     };
     let loc1 = lc('tat_ca', null, 'Tất cả', nk.so_cau) + lc('sai', null, 'Chỉ câu sai', nk.so_sai);
     if (loc.loai === 'ky_nang') loc1 += lc('ky_nang', loc.ma, 'Kỹ năng: ' + BC.tenKyNang(loc.ma), null);
-    nk.chip_noi_dung.forEach(function (x) { loc1 += '<span class="gp-chip-bao" title="' + esc(x.ten) + '">' + lc('noi_dung', x.ma, 'Mã ' + x.ma, x.so) + '</span>'; });
+    nk.chip_noi_dung.forEach(function (x) { loc1 += '<span class="gp-chip-bao" title="' + esc(x.ma + ': ' + x.ten) + '">' + lc('noi_dung', x.ma, x.ten_ngan || BC.tenNganNoiDung(x.ma), x.so) + '</span>'; });
     nk.chip_loi.forEach(function (x) { loc1 += lc('loi', x.ma, x.ten, x.so); });
     if (loc.loai === 'loi' && !nk.chip_loi.some(function (x) { return x.ma === loc.ma; })) loc1 += lc('loi', loc.ma, BC.tenLoi(loc.ma), 0);
-    if (loc.loai === 'noi_dung' && !nk.chip_noi_dung.some(function (x) { return x.ma === loc.ma; })) loc1 += lc('noi_dung', loc.ma, 'Mã ' + loc.ma, 0);
+    if (loc.loai === 'noi_dung' && !nk.chip_noi_dung.some(function (x) { return x.ma === loc.ma; })) loc1 += lc('noi_dung', loc.ma, BC.tenNganNoiDung(loc.ma), 0);
     h += '<div class="gp-chips gp-loc" role="group" aria-label="Lọc câu">' + loc1 + '</div>';
-    if (loc.loai === 'noi_dung') h += '<p class="gp-mo gp-loc-giai">Mã ' + esc(loc.ma) + ': ' + esc(BC.tenNoiDung(loc.ma)) + '</p>';
+    if (loc.loai === 'noi_dung') h += '<p class="gp-mo gp-loc-giai">' + esc(BC.tenNoiDung(loc.ma)) + ' <small>(mã ' + esc(loc.ma) + ')</small></p>';
     if (loc.loai === 'loi') h += '<p class="gp-mo gp-loc-giai">' + esc(BC.tenLoi(loc.ma)) + ': ' + esc(BC.moTaLoi(loc.ma)) + '</p>';
     if (!nk.ngay.length) {
       return h + the('gp-trong gp-trong-nho', '<p>' + (tongVan ? 'Không có câu nào khớp bộ lọc trong ' + (kh.caTuan ? 'tuần này' : 'ngày này') + '.' : 'Không có ván nào trong ' + (kh.caTuan ? 'tuần này' : 'ngày này') + '.') + '</p>');
@@ -633,7 +648,8 @@
       return '<div class="gp-vung-hang"><span class="gp-vung-ten"><i style="background:' + esc(v.mau) + '">' + v.so + '</i>' + esc(v.ten) + '</span><div class="gp-o-ds">' +
         v.o.map(function (o) {
           const on = S.kn === o.ma;
-          return '<button type="button" class="gp-o-kn gp-m-' + o.muc + (o.can_giup ? ' gp-can-giup' : '') + (on ? ' gp-chon' : '') + '" data-hd="kn" data-ma="' + esc(o.ma) + '" aria-pressed="' + on + '" aria-label="' + esc(o.ma + ' ' + o.ten + ': ' + o.ten_muc + (o.can_giup ? ', cần giúp' : '')) + '">' + esc(o.ma) + '</button>';
+          return '<button type="button" class="gp-o-kn gp-m-' + o.muc + (o.can_giup ? ' gp-can-giup' : '') + (on ? ' gp-chon' : '') + '" data-hd="kn" data-ma="' + esc(o.ma) + '" aria-pressed="' + on + '" aria-label="' + esc(o.ten + ' (mã ' + o.ma + '): ' + o.ten_muc + (o.can_giup ? ', cần giúp' : '')) + '" title="' + esc(o.ten) + '">' +
+            '<span class="gp-o-ten">' + esc(o.ten_ngan || o.ten) + '</span><small class="gp-o-ma">' + esc(o.ma) + '</small></button>';
         }).join('') + '</div></div>';
     }).join('') + '</div>';
     ban += '<div class="gp-chu-giai">' + bd.chu_giai.map(function (m) { return '<span><i class="gp-m-' + m.muc + '"></i>' + esc(m.ten) + '</span>'; }).join('') + '<span><i class="gp-cham-do"></i>Cần giúp</span></div>';
@@ -674,7 +690,7 @@
       ? '<ul class="gp-man-ds">' + man.map(function (m) { return '<li><img src="' + esc(hinhGame(m.game)) + '" alt=""><span><b>' + esc(m.ten_game) + '</b>' + esc(m.ten) + ' <small>(' + esc(m.bai) + ')</small></span></li>'; }).join('') + '</ul>'
       : '<p class="gp-mo">Nội dung này sẽ có màn chơi ở bản sau.</p>');
     if (d.tien_quyet.length) h += nhan('Nền cần có') + '<div class="gp-chips">' + d.tien_quyet.map(function (p) {
-      return /^L1\./.test(p.ma) ? '<span class="gp-chip" title="' + esc(p.ten) + '">' + esc(p.ten) + '</span>' : '<button type="button" class="gp-chip" data-hd="kn" data-ma="' + esc(p.ma) + '" title="' + esc(p.ten) + '">' + esc(p.ma) + ' · ' + esc(rutGon(p.ten, 34)) + '</button>';
+      return /^L1\./.test(p.ma) ? '<span class="gp-chip" title="' + esc(p.ten) + '">' + esc(p.ten) + '</span>' : '<button type="button" class="gp-chip" data-hd="kn" data-ma="' + esc(p.ma) + '" title="' + esc(p.ma + ': ' + p.ten) + '">' + esc(BC.tenNganNoiDung(p.ma)) + '</button>';
     }).join('') + '</div>';
     if (BC.VIEC_CUNG_CON[d.ma]) h += '<div class="gp-lam-cung">' + nhan('Làm cùng con') + '<p>' + esc(BC.VIEC_CUNG_CON[d.ma]) + '</p></div>';
     return the('gp-chi-tiet', h);
@@ -729,7 +745,7 @@
   }
   function phutHomNay() {
     const nay = homNay();
-    return S.be.vanDs.reduce(function (s, v) { return s + (v.ngay === nay ? v.giay || 0 : 0); }, 0) / 60;
+    return S.be.vanDs.reduce(function (s, v) { return s + (v.ngay === nay ? BC.giayVan(v) : 0); }, 0) / 60;
   }
   /**
    * Thời gian chơi: mặc định không giới hạn. Phụ huynh chọn nhanh hoặc chỉnh từng 5 phút; khi có giới hạn thì cho thêm
@@ -792,16 +808,65 @@
       '<label class="gp-cong-tac gp-cong-tac-to"><input type="checkbox" data-hd="mo-khoa"' + (p.mo_khoa_vung ? ' checked' : '') + '><span aria-hidden="true"></span><em>' + (p.mo_khoa_vung ? 'Đang mở' : 'Tắt') + '</em></label></div>');
     h += the('', nhan('Cổng vào Góc phụ huynh') + veMaBoMe());
     h += the('', nhan('Sao lưu và giữ dữ liệu') + veLuuTru());
+    h += the('', nhan('Giọng đọc đề') + '<div id="gp-giong">' + veGiong(S.giongCho) + '</div>');
     h += the('', nhan('Dữ liệu trên máy này') +
-      '<p class="gp-mo" id="gp-thong-ke">' + esc(thongKe()) + '</p>' +
       '<div class="gp-nut-ds">' +
         '<button type="button" class="gp-nut-phu" data-hd="xuat-ai">Xuất cho trợ lý AI</button>' +
-        '<button type="button" class="gp-nut-phu" data-hd="tai-jsonl">' + svg(IC.tai) + 'Tải nhật ký (JSONL)</button>' +
-        '<button type="button" class="gp-nut-phu" data-hd="tinh-lai">Tính lại tóm tắt từ nhật ký</button>' +
         '<button type="button" class="gp-nut-xoa" data-hd="xoa-be">Xóa dữ liệu của ' + esc(p.ten) + '</button>' +
+        '<button type="button" class="gp-nut-xoa" data-hd="xoa-tat-ca">Xóa mọi dữ liệu Đảo Khủng Long trên máy này</button>' +
       '</div>' +
-      '<p class="gp-rieng">' + svg(IC.khoa) + 'Dữ liệu chỉ nằm trên máy này, không gửi đi đâu. Tên của con không có trong nhật ký (chỉ có mã bé).</p>');
+      '<details class="gp-xem-truoc" id="gp-nang-cao"' + (S.nangCao ? ' open' : '') + '><summary data-hd="nang-cao">Nâng cao</summary>' +
+        '<p class="gp-mo" id="gp-thong-ke">' + esc(thongKe()) + '</p>' +
+        '<p class="gp-mo gp-nho">Tải nhật ký: tệp JSONL ghi từng thao tác của con, để xem bằng công cụ khác. Tính lại: dựng lại tóm tắt câu và ván từ nhật ký gốc khi số liệu có vẻ sai.</p>' +
+        '<div class="gp-nut-ds">' +
+          '<button type="button" class="gp-nut-phu" data-hd="tai-jsonl">' + svg(IC.tai) + 'Tải nhật ký (JSONL)</button>' +
+          '<button type="button" class="gp-nut-phu" data-hd="tinh-lai">Tính lại tóm tắt từ nhật ký</button>' +
+        '</div>' +
+      '</details>' +
+      '<p class="gp-rieng">' + svg(IC.khoa) + '<span>Dữ liệu chỉ nằm trên máy này, không gửi đi đâu. Tên của con không có trong nhật ký (chỉ có mã bé). ' +
+        '<a class="gp-lien-ket" href="/rieng-tu/" target="_blank" rel="noopener">Quyền riêng tư</a></span></p>');
     return h;
+  }
+
+  /**
+   * Máy có giọng đọc tiếng Việt không: true, false, hoặc null khi chưa biết (trình duyệt nạp danh sách giọng sau, sự kiện voiceschanged).
+   */
+  function coGiongViet() {
+    let ss = null;
+    try { ss = window.speechSynthesis || null; } catch (e) { ss = null; }
+    if (!ss || typeof ss.getVoices !== 'function') return false;
+    let ds = [];
+    try { ds = ss.getVoices() || []; } catch (e) { ds = []; }
+    if (ds.some(function (v) { return /^vi([-_]|$)/i.test((v && v.lang) || ''); })) return true;
+    return ds.length ? false : null;
+  }
+  /** Chờ danh sách giọng đọc một lần (voiceschanged hoặc 1,5 giây), rồi vẽ lại mục Giọng đọc đề. */
+  function choGiong() {
+    if (S.giongCho || S.dangChoGiong) return;
+    S.dangChoGiong = true;
+    let xong = false;
+    const ve2 = function () {
+      if (xong) return;
+      xong = true;
+      S.giongCho = true;
+      S.dangChoGiong = false;
+      const el = $('gp-giong');
+      if (el) el.innerHTML = veGiong(true);
+    };
+    try { if (window.speechSynthesis && window.speechSynthesis.addEventListener) window.speechSynthesis.addEventListener('voiceschanged', ve2); } catch (e) { /* bỏ qua */ }
+    const hg = setTimeout(ve2, 1500);
+    if (hg && hg.unref) hg.unref();
+  }
+  /** Mục Giọng đọc đề của Cài đặt: máy chưa có giọng tiếng Việt thì chỉ cách cài (iPad, Android). daCho: đã chờ danh sách giọng. */
+  function veGiong(daCho) {
+    const co = coGiongViet();
+    if (co === true) return '<p class="gp-mo">Máy có giọng đọc tiếng Việt: đảo đọc đề cho con nghe (nút loa khi chơi).</p>';
+    if (co === null && !daCho) { choGiong(); return '<p class="gp-mo">Đang kiểm tra giọng đọc tiếng Việt của máy…</p>'; }
+    let ss = null;
+    try { ss = window.speechSynthesis || null; } catch (e) { ss = null; }
+    return '<p class="gp-co gp-co-lon"><b>Máy chưa có giọng đọc tiếng Việt</b>, nên đảo chưa đọc được đề cho con nghe.' + (ss ? '' : ' Trình duyệt này không có chức năng đọc, hãy mở đảo bằng Safari hoặc Chrome.') + '</p>' +
+      '<p class="gp-mo"><b>iPad, iPhone:</b> Cài đặt &gt; Trợ năng &gt; Nội dung được đọc &gt; Giọng nói &gt; Tiếng Việt, rồi tải giọng “Linh”. Tải xong thì đóng hẳn đảo và mở lại.</p>' +
+      '<p class="gp-mo"><b>Android (Chrome):</b> Cài đặt &gt; Hệ thống &gt; Ngôn ngữ &gt; Đầu ra chuyển văn bản thành lời nói, chọn công cụ của Google và tải dữ liệu giọng Tiếng Việt.</p>';
   }
   /**
    * Tình trạng lưu trữ và sao lưu: cảnh báo khi máy không lưu được, lưu bền (Safari tự xóa sau 7 ngày không mở),
@@ -858,12 +923,13 @@
   function demSuKien() {
     if (S.soSuKien != null) return;
     const id = S.beId;
-    NK.docCuaBe(id).then(function (ds) {
+    // Đếm bằng chỉ mục, không đọc cả nhật ký ra chỉ để đếm
+    NK.demCuaBe(id).then(function (n) {
       if (S.beId !== id) return;
-      S.soSuKien = ds.length;
+      S.soSuKien = n;
       const el = $('gp-thong-ke');
       if (el) el.textContent = thongKe();
-    });
+    }, function () { /* bỏ qua: giữ dấu … */ });
   }
 
   /* ---------------- Xuất cho trợ lý AI (spec 06 mục 5.9) ---------------- */
@@ -876,20 +942,27 @@
   function taoGoi() {
     S.xuat.kq = null;
     S.xuat.dang = true;
+    S.xuat.hienCauHoi = false;
     ve(true);
     const id = S.beId;
-    NK.docCuaBe(id).then(function (evs) {
+    // Gói chỉ cần 4 tuần (câu sai tiêu biểu 28 ngày, nhật ký chi tiết 7 ngày): đọc theo khoảng, không đọc cả nhật ký
+    NK.docCuaBe(id, window.HocTap.congNgay(homNay(), -27)).then(function (evs) {
       if (S.beId !== id) return;
-      S.xuat.kq = BC.goiXuat(S.be, evs, { homNay: homNay(), taoLuc: NK.isoDiaPhuong(Date.now()), tuoi: HS.tuoiHienTai(S.be.hoSo), kemNhatKy: S.xuat.kem, biDanh: 'be_1' });
+      S.xuat.kq = BC.goiXuat(S.be, evs, { homNay: homNay(), taoLuc: NK.isoDiaPhuong(Date.now()), tuoi: HS.tuoiHienTai(S.be.hoSo), boTuoi: S.xuat.boTuoi, kemNhatKy: S.xuat.kem, biDanh: 'be_1' });
       S.xuat.dang = false;
       if (S.con && S.con.loai === 'xuat_ai') ve(false);
     });
   }
   function veXuatAi() {
     const quay = '<button type="button" class="gp-lui" data-hd="quay">' + svg(IC.trai) + (S.con.tuTab === 'cai_dat' ? 'Cài đặt' : 'Kế hoạch') + '</button>';
-    let h = '<div class="gp-tieu gp-tieu-con">' + quay + '<h1>Xuất dữ liệu cho trợ lý AI</h1><p>Gói JSON tóm tắt 4 tuần học của con, kèm từ điển mã, hướng dẫn và khuôn trả lời, để bạn dán vào một trợ lý AI và nhờ nhận xét, gợi ý bài luyện.</p></div>';
+    let h = '<div class="gp-tieu gp-tieu-con">' + quay + '<h1>Xuất dữ liệu cho trợ lý AI</h1><p>Gói tóm tắt 4 tuần học của con, để bạn dán vào một trợ lý AI và nhờ nhận xét, gợi ý cách luyện cùng con ở nhà.</p></div>';
     const kq = S.xuat.kq;
-    let noi = '<p class="gp-rieng">' + svg(IC.khoa) + 'Gói dùng bí danh be_1, không có tên, ngày sinh hay mã thiết bị. Không tự gửi đi đâu: bạn tự sao chép hoặc tải tệp.</p>' +
+    const nd = BC.noiDungGoi({ boTuoi: S.xuat.boTuoi, kemNhatKy: S.xuat.kem });
+    let noi = '<div class="gp-rieng">' + svg(IC.khoa) + '<div><p><b>Gói có:</b></p><ul class="gp-ds-goi">' + nd.co.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
+      '<p><b>Gói không có:</b> ' + esc(nd.khong.join(', ')) + '. Đảo không tự gửi gói đi đâu: bạn tự sao chép hoặc tải tệp.</p></div></div>' +
+      '<p class="gp-co gp-co-lon" id="gp-nhac-ai"><b>Lưu ý:</b> dán gói vào một trợ lý AI (ChatGPT, Gemini, Claude…) là gửi dữ liệu này tới công ty làm ra trợ lý đó. ' +
+      'Trước khi dán, nên tắt lịch sử trò chuyện hoặc tắt mục cho phép dùng cuộc trò chuyện để huấn luyện trong cài đặt của trợ lý.</p>' +
+      '<label class="gp-hop-chon"><input type="checkbox" data-hd="bo-tuoi"' + (S.xuat.boTuoi ? ' checked' : '') + '><span>Bỏ tuổi của con<small>Trợ lý vẫn biết con học lớp mấy, bài nào</small></span></label>' +
       '<label class="gp-hop-chon"><input type="checkbox" data-hd="kem-nk"' + (S.xuat.kem ? ' checked' : '') + '><span>Kèm nhật ký chi tiết 7 ngày gần nhất<small>Từng thao tác của con, cho phân tích sâu; gói lớn hơn nhiều</small></span></label>';
     if (!kq) {
       noi += '<p class="gp-co">Đang tạo gói…</p>';
@@ -900,12 +973,24 @@
         g.ho_so.ky_nang.length + ' kỹ năng, ' + g.van_gan_day.length + ' ván gần nhất, ' + g.cau_sai_tieu_bieu.length + ' câu sai tiêu biểu' +
         (g.nhat_ky_7_ngay ? ', ' + soDep(g.nhat_ky_7_ngay.length) + ' sự kiện 7 ngày' : '') + '</p>' +
         '<p class="gp-mo gp-nho">Ước lượng thận trọng: 1 token cho mỗi 3 byte của tệp.' + (vuot ? ' Gói vượt 30 000 token: một số trợ lý AI có thể không nhận hết, hãy bỏ tùy chọn nhật ký chi tiết.' : kq.da_rut_gon ? ' Đã bớt bớt câu sai để gói dưới 30 000 token.' : ' Gói mặc định luôn dưới 30 000 token.') + '</p>' +
-        '<div class="gp-nut-ds"><button type="button" class="gp-nut-chinh" data-hd="sao-chep">' + svg(IC.sao_chep) + 'Sao chép</button>' +
+        '<div class="gp-nut-ds"><button type="button" class="gp-nut-chinh" data-hd="cau-hoi-mau">' + svg(IC.sao_chep) + 'Sao chép câu hỏi mẫu</button>' +
+        '<button type="button" class="gp-nut-phu" data-hd="sao-chep">Chỉ sao chép gói</button>' +
         '<button type="button" class="gp-nut-phu" data-hd="tai-json">' + svg(IC.tai) + 'Tải tệp .json</button></div>' +
-        '<details class="gp-xem-truoc"><summary>Xem trước nội dung gói</summary><pre>' + esc(kq.chuoi.length > 6000 ? kq.chuoi.slice(0, 6000) + '\n…' : kq.chuoi) + '</pre></details>' +
-        '<p class="gp-mo gp-nho">Gợi ý: dán gói vào trợ lý AI rồi hỏi “Con tôi cần luyện gì tuần tới?”. Trợ lý sẽ trả JSON theo hop_dong_dau_ra.</p>';
+        '<p class="gp-mo gp-nho">Câu hỏi mẫu đã kèm gói: dán một lần vào trợ lý AI là xong. Trợ lý trả lời bằng chữ cho bố mẹ trước (con giỏi gì, nên luyện gì, 2 đến 3 hoạt động làm cùng con ở nhà); khối JSON ở cuối (nếu có) là để dành cho game, bạn bỏ qua được.</p>' +
+        (S.xuat.hienCauHoi
+          ? '<label class="gp-xoa-ten">Máy không cho sao chép tự động. Câu hỏi đã được chọn sẵn trong ô dưới: bấm Sao chép của máy (hoặc chạm giữ, Chọn tất cả, Sao chép).' +
+            '<textarea id="gp-cau-hoi" class="gp-o-cau-hoi" readonly>' + esc(BC.cauHoiMau(kq.chuoi)) + '</textarea></label>'
+          : '') +
+        '<details class="gp-xem-truoc"><summary>Xem trước nội dung gói</summary><pre>' + esc(kq.chuoi.length > 6000 ? kq.chuoi.slice(0, 6000) + '\n…' : kq.chuoi) + '</pre></details>';
     }
     return h + the('gp-xuat', noi);
+  }
+  /** Chọn sẵn chữ trong ô câu hỏi mẫu (khi máy không cho sao chép tự động). */
+  function chonCauHoi() {
+    const ta = $('gp-cau-hoi');
+    if (!ta) return;
+    try { ta.focus(); ta.select(); if (ta.setSelectionRange) ta.setSelectionRange(0, ta.value.length); } catch (e) { /* bỏ qua */ }
+    if (ta.scrollIntoView) ta.scrollIntoView({ block: 'center' });
   }
 
   function saoChep(txt) {
@@ -1048,6 +1133,9 @@
     if (e.target && e.target.id === 'gp-xoa-ten') {
       const nut = document.querySelector('#gp-hop [data-hd="xoa-that"]');
       if (nut) nut.disabled = !khopTen(e.target.value);
+    } else if (e.target && e.target.id === 'gp-xoa-het') {
+      const nut = document.querySelector('#gp-hop [data-hd="xoa-het-that"]');
+      if (nut) nut.disabled = !khopXoa(e.target.value);
     }
   }
   function dongHopThoai() { const h = $('gp-hop'); if (h) { h.classList.add('hidden'); h.innerHTML = ''; } }
@@ -1057,12 +1145,73 @@
     if (!o || !khopTen(o.value)) return;
     dongHopThoai();
     NK.xoaBe(p.id).then(function () {
+      HS.anGoiY(p.ten); // tên bé không còn hiện trong tên gợi ý (lấy từ hồ sơ chung của trang chủ)
       ctx.beBiXoa(p.id);
       ctx.bao('Đã xóa dữ liệu của ' + p.ten);
       S.be = null; S.beId = null;
       const con = ctx.A.dsBe || [];
       if (con.length) { S.con = null; S.tab = 'tong_quan'; taiBe(con[0].id); }
       else ctx.thoat();
+    });
+  }
+
+  /* ---------------- Xóa mọi dữ liệu của đảo trên máy này ---------------- */
+
+  function hoiXoaTatCa() {
+    const ds = ctx.A.dsBe || [];
+    const hop = $('gp-hop');
+    hop.innerHTML = '<div class="gp-hop-the"><h2 id="gp-hop-td">Xóa mọi dữ liệu Đảo Khủng Long trên máy này?</h2>' +
+      '<p>Hồ sơ của ' + (ds.length ? ds.length + ' bé (' + esc(ds.map(function (x) { return x.ten; }).join(', ')) + ')' : 'mọi bé') + ', mọi ván, câu, nhật ký thao tác, quả mọng, ' +
+      'giới hạn thời gian chơi và cài đặt âm thanh của đảo trên máy này sẽ bị xóa hẳn, rồi đảo mở lại từ đầu. Việc này không hoàn tác được. Muốn giữ lại thì bấm Sao lưu cả máy trước.</p>' +
+      '<p class="gp-mo gp-nho">Không xóa: mã bố mẹ (dùng chung với trang chủ 3hoa.com) và tiến trình của các trò trên trang chủ.</p>' +
+      '<label class="gp-xoa-ten">Gõ chữ <b>XÓA</b> để xác nhận<input type="text" id="gp-xoa-het" autocomplete="off" autocapitalize="characters" spellcheck="false"></label>' +
+      '<p class="gp-co hidden" id="gp-xoa-tb" role="status"></p>' +
+      '<div class="gp-nut-ds"><button type="button" class="gp-nut-phu" data-hd="dong-hop">Thôi, giữ lại</button><button type="button" class="gp-nut-xoa gp-nut-xoa-dac" data-hd="xoa-het-that" disabled>Xóa hết</button></div></div>';
+    hop.classList.remove('hidden');
+    setTimeout(function () { const b = $('gp-xoa-het'); if (b) b.focus(); }, 30);
+  }
+  /** Chữ gõ xác nhận: "XÓA" (không phân biệt hoa thường; "XOA" không dấu cũng được). */
+  function khopXoa(v) {
+    const c = String(v || '').normalize('NFC').replace(/\s+/g, '').toLowerCase();
+    return c === 'xóa' || c === 'xoa';
+  }
+  function baoXoa(chu, them) {
+    const tb = $('gp-xoa-tb');
+    if (!tb) return;
+    tb.classList.remove('hidden');
+    tb.innerHTML = esc(chu) + (them || '');
+  }
+  function taiLai() {
+    try { if (window.location && typeof window.location.reload === 'function') window.location.reload(); } catch (e) { /* bỏ qua */ }
+  }
+  /**
+   * Xóa hẳn: NhatKy.xoaTatCa (đóng kết nối, xóa khóa dkl-*, deleteDatabase), ẩn tên các bé khỏi tên gợi ý, rồi tải lại trang
+   * (máy không còn bé nào nên đảo mở ở màn đầu). Cửa sổ khác của đảo còn giữ kết nối (onblocked) thì báo bố mẹ đóng nó.
+   */
+  function xoaHetThat() {
+    const o = $('gp-xoa-het');
+    if (!o || !khopXoa(o.value)) return;
+    document.querySelectorAll('#gp-hop button').forEach(function (b) { b.disabled = true; });
+    o.disabled = true;
+    const ten = (ctx.A.dsBe || []).map(function (x) { return x.ten; });
+    baoXoa('Đang xóa…');
+    return NK.xoaTatCa({
+      giuKhoa: [HS.KHOA_AN_GOI_Y], // chỉ có dấu (băm) tên, không có tên: giữ để tên bé đã xóa trước đó không được gợi ý lại
+      biChan: function () { baoXoa('Đảo còn mở ở cửa sổ (thẻ) khác. Hãy đóng cửa sổ đó, việc xóa sẽ tự xong.'); }
+    }).then(function (r) {
+      HS.anGoiY(ten);
+      S.be = null; S.beId = null;
+      if (r.xong) {
+        baoXoa('Đã xóa mọi dữ liệu của đảo trên máy này. Đang mở lại…');
+        const hg = setTimeout(taiLai, 900);
+        if (hg && hg.unref) hg.unref();
+      } else {
+        baoXoa('Chưa xóa hết được vì đảo còn mở ở cửa sổ khác. Hãy đóng các cửa sổ khác của đảo rồi bấm Tải lại.',
+          ' <button type="button" class="gp-lien-ket" data-hd="tai-lai">Tải lại</button>');
+        const nut = document.querySelector('#gp-hop [data-hd="tai-lai"]');
+        if (nut) nut.disabled = false;
+      }
+      return r;
     });
   }
 
@@ -1143,13 +1292,32 @@
         if (!S.xuat.kq) return;
         saoChep(S.xuat.kq.chuoi).then(function (ok) {
           ctx.bao(ok ? 'Đã sao chép gói (' + soDep(S.xuat.kq.token) + ' token). Dán vào trợ lý AI nhé.' : 'Máy không cho sao chép tự động. Hãy dùng nút Tải tệp .json.', 4);
-          if (ok) ghi('phu_huynh_cai_dat', { truong: 'xuat_ai', cu: null, moi: { cach: 'sao_chep', token: S.xuat.kq.token, kem_nhat_ky: S.xuat.kem } });
+          if (ok) ghi('phu_huynh_cai_dat', { truong: 'xuat_ai', cu: null, moi: { cach: 'sao_chep', token: S.xuat.kq.token, kem_nhat_ky: S.xuat.kem, bo_tuoi: S.xuat.boTuoi } });
         });
         break;
+      case 'cau-hoi-mau': {
+        if (!S.xuat.kq) return;
+        const kq = S.xuat.kq;
+        saoChep(BC.cauHoiMau(kq.chuoi)).then(function (ok) {
+          if (ok) {
+            ctx.bao('Đã sao chép câu hỏi mẫu kèm gói. Mở trợ lý AI và dán vào là xong.', 4);
+            ghi('phu_huynh_cai_dat', { truong: 'xuat_ai', cu: null, moi: { cach: 'cau_hoi_mau', token: kq.token, kem_nhat_ky: S.xuat.kem, bo_tuoi: S.xuat.boTuoi } });
+            return;
+          }
+          // Không sao chép được (trình duyệt chặn): hiện ô chữ đã chọn sẵn để bố mẹ tự sao chép
+          S.xuat.hienCauHoi = true;
+          if (S.con && S.con.loai === 'xuat_ai') { ve(false); chonCauHoi(); }
+        });
+        break;
+      }
+      case 'nang-cao': { const d = b.parentNode; S.nangCao = !(d && d.open); break; }
+      case 'xoa-tat-ca': hoiXoaTatCa(); break;
+      case 'xoa-het-that': xoaHetThat(); break;
+      case 'tai-lai': taiLai(); break;
       case 'tai-json':
         if (!S.xuat.kq) return;
         taiTep(S.xuat.kq.chuoi, 'dao-khung-long-xuat-v1.json', 'application/json');
-        ghi('phu_huynh_cai_dat', { truong: 'xuat_ai', cu: null, moi: { cach: 'tai_tep', token: S.xuat.kq.token, kem_nhat_ky: S.xuat.kem } });
+        ghi('phu_huynh_cai_dat', { truong: 'xuat_ai', cu: null, moi: { cach: 'tai_tep', token: S.xuat.kq.token, kem_nhat_ky: S.xuat.kem, bo_tuoi: S.xuat.boTuoi } });
         break;
       case 'tai-jsonl': {
         const p = S.be.hoSo;
@@ -1234,6 +1402,9 @@
       S.slDu = !!el.checked;
     } else if (hd === 'kem-nk') {
       S.xuat.kem = !!el.checked;
+      taoGoi();
+    } else if (hd === 'bo-tuoi') {
+      S.xuat.boTuoi = !!el.checked;
       taoGoi();
     }
   }

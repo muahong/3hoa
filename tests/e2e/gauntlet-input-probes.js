@@ -1,12 +1,13 @@
 'use strict';
 // Read-only observations; all gameplay mutations use actual browser input.
 const http=require('http'),fs=require('fs'),path=require('path');
-let pw;try{pw=require('playwright')}catch{pw=require('C:/Users/son.nguyen/AppData/Roaming/Python/Python312/site-packages/playwright/driver/package')}
+const pw = require(path.join(__dirname, 'lib', 'playwright.js'));
 const root=path.resolve(__dirname,'../..');
 const server=http.createServer((req,res)=>{let p=decodeURIComponent(req.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';fs.readFile(path.join(root,p),(e,b)=>{res.writeHead(e?404:200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.css':'text/css'})[path.extname(p)]||'application/octet-stream'});res.end(e?'404':b)})});
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await pw.chromium.launch();const results=[];
 try{for(const game of (process.argv[2]?[process.argv[2]]:['thap-dong-ho','math-ninja','cuu-chuong'])){const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,hasTouch:true,isMobile:true});await context.addInitScript(()=>{let seed=360906;Math.random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}});const page=await context.newPage();page.setDefaultTimeout(10000);const rec={game,errors:[],fixture:{seed:360906,viewport:'390x844',dpr:1}};results.push(rec);page.on('pageerror',e=>rec.errors.push(String(e)));const tap=async s=>{const b=await page.locator(s).boundingBox();await page.touchscreen.tap(b.x+b.width/2,b.y+b.height/2)};
-await page.goto(`http://127.0.0.1:${server.address().port}/${game}/`,{waitUntil:'domcontentloaded'});await page.locator('#btn-play').click();await page.locator('.level-card').first().click();if(game==='thap-dong-ho')await page.locator('#btn-lesson-start').click();await page.waitForTimeout(3900);
+await page.goto(`http://127.0.0.1:${server.address().port}/${game}/`,{waitUntil:'domcontentloaded'});await page.locator('#btn-play').click();await page.locator('.level-card').first().click();if(game==='thap-dong-ho')await page.locator('#btn-lesson-start').click();// chờ vào ván và đọc xong câu đầu (thay cho chờ cố định 3,9 giây)
+await page.waitForFunction(()=>{const x=window.__NinjaToan||window.__CuuChuong||window.__ThapDongHo;return !!x&&x.G.state==='playing'&&!(x.G.readLeft>0)},null,{timeout:15000});
 if(game==='thap-dong-ho'){
  const read=()=>page.evaluate(()=>{const g=window.__ThapDongHo.G;return {piece:g.piece&&{id:g.piece.id,col:g.piece.col,target:g.piece.target,mode:g.piece.mode},wrong:g.wrong,correct:g.correct,board:g.board}});
  await page.waitForFunction(()=>window.__ThapDongHo.G.piece?.mode==='fall');rec.before=await read();const b=rec.before.board,x=b.x+(rec.before.piece.col+.5)*b.cell,y=b.y+b.cell*3;const cd=await context.newCDPSession(page);

@@ -135,7 +135,7 @@ html, body {
   min-height: 62px;
   color: #fff;
   /* Chữ trắng nằm giữa nút nên cả dải màu (không chỉ đầu đậm) phải đạt 4.5:1 ở MỌI khổ màn hình:
-     trên điện thoại nhãn nút thu còn 15–17 px nên không được dựa vào ngoại lệ "chữ to" 3:1 — xem tests/e2e */
+     trên điện thoại nhãn nút thu còn 15–17 px nên không được dựa vào ngoại lệ "chữ to" 3:1 (xem tests/e2e) */
   background: linear-gradient(180deg, #b23f0c 0%, #c74a12 100%);
   box-shadow: 0 7px 0 var(--orange-deep), 0 12px 24px rgba(0, 0, 0, 0.18);
   cursor: pointer;

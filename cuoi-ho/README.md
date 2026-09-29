@@ -38,6 +38,7 @@ rồi mở `http://localhost:8787` trong trình duyệt. Trên máy tính có th
 | `js/game.js` | Bộ máy trò chơi: hổ và bé (vẽ bằng canvas), vòng lửa, cú nhảy, điểm, tim, combo, bài học, hỏi đáp, mở khóa |
 | `js/dao.js`, `dao.css` | Chế độ đảo: chơi trong Đảo Khủng Long (xem mục dưới); chơi riêng thì không có tác dụng |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Các màn chơi (hành trình chinh phục đồng hồ)
 
@@ -66,7 +67,7 @@ Thiết lập thiết bị (dùng chung cho mọi bé): 🔊 Âm thanh, 🎵 Nh�
 - Thẻ "Bắt đầu" (tên màn, hình bé cưỡi hổ) thay cho menu; chạm "Bắt đầu" cũng mở khóa âm thanh trên iPad. Không có hành trình, bài học, hỏi đáp, bảng kết quả, tim, đồng hồ đếm giờ; game không ghi `localStorage` (đảo ghi nhật ký và kết quả).
 - Mỗi cụm 3 vòng lửa (trên, giữa, dưới) là một câu của ngân hàng câu của đảo. Vòng hiện "?" khi hổ đang chạy tới; hổ dừng thì mới lấy câu. Thẻ câu hỏi hiện đề và hình (tia số, đồng hồ); vòng ghi số (viết to), chữ hai dòng, mặt đồng hồ hoặc hình nhỏ.
 - Chạm vòng: đảo chấm. Đúng: nổ sao, điểm, combo, quả mọng. Sai hẳn: vòng đúng sáng xanh rồi màn "Gần đúng rồi" của đảo; câu quay lại sau 2 câu. Không hết giờ, không mất tim.
-- 💡 ba cấp gợi ý của đảo (cấp 3 tắt một vòng sai). ⏸ chỉ còn "Chơi tiếp" và "Về đảo". Âm thanh và giọng đọc theo thiết lập của đảo.
+- 💡 ba cấp gợi ý của đảo (cấp 3 tắt một vòng sai). ⏸: bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và 🏝️ Về đảo, giống nhau ở 6 game. Âm thanh và giọng đọc theo thiết lập của đảo.
 - Hết câu: hổ về đích, đảo hiện màn kết thúc của nó.
 
 Mọi chỗ `js/game.js` rẽ nhánh cho đảo là một dòng `if (DAO ...)` có chú thích "Chế độ đảo". Kiểm thử: `node --test tests/cuoi-ho-dao.test.js`.
@@ -77,7 +78,7 @@ Mọi chỗ `js/game.js` rẽ nhánh cho đảo là một dòng `if (DAO ...)` c
 - **Bộ sinh câu hỏi cho vòng lửa**: các hàm `genL1` … `genL9` trong `js/lessons.js`.
 - **Độ khó chung**: `JUMP_T`, `LEARN_T`, `RUN_GAP_T`, số tim `MAX_HEARTS` (hoặc `hearts` của từng màn trong `js/lessons.js`), ngưỡng sao `starsFor` trong `js/game.js`.
 - **Nhạc nền**: sửa giai điệu trong `TRACKS` ở `js/audio.js`.
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `cuoi-ho-v2`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 
 ## Kiểm thử
 

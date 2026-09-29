@@ -120,15 +120,16 @@
     the.appendChild(panel);
     if (app) app.appendChild(the);
 
-    // Nút "Về đảo" trong bảng tạm dừng (các nút chơi lại, bài học, menu, trang chủ được ẩn bằng dao.css)
-    const hang = tao('div', 'btn-row dao-hang-ve');
-    const ve = tao('button', 'btn ghost dao-nut-ve', '🏝️ Về đảo');
+    // Bảng tạm dừng: "🔊 Âm thanh" + "🏝️ Về đảo" (các nút chơi lại, bài học, menu, trang chủ được ẩn bằng dao.css)
+    const ve = tao('button', 'btn teal dao-nut-ve', '🏝️ Về đảo');
     ve.type = 'button';
     ve.id = 'dao-ve-dao';
     ve.addEventListener('click', veDao);
-    hang.appendChild(ve);
-    const pause = document.querySelector('#pause .panel');
-    if (pause) pause.appendChild(hang);
+    hangTamDung(ve, function () { return !s.tt || !s.tt.am_thanh || !!s.tt.am_thanh.tieng; }, function (bat) {
+      if (s.tt) s.tt.am_thanh = Object.assign({ tieng: true, giong: true }, s.tt.am_thanh, { tieng: bat });   // apAmThanh đọc lại đúng giá trị này
+      game.Sfx.setEnabled(bat);
+      game.Music.setEnabled(bat);
+    });
     dom = { the: the, nut: nut, ve: ve };
   }
 
@@ -548,6 +549,54 @@
     s.chonCuoi = v;                         // chọn đích mới (lần thứ hai trở đi là đổi ý)
     ghi('chon', b);
   }
+
+  /* ==== Bảng tạm dừng trên đảo: khối này giống hệt nhau ở 6 game (tests/games-nhom-g-dao.test.js) ==== */
+  const AM_BAT = '🔊 Âm thanh: Bật', AM_TAT = '🔇 Âm thanh: Tắt';
+  let daDungHangTamDung = false;
+  /** Ngay dưới "▶ Chơi tiếp": một hàng "🔊 Âm thanh" + "🏝️ Về đảo" (nutVe). Nút âm thanh bật / tắt hiệu ứng và nhạc
+      của game như thiết lập "tieng" của đảo, chỉ trong ván này (không lưu): tieng() cho biết đang bật, datTieng(bat) áp dụng. */
+  function hangTamDung(nutVe, tieng, datTieng) {
+    if (daDungHangTamDung) return null;
+    daDungHangTamDung = true;
+    const nut = document.createElement('button');
+    nut.type = 'button';
+    nut.id = 'dao-nut-am-thanh';
+    const ve = function () {
+      const bat = !!tieng();
+      nut.textContent = bat ? AM_BAT : AM_TAT;
+      nut.className = 'btn ghost dao-nut-am-thanh ' + (bat ? 'on' : 'off');
+      nut.setAttribute('aria-pressed', String(bat));
+    };
+    nut.addEventListener('click', function () {
+      const bat = !tieng();
+      try { datTieng(bat); if (bat) { window.Sfx.unlock(); window.Sfx.play('click'); } } catch (e) { /* bỏ qua */ }
+      ve();
+    });
+    ve();
+    const hang = document.createElement('div');
+    hang.className = 'btn-row dao-hang-tam-dung';
+    hang.appendChild(nut);
+    if (nutVe) {
+      const cu = nutVe.parentNode;
+      nutVe.textContent = '🏝️ Về đảo';
+      nutVe.hidden = false;
+      if (nutVe.classList) { nutVe.classList.remove('big', 'small', 'ghost'); nutVe.classList.add('teal'); }
+      hang.appendChild(nutVe);
+      // Hàng cũ của nút "Về đảo" chỉ còn các nút đã ẩn trên đảo: ẩn luôn cho khỏi hở một khoảng trống
+      if (cu && cu.children) {
+        const conHien = Array.prototype.some.call(cu.children, function (el) {
+          return !el.hidden && window.getComputedStyle(el).display !== 'none';
+        });
+        if (!conHien) cu.hidden = true;
+      }
+    }
+    const tiep = document.getElementById('btn-resume');
+    const hangTiep = tiep && tiep.parentNode;
+    const panel = document.querySelector('#pause .panel');
+    if (panel && panel.insertBefore) panel.insertBefore(hang, hangTiep && hangTiep.parentNode === panel ? hangTiep.nextSibling : null);
+    return { nut: nut, ve: ve };
+  }
+  /* ==== hết khối bảng tạm dừng ==== */
 
   /* ---------------- Gợi ý, nghe lại, tạm dừng ---------------- */
 

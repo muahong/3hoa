@@ -27,7 +27,8 @@
   function esc(t) { return window.PhanHoi.esc(t); }
   function giamDong() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function rung(el) { if (!el) return; el.classList.remove('ll2-rung'); void el.offsetWidth; el.classList.add('ll2-rung'); }
-  function tre(ms, f) { return setTimeout(function () { if (s) f(); }, ms); }
+  /** Hẹn giờ: bé đang tạm dừng thì chờ bé chơi tiếp mới chạy (KhungChoi.khiChoi). */
+  function tre(ms, f) { return setTimeout(function () { if (s) K().khiChoi(function () { if (s) f(); }); }, ms); }
 
   /* ---------------- Dựng vùng chơi ---------------- */
 
@@ -596,7 +597,7 @@
     tre(450, function () {
       K().phanHoiCau(q, v, Object.assign({}, kq, them || {}), function () {
         hienDapAn();
-        s.hen.push(setTimeout(function () { if (s) cauMoi(); }, 1300));
+        s.hen.push(tre(1300, cauMoi));
       });
     });
   }
@@ -644,7 +645,7 @@
     if (s.canh === 'buoi' && s.cach === 'chon' && ct.kieu !== 'thu_tu' && ct.h != null) ghim(ct.h % 24, ct.m || 0, T().dienTu(ct.h, ct.m || 0), 'dung');
     if (s.cach === 'thu') { const w = T().THU.indexOf(q.dap_an); toCot(w, true); const o = oNgay(ct.ngay); if (o) o.classList.add('dung'); }
     if (s.cach === 'dem') for (let n = 1; n <= T().soNgay(ct.thang); n++) if (T().thuCua(ct, n) === ct.thu) { const o = oNgay(n); if (o) o.classList.add('dung'); }
-    s.hen.push(setTimeout(function () { if (s) cauMoi(); }, 1700));
+    s.hen.push(tre(1700, cauMoi));
   }
 
   function goiY() {

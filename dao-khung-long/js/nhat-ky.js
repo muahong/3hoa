@@ -48,8 +48,13 @@
       datNhieu: function (ten, ds) { ds.forEach(function (o) { bang[ten].set(khoa(ten, o), sao(o)); }); return Promise.resolve(); },
       xoa: function (ten, k) { bang[ten].delete(k); return Promise.resolve(); },
       tatCa: function (ten) { return Promise.resolve(Array.from(bang[ten].values()).map(sao)); },
-      theoBe: function (ten, be) {
-        return Promise.resolve(Array.from(bang[ten].values()).filter(function (o) { return o.be === be; }).map(sao));
+      theoBe: function (ten, be, tuNgay) {
+        return Promise.resolve(Array.from(bang[ten].values()).filter(function (o) { return o.be === be && (!tuNgay || String(o.luc) >= tuNgay); }).map(sao));
+      },
+      demTheoBe: function (ten, be) {
+        let n = 0;
+        bang[ten].forEach(function (o) { if (o.be === be) n++; });
+        return Promise.resolve(n);
       },
       theoVan: function (van) {
         return Promise.resolve(Array.from(bang.su_kien.values()).filter(function (o) { return o.van === van; }).map(sao));
@@ -80,7 +85,9 @@
 
   function khoIndexedDB(idb) {
     let dbHua = null;
+    let daDong = false; // đã đóng hẳn để xóa cả cơ sở dữ liệu (xoaTatCa): không mở lại nữa
     function mo() {
+      if (daDong) return Promise.reject(new Error('Kho đã đóng để xóa'));
       if (dbHua) return dbHua;
       const hua = new Promise(function (ok, loi) {
         const yc = idb.open(DB_TEN, DB_PHIEN_BAN);
@@ -157,17 +164,34 @@
     return {
       loai: 'indexeddb',
       mo: mo,
+      /** Đóng kết nối và không mở lại (trước khi xóa cả cơ sở dữ liệu). Trả về Promise. */
+      dong: function () {
+        daDong = true;
+        const h = dbHua;
+        dbHua = null;
+        if (!h) return Promise.resolve();
+        return h.then(function (db) { try { db.close(); } catch (e) { /* bỏ qua */ } }, function () { /* bỏ qua */ });
+      },
       lay: function (ten, k) { return gd(ten, 'readonly', function (st) { return boc(st.get(k)); }).then(function (v) { return v === undefined ? null : v; }); },
       dat: function (ten, o) { return gd(ten, 'readwrite', function (st) { st.put(o); }); },
       datNhieu: function (ten, ds) { return gd(ten, 'readwrite', function (st) { ds.forEach(function (o) { st.put(o); }); }); },
       xoa: function (ten, k) { return gd(ten, 'readwrite', function (st) { st.delete(k); }); },
       tatCa: function (ten) { return gd(ten, 'readonly', function (st) { return boc(st.getAll()); }); },
-      theoBe: function (ten, be) {
+      /** tuNgay ('YYYY-MM-DD', chỉ với su_kien): chỉ đọc sự kiện từ ngày đó (chỉ mục be_luc, luc là ISO giờ máy). */
+      theoBe: function (ten, be, tuNgay) {
         if (ten === 'su_kien') {
-          return quet(ten, function (st) { return { st: st.index('be_luc'), range: IDBKeyRange.bound([be, ''], [be, '￿']) }; });
+          return quet(ten, function (st) { return { st: st.index('be_luc'), range: IDBKeyRange.bound([be, tuNgay || ''], [be, '￿']) }; });
         }
         if (KHO[ten].keyPath === 'be') return this.lay(ten, be).then(function (v) { return v ? [v] : []; });
         return quet(ten, function (st) { return { st: st.index('be'), range: IDBKeyRange.only(be) }; });
+      },
+      /** Đếm bản ghi của một bé bằng chỉ mục (không đọc bản ghi nào ra). */
+      demTheoBe: function (ten, be) {
+        return gd(ten, 'readonly', function (st) {
+          if (ten === 'su_kien') return boc(st.index('be_luc').count(IDBKeyRange.bound([be, ''], [be, '￿'])));
+          if (KHO[ten].keyPath === 'be') return boc(st.count(be));
+          return boc(st.index('be').count(IDBKeyRange.only(be)));
+        });
       },
       theoVan: function (van) {
         return quet('su_kien', function (st) { return { st: st.index('van'), range: IDBKeyRange.only(van) }; });
@@ -211,7 +235,7 @@
     const ghiDuoc = function (ten, rong) { return function () { return conGiuThe() ? k[ten].apply(k, arguments) : Promise.resolve(rong); }; };
     return {
       loai: k.loai,
-      lay: k.lay.bind(k), tatCa: k.tatCa.bind(k), theoBe: k.theoBe.bind(k), theoVan: k.theoVan.bind(k),
+      lay: k.lay.bind(k), tatCa: k.tatCa.bind(k), theoBe: k.theoBe.bind(k), theoVan: k.theoVan.bind(k), demTheoBe: k.demTheoBe.bind(k),
       dat: ghiDuoc('dat'), datNhieu: ghiDuoc('datNhieu'), xoa: ghiDuoc('xoa'), xoaNeu: ghiDuoc('xoaNeu', 0), xoaKhoaDuoi: ghiDuoc('xoaKhoaDuoi', 0)
     };
   }
@@ -440,6 +464,8 @@
     const ev = day(taoSuKien(loai, duLieu, tuyChon));
     if (!(tuyChon && tuyChon.luc != null)) st.cuoi = now;
     ghiDauMo();
+    // App đang ở nền: iOS đóng băng hẹn giờ, nên ghi ngay thay vì chờ 2 giây
+    if (trangAn()) xa();
     return ev;
   }
 
@@ -527,7 +553,8 @@
   function ketThucPhien(lyDo, luc) {
     if (!st.phien) return;
     const khi = luc != null ? luc : st.dongHo.now();
-    day(taoSuKien('phien_ket_thuc', { ly_do: lyDo, giay: Math.round((khi - st.phien.batDau) / 100) / 10 },
+    // Đồng hồ máy bị lùi giữa phiên: không ghi số giây âm
+    day(taoSuKien('phien_ket_thuc', { ly_do: lyDo, giay: Math.max(0, Math.round((khi - st.phien.batDau) / 100) / 10) },
       { luc: khi, ms: Math.max(0, khi - st.phien.batDau), van: null, cau: null }));
     st.phien = null;
     ghiDauMo();
@@ -885,11 +912,18 @@
       return function () { const i = st.nghe.indexOf(fn); if (i >= 0) st.nghe.splice(i, 1); };
     },
 
-    /** Mọi sự kiện của một bé, sắp theo thời gian (ULID). */
-    docCuaBe: function (be) {
-      return xa().then(function () { return kho.theoBe('su_kien', be); }).then(function (ds) {
+    /**
+     * Mọi sự kiện của một bé, sắp theo thời gian (ULID). tuNgay ('YYYY-MM-DD', tùy chọn): chỉ đọc từ ngày đó
+     * (theo khoảng của chỉ mục be_luc, không đọc cả nhật ký).
+     */
+    docCuaBe: function (be, tuNgay) {
+      return xa().then(function () { return kho.theoBe('su_kien', be, tuNgay || null); }).then(function (ds) {
         return ds.sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
       });
+    },
+    /** Số sự kiện trong nhật ký gốc của một bé, đếm bằng chỉ mục (không đọc bản ghi). */
+    demCuaBe: function (be) {
+      return xa().then(function () { return kho.demTheoBe('su_kien', be); }).then(function (n) { return n + st.boDem.filter(function (e) { return e.be === be; }).length; });
     },
     docVan: function (van) {
       return xa().then(function () { return kho.theoVan(van); }).then(function (ds) {
@@ -909,6 +943,52 @@
           if (ten === 'ho_so') return kho.xoa(ten, be);
           return kho.xoaNeu(ten, function (o) { return o.be === be; });
         }));
+      });
+    },
+    /**
+     * Xóa mọi dữ liệu Đảo Khủng Long trên máy này: thôi ghi (như thẻ đã nhường, không gọi onNhuong), bỏ bộ đệm, đóng kết nối,
+     * xóa mọi khóa localStorage 'dkl-*' và mốc hết giờ '3hoa-het-gio-v1' (chỉ đảo ghi), rồi deleteDatabase('dao-khung-long').
+     * Giữ mã bố mẹ và khóa cổng (dùng chung với trang chủ) và các khóa trong o.giuKhoa (ví dụ dấu tên bé đã xóa, 'dkl-an-goi-y').
+     * o.biChan(): gọi khi cửa sổ khác còn giữ kết nối (onblocked).
+     * Trả về Promise<{ xong, bi_chan, so_khoa }>: xong false khi sau o.choMs (mặc định 8 giây) vẫn bị chặn hoặc lỗi.
+     */
+    xoaTatCa: function (o) {
+      o = o || {};
+      st.nhuong = true; // mọi lần ghi sau đó bị bỏ qua (ghi, xa, dấu mở, api.kho)
+      if (st.hengio) { clearTimeout(st.hengio); st.hengio = null; }
+      st.boDem = [];
+      st.suKienVan = [];
+      st.van = null; st.cau = null; st.phien = null; st.be = null;
+      let soKhoa = 0;
+      try {
+        const ls = window.localStorage;
+        const ds = [];
+        for (let i = 0; i < ls.length; i++) { const k = ls.key(i); if (k && (k.indexOf('dkl-') === 0 || k === '3hoa-het-gio-v1') && (o.giuKhoa || []).indexOf(k) < 0) ds.push(k); }
+        ds.forEach(function (k) { ls.removeItem(k); });
+        soKhoa = ds.length;
+      } catch (e) { /* bỏ qua */ }
+      const cu = kho;
+      kho = khoBoNho();
+      api.kho = bocGhi(kho);
+      const dong = cu && cu.dong ? cu.dong() : Promise.resolve();
+      let idb = null;
+      try { idb = window.indexedDB || null; } catch (e) { idb = null; }
+      return dong.then(function () {
+        if (!idb || !idb.deleteDatabase) return { xong: true, bi_chan: false, so_khoa: soKhoa };
+        return new Promise(function (ok) {
+          let biChan = false, xong = false;
+          const het = function (kq) { if (xong) return; xong = true; ok({ xong: kq, bi_chan: biChan, so_khoa: soKhoa }); };
+          let yc;
+          try { yc = idb.deleteDatabase(DB_TEN); } catch (e) { het(false); return; }
+          yc.onsuccess = function () { het(true); };
+          yc.onerror = function () { het(false); };
+          yc.onblocked = function () {
+            biChan = true;
+            if (o.biChan) { try { o.biChan(); } catch (e) { /* bỏ qua */ } }
+          };
+          const hg = setTimeout(function () { het(false); }, o.choMs || 8000);
+          if (hg && hg.unref) hg.unref();
+        });
       });
     },
     donNhatKyCu: donNhatKyCu,

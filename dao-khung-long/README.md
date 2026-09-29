@@ -274,6 +274,26 @@ Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở g�
 - Đổi thứ tự hai thừa số được chọn lại một lần ở mọi game (không chỉ Truyện Tranh), thẻ nhiễu đảo thứ tự ít gặp hơn. Gợi ý tìm số còn thiếu theo cách lớp 2 ("5 cộng mấy bằng 12? Đếm thêm từ 5"). Sửa câu chữ: "11 giờ 30 phút" không lặp "trưa", "Con trả vừa đủ bằng những tờ nào?", "mỗi nhóm 4 quả cam".
 - Còn mở: cách viết trừ có nhớ (lời giải, gợi ý, dấu nhớ trong màn "Gần đúng rồi", nhận xét của báo cáo) đang "thêm 1 vào số trừ", còn SGK Bài 22, 23, 62 viết "trừ 1 ở số bị trừ"; chưa có bài học riêng cho tên thành phần.
 
+## Đọc to, màn kết thúc, chạm (nhóm E của lần rà soát 2026-09-28)
+
+- Đọc to cho bé chưa đọc được chữ: Đua Xe đọc đề như các thể loại khác. Thẻ lựa chọn có chữ cái (Chắc chắn, hai trăm linh năm, 5 kg…) có loa nhỏ ở góc, chạm để nghe, không tính là chọn (ghi `nghe_lai`, `doi_tuong: 'lua_chon'`; `KhungChoi` gắn loa qua MutationObserver). Lời giải đọc nối tiếp tên lỗi, từng bước và câu "Vậy..." (`PhanHoi.loiDoc`, `AmThanh.docChuoi`), thẻ lời giải có nút loa, cả với 6 trò cũ qua cầu nối. Lật Thẻ và Truyện Tranh bước 2 gọi tên lỗi và đọc to ngay lần sai đầu.
+- `AmThanh.chuanHoa` đọc đơn vị đứng sau một số thành chữ đầy đủ (lít, ki-lô-gam, xăng-ti-mét, đề-xi-mét, mét, ki-lô-mét, gam, đồng) và bỏ khoảng trắng nhóm ba chữ số ("1 000" đọc là một nghìn). AudioContext bị iOS đưa về `interrupted` được mở lại.
+- Màn kết thúc gọn cho bé (từ khoảng 160 chữ xuống khoảng 75): sao, quả mọng, khủng long, thanh lớn lên, bước tiếp theo, cảm xúc, đọc "Con được 2 sao, 42 quả mọng!" (`Dao.loiKetThuc`). Số câu, cách tính quả mọng, điều kiện Đã thuộc, trứng vùng nằm sau nút "Xem chi tiết".
+- Menu Tạm dừng giống nhau ở khung chung và Đua Xe, mỗi nút có hình (Đua Xe có thêm Xem lại bài học). Bấm Về đảo khi ván đã có câu trả lời thì hỏi lại "Con muốn về đảo? Ván này chưa xong đâu." với nút chính Chơi tiếp (`VanChoi.coTienTrinh`). Trong 6 trò cũ chạy trên đảo, bảng tạm dừng có thêm nút Âm thanh.
+- Chạm: nút Lao tới lên góc trên bên phải, chạm sát nút không đổi làn. Không phóng to bằng hai ngón hay chạm đúp (`touch-action: manipulation`, chặn `gesturestart`). `--ink-3` đậm hơn (#6d6788). Loa đề tối thiểu 52 px, các nút nhỏ tối thiểu 44 px.
+- Hiệu năng: Đua Xe không vẽ lại canvas khi tạm dừng, xem lời giải hay ở trạm dừng. Cá của Câu Cá dùng bóng hình elip thay cho `drop-shadow`. Hẹn giờ của các game dùng khung chung chờ bé chơi tiếp khi đang tạm dừng (`KhungChoi.hen`, `KhungChoi.khiChoi`).
+- Phông Baloo 2 tự lưu ở `/fonts/` (không còn Google Fonts, CSP không còn tên miền ngoài). `sw.js` sinh phần chung từ `scripts/refresh-games.py`: mạng trước có hạn 3 giây, `no-cache` nên sau khi deploy không trộn JS cũ và mới, `ignoreSearch` cho trang. Sửa tệp của đảo thì chạy `python scripts/refresh-games.py` (ghi dấu `noi-dung`, tự tăng `CACHE`; kiểm thử báo lỗi nếu quên). `og.jpg` là ảnh chia sẻ 1200x630.
+- Trang chủ đọc tóm tắt `dkl-tom-tat-v1` (`{ v: 1, luc, be: [{ ten, qua_mong, man_xong, sao }] }`, dựng bằng `Dao.tomTatTrangChu`), ghi khi chọn bé, tạo hay xóa bé và sau mỗi ván. Kiểm thử: `tests/dao-khung-long-nhom-e.test.js`.
+
+## Góc phụ huynh và quyền riêng tư (nhóm F của lần rà soát 2026-09-28)
+
+- Báo cáo đọc được trên điện thoại: ô bản đồ kỹ năng và chip lọc hiện tên ngắn của nội dung (mã in nhỏ bên dưới, `BaoCao.tenNganNoiDung`); đầu Tổng quan có câu "Tuần này nên luyện: ..." lấy từ mục đầu của kế hoạch tuần; các nút kỹ thuật (tải JSONL, tính lại, số sự kiện) nằm trong mục "Nâng cao" thu gọn của Cài đặt.
+- Gói cho trợ lý AI: liệt kê đúng những gì gói có và không có (`BaoCao.noiDungGoi`), tùy chọn bỏ tuổi, nhắc rằng dán vào trợ lý AI là gửi dữ liệu tới công ty đó (nên tắt lịch sử hoặc huấn luyện). Hướng dẫn trong gói yêu cầu trả lời bằng tiếng Việt dễ hiểu trước (con giỏi gì, nên luyện gì, 2 đến 3 hoạt động ở nhà), JSON chỉ là tùy chọn ở cuối. Nút "Sao chép câu hỏi mẫu" sao chép câu hỏi kèm gói; máy chặn sao chép thì hiện ô chữ đã chọn sẵn.
+- Xóa một bé thì tên bé không còn trong tên gợi ý: `dkl-an-goi-y` chỉ giữ dấu băm của tên (`HoSo.anGoiY`), không đụng hồ sơ chung của trang chủ.
+- "Xóa mọi dữ liệu Đảo Khủng Long trên máy này" (Cài đặt, gõ XÓA): `NhatKy.xoaTatCa` thôi ghi, đóng kết nối, xóa mọi khóa `dkl-*` và `3hoa-het-gio-v1` (giữ mã bố mẹ), `deleteDatabase` (bị cửa sổ khác chặn thì báo đóng cửa sổ đó), rồi tải lại về màn đầu.
+- Cài đặt có mục Giọng đọc đề: máy chưa có giọng tiếng Việt thì chỉ cách cài (iPad: Cài đặt > Trợ năng > Nội dung được đọc > Giọng nói > Tiếng Việt, giọng "Linh"; Android: công cụ chuyển văn bản thành lời nói của Google). Có liên kết tới trang Quyền riêng tư `/rieng-tu/`.
+- Dữ liệu: số sự kiện đếm bằng chỉ mục (`NhatKy.demCuaBe`), gói AI chỉ đọc nhật ký 28 ngày (`docCuaBe(be, tuNgay)`), sự kiện ghi lúc app ở nền được ghi xuống kho ngay (iOS đóng băng hẹn giờ), số giây chơi không bao giờ âm khi đồng hồ máy bị lùi. Kiểm thử: `tests/dao-khung-long-nhom-f.test.js`.
+
 ## Việc của các giai đoạn sau
 
 - GĐ 6: thử với 5 đến 10 bé trên iPad trong 4 tuần; chỉnh độ khó, tỉ lệ quả mọng, số câu đấu trường, cách viết báo cáo; thử gói xuất với một LLM.

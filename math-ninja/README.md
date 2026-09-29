@@ -45,6 +45,7 @@ Mở trang bằng Safari → bấm nút **Chia sẻ** → **Thêm vào Màn hìn
 | `js/profile.js` | Hồ sơ người chơi dùng chung cho các game 3hoa.com (tên, hình đại diện; khóa `3hoa-players-v1`) |
 | `js/dao.js`, `dao.css` | Chế độ Đảo Khủng Long (chỉ bật khi đảo mở game trong khung với `?dao=1`), xem mục bên dưới |
 | `manifest.json`, `sw.js`, `icons/` | Hỗ trợ cài như ứng dụng (PWA) và chơi ngoại tuyến |
+| `og.jpg` | Ảnh chia sẻ 1200×630 cho Facebook, Zalo, Messenger (thẻ `og:image` trong `index.html`) |
 
 ## Các màn chơi
 
@@ -101,7 +102,7 @@ Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Gi�
 - **Thêm hoặc sửa màn chơi**: chỉnh mảng `ANSWER_LEVELS` và `PAIR_LEVELS` trong `js/math.js` (tốc độ `speed`, số quả `fruits`, tỉ lệ bom `bomb`).
 - **Ngưỡng sao**: hàm `starThresholds` và bảng `STAR_FACTOR` trong `js/game.js`.
 - **Thời gian mỗi ván**: nhóm nút trong `index.html` (`data-sec`).
-- **Sau khi cập nhật game trên website**: tăng số phiên bản `CACHE` trong `sw.js` (ví dụ `ninja-toan-v2`) để thiết bị đã cài nhận bản mới.
+- **Sau khi cập nhật game trên website**: ở thư mục gốc chạy `python scripts/refresh-games.py`. Script ghi lại dấu `noi-dung` của mọi tệp được lưu sẵn trong `sw.js` và tự tăng `CACHE` khi có tệp đổi (quên chạy thì `node tests/run.js` báo lỗi). Tệp mới thì thêm vào `CORE` (bắt buộc) hoặc `OPTIONAL` (cố gắng lưu) trước khi chạy. Phần còn lại của `sw.js` sinh từ script, không sửa tay: trang và JS/CSS lấy mạng trước (chờ tối đa 3 giây rồi dùng bản đã lưu), ảnh và phông lấy bộ nhớ đệm trước, phông Baloo 2 lấy từ `../fonts/`.
 
 ## Chạy trong Đảo Khủng Long
 
@@ -114,7 +115,7 @@ Bốn nút bật/tắt (**🔊 Âm thanh**, **🎵 Nhạc nền**, **🗣️ Gi�
 - Quả chạm lưỡi dao trước là câu trả lời: ghi `thao_tac` `vuot` (giá trị, cột, vị trí x, y, đợt ném) rồi `traLoi`. Đúng: điểm, combo, quả mọng, khủng long cổ vũ. Sai hẳn: quả dừng, đảo hiện thẻ "Gần đúng rồi", đóng thẻ thì sang câu.
 - Quả rơi hết mà bé chưa chém: quả bay lại chậm hơn, không phạt, không hết giờ; rơi 2 lần thì nút 💡 nhấp nháy mời xem gợi ý.
 - Nút 💡: 3 cấp gợi ý của đảo, cấp 3 bỏ bớt một quả sai (ghi `loai_bo`). Câu đã xem gợi ý được 50 điểm như luật cũ.
-- Tạm dừng ghi `tam_dung`/`tiep_tuc`; bảng tạm dừng có nút "Về đảo". Hết câu: "Giỏi quá!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc.
+- Tạm dừng ghi `tam_dung`/`tiep_tuc`; bảng tạm dừng trên đảo có ▶ Chơi tiếp, 🔊 Âm thanh (bật / tắt hiệu ứng và nhạc trong ván này, không lưu) và 🏝️ Về đảo, giống nhau ở 6 game. Hết câu: "Giỏi quá!" rồi `ketThuc({ diem, dong_phu })`, đảo hiện màn kết thúc.
 
 ## Kiểm thử
 

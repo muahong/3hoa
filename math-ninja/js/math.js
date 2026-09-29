@@ -294,7 +294,7 @@
       const u = a % 10;
       if (u > 0 && b > u) return a + ' ' + MINUS + ' ' + u + ' = ' + (a - u) + ', bớt ' + (b - u) + ' nữa còn ' + ans;
       // Mẹo "bớt tròn chục rồi thêm lại" chỉ hợp khi số bị trừ có từ hai chục trở lên.
-      // Với 10 − b thì nó thành "10 − 10 = 0, thêm … nữa" — dài dòng và ngược cách dạy lớp 1.
+      // Với 10 − b thì nó thành "10 − 10 = 0, thêm … nữa": dài dòng và ngược cách dạy lớp 1.
       if (u === 0 && a >= 20 && b > 0) return a + ' ' + MINUS + ' 10 = ' + (a - 10) + ', thêm ' + (10 - b) + ' nữa là ' + ans;
       return '';
     }

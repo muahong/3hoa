@@ -175,20 +175,22 @@
       k.sai = true;
       ve(false);
       K().bao(kq.loiNoi + '. Con thử lại nhé', 'sai', 2.8);
-      setTimeout(function () { k.sai = false; if (s) ve(false); }, 800);
+      // Gọi tên lỗi bằng giọng đọc như các thể loại khác (bé chưa đọc được chữ vẫn biết mình nhầm ở đâu)
+      AT().doc(kq.loiNoi + '. Con thử lại nhé');
+      K().hen(function () { k.sai = false; if (s) ve(false); }, 800);
       return;
     }
     k.sai = true;
     ve(false);
     s.khoa = true;
-    setTimeout(function () {
+    K().hen(function () {
       if (!s) return;
       K().phanHoiCau(s.cur.q, k.gia_tri, kq, function () {
         k.sai = false;
         const dung = s.ban.kq.find(function (x) { return String(x.gia_tri) === String(s.cur.q.dap_an); });
         if (dung) dung.dung = true;
         ve(false);
-        setTimeout(function () {
+        K().hen(function () {
           if (!s) return;
           s.cur.tt = 'bo';
           if (dung) { dung.tt = 'bo'; dung.dung = false; }
@@ -216,7 +218,7 @@
     k.dung = true;
     ve(false);
     s.khoa = true;
-    setTimeout(function () {
+    K().hen(function () {
       if (!s) return;
       c.tt = 'xong';
       k.tt = 'xong';
@@ -237,7 +239,7 @@
     ve(false);
     const con = s.ban.phep.some(function (c) { return c.tt === 'up'; });
     if (con) return;
-    if (s.van.conCau()) setTimeout(function () { if (s) moBan(); }, 400);
+    if (s.van.conCau()) K().hen(function () { if (s) moBan(); }, 400);
     else ketThuc();
   }
 

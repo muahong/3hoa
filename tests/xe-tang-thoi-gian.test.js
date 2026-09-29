@@ -632,7 +632,7 @@ test('speakable: đọc "14:21" thành "14 giờ 21 phút", không câu nào cò
     for (let i = 0; i < 300; i++) {
       const q = lv.gen();
       const said = [sp('Đáp án là ' + q.answer.speech + '. ' + q.explain), sp(q.explain), sp('Đúng rồi. ' + q.answer.speech + '. ' + q.explain)];
-      said.forEach((s) => assert.doesNotMatch(s, /\d{1,2}:\d{2}/, lv.id + ': giọng đọc còn chuỗi đồng hồ điện tử thô — ' + s));
+      said.forEach((s) => assert.doesNotMatch(s, /\d{1,2}:\d{2}/, lv.id + ': giọng đọc còn chuỗi đồng hồ điện tử thô: ' + s));
     }
   });
 });

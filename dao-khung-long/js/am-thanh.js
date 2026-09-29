@@ -1,6 +1,7 @@
 /* ============================================================
    am-thanh.js – Tiếng động tổng hợp bằng Web Audio (không tải tệp) và giọng đọc tiếng Việt
-   API: window.AmThanh = { mo(), bat(ten), doc(chu), dungDoc(), co: { tieng, giong } }
+   API: window.AmThanh = { mo(), bat(ten), doc(chu), docChuoi(ds), chuanHoa(chu) (chữ sẽ đọc: đơn vị, nhóm số, dấu phép tính),
+        dungDoc(), co: { tieng, giong } }
    ============================================================ */
 (function () {
   'use strict';
@@ -16,7 +17,8 @@
   let ac = null;
   let master = null;
   function mo() {
-    if (ac) { if (ac.state === 'suspended') ac.resume().catch(function () {}); return; }
+    // iOS để 'interrupted' (cuộc gọi, Siri, ra nền) chứ không chỉ 'suspended': khác 'running' là mở lại
+    if (ac) { if (ac.state !== 'running' && ac.state !== 'closed') { try { ac.resume().catch(function () {}); } catch (e) { /* bỏ qua */ } } return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     try {
@@ -102,12 +104,31 @@
   };
   giong.khoiDong();
 
+  /*
+   * Chuẩn hóa chữ trước khi đọc: bỏ khoảng trắng nhóm ba chữ số ("1 000" đọc là "một nghìn", không phải "một, không trăm"),
+   * đơn vị viết tắt đứng sau một số thành chữ đầy đủ ("5 kg" → "5 ki-lô-gam"), dấu phép tính thành chữ.
+   * Chữ thường không bị đụng tới: đơn vị chỉ đổi khi đứng ngay sau một số và không dính chữ cái nào phía sau ("3 máy" giữ nguyên).
+   */
+  const CHU_CAI = 'A-Za-z\\u00C0-\\u024F\\u1E00-\\u1EFF';
+  const DON_VI = [['km', 'ki-lô-mét'], ['kg', 'ki-lô-gam'], ['cm', 'xăng-ti-mét'], ['dm', 'đề-xi-mét'], ['mm', 'mi-li-mét'], ['m', 'mét'], ['l', 'lít'], ['g', 'gam'], ['đ', 'đồng']];
+  const RE_DON_VI = new RegExp('(\\d)[ \\u00a0\\u202f\\u2009]?(' + DON_VI.map(function (x) { return x[0]; }).join('|') + ')(?![' + CHU_CAI + '0-9])', 'g');
+  const TEN_DON_VI = {};
+  DON_VI.forEach(function (x) { TEN_DON_VI[x[0]] = x[1]; });
+  // Số có nhóm ba chữ số: 1-3 chữ số, rồi một hay nhiều nhóm (khoảng trắng + đúng 3 chữ số), không dính chữ số nào hai đầu
+  const RE_NHOM_SO = /(^|[^\d.,])(\d{1,3}(?:[    ]\d{3})+)(?!\d)/g;
+  function chuanHoaDoc(chu) {
+    let t = String(chu == null ? '' : chu);
+    t = t.replace(RE_NHOM_SO, function (m, truoc, so) { return truoc + so.replace(/[    ]/g, ''); });
+    t = t.replace(RE_DON_VI, function (m, so, dv) { return so + ' ' + TEN_DON_VI[dv]; });
+    return t.replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/(\d)\s*:\s*(\d)/g, '$1 chia $2').replace(/=/g, ' bằng ');
+  }
+
   function doc(chu, tuyChon) {
     if (!co.giong || !giong.co || !chu) return false;
     try {
       const ss = window.speechSynthesis;
       if (!(tuyChon && tuyChon.noiTiep)) ss.cancel();
-      const u = new window.SpeechSynthesisUtterance(String(chu).replace(/−/g, ' trừ ').replace(/\+/g, ' cộng ').replace(/×/g, ' nhân ').replace(/(\d)\s*:\s*(\d)/g, '$1 chia $2').replace(/=/g, ' bằng '));
+      const u = new window.SpeechSynthesisUtterance(chuanHoaDoc(chu));
       u.voice = giong.giong;
       u.lang = giong.giong.lang || 'vi-VN';
       u.rate = 0.95;
@@ -117,12 +138,21 @@
     } catch (e) { return false; }
   }
   function dungDoc() { try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ } }
+  /** Đọc nối tiếp nhiều câu (lời giải: tên lỗi, từng bước, "Vậy..."): câu đầu cắt lời đang đọc, các câu sau nối theo. */
+  function docChuoi(ds) {
+    ds = (Array.isArray(ds) ? ds : [ds]).filter(function (x) { return x != null && String(x).trim(); });
+    let ok = false;
+    ds.forEach(function (c, i) { ok = doc(c, i ? { noiTiep: true } : null) || ok; });
+    return ok;
+  }
 
   window.AmThanh = {
     co: co,
     mo: mo,
     bat: bat,
     doc: doc,
+    docChuoi: docChuoi,
+    chuanHoa: chuanHoaDoc,
     dungDoc: dungDoc,
     coGiong: function () { return giong.co; },
     datTieng: function (b) { co.tieng = !!b; luuCo(); },

@@ -60,3 +60,7 @@ html.dao #btn-quit { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .dao-hinh .dao-be { animation: none !important; }
 }
+
+/* Bảng tạm dừng trên đảo (giống nhau ở 6 game): "▶ Chơi tiếp", rồi "🔊 Âm thanh" và "🏝️ Về đảo" cùng một hàng, cùng cỡ */
+.dao-hang-tam-dung { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+.dao-hang-tam-dung .btn { min-width: 210px; min-height: 58px; font-size: 21px; padding: 10px 20px; }

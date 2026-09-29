@@ -2110,7 +2110,7 @@
       if (isNext) nextFound = true;
       let meta;
       if (!unlocked) meta = '<span class="lock">🔒 Qua hỏi đáp màn ' + (l.n - 1) + ' để mở</span>';
-      else meta = '<span class="best">🏆 ' + (p.best ? fmt(p.best) : '—') + '</span>' +
+      else meta = '<span class="best">🏆 ' + (p.best ? fmt(p.best) : '–') + '</span>' +
         '<span class="quiz-best">🧠 ' + (p.quizBest || 0) + '/' + QUIZ_N + '</span>' +
         '<span class="stars" aria-hidden="true">' + starsHtml(p.stars || 0) + '</span>';
       const label = 'Màn ' + l.n + ': ' + l.title + ', ' + gradeLabel(l) +
@@ -2585,7 +2585,7 @@
       ? pool.slice(0, 12).map(function (it) {
         return '<div class="report-row">' + reviewClockHtml(it.info) + '<span class="t">' + esc(describeReview(it)) + '</span><span class="n">✖ ' + it.n + '</span></div>';
       }).join('')
-      : '<div class="report-row"><span class="t">Chưa có gì cần ôn — tuyệt vời! 🎉</span></div>';
+      : '<div class="report-row"><span class="t">Chưa có gì cần ôn. Tuyệt vời! 🎉</span></div>';
     paintChipClocks($('report-review'));
   }
 

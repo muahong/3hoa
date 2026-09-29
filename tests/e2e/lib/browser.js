@@ -1,5 +1,5 @@
 /* Trợ giúp kiểm thử đầu-cuối bằng Playwright (Chromium có sẵn trong sandbox).
-   Chạy: NODE_PATH=/opt/node22/lib/node_modules node tests/e2e/<game>.e2e.js
+   Chạy: NODE_PATH="$(npm root -g)" node tests/e2e/<game>.e2e.js  (sandbox cũ: NODE_PATH=/opt/node22/lib/node_modules)
    Dùng:
      const { withGame, assertClean } = require('./lib/browser.js');
      withGame('cuoi-ho', async ({ page, log, shot, hook }) => { ... }, { viewport: { width: 1180, height: 820 } })
@@ -12,10 +12,10 @@
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const { chromium } = require('playwright');
+const { chromium } = require('./playwright.js');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.woff2': 'font/woff2', '.xml': 'application/xml' };
 
 function serve() {
   const server = http.createServer((req, res) => {
@@ -71,11 +71,11 @@ async function withGame(dir, fn, opts) {
 function assertClean(log, label) {
   const problems = [].concat(log.pageErrors.map((e) => 'pageerror: ' + e), log.errors.map((e) => 'console.error: ' + e), log.failedRequests.map((e) => 'request: ' + e));
   if (problems.length) {
-    console.error((label || 'e2e') + ' — lỗi:\n  ' + problems.join('\n  '));
+    console.error((label || 'e2e') + ': lỗi:\n  ' + problems.join('\n  '));
     process.exitCode = 1;
     return false;
   }
-  console.log((label || 'e2e') + ' — sạch (không lỗi trang/console).' + (log.warnings.length ? ' Cảnh báo: ' + log.warnings.length : ''));
+  console.log((label || 'e2e') + ': sạch (không lỗi trang/console).' + (log.warnings.length ? ' Cảnh báo: ' + log.warnings.length : ''));
   return true;
 }
 

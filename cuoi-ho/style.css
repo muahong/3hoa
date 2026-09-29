@@ -3,7 +3,7 @@
    Giao diện rạp xiếc ban đêm, thân thiện với trẻ nhỏ, tối ưu cảm ứng (iPad)
    ============================================================ */
 
-/* Phông dự phòng đo theo Baloo 2: khi Google Fonts về muộn (hoặc không tải được), chữ giữ nguyên cỡ,
+/* Phông dự phòng đo theo Baloo 2: khi phông tự lưu ở ../fonts về muộn (hoặc không tải được), chữ giữ nguyên cỡ,
    không "nhảy" một nhịp khi phông thật về. Chỉ dùng phông có sẵn trong máy, không tải thêm gì. */
 @font-face {
   font-family: 'Baloo 2 Fallback';

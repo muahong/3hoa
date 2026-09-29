@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,12 +13,26 @@
 <meta name="theme-color" content="#3d9df5">
 <meta name="description" content="Ninja Toán Học – trò chơi chém trái cây giúp bé lớp 1 đến lớp 3 luyện phép cộng, trừ, nhân, chia. Chơi trên iPad, điện thoại hoặc máy tính.">
 <title>Ninja Toán Học – Chém trái cây, học cộng trừ nhân chia</title>
+<link rel="canonical" href="https://3hoa.com/math-ninja/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://3hoa.com/math-ninja/">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:site_name" content="3hoa.com">
+<meta property="og:title" content="Ninja Toán Học – Chém trái cây, học cộng trừ nhân chia">
+<meta property="og:description" content="Ninja Toán Học – trò chơi chém trái cây giúp bé lớp 1 đến lớp 3 luyện phép cộng, trừ, nhân, chia. Chơi trên iPad, điện thoại hoặc máy tính.">
+<meta property="og:image" content="https://3hoa.com/math-ninja/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ninja Toán Học: chém trái cây, học cộng trừ nhân chia">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ninja Toán Học – Chém trái cây, học cộng trừ nhân chia">
+<meta name="twitter:description" content="Ninja Toán Học – trò chơi chém trái cây giúp bé lớp 1 đến lớp 3 luyện phép cộng, trừ, nhân, chia. Chơi trên iPad, điện thoại hoặc máy tính.">
+<meta name="twitter:image" content="https://3hoa.com/math-ninja/og.jpg">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fonts/baloo-2.css">
 <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="game-shell.css">
 <link rel="stylesheet" href="dao.css">
@@ -159,8 +173,8 @@
         <div class="howto-item"><div class="em">🔢</div><div class="tx">Nhìn <b>phép tính</b> ở phía trên màn hình, ví dụ <b>7 + 5 = ?</b></div></div>
         <div class="howto-item"><div class="em">👆</div><div class="tx"><b>Vuốt ngón tay</b> qua quả có <b>đáp án đúng</b> để chém nó. Chém nhanh được thêm điểm!</div></div>
         <div class="howto-item"><div class="em">❌</div><div class="tx">Chém <b>số sai</b> hoặc chém <b>bom 💣</b> sẽ mất 1 tim ❤️. Hết 3 tim là thua.</div></div>
-        <div class="howto-item"><div class="em">🍃</div><div class="tx">Quả rơi mất thì không sao — quả sẽ bay lại. Lỡ 2 lần, đáp án đúng có <b>vòng vàng</b> gợi ý.</div></div>
-        <div class="howto-item"><div class="em">💡</div><div class="tx">Bí quá thì bấm nút <b>💡</b> ở góc trên để xem đáp án — câu đó được <b>50 điểm</b> thay vì 100.</div></div>
+        <div class="howto-item"><div class="em">🍃</div><div class="tx">Quả rơi mất thì không sao, quả sẽ bay lại. Lỡ 2 lần, đáp án đúng có <b>vòng vàng</b> gợi ý.</div></div>
+        <div class="howto-item"><div class="em">💡</div><div class="tx">Bí quá thì bấm nút <b>💡</b> ở góc trên để xem đáp án: câu đó được <b>50 điểm</b> thay vì 100.</div></div>
         <div class="howto-item"><div class="em">📝</div><div class="tx">Phép tính từng sai sẽ quay lại với nhãn <b>Ôn lại</b>. Trả lời đúng 2 lần là thuộc!</div></div>
         <div class="howto-item"><div class="em">🔥</div><div class="tx">Trả lời <b>đúng liên tiếp</b> để nhận <b>Combo</b> nhân điểm. Chém tim 💗 để hồi lại mạng.</div></div>
         <div class="howto-item"><div class="em">🤝</div><div class="tx">Chế độ <b>Ghép đôi</b>: chém <b>2 quả</b> mà cộng, trừ, nhân hoặc chia với nhau bằng số cho trước.</div></div>

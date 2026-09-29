@@ -86,6 +86,47 @@ for (const g of GAMES) {
   });
 }
 
+/* ============================================================
+   Service worker: phần dùng chung giống hệt nhau, dấu noi-dung khớp tệp thật (quên tăng CACHE thì hỏng)
+   Sửa: python scripts/refresh-games.py (ghi lại phần dùng chung + dấu noi-dung, tự tăng CACHE)
+   ============================================================ */
+const SW_GAMES = GAMES.concat(['dao-khung-long']);
+const crypto = require('crypto');
+const lf = (s) => s.replace(/\r\n/g, '\n');
+const PY = lf(read('scripts/refresh-games.py'));
+const SW_MARKER = PY.match(/^SW_MARKER = '([^']+)'/m)[1];
+const SW_SHARED = PY.match(/^SW_SHARED = r'''([\s\S]*?)'''/m)[1];
+const TEXT_EXT = new Set(['.html', '.css', '.js', '.json', '.svg', '.txt', '.md']);
+
+/** Giống content_stamp() trong scripts/refresh-games.py. */
+function stamp(game, sw) {
+  const rels = new Set();
+  for (const m of sw.matchAll(/const (?:CORE|OPTIONAL|FONTS) = \[([\s\S]*?)\];/g)) {
+    for (const x of m[1].matchAll(/'([^']+)'/g)) { const p = x[1].startsWith('./') ? x[1].slice(2) : x[1]; rels.add(p || 'index.html'); }
+  }
+  const h = crypto.createHash('sha256');
+  for (const rel of Array.from(rels).sort()) {
+    let data = fs.readFileSync(path.join(ROOT, game, rel));
+    if (TEXT_EXT.has(path.extname(rel).toLowerCase())) data = Buffer.from(data.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+    h.update(Buffer.concat([Buffer.from(rel + '\0', 'utf8'), data, Buffer.from('\0')]));
+  }
+  return h.digest('hex').slice(0, 16);
+}
+
+for (const g of SW_GAMES) {
+  test(g + ': sw.js shared block is generated, precaches the self-hosted font, content stamp matches the files', () => {
+    const sw = lf(read(g + '/sw.js'));
+    const i = sw.indexOf(SW_MARKER);
+    assert.ok(i > 0, 'sw.js thiếu dòng đánh dấu phần dùng chung');
+    assert.equal(sw.slice(i + SW_MARKER.length + 1), SW_SHARED, 'phần dùng chung của sw.js khác scripts/refresh-games.py: chạy python scripts/refresh-games.py');
+    assert.doesNotMatch(sw, /fonts\.g(oogleapis|static)\.com/, 'không còn Google Fonts');
+    assert.match(sw, /const OPTIONAL = \[/);
+    const m = sw.match(/^\/\/ noi-dung: (\w+)$/m);
+    assert.ok(m, 'sw.js thiếu dòng // noi-dung: <dấu>');
+    assert.equal(m[1], stamp(g, sw), 'tệp của ' + g + ' đã đổi mà CACHE chưa tăng: chạy python scripts/refresh-games.py');
+  });
+}
+
 test('hub: CSP, no inline handlers, profile.js + hub.js loaded', () => {
   const html = read('index.html');
   assert.match(html, /<meta http-equiv="Content-Security-Policy"/);

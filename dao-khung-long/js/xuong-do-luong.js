@@ -97,7 +97,8 @@
     an(dom.dung, true);
     dom.san.classList.remove('xd-thang');
   }
-  function hen(f, ms) { const t = setTimeout(function () { if (s) f(); }, ms); s.hen.push(t); return t; }
+  /** Hẹn giờ của ván: bé đang tạm dừng thì chờ bé chơi tiếp mới chạy (KhungChoi.khiChoi). */
+  function hen(f, ms) { const t = setTimeout(function () { if (s) K().khiChoi(function () { if (s) f(); }); }, ms); s.hen.push(t); return t; }
 
   function cauMoi() {
     if (!s) return;

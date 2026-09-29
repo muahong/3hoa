@@ -26,6 +26,9 @@
   function dongHo(giay) { giay = Math.max(0, giay); const m = Math.floor(giay / 60); const g = Math.floor(giay % 60); return m + ':' + (g < 10 ? '0' : '') + g; }
   function an(el, b) { if (el) el.classList.toggle('hidden', !!b); }
   function chu(el, t) { if (el && el.textContent !== String(t)) el.textContent = String(t); }
+  function K() { return window.KhungChoi; }
+  /** Đọc đề khi câu hiện (mặc định có, như các thể loại khác; o.docDe === false để tắt). */
+  function docDe() { return window.AmThanh.co.giong && !(s && s.o && s.o.docDe === false); }
 
   /* ---------------- DOM và sự kiện ---------------- */
 
@@ -41,12 +44,30 @@
     dom.gyBong = dom.goiYBong; dom.gyHinh = dom.goiYHinh; dom.gyChu = dom.goiYChu;
     dom.ph = dom.phanHoi; dom.tienDo = dom.tienDoThanh;
     dom.ctx = dom.canvas.getContext('2d');
+    // Menu Tạm dừng giống khung chơi chung: nút có hình, thêm "Xem lại bài học" khi màn có bài học
+    dom.baiHoc = document.createElement('button');
+    dom.baiHoc.type = 'button';
+    dom.baiHoc.className = 'nut nut-trang hidden';
+    dom.baiHoc.id = 'dx-bai-hoc';
+    const cachChoi = $('dx-cach-choi');
+    if (cachChoi && cachChoi.parentNode) cachChoi.parentNode.insertBefore(dom.baiHoc, cachChoi.nextSibling);
+    K().trangTriTamDung({ tiep: dom.tiep, cachChoi: cachChoi, baiHoc: dom.baiHoc, am: dom.am, giong: dom.giong, veDao: dom.veDao });
+    K().ganLoaLoiGiai(dom.ph, function () { return s && s.giaiDoan === 'phan_hoi' ? s.phDoc : null; }, function () {
+      if (s && s.van.q && !s.van.q.xong) s.van.thaoTac('nghe_lai', { doi_tuong: 'loi_giai' });
+    });
 
     dom.canvas.addEventListener('pointerdown', function (e) {
       if (!s || !s.chay) return;
       e.preventDefault();
+      // Chạm sát nút Lao tới (trượt tay) thì không đổi làn
+      if (ganNutLao(e.clientX, e.clientY)) return;
       const r = dom.canvas.getBoundingClientRect();
       doiLan(e.clientX - r.left < r.width / 2 ? -1 : 1);
+    });
+    dom.baiHoc.addEventListener('click', function () {
+      if (!s || !s.o.xemBaiHoc || s.giaiDoan !== 'tam_dung') return;
+      an(dom.tam, true);
+      s.o.xemBaiHoc(function () { an(dom.tam, false); s.veLai = true; });
     });
     dom.lao.addEventListener('click', function () { laoToi(); });
     dom.nghe.addEventListener('click', function () { ngheLai(); });
@@ -54,7 +75,14 @@
     dom.tramGoiY.addEventListener('click', function () { xinGoiY(); });
     dom.tamDung.addEventListener('click', function () { tamDung('nut'); });
     dom.tiep.addEventListener('click', function () { tiepTuc('nut'); });
-    dom.veDao.addEventListener('click', function () { thoat(); });
+    dom.veDao.addEventListener('click', function () {
+      if (!s) return;
+      // Ván đã có câu trả lời: hỏi lại cho chắc (bé hay chạm nhầm); chưa làm gì thì về luôn
+      if (s.van.coTienTrinh && s.van.coTienTrinh()) {
+        an(dom.tam, true);
+        K().hoiVeDao(dom.man, { hinh: s.o.hinhGoiY, onChoiTiep: function () { tiepTuc('nut'); }, onVeDao: thoat });
+      } else thoat();
+    });
     dom.am.addEventListener('click', function () { window.AmThanh.datTieng(!window.AmThanh.co.tieng); capNhatNutAm(); });
     dom.giong.addEventListener('click', function () { window.AmThanh.datGiong(!window.AmThanh.co.giong); capNhatNutAm(); });
     dom.phTiep.addEventListener('click', function () { dongPhanHoi('choi_tiep'); });
@@ -85,14 +113,17 @@
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden' && s && s.dangChay && (s.giaiDoan === 'chay' || s.giaiDoan === 'dem_nguoc')) tamDung('an_tab');
     });
-    window.addEventListener('resize', function () { if (s && s.dangChay) doKichThuoc(); });
+    window.addEventListener('resize', function () { if (s && s.dangChay) { doKichThuoc(); s.veLai = true; } });
     return dom;
   }
 
-  function capNhatNutAm() {
-    chu(dom.am, 'Âm thanh: ' + (window.AmThanh.co.tieng ? 'Bật' : 'Tắt'));
-    chu(dom.giong, 'Giọng đọc: ' + (window.AmThanh.co.giong ? 'Bật' : 'Tắt'));
-    dom.giong.disabled = !window.AmThanh.coGiong();
+  function capNhatNutAm() { K().nutAm(dom.am, dom.giong); }
+
+  /** Điểm (x, y) trên màn hình nằm trên hoặc sát nút Lao tới (cách mép 14 px). */
+  function ganNutLao(x, y) {
+    if (!dom.lao || dom.lao.classList.contains('hidden')) return false;
+    const r = dom.lao.getBoundingClientRect();
+    return r.width > 0 && x >= r.left - 14 && x <= r.right + 14 && y >= r.top - 14 && y <= r.bottom + 14;
   }
 
   /* ---------------- Hình học và nền ---------------- */
@@ -152,6 +183,8 @@
     };
     doKichThuoc();
     capNhatNutAm();
+    an(dom.baiHoc, !o.xemBaiHoc);
+    K().dongHoiVeDao(dom.man);
     dom.gyHinh.src = o.hinhGoiY || '';
     dom.phHinh.src = o.hinhGoiY || '';
     chu(dom.bongNhan, 'Bóng kỷ lục của ' + (o.tenBe || 'con'));
@@ -177,7 +210,10 @@
     const dt = Math.min(0.05, Math.max(0, (tNow - s.tCuoi) / 1000));
     s.tCuoi = tNow;
     capNhat(dt);
-    ve();
+    // Tạm dừng, xem lời giải, trạm dừng: cảnh đứng yên dưới lớp phủ, chỉ vẽ một lần khi đổi trạng thái (đỡ tốn pin iPad)
+    const dung = s.giaiDoan === 'tam_dung' || s.giaiDoan === 'phan_hoi' || s.giaiDoan === 'tram';
+    if (!dung || s.daVeDung !== s.giaiDoan || s.veLai) { ve(); s.veLai = false; }
+    s.daVeDung = dung ? s.giaiDoan : null;
     s.raf = requestAnimationFrame(khung);
   }
 
@@ -266,7 +302,7 @@
     dom.cau.classList.remove('nay');
     void dom.cau.offsetWidth;
     dom.cau.classList.add('nay');
-    if (window.AmThanh.co.giong && s.o.docDe) window.AmThanh.doc(q.de_doc);
+    if (docDe()) window.AmThanh.doc(q.de_doc);
   }
 
   /* ---------------- Thao tác của bé ---------------- */
@@ -419,7 +455,9 @@
     chu(dom.phNote, s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!');
     an(dom.ph, false);
     an(dom.gyBong, true);
-    window.AmThanh.doc((kq.loi && kq.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (kq.loiNoi || ''));
+    // Đọc cả tên lỗi, từng bước và câu "Vậy...": bé chưa đọc được chữ vẫn nghe đủ lời giải (nút loa trên thẻ đọc lại)
+    s.phDoc = window.PhanHoi.loiDoc(q, giaTri, kq);
+    window.AmThanh.docChuoi(s.phDoc);
     setTimeout(function () { try { dom.phTiep.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
 
@@ -467,7 +505,7 @@
     chu(dom.de, q.de);
     an(dom.cau, false);
     an(dom.tram, false);
-    if (window.AmThanh.co.giong && s.o.docDe) window.AmThanh.doc(q.de_doc);
+    if (docDe()) window.AmThanh.doc(q.de_doc);
   }
 
   function tramGo(k) {
@@ -529,6 +567,7 @@
     window.NhatKy.tiepTuc(nguon);
     s.giaiDoan = s.giaiTruoc || 'chay';
     an(dom.tam, true);
+    K().dongHoiVeDao(dom.man);
     s.tCuoi = performance.now();
     const cho = s.phCho;
     s.phCho = null;
@@ -538,6 +577,7 @@
     if (!s) return;
     const o = s.o;
     an(dom.tam, true);
+    K().dongHoiVeDao(dom.man);
     const giay = s.t;
     s.dangChay = false;
     cancelAnimationFrame(s.raf);

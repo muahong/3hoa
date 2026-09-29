@@ -132,7 +132,7 @@ test('cuoi-ho: L7 no nonsense options (13 giờ tối, 19 giờ sáng, 10/11 gi�
     for (const o of q.options) {
       assert.doesNotMatch(o.text, /^(1[3-9]|2\d) giờ.* (sáng|trưa|chiều|tối|đêm)$/, o.text);
       assert.doesNotMatch(o.text, /^12 giờ( \d+ phút)? (sáng|chiều)$/, o.text);
-      // 22–23 giờ là buổi đêm (Toán 2), không phải buổi tối — kiểm cả đáp án lẫn đáp án nhiễu
+      // 22–23 giờ là buổi đêm (Toán 2), không phải buổi tối; kiểm cả đáp án lẫn đáp án nhiễu
       assert.doesNotMatch(o.text, /^(10|11) giờ.* tối$/, o.text);
       assert.doesNotMatch(o.text, /^([1-6]) giờ.* tối$/, o.text);
     }

@@ -70,6 +70,12 @@
     dom.taiVe.addEventListener('click', function () { veDao({ ly_do: 'khong_mo_duoc' }); });
     dom.phTiep.addEventListener('click', function () { dongPhanHoi('choi_tiep'); });
     dom.phQueNut.addEventListener('click', doiQueTinh);
+    // Loa trên thẻ lời giải như khung chơi chung: đọc lại tên lỗi, các bước, câu "Vậy..."
+    if (window.KhungChoi && window.KhungChoi.ganLoaLoiGiai) {
+      window.KhungChoi.ganLoaLoiGiai(dom.ph, function () { return s && s.phMo ? s.phDoc : null; }, function () {
+        if (s && s.van && s.van.q && !s.van.q.xong) s.van.thaoTac('nghe_lai', { doi_tuong: 'loi_giai' });
+      });
+    }
     document.addEventListener('keydown', function (e) {
       if (s && s.phMo && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); dongPhanHoi('choi_tiep'); }
     });
@@ -313,7 +319,8 @@
     dom.phQueNut.textContent = 'Xem bằng que tính';
     dom.phNote.textContent = s.van.seOnLai() ? 'Câu này sẽ quay lại sau 2 câu nữa để con tự làm' : 'Lần sau gặp lại, con làm được mà!';
     an(dom.ph, false);
-    AT().doc((k.loi && k.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (k.loiNoi || ''));
+    s.phDoc = PH.loiDoc ? PH.loiDoc(q, giaTri, k) : [(k.loi && k.loi[0] !== 'khac' ? 'Gần đúng rồi. ' : '') + (k.loiNoi || '')];
+    if (AT().docChuoi) AT().docChuoi(s.phDoc); else AT().doc(s.phDoc.join(' '));
     setTimeout(function () { try { dom.phTiep.focus(); } catch (e) { /* bỏ qua */ } }, 50);
   }
 

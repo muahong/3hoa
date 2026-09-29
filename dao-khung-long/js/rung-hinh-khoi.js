@@ -128,7 +128,7 @@
     // Bé "đi" sang khoảng rừng mới
     dom.rung.classList.remove('rh-den');
     dom.rung.classList.add('rh-di');
-    setTimeout(function () {
+    K().hen(function () {
       if (!s) return;
       dom.rung.classList.remove('rh-di');
       di();
@@ -767,7 +767,7 @@
     capNhatBan();
     AT().bat('doi_lan');
     const giaTri = s.ct.kieu === 'phan_loai' ? k : vat;
-    setTimeout(function () { if (s && s.q && !s.q.xong) { s.khoa = false; nop(giaTri, s.ct.kieu === 'phan_loai' ? { ro: k } : { vat: vat, vi_tri: String.fromCharCode(65 + +i) }); } }, 420);
+    K().hen(function () { if (s && s.q && !s.q.xong) { s.khoa = false; nop(giaTri, s.ct.kieu === 'phan_loai' ? { ro: k } : { vat: vat, vi_tri: String.fromCharCode(65 + +i) }); } }, 420);
   }
 
   function datVaoRoDem(i, k, cach) {
@@ -943,7 +943,7 @@
     s.khoa = true;
     capNhatPanel();
     const q = s.q;
-    setTimeout(function () {
+    K().hen(function () {
       if (!s) return;
       K().phanHoiCau(q, v, Object.assign({}, kq, { moDau: moDau(), chonHien: chonHien(v) }), function () { veDauChan(); cauMoi(); });
     }, 500);
@@ -985,7 +985,7 @@
     AT().doc('Đúng rồi! ' + (s.q.ket_luan || ''));
     capNhatPanel();
     veDauChan();
-    setTimeout(function () { if (s) cauMoi(); }, CO_GIAM_DONG ? 1400 : 2300);
+    K().hen(function () { if (s) cauMoi(); }, CO_GIAM_DONG ? 1400 : 2300);
   }
 
   /** Dấu chân trên đường rừng: mỗi câu mới một bước. */

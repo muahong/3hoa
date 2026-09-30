@@ -1,6 +1,6 @@
 /* ============================================================
    huong-dan.js – Trang "Cách chơi" cho bé và thẻ cách chơi của từng trò
-   - Trang Cách chơi (#man-huong-dan): 10 chương có hình, chữ to và giọng đọc, dùng số liệu thật của bé
+   - Trang Cách chơi (#man-huong-dan): 11 chương có hình, chữ to và giọng đọc, dùng số liệu thật của bé
      (khủng long đang ở mức nào, còn bao nhiêu quả mọng nữa, trứng vùng nào sắp nở, nhiệm vụ hôm nay, kỹ năng sắp thuộc).
      Mở từ bản đồ (nút Cách chơi), trang vùng, màn kết thúc. Lần đầu lên đảo mở bản ngắn 4 chương rồi vào nhiệm vụ 1.
    - Thẻ cách chơi của một trò (#hd-lop): 3 bước ngắn theo thể loại và chế độ của màn. Hiện trước lần chơi đầu của
@@ -576,6 +576,35 @@
             ['🎁', 'Thắng lần đầu được cúp, quà cho ' + esc(c.kl) + ' và <b>' + HT().THUONG.thang_dau_truong + ' quả mọng</b>. Muốn thành Huyền thoại thì phải thắng một đấu trường.'],
             moSom ? ['🔓', 'Đấu Trường Học Kì 1 mở khi con học tới Bài ' + M[11].bai + ' hoặc đã luyện ' + M[11].ky_nang + ' kỹ năng. Đấu Trường Cuối Năm mở khi tới Bài ' + M[12].bai + ' hoặc đã luyện ' + M[12].ky_nang + ' kỹ năng.'] : null
           ])
+        };
+      }
+    },
+    {
+      id: 'hang', icon: '🏠', ten: 'Hang Khủng Long',
+      ve: function (c) {
+        const PK = window.PhuKien;
+        if (!PK) return '';
+        const co = PK.cuaBe(c.p);
+        return '<div class="hd-hang">' + PK.DS.map(function (d) {
+          const la = co.indexOf(d.ma) >= 0;
+          return '<span class="hd-hang-o' + (la ? '' : ' khoa') + '"><img src="' + c.hinh(d.anh) + '" alt=""><small>' + esc(la ? d.ten : '???') + '</small></span>';
+        }).join('') + '</div>';
+      },
+      noi: function (c) {
+        const PK = window.PhuKien;
+        const co = PK ? PK.cuaBe(c.p).length : 0;
+        return {
+          tieu_de: 'Hang Khủng Long và món đồ',
+          mo: 'Hang Khủng Long là nhà của ' + esc(c.kl) + '. Trong hang có tủ đồ, các bạn khủng long và kệ cúp của con.',
+          y: [
+            ['🏠', 'Chạm nút <b>Hang</b> ở góc dưới bản đồ, hoặc chạm ' + esc(c.kl) + ' trên bản đồ, để vào hang.'],
+            ['🎁', 'Trứng vùng nở hay thắng đấu trường, con nhận một <b>món đồ</b> cho ' + esc(c.kl) + '. Có tất cả ' + (PK ? PK.DS.length : 12) + ' món.'],
+            ['👕', 'Trong <b>Tủ đồ</b>, chạm một món để nghe con có món đó vì sao, rồi chạm <b>Mặc cho ' + esc(c.kl) + '</b>. Mỗi lúc ' + esc(c.kl) + ' mặc một món.'],
+            ['✨', 'Mỗi món có <b>phép</b>: mặc món đó khi chơi ở vùng của nó, mỗi câu con làm đúng thì món đồ làm trò vui. Phép không làm bài dễ hơn.'],
+            ['⏱️', 'Thời gian ở trong hang cũng tính vào giờ chơi của con.']
+          ],
+          them: 'Con đã có <b>' + co + '/' + (PK ? PK.DS.length : 12) + '</b> món đồ.',
+          hanh: c.ctx.moHang ? { nhan: 'Vào Hang Khủng Long', lam: function () { c.ctx.moHang(); } } : null
         };
       }
     },

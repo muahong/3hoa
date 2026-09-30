@@ -1,7 +1,7 @@
 """Xuất hình WebP cho Đảo Khủng Long từ bản gốc PNG do Codex vẽ.
 
 Chạy từ gốc repo:  python scripts/dkl-images.py
-- Nhân vật, loài, đồ vật (PNG có alpha): cắt sát viền, cạnh dài tối đa 560 px.
+- Nhân vật, loài, đồ vật (PNG có alpha): cắt sát viền, cạnh dài tối đa 560 px (món đồ của khủng long, hộp quà: 360 px).
 - Cảnh nền (PNG không alpha): rộng 1280 px.
 - Biểu tượng PWA: dao-khung-long/icons/ (192, 180, 512, 512 maskable).
 Kết quả ghi vào dao-khung-long/assets/img/. Cần Pillow có hỗ trợ WebP.
@@ -17,6 +17,7 @@ OUT = ROOT / "dao-khung-long" / "assets" / "img"
 ICONS = ROOT / "dao-khung-long" / "icons"
 SPRITE_MAX = 560
 ICON_MAX = 160  # berry dùng làm biểu tượng nhỏ
+DO_MAX = 360  # món đồ của khủng long (pk-*) và hộp quà: hiện nhỏ hơn nhân vật
 BG_WIDTH = 1280
 
 
@@ -44,7 +45,7 @@ def export() -> None:
         im = Image.open(png)
         dest = OUT / (png.stem + ".webp")
         if im.mode == "RGBA":
-            limit = ICON_MAX if png.stem == "berry" else SPRITE_MAX
+            limit = ICON_MAX if png.stem == "berry" else DO_MAX if png.stem.startswith("pk-") or png.stem == "hop-qua" else SPRITE_MAX
             im = fit(trim(im), limit)
             im.save(dest, "WEBP", quality=84, method=6)
         else:

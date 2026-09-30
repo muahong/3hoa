@@ -181,6 +181,23 @@ Màn của game cũ hỏi kỹ năng đo lường, hình học, thời gian ở 
 
 Hồ sơ bé thêm `huong_dan: { da_mo, gioi_thieu, cach_choi: { <thể loại>: ngày } }`. Trang Cách chơi không ghi nhật ký (không phải thao tác học). Kiểm thử: `tests/dao-khung-long-huong-dan.test.js`.
 
+## Hang Khủng Long và 12 món đồ (2026-09-30)
+
+Một bé hỏi món quà "Bộ Giáp Học Kì 1" dùng để làm gì: trước đây 12 phụ kiện chỉ là tên lưu trong hồ sơ và một dòng "Quà thêm: …" ở màn ăn mừng, còn nút "Đưa về Vườn" dẫn tới một khu vườn chưa có. Đề xuất và mockup: https://claude.ai/artifact/63JCLiHxGFMveNDv3jXQFu. Người dùng chốt: tên chung "Hang Khủng Long", mỗi lúc mặc một món, thời gian trong hang tính vào giờ chơi, làm cả ba phần.
+
+| Phần | Nội dung |
+|---|---|
+| Hang (`js/hang.js`, `css/hang.css`, nền `bg-hang`) | Vào bằng nút **Hang** ở góc dưới bản đồ (chấm "Mới" khi có món chưa xem) hoặc chạm khủng long đang đi dạo trên bản đồ. Khủng long đứng giữa hang, chạm thì nói, chạm bát quả mọng thì ăn (không tốn quả mọng); 3 bạn khủng long nở gần nhất đứng phía sau, chạm thì bạn nói mình nở nhờ vùng nào. Ba ngăn: **Tủ đồ** (12 ô, món chưa có là hình bóng kèm cách nhận), **Bạn bè** (10 bạn của trứng vùng, tên bé đặt), **Cúp** (10 cúp vùng có sao, 2 cúp đấu trường). Chạm ô nào cũng được đọc to |
+| Thẻ món đồ | Hình to, "Con có vì…", "Mặc ở…", "Phép…", đọc to khi mở; nút Nghe lại, Mặc cho Rex (hay Cởi ra), Đóng. Món chưa có: "Ở đâu", "Để nhận", nút Đi tới vùng (khi vùng đã mở) |
+| Màn mở quà (`Hang.moQua`) | Thay dòng "Quà thêm": sau màn trứng vùng nở hay thắng đấu trường, bé chạm hộp quà, món đồ hiện to kèm lý do và phép, nút lớn "Mặc cho Rex ngay" (khủng long cổ vũ đang mặc món đó) hoặc "Để vào tủ". Nút ở màn trứng nở nay là "Đưa về Hang" |
+| Mặc đồ (`js/phu-kien.js`) | Danh mục `PhuKien.DS` (mã, tên, vùng, chỗ mặc: đầu, cổ, thân, tay, chân). Hồ sơ giữ `phu_kien` (tên, như cũ), thêm `dang_mac` (mã món đang mặc) và `phu_kien_da_xem`. Món đang mặc được ghép lên hình khủng long bằng canvas (`PhuKien.anhMac`, điểm neo `NEO` cho Rex, Mây × 5 mức lớn và 3 dáng ăn, cổ vũ, suy nghĩ; trứng không mặc) và hiện ở bản đồ, màn kết thúc, màn ăn mừng, mọi trò chơi (cả Đấu Trường, gợi ý, game cũ) |
+| Phép | Mặc món của một vùng khi chơi ở vùng đó: mỗi câu làm đúng thì món đồ bật lên ở góc màn hình với chuyển động, hạt màu và tiếng riêng (`VanChoi` gọi `khiDung`). Bộ Giáp Học Kì 1: ở hai đấu trường, tuyệt chiêu thành "Cú Húc Giáp Thép". Vương Miện Cuối Năm: có phép ở mọi vùng. Phép chỉ đổi hình và tiếng, không đổi câu hỏi, gợi ý, máu trùm, sao hay quả mọng (có kiểm thử) |
+| Giờ chơi | Thời gian trong hang lưu ở `ho_so.gio_hang` (giây theo ngày, giữ 35 ngày; `HoSo.giayHang`, `themGiayHang`), chỉ tính khi bé còn chạm (mỗi lần chạm tối đa 60 giây, không tính lúc app ở nền), cộng vào giờ chơi hôm nay của giới hạn và của Góc phụ huynh. Hết giờ thì không vào được hang; đang ở trong hang mà hết giờ thì về bản đồ và hiện hộp hết giờ |
+| Nhật ký | Sự kiện mới `hang` (game `hang-khung-long`): `vao`, `roi` (kèm `giay`), `xem_mon`, `mac`, `coi`, `mo_qua`; đã thêm vào lược đồ `06-su-kien-v1.schema.json` |
+| Cách chơi | Chương mới "Hang Khủng Long" (11 chương) với nút Vào Hang Khủng Long |
+
+Hình (lượt `hang`, `assets/art/prompts/run11-hang.txt`): 12 món `pk-*`, `hop-qua`, `bg-hang`; món đồ xuất ở 360 px. Canh điểm neo: sửa khối NEO trong `js/phu-kien.js` rồi chạy `python scripts/dkl-neo-phu-kien.py [thư mục ra] [mã món ...]` để vẽ bảng mọi hình khủng long mặc món đó. Kiểm thử: `tests/dao-khung-long-hang.test.js`.
+
 ## Cấu trúc tệp
 
 | Tệp | Vai trò |
@@ -200,7 +217,8 @@ Hồ sơ bé thêm `huong_dan: { da_mo, gioi_thieu, cach_choi: { <thể loại>:
 | `js/cau-noi.js` | Cầu nối cho sáu game cũ chạy trong iframe (giai đoạn 5) |
 | `js/bao-cao.js`, `js/goc-phu-huynh.js` | Góc phụ huynh: hàm tính báo cáo thuần (kiểm thử được bằng Node) và giao diện |
 | `js/bai-hoc.js` | Bài học 30 giây (`BaiHoc.dangKy`) và sự kiện `bai_hoc_xem` |
-| `js/huong-dan.js`, `css/huong-dan.css` | Trang Cách chơi (10 chương), thẻ cách chơi của từng trò, và giao diện các chỗ chỉ đường (nút Cách chơi, bước tiếp theo, kỹ năng còn thiếu ở màn kết thúc) |
+| `js/phu-kien.js`, `js/hang.js`, `css/hang.css` | 12 món đồ của khủng long (danh mục, điểm neo, ghép hình, phép khi làm đúng), Hang Khủng Long và màn mở quà |
+| `js/huong-dan.js`, `css/huong-dan.css` | Trang Cách chơi (11 chương), thẻ cách chơi của từng trò, và giao diện các chỗ chỉ đường (nút Cách chơi, bước tiếp theo, kỹ năng còn thiếu ở màn kết thúc) |
 | `js/phan-hoi.js` | Nội dung màn “Gần đúng rồi!”: đặt tính cột dọc, que tính, mô hình khối, hình lời giải do ngân hàng câu dựng |
 | `js/am-thanh.js` | Tiếng động tổng hợp bằng Web Audio, giọng đọc tiếng Việt |
 | `js/app.js` | Điều phối các màn; sổ đăng ký thể loại `window.DaoTroChoi[game] = { ten, khung, san hoặc man, batDau }`; cập nhật tóm tắt, thưởng, nhiệm vụ, mức lớn, đấu trường sau mỗi ván; thời gian chơi do phụ huynh đặt (mặc định không giới hạn; hết giờ thì hộp "Hôm nay con chơi đủ giờ rồi" có nút Bố mẹ cho chơi thêm, qua cổng phép tính vào thẳng mục thời gian của Cài đặt) |
@@ -214,7 +232,7 @@ IndexedDB `dao-khung-long`:
 
 | Kho | Khóa | Nội dung |
 |---|---|---|
-| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, cài đặt của phụ huynh `gioi_han_phut` (null là không giới hạn), `them_hom_nay`, `mo_khoa_vung`, `ke_hoach_tuan`, trang Cách chơi và thẻ cách chơi đã xem `huong_dan`) |
+| `ho_so` | `id` | Hồ sơ bé (tên, tuổi khi nhập, lớp và nguồn của lớp, bài đang học, phong cách, khủng long, kỷ lục từng màn, nhiệm vụ hôm nay, trứng vùng đã nở, bài học đã xem, phụ kiện, đấu trường đã thắng `dau_truong_thang`, món đang mặc `dang_mac`, món đã xem `phu_kien_da_xem`, giây ở Hang Khủng Long theo ngày `gio_hang`, cài đặt của phụ huynh `gioi_han_phut` (null là không giới hạn), `them_hom_nay`, `mo_khoa_vung`, `ke_hoach_tuan`, trang Cách chơi và thẻ cách chơi đã xem `huong_dan`) |
 | `su_kien` | `id` (ULID), chỉ mục `be_luc`, `van` | Nhật ký gốc, mỗi thao tác một sự kiện (cả của sáu game cũ khi chơi trong đảo); giữ 120 ngày (dọn nền mỗi ngày một lần, khóa `dkl-don-nhat-ky-v1`) |
 | `tom_tat_cau` | `cau` | Tóm tắt từng câu |
 | `tom_tat_van` | `van` | Tóm tắt từng ván, có câu mô tả tiếng Việt |
@@ -226,7 +244,7 @@ Tên bé không đi vào nhật ký (chỉ có mã `be_…`), không vào gói x
 
 ## Sự kiện ghi
 
-Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, các lựa chọn kèm vị trí và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), các `thao_tac` của thể loại đó (`doi_lan`, `lat`, `chon`, `bo_chon`, `go_so`, `xoa`, `tha`, `keo`, `dat`, `bo_ra`, `rot`, `keo_thuoc`, `cau`, `dem`, `boc`, `ve`, `noi`, `xoay`, `lat_trang`, `di_chuyen`, `doi_cot`, `xoay_nong`, `ban`, `vuot`, `cham`, `nghe_lai`), `goi_y`, `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, trường riêng của game như `to_tien`, `tong`), `phan_hoi_xem`, `cau_ket_thuc` (`dung_ngay`, `dung_sau_goi_y`, `dung_lan_2`, `sai`, `het_gio`, `bo_qua`). Quanh ván: `phien_bat_dau`, `van_bat_dau`, `van_ket_thuc` (đấu trường thêm `thang`, `mau_con_lai`), `thanh_thao_doi`, `thuong` (thêm `thang_dau_truong`), `cam_xuc`, `tam_dung`, `tiep_tuc`, `bai_hoc_xem`, `ho_so_doi`. Góc phụ huynh chỉ ghi `phu_huynh_*`. Đua Xe ghi thêm `thao_tac` kiểu `tu_vao_cong` khi xe tự vào cổng. Đổi ý tính các thao tác `doi_lan`, `bo_chon`, `doi_cot`, `xoa`, `bo_ra` và lần `chon` thứ hai trở đi.
+Mọi thể loại ghi cùng một chuỗi cho mỗi câu: `cau_hien` (mã câu, đề, cấu trúc, đáp án, các lựa chọn kèm vị trí và mã lỗi, câu ôn lại của câu nào, lần gặp thứ mấy), các `thao_tac` của thể loại đó (`doi_lan`, `lat`, `chon`, `bo_chon`, `go_so`, `xoa`, `tha`, `keo`, `dat`, `bo_ra`, `rot`, `keo_thuoc`, `cau`, `dem`, `boc`, `ve`, `noi`, `xoay`, `lat_trang`, `di_chuyen`, `doi_cot`, `xoay_nong`, `ban`, `vuot`, `cham`, `nghe_lai`), `goi_y`, `tra_loi` (giá trị, đúng sai, mã lỗi, lần thử, số lần đổi ý, cấp gợi ý, trường riêng của game như `to_tien`, `tong`), `phan_hoi_xem`, `cau_ket_thuc` (`dung_ngay`, `dung_sau_goi_y`, `dung_lan_2`, `sai`, `het_gio`, `bo_qua`). Quanh ván: `phien_bat_dau`, `van_bat_dau`, `van_ket_thuc` (đấu trường thêm `thang`, `mau_con_lai`), `thanh_thao_doi`, `thuong` (thêm `thang_dau_truong`), `cam_xuc`, `tam_dung`, `tiep_tuc`, `bai_hoc_xem`, `ho_so_doi`, `hang` (Hang Khủng Long: vào, rời kèm số giây, xem món, mặc, cởi, mở quà). Góc phụ huynh chỉ ghi `phu_huynh_*`. Đua Xe ghi thêm `thao_tac` kiểu `tu_vao_cong` khi xe tự vào cổng. Đổi ý tính các thao tác `doi_lan`, `bo_chon`, `doi_cot`, `xoa`, `bo_ra` và lần `chon` thứ hai trở đi.
 
 ## Kiểm thử
 
@@ -298,4 +316,4 @@ Chơi thử trong trình duyệt: `python scripts/dkl-phuc-vu.py 8790 .` ở g�
 
 - GĐ 6: thử với 5 đến 10 bé trên iPad trong 4 tuần; chỉnh độ khó, tỉ lệ quả mọng, số câu đấu trường, cách viết báo cáo; thử gói xuất với một LLM.
 - Cần người rà: màu tờ tiền vẽ bằng SVG (gần màu tờ thật, không chép tờ thật) so với tranh SGK; đề truyện tranh và lịch mẫu theo SGK bản đầy đủ.
-- Chưa có: vườn khủng long và phụ kiện hiển thị trên khủng long; bài học cho số liền trước, liền sau, so sánh số, tia số, ghép hình; biểu đồ tranh mỗi hình là 10 (Bài 65, 74), xúc xắc (Bài 66), vẽ đoạn thẳng theo độ dài (Bài 27), chọn túi hàng đủ 13 kg (Bài 18).
+- Chưa có: bài học cho số liền trước, liền sau, so sánh số, tia số, ghép hình; biểu đồ tranh mỗi hình là 10 (Bài 65, 74), xúc xắc (Bài 66), vẽ đoạn thẳng theo độ dài (Bài 27), chọn túi hàng đủ 13 kg (Bài 18).

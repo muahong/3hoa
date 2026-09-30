@@ -68,7 +68,17 @@
     no_trung: function (t) { on(t, 0.25, 0.3, 2400); [659, 880, 1175, 1568].forEach(function (f, i) { not(f, t + 0.2 + i * 0.1, 0.35, 'sine', 0.24); }); },
     dem_nguoc: function (t) { not(523, t, 0.14, 'square', 0.1); },
     xuat_phat: function (t) { not(1047, t, 0.35, 'square', 0.12); },
-    go_phim: function (t) { not(880, t, 0.05, 'square', 0.07); }
+    go_phim: function (t) { not(880, t, 0.05, 'square', 0.07); },
+    // Hang Khủng Long: mặc đồ, mở quà, và "phép" của từng món đồ khi bé làm đúng (js/phu-kien.js)
+    mac_do: function (t) { on(t, 0.18, 0.18, 3000); not(523, t + 0.05, 0.14, 'triangle', 0.2); not(784, t + 0.14, 0.2, 'triangle', 0.22); },
+    mo_qua: function (t) { on(t, 0.35, 0.25, 1800); [784, 988, 1175, 1568, 1976].forEach(function (f, i) { not(f, t + 0.15 + i * 0.07, 0.3, 'sine', 0.2); }); },
+    phep_bay: function (t) { on(t, 0.4, 0.14, 700); not(660, t, 0.3, 'sine', 0.12, 990); },
+    phep_lua: function (t) { on(t, 0.45, 0.22, 500); not(220, t, 0.35, 'sawtooth', 0.06, 440); },
+    phep_sao: function (t) { [1319, 1568, 2093].forEach(function (f, i) { not(f, t + i * 0.06, 0.18, 'sine', 0.14); }); },
+    phep_veo: function (t) { not(300, t, 0.25, 'triangle', 0.14, 1400); on(t + 0.05, 0.2, 0.1, 2500); },
+    phep_chuong: function (t) { [0, 0.09, 0.18].forEach(function (d) { not(1760, t + d, 0.12, 'square', 0.05); not(2349, t + d + 0.03, 0.1, 'sine', 0.08); }); },
+    phep_leng_keng: function (t) { [2093, 2637, 2349, 3136].forEach(function (f, i) { not(f, t + i * 0.07, 0.16, 'triangle', 0.1); }); },
+    phep_giap: function (t) { not(196, t, 0.2, 'square', 0.1, 150); not(1568, t + 0.04, 0.4, 'triangle', 0.14); not(2093, t + 0.06, 0.35, 'sine', 0.1); }
   };
 
   function bat(ten) {

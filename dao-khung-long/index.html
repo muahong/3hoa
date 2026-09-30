@@ -41,6 +41,7 @@
 <link rel="stylesheet" href="css/dau-truong.css">
 <link rel="stylesheet" href="css/cau-noi.css">
 <link rel="stylesheet" href="css/goc-phu-huynh.css">
+<link rel="stylesheet" href="css/hang.css">
 <link rel="stylesheet" href="css/goc-phu-huynh-f.css">
 <link rel="stylesheet" href="css/huong-dan.css">
 </head>
@@ -144,6 +145,7 @@
       <button class="nut nut-cam nv-choi" id="nv-choi" type="button">Chơi nhiệm vụ 1</button>
     </aside>
     <div class="bd-duoi">
+      <button class="nut-nho nut-hang" id="bd-hang" type="button" aria-label="Hang Khủng Long"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5V11a9 9 0 0 1 18 0v9.5z" fill="#c9783a"/><path d="M8.2 20.5v-5.2a3.8 3.8 0 0 1 7.6 0v5.2z" fill="#3b2412"/><circle cx="7" cy="9.5" r="1.1" fill="#ffd166"/><circle cx="17" cy="9.5" r="1.1" fill="#ffd166"/></svg>Hang<span class="nut-hang-moi hidden" id="bd-hang-moi"></span></button>
       <button class="nut-nho nut-cach-choi" id="bd-cach-choi" type="button"><span class="hoi" aria-hidden="true">?</span>Cách chơi</button>
       <button class="nut-nho" id="bd-bo-me" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10V7.5a4.5 4.5 0 0 1 9 0V10" stroke="currentColor" stroke-width="2.6" fill="none"/><rect x="4.5" y="10" width="15" height="11" rx="3" fill="currentColor"/></svg>Bố mẹ</button>
       <button class="nut-nho" id="bd-am" type="button">Âm thanh: Bật</button>
@@ -449,6 +451,10 @@
     </div>
   </section>
 
+  <!-- 15. Hang Khủng Long và màn mở quà: js/hang.js tự dựng giao diện -->
+  <section id="man-hang" class="man man-hang hidden" aria-label="Hang Khủng Long"></section>
+  <section id="man-qua" class="man man-qua hidden" aria-label="Quà mới"></section>
+
   <!-- 14. Cách chơi: js/huong-dan.js tự dựng giao diện (thẻ cách chơi của từng trò là lớp phủ #hd-lop gắn vào body) -->
   <section id="man-huong-dan" class="man man-hd hidden" aria-label="Cách chơi"></section>
 
@@ -504,6 +510,7 @@
 <script src="js/cau-thoi-gian.js"></script>
 <script src="js/hoc-tap.js"></script>
 <script src="js/dao.js"></script>
+<script src="js/phu-kien.js"></script>
 <script src="js/ho-so.js"></script>
 <script src="js/van-choi.js"></script>
 <script src="js/am-thanh.js"></script>
@@ -524,6 +531,7 @@
 <script src="js/bao-cao.js"></script>
 <script src="js/goc-phu-huynh.js"></script>
 <script src="js/huong-dan.js"></script>
+<script src="js/hang.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -386,6 +386,8 @@
     Q.tong = Q.tu_lam + Q.vung_chac + Q.nho_goi_y + Q.sua_duoc;
     // App bị tắt ngang giữa ván thì lần mở sau vẫn cộng số quả mọng này cho bé
     if (this.nk.quaMongVan) this.nk.quaMongVan(Q.tong);
+    // Phép của món đồ khủng long đang mặc (js/phu-kien.js): chỉ hình và tiếng, lỗi ở đây không làm hỏng ván
+    if (dung && typeof this.o.khiDung === 'function') { try { this.o.khiDung(kq); } catch (e) { /* bỏ qua */ } }
     return qm.qua_mong + qm.them_sua;
   };
 

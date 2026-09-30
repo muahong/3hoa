@@ -38,6 +38,24 @@
     return goc + (them && them.phut > 0 ? them.phut : 0);
   }
 
+  /** Số ngày giữ thời gian trong Hang Khủng Long (ho_so.gio_hang = { 'YYYY-MM-DD': giây }). */
+  const GIU_GIO_HANG_NGAY = 35;
+  /** Số giây bé ở trong Hang Khủng Long ngày `ngay` (tính vào giờ chơi hôm nay). */
+  function giayHang(p, ngay) {
+    const g = p && p.gio_hang && p.gio_hang[ngay];
+    return typeof g === 'number' && isFinite(g) && g > 0 ? g : 0;
+  }
+  /** Cộng thời gian một lần vào hang; chỉ giữ GIU_GIO_HANG_NGAY ngày gần nhất. */
+  function themGiayHang(p, ngay, giay) {
+    if (!p || !ngay) return;
+    const g = Math.max(0, Math.round(Number(giay) || 0));
+    const bang = p.gio_hang && typeof p.gio_hang === 'object' ? p.gio_hang : {};
+    if (g) bang[ngay] = giayHang(p, ngay) + g;
+    const ngayDs = Object.keys(bang).sort();
+    ngayDs.slice(0, Math.max(0, ngayDs.length - GIU_GIO_HANG_NGAY)).forEach(function (k) { delete bang[k]; });
+    p.gio_hang = bang;
+  }
+
   function sachTen(s) {
     s = String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim();
     if (s.length > TEN_TOI_DA) s = s.slice(0, TEN_TOI_DA).trim();
@@ -102,6 +120,7 @@
       nhiem_vu: null,
       trung_vung: {},
       phu_kien: [],
+      dang_mac: null,
       tao_luc: window.NhatKy.isoDiaPhuong(d.getTime())
     };
     return taiDanhSach().then(function (ds) {
@@ -192,6 +211,8 @@
     GIOI_HAN: GIOI_HAN,
     sachGioiHan: sachGioiHan,
     gioiHanHomNay: gioiHanHomNay,
+    giayHang: giayHang,
+    themGiayHang: themGiayHang,
     sachTen: sachTen,
     namHocBatDau: namHocBatDau,
     goiYLop: goiYLop,

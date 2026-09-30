@@ -743,9 +743,10 @@
       '<div class="gp-buoc-so"><button type="button" data-hd="cai" data-truong="bai_dang_hoc" data-gt="' + (p.bai_dang_hoc - 1) + '" aria-label="Bài trước"' + (p.bai_dang_hoc <= 1 ? ' disabled' : '') + '>−</button>' +
       '<b aria-live="polite">Bài ' + esc(p.bai_dang_hoc) + '</b><button type="button" data-hd="cai" data-truong="bai_dang_hoc" data-gt="' + (p.bai_dang_hoc + 1) + '" aria-label="Bài sau"' + (p.bai_dang_hoc >= 75 ? ' disabled' : '') + '>+</button></div></div>';
   }
+  /** Phút đã chơi hôm nay: các ván và thời gian trong Hang Khủng Long (cùng cách tính với giới hạn giờ trong app.js). */
   function phutHomNay() {
     const nay = homNay();
-    return S.be.vanDs.reduce(function (s, v) { return s + (v.ngay === nay ? BC.giayVan(v) : 0); }, 0) / 60;
+    return (S.be.vanDs.reduce(function (s, v) { return s + (v.ngay === nay ? BC.giayVan(v) : 0); }, 0) + HS.giayHang(S.be.hoSo, nay)) / 60;
   }
   /**
    * Thời gian chơi: mặc định không giới hạn. Phụ huynh chọn nhanh hoặc chỉnh từng 5 phút; khi có giới hạn thì cho thêm
@@ -761,7 +762,7 @@
     };
     let h = '<div class="gp-dong-cai gp-dong-cai-cot" id="gp-thoi-gian"><span>Thời gian chơi mỗi ngày<small>' +
       (gh == null ? 'Đang để không giới hạn (mặc định). Con chơi bao lâu tùy bố mẹ.' : 'Hết giờ, con được chơi nốt ván đang dở rồi nghỉ. Bố mẹ cho thêm giờ bất cứ lúc nào ở dưới.') +
-      ' Hôm nay con đã chơi ' + daChoi + ' phút. Chỉ tính lúc con chơi thật trong Đảo (không tính lúc tạm dừng hay ra khỏi app), kể cả 6 trò cũ mở từ đảo.' +
+      ' Hôm nay con đã chơi ' + daChoi + ' phút' + (HS.giayHang(p, homNay()) >= 30 ? ' (có ' + Math.round(HS.giayHang(p, homNay()) / 60) + ' phút trong Hang Khủng Long)' : '') + '. Chỉ tính lúc con chơi thật trong Đảo (không tính lúc tạm dừng hay ra khỏi app), kể cả 6 trò cũ mở từ đảo và lúc con ở Hang Khủng Long mặc đồ cho khủng long.' +
       ' Để con không đổi ngày giờ của máy để có thêm giờ, bố mẹ khóa ngày giờ bằng Thời gian sử dụng (Screen Time) của iPad.</small></span>' +
       '<div class="gp-chips" role="group" aria-label="Thời gian chơi mỗi ngày">' + GIOI_HAN.map(function (g) {
         return chip(g === gh, 'cai', 'data-truong="gioi_han_phut" data-gt="' + (g == null ? '' : g) + '"', g == null ? 'Không giới hạn' : g + ' phút');

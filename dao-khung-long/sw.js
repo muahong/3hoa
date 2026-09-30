@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'dao-khung-long-v11';
-// noi-dung: e45f26404ab27f42
+const CACHE = 'dao-khung-long-v12';
+// noi-dung: 8e3009f3bc16d951
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',
@@ -13,6 +13,7 @@ const CORE = [
   './css/dau-truong.css',
   './css/goc-phu-huynh.css',
   './css/goc-phu-huynh-f.css',
+  './css/hang.css',
   './css/huong-dan.css',
   './css/lat-lich.css',
   './css/rung-hinh-khoi.css',
@@ -27,6 +28,7 @@ const CORE = [
   './js/cau-thoi-gian.js',
   './js/hoc-tap.js',
   './js/dao.js',
+  './js/phu-kien.js',
   './js/ho-so.js',
   './js/van-choi.js',
   './js/am-thanh.js',
@@ -47,6 +49,7 @@ const CORE = [
   './js/bao-cao.js',
   './js/goc-phu-huynh.js',
   './js/huong-dan.js',
+  './js/hang.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-180.png',
@@ -61,6 +64,7 @@ const OPTIONAL = [
   './assets/img/bg-desert-pyramid.webp',
   './assets/img/bg-dusk-sky.webp',
   './assets/img/bg-garden.webp',
+  './assets/img/bg-hang.webp',
   './assets/img/bg-island-map.webp',
   './assets/img/bg-market.webp',
   './assets/img/bg-meadow.webp',
@@ -70,6 +74,7 @@ const OPTIONAL = [
   './assets/img/boss-hk1.webp',
   './assets/img/car-may.webp',
   './assets/img/car-rex.webp',
+  './assets/img/hop-qua.webp',
   './assets/img/ic-cau-ca.webp',
   './assets/img/ic-cho.webp',
   './assets/img/ic-dau-truong.webp',
@@ -88,6 +93,18 @@ const OPTIONAL = [
   './assets/img/may-legend.webp',
   './assets/img/may-teen.webp',
   './assets/img/may-think.webp',
+  './assets/img/pk-can-cau.webp',
+  './assets/img/pk-giap-hk1.webp',
+  './assets/img/pk-giap-nhan-chia.webp',
+  './assets/img/pk-giay-dua.webp',
+  './assets/img/pk-khan-100.webp',
+  './assets/img/pk-khien.webp',
+  './assets/img/pk-mao-lua.webp',
+  './assets/img/pk-mu-dong-ho.webp',
+  './assets/img/pk-thuoc-vang.webp',
+  './assets/img/pk-tui-tien.webp',
+  './assets/img/pk-vong-co-nghin.webp',
+  './assets/img/pk-vuong-mien.webp',
   './assets/img/rex-adult.webp',
   './assets/img/rex-cheer.webp',
   './assets/img/rex-eating.webp',

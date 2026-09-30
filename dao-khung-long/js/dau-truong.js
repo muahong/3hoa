@@ -207,6 +207,7 @@
 
   /**
    * o: { van, man (có man.dau_truong: { boss, ten_boss, mau_boss }), nen, phu, hinhGoiY, hinhBe, hinhCoVu, tenKhungLong,
+   *      tuyetChieu (tên tuyệt chiêu khi khủng long mặc Bộ Giáp Học Kì 1, không thì null),
    *      anh(ten) → url, xemBaiHoc, onXong(kq), onThoat(kq) }
    */
   function batDau(o) {
@@ -469,7 +470,8 @@
     const xa = khoangCach();
     dom.dongBe.style.setProperty('--xa', xa + 'px');
     if (r.tuyetChieu) {
-      const ten = TEN_TUYET_CHIEU[(s.tran.soTuyetChieu - 1) % TEN_TUYET_CHIEU.length];
+      // Mặc Bộ Giáp Học Kì 1: tuyệt chiêu riêng của bộ giáp (vẫn trừ 2 máu như mọi tuyệt chiêu)
+      const ten = s.o.tuyetChieu || TEN_TUYET_CHIEU[(s.tran.soTuyetChieu - 1) % TEN_TUYET_CHIEU.length];
       veSao(true);
       bangLon('Tuyệt chiêu!', ten, 'tuyet-chieu');
       hieuUng(dom.dongBe, 'dt-tuyet-chieu');

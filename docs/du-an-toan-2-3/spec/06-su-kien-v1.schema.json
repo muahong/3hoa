@@ -15,12 +15,12 @@
     "van": { "type": "string" },
     "cau": { "type": "string" },
     "game": {
-      "enum": ["chem-trai-cay", "ban-thien-thach", "me-cung", "thap-xep-hinh", "xep-hinh-so", "xe-tang", "cuoi-ho", "dua-xe", "truyen-tranh", "xuong-do-luong", "cho-khung-long", "cau-ca", "lat-the", "rung-hinh-khoi", "lat-lich", "dau-truong", "trang-chu", "goc-phu-huynh"]
+      "enum": ["chem-trai-cay", "ban-thien-thach", "me-cung", "thap-xep-hinh", "xep-hinh-so", "xe-tang", "cuoi-ho", "dua-xe", "truyen-tranh", "xuong-do-luong", "cho-khung-long", "cau-ca", "lat-the", "rung-hinh-khoi", "lat-lich", "dau-truong", "trang-chu", "goc-phu-huynh", "hang-khung-long"]
     },
     "vung": { "type": "integer", "minimum": 0, "maximum": 12 },
     "man": { "type": "string" },
     "loai": {
-      "enum": ["phien_bat_dau", "phien_ket_thuc", "van_bat_dau", "van_ket_thuc", "bai_hoc_xem", "cau_hien", "thao_tac", "goi_y", "tra_loi", "phan_hoi_xem", "cau_ket_thuc", "tam_dung", "tiep_tuc", "cam_xuc", "thuong", "thanh_thao_doi", "ho_so_doi", "phu_huynh_mo", "phu_huynh_cai_dat", "luu_tru_canh_bao"]
+      "enum": ["phien_bat_dau", "phien_ket_thuc", "van_bat_dau", "van_ket_thuc", "bai_hoc_xem", "cau_hien", "thao_tac", "goi_y", "tra_loi", "phan_hoi_xem", "cau_ket_thuc", "tam_dung", "tiep_tuc", "cam_xuc", "thuong", "thanh_thao_doi", "ho_so_doi", "phu_huynh_mo", "phu_huynh_cai_dat", "luu_tru_canh_bao", "hang"]
     },
     "du_lieu": { "type": "object" }
   },
@@ -159,6 +159,22 @@
               "den": { "enum": ["chua_hoc", "lam_quen", "dang_luyen", "da_thuoc", "vung_chac"] },
               "can_giup": { "type": "boolean" },
               "bang_chung": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "loai": { "const": "hang" } } },
+      "then": {
+        "properties": {
+          "du_lieu": {
+            "required": ["viec"],
+            "properties": {
+              "viec": { "enum": ["vao", "roi", "xem_mon", "mac", "coi", "mo_qua"] },
+              "ma": { "type": ["string", "null"] },
+              "giay": { "type": "number", "minimum": 0 },
+              "mac": { "type": ["string", "null"] }
             }
           }
         }

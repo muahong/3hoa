@@ -3,7 +3,7 @@
    - HocTap.tienDoThuoc nói đúng điều bé còn thiếu, khớp với mức Đã thuộc mà mucKyNang tính ra.
    - Dao.buocTiep: đủ phút → nghỉ; nhiệm vụ còn lại chơi lần lượt; 1 sao thì chơi lại; cúp vừa mở; màn chưa chơi cùng vùng,
      rồi vùng khác theo thứ tự bài SGK (không vượt bài đang học quá 3 bài); đấu trường; lấy thêm sao; về đảo.
-   - Mọi thể loại có cách chơi, mọi chế độ màn dùng có bước riêng; 10 chương dựng được cho bé mới và bé đã chơi nhiều;
+   - Mọi thể loại có cách chơi, mọi chế độ màn dùng có bước riêng; 11 chương dựng được cho bé mới và bé đã chơi nhiều;
      con số trong trang (quả mọng, mức lớn, điều kiện Đã thuộc) đọc từ luật thật; không có dấu gạch dài. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,7 +14,7 @@ const { loadGame } = require('./lib/load.js');
 const J = (x) => (x === undefined ? x : JSON.parse(JSON.stringify(x)));
 
 const FILES = ['js/nhat-ky.js', 'js/ngan-hang.js', 'js/cau-so-sanh.js', 'js/cau-do-luong.js', 'js/cau-tien.js', 'js/cau-thong-ke.js', 'js/cau-hinh-hoc.js',
-  'js/cau-thoi-gian.js', 'js/hoc-tap.js', 'js/dao.js', 'js/ho-so.js', 'js/phan-hoi.js', 'js/huong-dan.js'];
+  'js/cau-thoi-gian.js', 'js/hoc-tap.js', 'js/dao.js', 'js/ho-so.js', 'js/phan-hoi.js', 'js/phu-kien.js', 'js/huong-dan.js'];
 
 function moi() {
   const w = loadGame('dao-khung-long', FILES);
@@ -202,9 +202,9 @@ function ctx(w, p, them) {
   }, them || {});
 }
 
-test('trang Cách chơi: 10 chương dựng được cho bé mới và bé đã chơi nhiều; số liệu đọc từ luật thật', () => {
+test('trang Cách chơi: 11 chương dựng được cho bé mới và bé đã chơi nhiều; số liệu đọc từ luật thật', () => {
   const { w, HT, HD, DAO } = moi();
-  assert.equal(HD.CHUONG.length, 10);
+  assert.equal(HD.CHUONG.length, 11);
   assert.deepEqual(J(HD.GIOI_THIEU.filter((id) => HD.THU_TU.indexOf(id) < 0)), []);
   const beMoi = hoSo({ khung_long: { ten: 'Rex', muc: 'trung', qua_mong: 0 } });
   const cauDs = [];

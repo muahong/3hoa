@@ -32,7 +32,11 @@
   color-scheme: light;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; background: #1a0b3d; color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; touch-action: manipulation; }
+/* iPad: bé chạm đúp nhanh ở đâu cũng không phóng to màn hình (cử chỉ hai ngón đã bị chặn nên bé không tự thu nhỏ lại được).
+   touch-action không kế thừa và Safari tính lại từ đầu trong mỗi khung cuộn (danh sách, bảng, hang...), nên phải đặt cho mọi phần tử;
+   các vùng kéo thả có touch-action: none riêng vẫn thắng vì * có độ ưu tiên thấp nhất. */
+* { touch-action: manipulation; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #1a0b3d; color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
 body { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; overscroll-behavior: none; }
 button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
 button:disabled { cursor: default; }

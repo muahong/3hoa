@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên.
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'me-cung-dong-ho-v10';
-// noi-dung: c3338e8df968462a
+const CACHE = 'me-cung-dong-ho-v11';
+// noi-dung: 5ef0cbabc7c9a071
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',

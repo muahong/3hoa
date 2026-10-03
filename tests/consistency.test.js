@@ -185,3 +185,16 @@ for (const g of GAMES) {
     assert.match(rm, new RegExp('tests/e2e/' + g + '\\.e2e\\.js'), 'README thiếu lệnh chạy kiểm thử đầu-cuối');
   });
 }
+
+/* iPad: chạm đúp nhanh không được phóng to màn hình. touch-action không kế thừa và Safari tính lại từ đầu trong mỗi
+   khung cuộn, nên chỉ đặt cho html, body (hay vài nút) là chưa đủ: phải có * { touch-action: manipulation }. */
+test('every game blocks double-tap zoom on every element, not only html/body', () => {
+  const ALL = GAMES.map((g) => g + '/game-shell.css').concat('dao-khung-long/style.css');
+  for (const f of ALL) assert.match(read(f), /^\* \{ touch-action: manipulation; \}$/m, f + ' thiếu * { touch-action: manipulation; }');
+  for (const g of GAMES.concat('dao-khung-long')) {
+    const vp = read(g + '/index.html').match(/<meta name="viewport" content="([^"]+)"/);
+    assert.ok(vp, g + ' thiếu thẻ viewport');
+    assert.match(vp[1], /maximum-scale=1/, g + ': viewport thiếu maximum-scale=1 (iPad tự phóng to khi chạm ô nhập)');
+  }
+  assert.match(read('dao-khung-long/js/app.js'), /veVuaKhungKhiBiPhongTo\(\);/, 'đảo thiếu lưới an toàn đưa màn hình về vừa khung');
+});

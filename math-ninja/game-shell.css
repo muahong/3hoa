@@ -1,4 +1,8 @@
 /* Shared game shell. Source: scripts/refresh-games.py; keep each PWA self-contained. */
+/* iPad: a quick double tap anywhere must not zoom the page (the child cannot pinch back out, gestures are blocked).
+   touch-action is not inherited and Safari starts over inside every scroll container, so it goes on every element;
+   class or element rules (touch-action: none on canvas and drag areas, pan-y on lists) still win over *. */
+* { touch-action: manipulation; }
 /* Header buttons stay finger-sized; a hidden screen never swallows taps while it fades out. */
 .screen-head .btn { min-width: 44px; min-height: 44px; }
 .screen.hidden * { pointer-events: none !important; }

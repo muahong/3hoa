@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên.
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'ninja-toan-v14';
-// noi-dung: c0c3275df6fff4be
+const CACHE = 'ninja-toan-v15';
+// noi-dung: d87183778804870d
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',

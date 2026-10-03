@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên.
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'xe-tang-thoi-gian-v13';
-// noi-dung: 53380b34289b1675
+const CACHE = 'xe-tang-thoi-gian-v14';
+// noi-dung: bd2b75452cf9dea7
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',

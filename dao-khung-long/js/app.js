@@ -161,12 +161,35 @@
 
   /* ---------------- Khởi động ---------------- */
 
+  /**
+   * Lưới an toàn cho iPad: nếu màn hình lỡ bị phóng to (bé không tự thu nhỏ được vì cử chỉ hai ngón đã bị chặn,
+   * nút điều khiển trôi ra ngoài), đổi tạm thẻ viewport để Safari đưa về vừa khung rồi trả lại như cũ.
+   */
+  function veVuaKhungKhiBiPhongTo() {
+    const vv = window.visualViewport;
+    const meta = document.querySelector('meta[name="viewport"]');
+    if (!vv || !meta) return;
+    const goc = meta.getAttribute('content');
+    let hen = 0, lanSua = 0;
+    vv.addEventListener('resize', function () {
+      clearTimeout(hen);
+      hen = setTimeout(function () {
+        // Mỗi 2 giây sửa tối đa một lần: đổi thẻ viewport cũng làm khung đổi cỡ, không được tự gọi lại mãi
+        if (vv.scale < 1.02 || Date.now() - lanSua < 2000) return;
+        lanSua = Date.now();
+        meta.setAttribute('content', goc + ', minimum-scale=1');
+        setTimeout(function () { meta.setAttribute('content', goc); }, 80);
+      }, 300);
+    });
+  }
+
   function khoiDong() {
     window.addEventListener('error', function (e) { console.error('Lỗi:', e && e.message); });
     window.addEventListener('unhandledrejection', function (e) { console.error('Lỗi hứa:', e && e.reason); });
     document.addEventListener('pointerdown', function () { NK.cham(); AT.mo(); NK.xinLuuBenLanDau(); }, { passive: true });
-    // iPad: không phóng to bằng hai ngón hay chạm đúp khi bé chạm nhanh (CSS touch-action: manipulation lo phần chạm đúp)
+    // iPad: không phóng to bằng hai ngón hay chạm đúp khi bé chạm nhanh (CSS * { touch-action: manipulation } lo phần chạm đúp)
     ['gesturestart', 'gesturechange'].forEach(function (k) { document.addEventListener(k, function (e) { e.preventDefault(); }, { passive: false }); });
+    veVuaKhungKhiBiPhongTo();
     ganSuKien();
     ['bg-race-track', 'bg-island-map', 'berry', 'the-lung', 'ic-truyen-tranh', 'ic-lat-the', 'ic-xep-hinh', 'ic-xuong-do-luong', 'ic-cho', 'ic-cau-ca', 'ic-rung-hinh', 'ic-lat-lich', 'ic-dau-truong'].forEach(taiAnh);
     // Mỗi lúc chỉ một cửa sổ ghi dữ liệu: mở đảo ở cửa sổ khác thì cửa sổ này dừng (hai cửa sổ ghi đè hồ sơ của nhau)

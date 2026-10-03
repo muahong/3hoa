@@ -388,7 +388,7 @@
         return '<button type="button" class="gp-chip gp-ok" data-hd="kn" data-ma="' + esc(x.ma) + '" aria-label="' + esc(x.ten + ': ' + BC.TEN_MUC[x.muc] + '. Xem trên bản đồ kỹ năng') + '">' + esc(x.ten) + (x.muc === 'vung_chac' ? ' ★' : '') + '</button>';
       }).join('') + (t.gioi.length > 10 ? '<span class="gp-chip">+' + (t.gioi.length - 10) + '</span>' : '') + '</div>' +
         (coSao ? '<small class="gp-dinh-nghia">★ Vững chắc: vẫn đúng khi ôn lại sau 1, 3, 7, 14 ngày.</small>' : '')
-      : '<p class="gp-mo">Chưa có kỹ năng Đã thuộc. Một kỹ năng thành Đã thuộc khi con tự làm đúng từ 90% trên 20 câu, qua 2 ngày khác nhau.</p>'));
+      : '<p class="gp-mo">Chưa có kỹ năng Đã thuộc. Một kỹ năng thành Đã thuộc khi con tự làm đúng từ 90% trên 20 câu và làm lại đúng các câu từng sai.</p>'));
     if (t.can_giup.length) {
       trai += t.can_giup.map(function (x) {
         const pt = x.ti_le_tuan != null ? x.ti_le_tuan : x.ti_le_14;

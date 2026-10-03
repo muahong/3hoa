@@ -1071,8 +1071,7 @@
         const muoi = Math.round(t.can_ti_le * 10);
         const ds = [
           [t.tu_lam >= t.can_tu_lam, 'Tự làm ' + t.can_tu_lam + ' câu', t.tu_lam >= t.can_tu_lam ? '' : 'con đã làm ' + t.tu_lam],
-          [t.ti_le != null && t.ti_le >= t.can_ti_le, 'Đúng ngay ' + muoi + ' trên 10 câu', t.ti_le == null || t.ti_le >= t.can_ti_le ? '' : 'con đang ' + Math.floor(t.ti_le * 10) + ' trên 10'],
-          [t.so_ngay >= t.can_so_ngay, 'Chơi ' + t.can_so_ngay + ' ngày khác nhau', t.so_ngay >= t.can_so_ngay ? '' : 'con mới ' + t.so_ngay + ' ngày']
+          [t.ti_le != null && t.ti_le >= t.can_ti_le, 'Đúng ngay ' + muoi + ' trên 10 câu', t.ti_le == null || t.ti_le >= t.can_ti_le ? '' : 'con đang ' + Math.floor(t.ti_le * 10) + ' trên 10']
         ];
         if (t.cau_no) ds.push([false, 'Làm lại đúng ' + t.cau_no + ' câu từng sai', '']);
         h += '<small>Để thành Đã thuộc, con cần:</small></div><ul class="kt-kn-ds">' + ds.map(function (x) {

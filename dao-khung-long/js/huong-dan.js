@@ -255,7 +255,6 @@
     const ra = [];
     if (t.tu_lam < t.can_tu_lam) ra.push('tự làm thêm ' + (t.can_tu_lam - t.tu_lam) + ' câu');
     if (t.ti_le == null || t.ti_le < t.can_ti_le) ra.push('đúng ngay ' + Math.round(t.can_ti_le * 10) + ' trên 10 câu' + (t.ti_le != null ? ' (con đang ' + Math.floor(t.ti_le * 10) + ' trên 10)' : ''));
-    if (t.so_ngay < t.can_so_ngay) ra.push('chơi thêm ' + (t.can_so_ngay - t.so_ngay) + ' ngày nữa');
     if (t.cau_no > 0) ra.push('làm lại đúng ' + t.cau_no + ' câu từng sai');
     return ra;
   }
@@ -529,7 +528,7 @@
           const k = c.bang[kn];
           if (k.muc !== 'dang_luyen' && k.muc !== 'lam_quen') return;
           const t = HT().tienDoThuoc(theoKy[kn] || [], daSua, c.ctx.homNay);
-          const diem = Math.min(1, t.tu_lam / t.can_tu_lam) + Math.min(1, (t.ti_le || 0) / t.can_ti_le) + Math.min(1, t.so_ngay / t.can_so_ngay) + (t.cau_no ? 0 : 1);
+          const diem = Math.min(1, t.tu_lam / t.can_tu_lam) + Math.min(1, (t.ti_le || 0) / t.can_ti_le) + (t.cau_no ? 0 : 1);
           sap.push({ kn: kn, t: t, diem: diem });
         });
         sap.sort(function (a, b) { return b.diem - a.diem; });
@@ -541,7 +540,6 @@
           y: [
             ['📝', 'tự làm, không gợi ý, từ <b>' + D.tu_lam + ' câu</b> trở lên,'],
             ['🎯', 'đúng ngay <b>' + saoMuoi(D.ti_le) + ' trên 10 câu</b>,'],
-            ['📅', 'chơi ở <b>' + D.so_ngay + ' ngày khác nhau</b>,'],
             ['🔁', 'làm lại đúng các câu từng sai.'],
             ['🌳', 'Ôn lại sau ' + HT().MOC_ON.slice(0, 4).join(', ') + ' ngày mà vẫn đúng thì thành <b>Vững chắc</b>.']
           ],

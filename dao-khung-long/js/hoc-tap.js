@@ -16,8 +16,8 @@
   function khoangOn(i) { const k = Math.min(i, MOC_ON.length - 1); return MOC_ON[k] - (k ? MOC_ON[k - 1] : 0); }
   /** Đã thuộc chỉ tụt về Đang luyện vì câu nợ khi có từ chừng này câu nợ, hoặc có câu nợ để quá chừng này ngày. */
   const TUT_NO = { so_cau: 2, so_ngay: 3 };
-  /** Điều kiện Đã thuộc trong cửa sổ 14 ngày: tự làm (không gợi ý) từ 20 câu, đúng ngay từ 90%, ở ít nhất 2 ngày, không còn câu sai chưa sửa. */
-  const DK_THUOC = { tu_lam: 20, ti_le: 0.9, so_ngay: 2 };
+  /** Điều kiện Đã thuộc trong cửa sổ 14 ngày: tự làm (không gợi ý) từ 20 câu, đúng ngay từ 90%, không còn câu sai chưa sửa. */
+  const DK_THUOC = { tu_lam: 20, ti_le: 0.9 };
   /** Tỉ lệ câu mới làm đúng ngay để được 3 sao, 2 sao (dưới nữa là 1 sao). */
   const SAO = { ba: 0.9, hai: 0.7 };
   /** Quả mọng thưởng ngoài từng câu (app.js trao, trang Cách chơi đọc đúng các số này). */
@@ -219,33 +219,26 @@
     const tuLam = cuaSo.filter(function (c) { return c.goi_y_cap === 0 && c.ket_qua !== 'bo_qua'; });
     if (tuLam.length < DK_THUOC.tu_lam || coNo) return false;
     const dung = tuLam.filter(function (c) { return c.ket_qua === 'dung_ngay'; }).length;
-    if (dung / tuLam.length < DK_THUOC.ti_le) return false;
-    const ngay = {};
-    tuLam.forEach(function (c) { ngay[c.ngay] = 1; });
-    return Object.keys(ngay).length >= DK_THUOC.so_ngay;
+    return dung / tuLam.length >= DK_THUOC.ti_le;
   }
 
   /**
    * Bé còn thiếu gì để một kỹ năng thành Đã thuộc (cùng điều kiện với dieuKienThuoc, cửa sổ 14 ngày tới hôm nay).
    * cauDs: tóm tắt câu của kỹ năng đó; daSua: tapDaSua của mọi câu của bé.
-   * Trả về { tu_lam, can_tu_lam, dung_ngay, ti_le, can_ti_le, so_ngay, can_so_ngay, cau_no, du }.
+   * Trả về { tu_lam, can_tu_lam, dung_ngay, ti_le, can_ti_le, cau_no, du }.
    */
   function tienDoThuoc(cauDs, daSua, homNay) {
     const tu = congNgay(homNay, -13);
     const cs = (cauDs || []).filter(function (c) { return c.ket_qua !== 'bo_qua' && c.ngay >= tu && c.ngay <= homNay; });
     const tuLam = cs.filter(function (c) { return c.goi_y_cap === 0; });
     const dung = tuLam.filter(function (c) { return c.ket_qua === 'dung_ngay'; }).length;
-    const ngay = {};
-    tuLam.forEach(function (c) { ngay[c.ngay] = 1; });
-    const soNgayChoi = Object.keys(ngay).length;
     const no = cs.filter(function (c) { return c.ket_qua === 'sai' && !(daSua || {})[c.cau]; }).length;
     const tiLe = tuLam.length ? lam2(dung / tuLam.length) : null;
     return {
       tu_lam: tuLam.length, can_tu_lam: DK_THUOC.tu_lam,
       dung_ngay: dung, ti_le: tiLe, can_ti_le: DK_THUOC.ti_le,
-      so_ngay: soNgayChoi, can_so_ngay: DK_THUOC.so_ngay,
       cau_no: no,
-      du: tuLam.length >= DK_THUOC.tu_lam && dung / tuLam.length >= DK_THUOC.ti_le && soNgayChoi >= DK_THUOC.so_ngay && no === 0
+      du: tuLam.length >= DK_THUOC.tu_lam && dung / tuLam.length >= DK_THUOC.ti_le && no === 0
     };
   }
 

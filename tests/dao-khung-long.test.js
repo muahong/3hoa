@@ -346,7 +346,8 @@ test('thành thạo: chưa học, làm quen, đang luyện, đã thuộc, vững
   assert.equal(muc([]).muc, 'chua_hoc');
   assert.equal(muc(Array.from({ length: 5 }, () => cau('2026-10-12', 'dung_ngay'))).muc, 'lam_quen');
   const motNgay = Array.from({ length: 22 }, () => cau('2026-10-12', 'dung_ngay'));
-  assert.equal(muc(motNgay).muc, 'dang_luyen', 'cần ít nhất 2 ngày khác nhau');
+  assert.equal(muc(motNgay).muc, 'da_thuoc', 'đủ 20 câu tự làm đúng trong một ngày là thuộc, không cần chơi 2 ngày');
+  assert.equal(muc(motNgay.slice(0, 19)).muc, 'dang_luyen', 'chưa đủ 20 câu tự làm');
   const haiNgay = Array.from({ length: 11 }, () => cau('2026-10-11', 'dung_ngay')).concat(Array.from({ length: 11 }, () => cau('2026-10-12', 'dung_ngay')));
   const t = muc(haiNgay);
   assert.equal(t.muc, 'da_thuoc');

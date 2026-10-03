@@ -31,22 +31,22 @@ function hoSo(them) {
   return Object.assign({ id: 'be_1', ten: 'An', lop: 2, bai_dang_hoc: 20, phong_cach: 'dung_manh', khung_long: { ten: 'Rex', muc: 'so_sinh', qua_mong: 120 }, ky_luc: {}, trung_vung: {}, phu_kien: [] }, them || {});
 }
 
-test('tienDoThuoc: 20 câu tự làm đúng trong 1 ngày còn thiếu 1 ngày; thêm ngày thứ hai thì đủ, khớp mức Đã thuộc', () => {
+test('tienDoThuoc: 19 câu tự làm đúng còn thiếu 1 câu; 20 câu trong cùng một ngày là đủ, khớp mức Đã thuộc', () => {
   const { HT, HD } = moi();
   const ds = [];
-  for (let i = 0; i < 20; i++) ds.push(cau(i, '2026-09-20'));
+  for (let i = 0; i < 19; i++) ds.push(cau(i, '2026-09-20'));
   const t = HT.tienDoThuoc(ds, {}, '2026-09-20');
-  assert.equal(t.tu_lam, 20);
-  assert.equal(t.so_ngay, 1);
+  assert.equal(t.tu_lam, 19);
   assert.equal(t.du, false);
-  assert.deepEqual(J(HD.conThieu(t)), ['chơi thêm 1 ngày nữa']);
+  assert.deepEqual(J(HD.conThieu(t)), ['tự làm thêm 1 câu']);
   assert.equal(HT.mucKyNang(ds, {}, '2026-09-20').muc, 'dang_luyen');
 
-  ds.push(cau(21, '2026-09-21'));
-  const t2 = HT.tienDoThuoc(ds, {}, '2026-09-21');
+  ds.push(cau(19, '2026-09-20'));
+  const t2 = HT.tienDoThuoc(ds, {}, '2026-09-20');
   assert.equal(t2.du, true);
+  assert.equal(t2.so_ngay, undefined, 'không còn điều kiện số ngày chơi');
   assert.deepEqual(J(HD.conThieu(t2)), []);
-  assert.equal(HT.mucKyNang(ds, {}, '2026-09-21').muc, 'da_thuoc');
+  assert.equal(HT.mucKyNang(ds, {}, '2026-09-20').muc, 'da_thuoc');
 });
 
 test('tienDoThuoc: câu nhờ gợi ý không tính là tự làm; câu sai chưa sửa là câu nợ; tỉ lệ dưới 9 trên 10 được nêu ra', () => {
@@ -60,7 +60,6 @@ test('tienDoThuoc: câu nhờ gợi ý không tính là tự làm; câu sai chư
   assert.equal(t.tu_lam, 14);
   assert.equal(t.dung_ngay, 12);
   assert.equal(t.cau_no, 2);
-  assert.equal(t.so_ngay, 2);
   const thieu = HD.conThieu(t);
   assert.ok(thieu.includes('tự làm thêm 6 câu'), thieu.join('; '));
   assert.ok(thieu.some((x) => x.startsWith('đúng ngay 9 trên 10 câu (con đang 8 trên 10)')), thieu.join('; '));
@@ -77,7 +76,7 @@ test('hằng số luật: sao, điều kiện thuộc, quả mọng thưởng d�
   assert.equal(HT.saoCuaVan(10, 7), 2);
   assert.equal(HT.saoCuaVan(10, 6), 1);
   assert.equal(HT.SAO.ba, 0.9);
-  assert.deepEqual(J(HT.DK_THUOC), { tu_lam: 20, ti_le: 0.9, so_ngay: 2 });
+  assert.deepEqual(J(HT.DK_THUOC), { tu_lam: 20, ti_le: 0.9 });
   assert.deepEqual(J(HT.THUONG), { ky_nang_da_thuoc: 50, xong_3_nhiem_vu: 20, thang_dau_truong: 100 });
   const app = fs.readFileSync(path.join(__dirname, '..', 'dao-khung-long', 'js', 'app.js'), 'utf8');
   for (const k of Object.keys(HT.THUONG)) assert.ok(app.includes('HT.THUONG.' + k), 'app.js trao thưởng ' + k + ' bằng HT.THUONG');
@@ -230,7 +229,7 @@ test('trang Cách chơi: 11 chương dựng được cho bé mới và bé đã 
   assert.match(ch('lon_len').noi(c0).them, /chơi xong một ván là Rex lên <b>Sơ sinh<\/b>/);
   assert.match(ch('nhiem_vu').noi(c0).hanh.nhan, /Chơi nhiệm vụ 1/);
   const dt = JSON.stringify(ch('da_thuoc').noi(c0).y);
-  assert.ok(dt.includes('20 câu') && dt.includes('9 trên 10 câu') && dt.includes('2 ngày khác nhau'), dt);
+  assert.ok(dt.includes('20 câu') && dt.includes('9 trên 10 câu') && !dt.includes('ngày khác nhau'), dt);
 });
 
 test('chữ cho bé: không dùng dấu gạch dài trong trang Cách chơi và các chỗ chỉ đường', () => {

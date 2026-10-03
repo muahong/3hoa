@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'dao-khung-long-v17';
-// noi-dung: 437ba860823e9101
+const CACHE = 'dao-khung-long-v18';
+// noi-dung: 1ad167d2ce441924
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',

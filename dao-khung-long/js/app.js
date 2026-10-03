@@ -51,6 +51,7 @@
     window.scrollTo(0, 0);
   }
   let hengioBao = null;
+  window.addEventListener('dkl-doc-loi', function () { bao('Chưa đọc được. Con xem phần chữ nhé. Bố mẹ kiểm tra giọng nói và âm lượng của thiết bị.', 5); });
   function bao(chu, giay) {
     const el = $('thong-bao');
     el.textContent = chu;
@@ -492,6 +493,11 @@
         saoHtml + '<span class="bd-tron">' + trong + '</span><span class="bd-nhan">' + esc(v.ten) + (phu ? '<small>' + esc(phu) + '</small>' : '') + '</span></button>';
     });
     $('bd-diem').innerHTML = h;
+    $('bd-list').innerHTML = DAO.VUNG.map(function (v) {
+      const tt = DAO.trangThaiVung(v, p, A.hocTap);
+      const trangThai = !tt.mo ? 'Chưa mở' : tt.sap_co ? 'Sắp có' : 'Đã mở';
+      return '<button type="button" data-vung="' + v.so + '" aria-label="' + esc(v.ten + ', ' + trangThai) + '"><b>' + esc(v.ten) + '</b><small>' + trangThai + '</small></button>';
+    }).join('');
     // Khủng long của bé đứng cạnh vùng vừa chơi
     const vanCuoi = A.vanDs[A.vanDs.length - 1];
     const vgan = DAO.vung((vanCuoi && vanCuoi.vung) || (nv.ds[0] && DAO.man(nv.ds[0].man) ? DAO.man(nv.ds[0].man).vung : 2)) || DAO.vung(2);
@@ -983,11 +989,12 @@
     moChiTietKetThuc(false);
     $('kt-tieu-de').textContent = kq.kyLucMoi && p.ky_luc[k.m.id] && p.ky_luc[k.m.id].lan_choi > 1 ? 'Kỷ lục mới!' : 'Hoàn thành!';
     $('kt-man').textContent = DAO.tenManDayDu(k.m);
-    $('kt-sao').innerHTML = [0, 1, 2].map(function (i) { return '<i class="' + (i < kq.sao ? 'co' : '') + '" style="--tre:' + (i * 0.25) + 's">★</i>'; }).join('');
+    window.TiepCan.sao($('kt-sao'), kq.sao);
     const tongCau = d.dungNgay + d.nhoGoiY + d.lan2 + d.sai;
     $('kt-dung').textContent = (d.dungNgay + d.nhoGoiY + d.lan2) + '/' + tongCau;
     $('kt-tu-lam').textContent = d.dungNgay;
-    $('kt-sua').textContent = d.suaDuoc;
+    $('kt-sua').textContent = d.suaDuoc + (d.suaNgay || 0);
+    $('kt-sua-phu').textContent = (d.suaNgay || 0) + ' sửa ngay trong lượt · ' + d.suaDuoc + ' câu quay lại';
     const kl = $('kt-ky-luc');
     kl.classList.toggle('hidden', !kq.giayDua && !kq.dongPhu);
     const pKl = p.ky_luc[k.m.id];
@@ -1440,6 +1447,10 @@
       // Hết giờ rồi thì đổi bé cần bố mẹ cho phép (không lách giờ bằng hồ sơ của anh chị hay hồ sơ mới)
       if (duPhutHomNay()) xinBoMe('ban-do', 'Hôm nay con chơi đủ giờ rồi. Đổi bạn cần bố mẹ cho phép.', function () { moChonBe(); A.boMeChoPhep = true; });
       else moChonBe();
+    });
+    $('bd-list').addEventListener('click', function (e) {
+      const b = e.target.closest('[data-vung]');
+      if (b) moVung(Number(b.getAttribute('data-vung')));
     });
     $('bd-bo-me').addEventListener('click', function () { moPhuHuynh('ban-do'); });
     $('bd-am').addEventListener('click', function () { AT.datTieng(!AT.co.tieng); this.textContent = 'Âm thanh: ' + (AT.co.tieng ? 'Bật' : 'Tắt'); });

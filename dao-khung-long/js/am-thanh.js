@@ -88,6 +88,12 @@
 
   /* ---------------- Giọng đọc (Web Speech API, ưu tiên giọng cục bộ như "Linh" trên iPad) ---------------- */
 
+  const nguoiNgheGiong = [];
+  let trangThai = 'khong_co';
+  function baoGiong() { nguoiNgheGiong.forEach(function (fn) { fn(); }); }
+  function nhanGiong() {
+    return trangThai === 'co' ? 'Giọng đọc: ' + (co.giong ? 'Bật' : 'Tắt') : trangThai === 'dang_tai' ? 'Đang tải giọng Việt' : 'Chưa có giọng Việt';
+  }
   const giong = {
     co: false,
     giong: null,
@@ -98,13 +104,18 @@
         const vi = ds.filter(function (v) { return /^vi([-_]|$)/i.test(v.lang || ''); });
         this.giong = vi.find(function (v) { return v.localService; }) || vi[0] || null;
         this.co = !!this.giong;
-      } catch (e) { this.co = false; }
+        trangThai = this.co ? 'co' : ds.length ? 'khong_co' : 'dang_tai';
+      } catch (e) { this.co = false; trangThai = 'khong_co'; }
+      baoGiong();
     },
     khoiDong: function () {
       if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance === 'undefined') return;
       const self = this;
       this.chon();
-      try { window.speechSynthesis.onvoiceschanged = function () { self.chon(); }; } catch (e) { /* bỏ qua */ }
+      try {
+        if (window.speechSynthesis.addEventListener) window.speechSynthesis.addEventListener('voiceschanged', function () { self.chon(); });
+        else window.speechSynthesis.onvoiceschanged = function () { self.chon(); };
+      } catch (e) { /* bỏ qua */ }
       setTimeout(function () { self.chon(); }, 800);
     },
     moKhoa: function () {
@@ -134,7 +145,9 @@
   }
 
   function doc(chu, tuyChon) {
-    if (!co.giong || !giong.co || !chu) return false;
+    if (!co.giong || !chu) return false;
+    giong.chon();
+    if (!giong.co) return false;
     try {
       const ss = window.speechSynthesis;
       if (!(tuyChon && tuyChon.noiTiep)) ss.cancel();
@@ -143,9 +156,17 @@
       u.lang = giong.giong.lang || 'vi-VN';
       u.rate = 0.95;
       u.pitch = 1.05;
+      u.onerror = function (event) {
+        // Replacing or stopping our own utterance is a normal interaction.
+        if (event && /^(canceled|interrupted)$/.test(event.error)) return;
+        baoDocLoi();
+      };
       ss.speak(u);
       return true;
-    } catch (e) { return false; }
+    } catch (e) { baoDocLoi(); return false; }
+  }
+  function baoDocLoi() {
+    if (typeof window.CustomEvent === 'function') window.dispatchEvent(new window.CustomEvent('dkl-doc-loi'));
   }
   function dungDoc() { try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) { /* bỏ qua */ } }
   /** Đọc nối tiếp nhiều câu (lời giải: tên lỗi, từng bước, "Vậy..."): câu đầu cắt lời đang đọc, các câu sau nối theo. */
@@ -165,7 +186,21 @@
     chuanHoa: chuanHoaDoc,
     dungDoc: dungDoc,
     coGiong: function () { return giong.co; },
+    nhanGiong: nhanGiong,
+    trangThaiGiong: function () { return trangThai; },
+    theoDoiGiong: function (fn) { nguoiNgheGiong.push(fn); fn(); },
+    ganNutDoc: function (btn) {
+      if (!btn || btn._giongDaGan) return;
+      btn._giongDaGan = true;
+      const nhan = btn.getAttribute('aria-label') || btn.textContent || 'Nghe';
+      nguoiNgheGiong.push(function () {
+        btn.disabled = !giong.co || !co.giong;
+        btn.setAttribute('aria-label', btn.disabled ? nhan + '. ' + nhanGiong() : nhan);
+        btn.title = btn.disabled ? nhanGiong() + '. Bố mẹ có thể thêm giọng Tiếng Việt trong cài đặt giọng nói của thiết bị.' : nhan;
+      });
+      nguoiNgheGiong[nguoiNgheGiong.length - 1]();
+    },
     datTieng: function (b) { co.tieng = !!b; luuCo(); },
-    datGiong: function (b) { co.giong = !!b; luuCo(); if (!b) dungDoc(); }
+    datGiong: function (b) { co.giong = !!b; luuCo(); if (!b) dungDoc(); baoGiong(); }
   };
 })();

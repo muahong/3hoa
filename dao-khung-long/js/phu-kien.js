@@ -66,6 +66,45 @@
   /** Điểm gốc trong món đồ (tỉ lệ bề ngang, bề cao) được đặt trùng điểm neo: mũ đặt đáy lên đầu, khăn treo từ trên cổ. */
   const GOC = { dau: [0.5, 0.88], co: [0.5, 0.32], than: [0.5, 0.5], tay: [0.5, 0.5], chan: [0.5, 0.6] };
 
+  // Item origins are contact points inside the artwork, rather than its centre.
+  const NAM = {
+    'thuoc-vang': { g: [0.34, 0.65], w: 42, r: -42 },
+    'tui-tien': { g: [0.46, 0.27], w: 30, r: 8 },
+    'can-cau-bac': { g: [0.22, 0.82], w: 44, r: -22 },
+    'khien-hinh-khoi': { g: [0.5, 0.5], w: 30, r: 0 }
+  };
+  const BAN_TAY = {
+    'rex-hatchling': [86, 44, 5, 4], 'rex-kid': [91, 43, 5, 4],
+    'rex-teen': [86, 49, 5, 4], 'rex-adult': [90, 42, 5, 4],
+    'rex-legend': [49, 56, 5, 4], 'rex-cheer': [78, 34, 4, 4]
+  };
+  // Quadrupeds carry tools in a shoulder sling while their forefeet support them.
+  const DAY_MAY = {
+    'may-kid': [47, 70, 60, 58], 'may-teen': [48, 68, 65, 50],
+    'may-adult': [47, 68, 66, 48], 'may-legend': [48, 68, 63, 48],
+    'may-cheer': [47, 64, 60, 44], 'may-think': [45, 72, 58, 54]
+  };
+  // Mây wears shoes on the two forefeet while grounded. Feeding exposes the rear soles instead.
+  const BAN_CHAN = {
+    'rex-eating': [{ x: 48, y: 89, w: 24, r: -18, front: true }, { x: 88, y: 83, w: 22, r: 28, front: true }],
+    'rex-teen': [{ x: 10, y: 91, w: 21, r: -26, front: true }, { x: 86, y: 88, w: 23, r: 42, front: true }],
+    'rex-cheer': [{ x: 22, y: 90, w: 18, r: -24, front: true }, { x: 87, y: 81, w: 21, r: 42, front: true }],
+    'may-kid': [{ x: 59, y: 94, w: 23, r: 0, lat: true }, { x: 79, y: 92, w: 21, r: -4, lat: false }],
+    'may-teen': [{ x: 58, y: 96, w: 19, r: 0, lat: true }, { x: 80, y: 83, w: 18, r: 15, front: true }],
+    'may-adult': [{ x: 56, y: 95, w: 19, r: 0, lat: true }, { x: 77, y: 95, w: 18, r: 0, lat: false }],
+    'may-legend': [{ x: 57, y: 96, w: 16, r: 0, lat: true }, { x: 76, y: 83, w: 16, r: 20, front: true }],
+    'may-eating': [{ x: 55, y: 88, w: 26, r: -15, front: true }, { x: 95, y: 88, w: 23, r: 25, front: true }],
+    'may-cheer': [{ x: 65, y: 82, w: 20, r: 38, front: true }, { x: 87, y: 80, w: 18, r: 44, front: true }],
+    'may-think': [{ x: 53, y: 95, w: 20, r: 0, lat: true }, { x: 79, y: 93, w: 19, r: 0, lat: false }]
+  };
+  // Shell and occupied limbs reserve their slots without changing item ownership.
+  function slotVisible(sprite, slot) {
+    if (/-hatchling$/.test(sprite) && slot === 'chan') return false;
+    if (sprite === 'rex-hatchling' && slot === 'dau') return false; // shell cap stays on the head
+    if (slot === 'tay') return !!(BAN_TAY[sprite] || DAY_MAY[sprite]);
+    return true;
+  }
+
   const theoMaDs = {};
   const theoTenDs = {};
   DS.forEach(function (d) { theoMaDs[d.ma] = d; theoTenDs[d.ten] = d; });
@@ -123,16 +162,24 @@
    * tính theo hình khủng long; lat: lật gương). tiLe = cao / rộng của hình món đồ.
    */
   function viTri(tenHinh, ma, rong, cao, tiLe) {
-    const n = NEO[maTuHinh(tenHinh)];
-    const d = theoMa(ma);
-    if (!n || !d) return [];
-    const ds = Array.isArray(n[d.cho]) ? n[d.cho] : [n[d.cho]];
-    const g = GOC[d.cho];
-    return ds.filter(Boolean).map(function (a, i) {
-      const w = rong * a.w / 100 * (d.s || 1);
-      const h = w * (tiLe || 1);
+    const sprite = maTuHinh(tenHinh);
+    const n = NEO[sprite], d = theoMa(ma);
+    if (!n || !d || !slotVisible(sprite, d.cho)) return [];
+    const grip = d.cho === 'tay' ? NAM[ma] : null;
+    const shoe = d.cho === 'chan' && BAN_CHAN[sprite];
+    let anchors = shoe || (Array.isArray(n[d.cho]) ? n[d.cho] : [n[d.cho]]);
+    if (grip) {
+      const at = BAN_TAY[sprite] || DAY_MAY[sprite];
+      anchors = [{ x: at[0], y: at[1], w: DAY_MAY[sprite] ? grip.w * 0.72 : grip.w, r: grip.r }];
+    }
+    const g = grip ? grip.g : GOC[d.cho];
+    return anchors.filter(Boolean).map(function (a, i) {
+      const w = rong * a.w / 100 * (grip || shoe ? 1 : d.s || 1);
+      const h = w * (a.front ? 240 / 180 : tiLe || 1);
       const cx = rong * a.x / 100, cy = cao * a.y / 100 + (d.dy || 0) * h;
-      return { x: cx - w * g[0], y: cy - h * g[1], w: w, h: h, cx: cx, cy: cy, r: a.r || 0, lat: d.cho === 'chan' && i === 0 };
+      return { x: cx - w * g[0], y: cy - h * g[1], w: w, h: h, cx: cx, cy: cy, r: a.r || 0,
+        lat: a.lat == null ? d.cho === 'chan' && i === 0 && !a.front : a.lat,
+        asset: a.front ? 'pk-giay-dua-front.svg' : d.anh + '.webp' };
     });
   }
 
@@ -161,15 +208,15 @@
     const goc = duongDan || ('assets/img/' + maTuHinh(tenHinh) + '.webp');
     const d = theoMa(ma);
     if ((!d && !deu) || !coNeo(tenHinh) || typeof document === 'undefined' || !document.createElement) return Promise.resolve(goc);
-    const khoa = maTuHinh(tenHinh) + '|' + (ma || '') + (deu ? '|deu' : '');
+    const khoa = goc + '|' + maTuHinh(tenHinh) + '|' + (ma || '') + (deu ? '|deu' : '');
     if (boNho[khoa]) return boNho[khoa];
     const thuMuc = goc.replace(/[^/]*$/, '');
-    boNho[khoa] = Promise.all([taiAnh(goc), d ? taiAnh(thuMuc + d.anh + '.webp') : null]).then(function (r) {
+    boNho[khoa] = Promise.all([taiAnh(goc), d ? taiAnh(thuMuc + d.anh + '.webp') : null, d && d.cho === 'chan' ? taiAnh(thuMuc + 'pk-giay-dua-front.svg') : null]).then(function (r) {
       const kl = r[0], mon = r[1];
       const W = kl.naturalWidth, H = kl.naturalHeight;
       const ds = mon ? viTri(tenHinh, ma, W, H, mon.naturalHeight / mon.naturalWidth) : [];
       let x0 = deu ? -W * LE_DEU.trai : 0, y0 = deu ? -H * LE_DEU.tren : 0, x1 = deu ? W * (1 + LE_DEU.phai) : W, y1 = deu ? H * (1 + LE_DEU.duoi) : H;
-      ds.forEach(function (v) {
+      if (!deu) ds.forEach(function (v) {
         const m = Math.max(v.w, v.h) * 0.2; // chừa chỗ cho góc xoay
         x0 = Math.min(x0, v.x - m); y0 = Math.min(y0, v.y - m); x1 = Math.max(x1, v.x + v.w + m); y1 = Math.max(y1, v.y + v.h + m);
       });
@@ -178,14 +225,44 @@
       cv.width = Math.ceil(x1 - x0); cv.height = Math.ceil(y1 - y0);
       const c = cv.getContext('2d');
       c.drawImage(kl, -x0, -y0);
+      const carry = d && d.cho === 'tay' && DAY_MAY[maTuHinh(tenHinh)];
+      if (ds.length && carry) {
+        c.save(); c.strokeStyle = '#7a4526'; c.lineWidth = W * 0.028; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(W * carry[2] / 100 - x0, H * carry[3] / 100 - y0);
+        c.quadraticCurveTo(W * (carry[0] - 10) / 100 - x0, H * (carry[1] - 7) / 100 - y0, W * carry[0] / 100 - x0, H * carry[1] / 100 - y0);
+        c.stroke(); c.strokeStyle = '#f4c976'; c.lineWidth = W * 0.008; c.stroke(); c.restore();
+      }
       ds.forEach(function (v) {
         c.save();
         c.translate(v.cx - x0, v.cy - y0);
         c.rotate(v.r * Math.PI / 180);
         if (v.lat) c.scale(-1, 1);
-        c.drawImage(mon, v.x - v.cx, v.y - v.cy, v.w, v.h);
+        c.drawImage(v.asset === 'pk-giay-dua-front.svg' ? r[2] : mon, v.x - v.cx, v.y - v.cy, v.w, v.h);
         c.restore();
       });
+      if (ds.length && carry) {
+        c.save(); c.fillStyle = '#8a502b';
+        c.fillRect(W * carry[0] / 100 - x0 - W * .05, H * carry[1] / 100 - y0, W * .10, H * .018);
+        c.restore();
+      }
+      // Restore only the photographed foreground pixels: fingers grip the item,
+      // and the jagged shell rim covers armour below it.
+      const sprite = maTuHinh(tenHinh);
+      if (ds.length && d.cho === 'tay' && BAN_TAY[sprite]) {
+        const hand = BAN_TAY[sprite];
+        c.save(); c.beginPath();
+        c.ellipse(W * hand[0] / 100 - x0, H * hand[1] / 100 - y0, W * hand[2] / 100, H * hand[3] / 100, 0, 0, Math.PI * 2);
+        c.clip(); c.drawImage(kl, -x0, -y0); c.restore();
+      }
+      if (ds.length && /-hatchling$/.test(sprite) && d.cho === 'than') {
+        const rim = sprite === 'rex-hatchling'
+          ? [[0,55],[13,59],[23,68],[33,64],[46,70],[58,62],[69,69],[80,59],[91,58],[100,61]]
+          : [[0,51],[17,49],[29,59],[42,55],[53,63],[65,57],[77,54],[90,57],[100,58]];
+        c.save(); c.beginPath();
+        rim.forEach(function (point, i) { c[i ? 'lineTo' : 'moveTo'](W * point[0] / 100 - x0, H * point[1] / 100 - y0); });
+        c.lineTo(W - x0, H - y0); c.lineTo(-x0, H - y0); c.closePath();
+        c.clip(); c.drawImage(kl, -x0, -y0); c.restore();
+      }
       return new Promise(function (ok) {
         if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob(function (b) { ok(b ? URL.createObjectURL(b) : cv.toDataURL('image/png')); }, 'image/png');
         else ok(cv.toDataURL('image/png'));
@@ -234,7 +311,7 @@
   }
 
   window.PhuKien = {
-    DS: DS, CHO: CHO, TEN_CHO: TEN_CHO, NEO: NEO,
+    DS: DS, CHO: CHO, TEN_CHO: TEN_CHO, NEO: NEO, slotVisible: slotVisible,
     theoMa: theoMa, theoTen: theoTen, cuaBe: cuaBe, coMon: coMon, dangMac: dangMac, chuaXem: chuaXem,
     coPhep: coPhep, phepCua: phepCua, tenVung: tenVung,
     maTuHinh: maTuHinh, coNeo: coNeo, viTri: viTri, anhMac: anhMac, phep: phep

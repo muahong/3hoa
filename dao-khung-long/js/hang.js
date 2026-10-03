@@ -75,13 +75,13 @@
     man.innerHTML =
       '<div class="hk-nen" aria-hidden="true"></div>' +
       '<button class="nut-quay" id="hk-quay" type="button" aria-label="Về bản đồ">‹</button>' +
-      '<h1 class="hk-ten">Hang Khủng Long</h1>' +
+      '<header class="hk-header"><h1 class="hk-ten">Hang Khủng Long</h1>' +
+      '<p class="hk-noi" id="hk-noi" aria-live="polite"></p></header>' +
       '<div class="hk-canh">' +
       '  <div class="hk-ban" id="hk-ban"></div>' +
       '  <button class="hk-bat" id="hk-bat" type="button" aria-label="Cho khủng long ăn quả mọng">' +
       '    <span class="hk-chen" aria-hidden="true"></span><img alt="" data-anh="berry"><img alt="" data-anh="berry"><img alt="" data-anh="berry"></button>' +
       '  <button class="hk-kl" id="hk-kl" type="button" aria-label="Chạm vào khủng long"><img id="hk-kl-hinh" alt=""></button>' +
-      '  <p class="hk-noi" id="hk-noi" aria-live="polite"></p>' +
       '  <button class="hk-dang-mac" id="hk-dang-mac" type="button"></button>' +
       '</div>' +
       '<aside class="hk-bang" aria-label="Đồ, bạn bè và cúp">' +

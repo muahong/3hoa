@@ -1,7 +1,7 @@
 /* Service worker: chơi ngoại tuyến sau lần tải đầu tiên (dữ liệu của bé nằm trong IndexedDB, không đi qua đây).
    Đổi tệp của game thì chạy: python scripts/refresh-games.py (ghi lại dấu noi-dung, tự tăng CACHE). */
-const CACHE = 'dao-khung-long-v12';
-// noi-dung: 8e3009f3bc16d951
+const CACHE = 'dao-khung-long-v17';
+// noi-dung: 437ba860823e9101
 /* Tệp lõi: thiếu một tệp thì bản cài thất bại, máy giữ bản cũ. */
 const CORE = [
   './',
@@ -51,6 +51,7 @@ const CORE = [
   './js/huong-dan.js',
   './js/hang.js',
   './js/app.js',
+  './js/tiep-can.js',
   './manifest.json',
   './icons/icon-180.png',
   './icons/icon-192.png'
@@ -97,6 +98,8 @@ const OPTIONAL = [
   './assets/img/pk-giap-hk1.webp',
   './assets/img/pk-giap-nhan-chia.webp',
   './assets/img/pk-giay-dua.webp',
+  './assets/img/pk-giay-dua-front.svg',
+  './assets/img/pk-giay-dua-front.svg',
   './assets/img/pk-khan-100.webp',
   './assets/img/pk-khien.webp',
   './assets/img/pk-mao-lua.webp',

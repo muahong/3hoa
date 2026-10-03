@@ -41,7 +41,7 @@
     this.lanGap = Object.assign({}, o.lanGap || {});
     this.q = null;
     this.stt = 0;
-    this.dem = { moi: 0, dungNgayMoi: 0, dungNgay: 0, nhoGoiY: 0, lan2: 0, sai: 0, suaDuoc: 0 };
+    this.dem = { moi: 0, dungNgayMoi: 0, dungNgay: 0, nhoGoiY: 0, lan2: 0, sai: 0, suaDuoc: 0, suaNgay: 0 };
     this.quaMong = { tong: 0, tu_lam: 0, nho_goi_y: 0, sua_duoc: 0, vung_chac: 0, so_tu_lam: 0, so_nho_goi_y: 0, so_sua_duoc: 0 };
     this.chuoiDung = 0;
     this.daKetThuc = false;
@@ -345,6 +345,7 @@
 
   VanChoi.prototype._ketThucCau = function (kq) {
     const q = this.q;
+    if (!q || q.xong) return 0;
     const HT = window.HocTap;
     const du = { ket_qua: kq, tong_giay: q.giayTraLoi != null ? q.giayTraLoi : Math.round(this.nk.msTrongCau() / 100) / 10 };
     const dung = kq !== 'sai' && kq !== 'het_gio' && kq !== 'bo_qua';
@@ -374,6 +375,7 @@
     else if (kq === 'dung_lan_2') this.dem.lan2++;
     else if (kq === 'sai' || kq === 'het_gio') this.dem.sai++;
     if (suaDuoc) this.dem.suaDuoc++;
+    else if (dung && q.cacLoi && q.cacLoi.length) this.dem.suaNgay++; // same turn; no retry reward
     this.chuoiDung = kq === 'dung_ngay' ? this.chuoiDung + 1 : 0;
 
     const muc = (this.o.mucKy || {})[q.ky_nang];

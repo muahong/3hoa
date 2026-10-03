@@ -62,8 +62,12 @@
   function nutAm(am, giong) {
     const A = AT();
     datNut(am, A.co.tieng ? 'am' : 'am_tat', 'Âm thanh: ' + (A.co.tieng ? 'Bật' : 'Tắt'));
-    datNut(giong, A.co.giong && A.coGiong() ? 'giong' : 'giong_tat', 'Giọng đọc: ' + (A.co.giong ? 'Bật' : 'Tắt'));
-    if (giong) giong.disabled = !A.coGiong();
+    datNut(giong, A.co.giong && A.coGiong() ? 'giong' : 'giong_tat', A.nhanGiong());
+    if (giong) {
+      giong.disabled = !A.coGiong();
+      giong.title = 'Bố mẹ có thể thêm giọng Tiếng Việt trong cài đặt giọng nói của thiết bị.';
+      if (!giong._giongTheoDoi) { giong._giongTheoDoi = true; A.theoDoiGiong(function () { nutAm(am, giong); }); }
+    }
   }
 
   /** Nút loa trên thẻ lời giải (thẻ .ph-the trong lớp phủ lopPhu): chạm để nghe lại cả lời giải. layDoc() trả về các câu. */
@@ -82,6 +86,7 @@
       AT().docChuoi(ds);
     });
     the.insertBefore(b, the.firstChild);
+    AT().ganNutDoc(b);
   }
 
   /**
@@ -148,7 +153,7 @@
     if (!goc || !goc.querySelectorAll) return;
     goc.querySelectorAll(LUA_CHON_CHU).forEach(function (b) {
       const co = b.querySelector('.kc-loa-lc');
-      const can = !b.disabled && CO_CHU_CAI.test(chuThe(b));
+      const can = !b.disabled && AT().coGiong() && AT().co.giong && CO_CHU_CAI.test(chuThe(b));
       if (can && !co) {
         const l = document.createElement('span');
         l.className = 'kc-loa-lc';
@@ -177,6 +182,7 @@
     const san = dom.san;
     if (!san || san._loaLuaChon) return;
     san._loaLuaChon = true;
+    AT().theoDoiGiong(function () { ganLoaLuaChon(san); });
     ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(function (k) { san.addEventListener(k, chanLoa, true); });
     if (typeof window.MutationObserver === 'function') {
       let cho = false;
@@ -203,6 +209,7 @@
       if (s && s.van && s.van.q && !s.van.q.xong) s.van.thaoTac('nghe_lai', { doi_tuong: 'loi_giai' });
     });
     theoDoiLuaChon();
+    AT().ganNutDoc(dom.nghe);
     dom.nghe.addEventListener('click', function () { ngheLai(); });
     dom.goiYBtn.addEventListener('click', function () { if (s && s.o.onGoiY && !dangKhoa()) s.o.onGoiY(); });
     dom.tamDung.addEventListener('click', function () { tamDung('nut'); });
@@ -226,6 +233,7 @@
     dom.phQueNut.addEventListener('click', function () { doiQueTinh(); });
     document.addEventListener('keydown', function (e) {
       if (!s || !s.dangMo) return;
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('button')) return;
       if (s.phMo) { if (e.key === 'Enter' || e.key === ' ') { dongPhanHoi('choi_tiep'); e.preventDefault(); } return; }
       if (s.tamDung) { if (e.key === 'Escape' || e.key === 'p') { tiepTuc('phim'); e.preventDefault(); } return; }
       if (e.key === 'Escape' || e.key === 'p') { tamDung('phim'); e.preventDefault(); return; }

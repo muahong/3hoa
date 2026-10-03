@@ -126,11 +126,15 @@
 
   <!-- 4. Bản đồ đảo -->
   <section id="man-ban-do" class="man man-bien hidden" aria-label="Bản đồ Đảo Khủng Long">
+    <div class="bd-view" aria-label="Bản đồ kéo ngang" tabindex="0">
     <div class="bd-khung" id="bd-khung">
       <img src="assets/img/bg-island-map.webp" alt="" class="bd-anh" draggable="false">
       <div class="bd-diem" id="bd-diem"></div>
       <div class="bd-ban" id="bd-ban"><img id="bd-ban-hinh" alt=""><span class="bd-ban-noi" id="bd-ban-noi">Đi nào!</span></div>
     </div>
+    </div>
+    <p class="bd-pan-tip">Vuốt bản đồ sang hai bên, hoặc chọn tên vùng bên dưới.</p>
+    <nav class="bd-list" id="bd-list" aria-label="Các vùng trên đảo"></nav>
     <button class="chip-be" id="bd-chip" type="button" aria-label="Đổi bạn chơi">
       <span class="chip-be-anh"><img id="bd-chip-hinh" alt=""></span>
       <b id="bd-chip-ten">An</b>
@@ -183,7 +187,7 @@
 
   <!-- 6. Đua Xe -->
   <section id="man-dua-xe" class="man man-dua hidden" aria-label="Đua Xe">
-    <canvas id="dx-canvas" aria-label="Đường đua ba làn. Chạm bên trái hoặc bên phải để đổi làn." role="img"></canvas>
+    <canvas aria-hidden="true" id="dx-canvas" aria-label="Đường đua ba làn. Chạm bên trái hoặc bên phải để đổi làn." role="img"></canvas>
     <div class="dx-trai">
       <div class="dx-o"><small>ĐIỂM</small><b id="dx-diem">0</b></div>
       <div class="dx-o dx-o-nho"><b id="dx-vong">Vòng 1/3</b><span id="dx-gio">0:00</span><small id="dx-ky-luc">Chưa có kỷ lục</small></div>
@@ -196,6 +200,8 @@
       <button class="dx-nut" id="dx-goi-y" type="button" aria-label="Gợi ý"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.6V17h6v-1.1c0-.6.3-1.2.8-1.6A6.5 6.5 0 0 0 12 2.5z" fill="#ffd166"/><rect x="9" y="18" width="6" height="2.2" rx="1" fill="#fff"/><rect x="10" y="20.8" width="4" height="1.6" rx=".8" fill="#fff"/></svg></button>
       <button class="dx-nut" id="dx-tam-dung" type="button" aria-label="Tạm dừng"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4" fill="#fff"/></svg></button>
     </div>
+    <div id="dx-choices" class="dx-choices hidden" role="group" aria-labelledby="dx-de"></div>
+    <p id="dx-lane-status" class="sr-only" role="status" aria-live="polite"></p>
     <div class="dx-tien-do" aria-hidden="true"><i id="dx-tien-do-thanh"></i><span class="dx-co">🏁</span></div>
     <div class="dx-tang-toc hidden" id="dx-tang-toc">TĂNG TỐC <small>3 câu đúng liền</small></div>
     <div class="dx-bong-nhan hidden" id="dx-bong-nhan">Bóng kỷ lục</div>
@@ -399,7 +405,7 @@
         <div class="kt-so">
           <div><b id="kt-dung">0/0</b><span>câu đúng</span></div>
           <div><b id="kt-tu-lam">0</b><span>câu tự làm, không gợi ý</span></div>
-          <div><b id="kt-sua">0</b><span>câu từng sai, nay đã sửa</span></div>
+          <div><b id="kt-sua">0</b><span>câu từng sai, nay đã sửa</span><small id="kt-sua-phu"></small></div>
         </div>
         <p class="kt-ky-luc hidden" id="kt-ky-luc"></p>
       </div>
@@ -532,6 +538,7 @@
 <script src="js/goc-phu-huynh.js"></script>
 <script src="js/huong-dan.js"></script>
 <script src="js/hang.js"></script>
+<script src="js/tiep-can.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

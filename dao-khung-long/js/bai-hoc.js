@@ -185,6 +185,12 @@
   function khoiDom() {
     if (dom) return dom;
     dom = { man: $('man-bai-hoc'), ten: $('bh-tieu-de'), cham: $('bh-cham'), san: $('bh-san'), chu: $('bh-chu'), thu: $('bh-thu'), hinh: $('bh-hinh'), nghe: $('bh-nghe'), boQua: $('bh-bo-qua'), tiep: $('bh-tiep') };
+    window.AmThanh.ganNutDoc(dom.nghe);
+    const ghiGiong = document.createElement('p');
+    ghiGiong.className = 'bh-giong';
+    ghiGiong.setAttribute('role', 'status');
+    dom.nghe.parentNode.appendChild(ghiGiong);
+    window.AmThanh.theoDoiGiong(function () { ghiGiong.textContent = window.AmThanh.coGiong() ? '' : window.AmThanh.nhanGiong() + '. Bố mẹ có thể thêm giọng Tiếng Việt trong cài đặt giọng nói của thiết bị.'; });
     dom.nghe.addEventListener('click', function () { if (s) { s.ngheLai++; doc(); } });
     dom.boQua.addEventListener('click', function () { ket(true); });
     dom.tiep.addEventListener('click', function () { tiep(); });

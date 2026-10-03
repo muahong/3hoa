@@ -44,6 +44,13 @@
     dom.gyBong = dom.goiYBong; dom.gyHinh = dom.goiYHinh; dom.gyChu = dom.goiYChu;
     dom.ph = dom.phanHoi; dom.tienDo = dom.tienDoThanh;
     dom.ctx = dom.canvas.getContext('2d');
+    dom.choices = $('dx-choices');
+    dom.laneStatus = $('dx-lane-status');
+    dom.choices.innerHTML = [0, 1, 2].map(function (i) { return '<button type="button" data-lane="' + i + '" aria-pressed="false"></button>'; }).join('');
+    dom.choices.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-lane]');
+      if (b && s && s.giaiDoan === 'chay') doiLan(Number(b.getAttribute('data-lane')) - s.lan);
+    });
     // Menu Tạm dừng giống khung chơi chung: nút có hình, thêm "Xem lại bài học" khi màn có bài học
     dom.baiHoc = document.createElement('button');
     dom.baiHoc.type = 'button';
@@ -70,6 +77,7 @@
       s.o.xemBaiHoc(function () { an(dom.tam, false); s.veLai = true; });
     });
     dom.lao.addEventListener('click', function () { laoToi(); });
+    window.AmThanh.ganNutDoc(dom.nghe);
     dom.nghe.addEventListener('click', function () { ngheLai(); });
     dom.goiY.addEventListener('click', function () { xinGoiY(); });
     dom.tramGoiY.addEventListener('click', function () { xinGoiY(); });
@@ -96,6 +104,7 @@
     document.addEventListener('keydown', function (e) {
       if (!s || !s.dangChay) return;
       const k = e.key;
+      if ((k === 'Enter' || k === ' ') && e.target.closest && e.target.closest('button')) return;
       if (s.giaiDoan === 'tram') {
         if (/^[0-9]$/.test(k)) { tramGo(k); e.preventDefault(); }
         else if (k === 'Backspace') { tramXoa(); e.preventDefault(); }
@@ -287,6 +296,7 @@
   }
 
   function sinhCauMoi() {
+    an(dom.choices, true);
     const dang = s.van.dangKeTiep();
     if (!dang) { s.dich = { z: 44 }; an(dom.cau, true); an(dom.lao, true); return; }
     if (dang === 'nhap_so') { s.tram = { z: 38 }; an(dom.cau, true); an(dom.lao, true); return; }
@@ -296,6 +306,7 @@
     const z0 = hh.zXe + T * V_CO_BAN;
     s.cong = { q: q, z: z0, z0: z0, T: T, daQua: false, lao: false, goiY: false, chuDong: false, loaiBo: null, tQuyet: null };
     chu(dom.de, q.de);
+    capNhatLuaChon();
     an(dom.cau, false);
     an(dom.lao, false);
     an(dom.gyBong, true);
@@ -307,12 +318,26 @@
 
   /* ---------------- Thao tác của bé ---------------- */
 
+  function capNhatLuaChon() {
+    const c = s && s.cong;
+    if (!c || c.daQua) { an(dom.choices, true); return; }
+    an(dom.choices, false);
+    dom.choices.querySelectorAll('button').forEach(function (b, i) {
+      const label = ['Làn trái', 'Làn giữa', 'Làn phải'][i] + ': ' + c.q.lua_chon[i].gia_tri;
+      chu(b, label); b.setAttribute('aria-pressed', i === s.lan ? 'true' : 'false');
+      b.disabled = !!c.lao;
+    });
+    chu(dom.laneStatus, ['Làn trái', 'Làn giữa', 'Làn phải'][s.lan] + ': ' + c.q.lua_chon[s.lan].gia_tri);
+    dom.lao.setAttribute('aria-label', 'Lao tới: ' + dom.laneStatus.textContent);
+  }
+
   function doiLan(huong) {
     if (!s || s.giaiDoan !== 'chay' || s.veDichLuc) return;
     const cu = s.lan;
     const moi = gioi(cu + huong, 0, 2);
     if (moi === cu) return;
     s.lan = moi;
+    capNhatLuaChon();
     window.AmThanh.bat('doi_lan');
     if (s.lanDauHuongDan) { s.lanDauHuongDan = false; an(dom.huongDan, true); }
     const c = s.cong;
@@ -327,6 +352,7 @@
     const c = s && s.cong;
     if (!c || c.daQua || c.lao || s.giaiDoan !== 'chay') return;
     c.lao = true;
+    capNhatLuaChon();
     c.chuDong = true;
     c.tQuyet = window.NhatKy.msTrongCau();
     s.van.thaoTac('cham', { doi_tuong: 'nut_lao_toi', gia_tri: c.q.lua_chon[s.lan].gia_tri, lan: LAN[s.lan] });
@@ -372,6 +398,7 @@
     c.daQua = true;
     an(dom.lao, true);
     if (c.q.stt >= 2) { s.lanDauHuongDan = false; an(dom.huongDan, true); }
+    an(dom.choices, true);
     const chon = c.q.lua_chon[s.lan];
     // Bé không đổi làn, không lao tới mà xe tự vào cổng sai: bé chưa chọn, không gán lỗi cho bé
     if (!c.chuDong && window.NganHang.nhanBietLoi(c.q.cau_truc, chon.gia_tri).length) { tuVaoCong(c, chon); return; }
